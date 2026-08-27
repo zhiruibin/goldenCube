@@ -85,9 +85,12 @@ class StageResultScene {
         });
     }
 
-    onTouchStart(e) {
-        const x = e.clientX;
-        const y = e.clientY;
+    /**
+     * 触摸结束点击路由（game.js 通过 scene.handleTap(x, y) 分发到当前场景）
+     * @param {number} x 逻辑坐标 X
+     * @param {number} y 逻辑坐标 Y
+     */
+    handleTap(x, y) {
         for (let i = 0; i < this._buttons.length; i++) {
             const btn = this._buttons[i];
             if (btn.hitTest(x, y)) {
