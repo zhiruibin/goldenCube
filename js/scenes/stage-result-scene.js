@@ -118,7 +118,8 @@ class StageResultScene {
 
         const topInset = this._getTopInset();
 
-        drawBrandTitle(ctx, '过关', 12, topInset, 'bold 30px sans-serif');
+        // 大标题：水平居中（drawBrandTitle 以 x 为水平中心）
+        drawBrandTitle(ctx, '过关', W / 2, topInset, 'bold 30px sans-serif');
 
         const stageName = this._stage ? this._stage.name : '';
         ctx.fillStyle = SUBTITLE;
