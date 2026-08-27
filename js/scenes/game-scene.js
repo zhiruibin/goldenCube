@@ -217,8 +217,7 @@ class GameScene {
             controlBottom: this._secondRowBottom,
         });
 
-        // 启动引擎
-        this._engine.init();
+        // 启动引擎（init 已在 _initEngine 内完成；此处不可重复 init，否则清空闯关垃圾布局）
         this._engine.start();
 
         // 注册引擎回调
@@ -461,6 +460,10 @@ class GameScene {
 
     _initEngine() {
         this._engine = new TetrisEngine(this._replaySeed);
+        // 必须先 init 再 setMode/initStage：initStage 依赖 init 后的空棋盘；
+        // 若顺序颠倒（onEnter 末尾再 init 一次），init 会清空垃圾布局与 _garbageRemaining，
+        // 导致所有关卡无垃圾方块、首块落地即触发 stageClear（游戏秒结束）
+        this._engine.init();
         this._engine.setMode(this._mode);
         this._stageOverReason = null;
         if (this._mode === 'stage' && this._stageId) {
@@ -570,7 +573,7 @@ class GameScene {
             if (this._effectRenderer) {
                 this._effectRenderer.addLandRipple(
                     this._boardX, this._boardY, this._cellSize,
-                    current || info, !!info.hardDrop
+                    this._engine.getCurrentPiece() || info, !!info.hardDrop
                 );
             }
             // 落地音效（震动预算已留给按键确认，落地改为纯声音反馈）
