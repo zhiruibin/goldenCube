@@ -1,0 +1,26 @@
+{
+	"id": "e6722664-2f62-4a3b-844b-e99cf6461037",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.expired-challenges-excluded",
+	"title": "过期挑战排除在待应战列表外且不可应战",
+	"statement": "挑战超过 expiresAt 后即过期，不再出现在待应战列表中，且不可被应战。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787230425315,
+	"updatedAt": 1787230425315,
+	"createdByTaskId": "business-init",
+	"latestEventId": "c1b0ca5e-1715-4ae2-8880-23c6ebc26d46",
+	"tags": [],
+	"aliases": [
+		"过期挑战不可应战",
+		"挑战过期后下架"
+	],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "cloudfunctions/challenge/README.md"
+		}
+	]
+}

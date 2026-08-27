@@ -1,0 +1,23 @@
+{
+	"id": "a3efbac4-b114-4145-b7de-efde5335abd6",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "skins.equipped-block.persisted",
+	"title": "已装备方块皮肤作用于锁定方块",
+	"statement": "棋盘渲染器从本地存储键 equipped_block 读取已装备方块皮肤并应用到已锁定方块的颜色绘制，保证方块落地后与下落中（PieceRenderer）样式一致。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015752762,
+	"updatedAt": 1787015752762,
+	"createdByTaskId": "business-init",
+	"latestEventId": "e9031837-5a2d-4a1f-97a3-0158f234b624",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/render/board-renderer.js",
+			"symbol": "BoardRenderer._applyBlockSkin"
+		}
+	]
+}

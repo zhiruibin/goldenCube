@@ -1,0 +1,12 @@
+{
+	"id": "0c9309e4-c655-46c2-acc7-476e487cb30b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "d9db80b5-505e-40e4-a083-32b098bc7ac8",
+	"operation": "create",
+	"after": "The shop organizes items into block, board, and sound categories; each category tracks its equipped item and defaults to 'default'.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/shop-scene.js:_refreshCache"
+	],
+	"createdAt": 1787015835475
+}

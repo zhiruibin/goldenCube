@@ -1,0 +1,32 @@
+{
+	"id": "97fc74d7-6eca-4c30-8da9-819ab2a77b15",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "result.rank-sync.states",
+	"title": "Result rank sync state machine",
+	"statement": "Result scene tracks its leaderboard sync through states idle/syncing/done/offline/failed, allowing offline or failed sync to be surfaced.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787229367540,
+	"updatedAt": 1787229367540,
+	"createdByTaskId": "business-init",
+	"latestEventId": "10654f9b-d5b9-4807-ad8e-0f1064a0c31b",
+	"tags": [],
+	"aliases": [
+		"结算同步状态",
+		"排行榜同步状态",
+		"结算页离线同步"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/result-scene.js"
+		},
+		{
+			"type": "symbol",
+			"path": "js/scenes/result-scene.js",
+			"symbol": "ResultScene"
+		}
+	]
+}

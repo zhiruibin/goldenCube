@@ -1,0 +1,12 @@
+{
+	"id": "d73235bd-6784-4701-9b62-6749f3f22043",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "24fd3549-c959-48ef-8b44-3e608c555453",
+	"operation": "create",
+	"after": "Friend leaderboard functionality is implemented through the WeChat open data context (openDataContext/) rather than the rank cloud function.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/rank/README.md"
+	],
+	"createdAt": 1787015892166
+}

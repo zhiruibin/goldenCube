@@ -1,0 +1,23 @@
+{
+	"id": "3f0f7f5e-8b7d-4e17-8c92-44d49095dfcd",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "game.input.hard-drop-cooldown",
+	"title": "Hard drop input cooldown",
+	"statement": "Hard drop inputs are ignored until 200ms after the previous hard drop, to prevent accidental immediate drops from rapid taps or multi-touch.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015835148,
+	"updatedAt": 1787015835148,
+	"createdByTaskId": "business-init",
+	"latestEventId": "4a05ad02-3ff9-4f19-9ae6-5738e253fea7",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/game-scene.js",
+			"symbol": "HARD_DROP_COOLDOWN_MS"
+		}
+	]
+}

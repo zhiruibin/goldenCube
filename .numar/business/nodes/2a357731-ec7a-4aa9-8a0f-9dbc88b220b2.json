@@ -1,0 +1,28 @@
+{
+	"id": "2a357731-ec7a-4aa9-8a0f-9dbc88b220b2",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "effects.lucky-fx.setting-toggle",
+	"title": "摇奖彩纸特效可由存储开关关闭",
+	"statement": "彩纸庆祝特效由本地存储 setting_luckyFx 控制，未显式设置为 false 时默认开启；特效关闭或粒子容量为 0 时不触发庆祝。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015752828,
+	"updatedAt": 1787015752828,
+	"createdByTaskId": "business-init",
+	"latestEventId": "164ae6a2-a0d2-406a-b7e4-c5df7edac707",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/render/confetti-fx.js",
+			"symbol": "ConfettiFx.init"
+		},
+		{
+			"type": "symbol",
+			"path": "js/render/confetti-fx.js",
+			"symbol": "ConfettiFx.trigger"
+		}
+	]
+}

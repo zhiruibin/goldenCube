@@ -1,0 +1,12 @@
+{
+	"id": "58348e06-3347-44e2-be8d-e8e0acfd15f1",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "9593bfbe-56f8-4ff3-8904-97318ab3b592",
+	"operation": "create",
+	"after": "确保用户资料时优先读取本地缓存；无缓存时静默尝试获取微信资料，均未取得则返回空资料，不主动弹出授权框。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/user-profile.js:ensureUserProfile"
+	],
+	"createdAt": 1787229097855
+}

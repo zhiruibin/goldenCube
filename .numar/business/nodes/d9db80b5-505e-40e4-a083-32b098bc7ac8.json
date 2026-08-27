@@ -1,0 +1,23 @@
+{
+	"id": "d9db80b5-505e-40e4-a083-32b098bc7ac8",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "shop.categories.equipped-defaults",
+	"title": "Shop categories and equipment defaults",
+	"statement": "The shop organizes items into block, board, and sound categories; each category tracks its equipped item and defaults to 'default'.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015835475,
+	"updatedAt": 1787015835475,
+	"createdByTaskId": "business-init",
+	"latestEventId": "0c9309e4-c655-46c2-acc7-476e487cb30b",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/shop-scene.js",
+			"symbol": "_refreshCache"
+		}
+	]
+}

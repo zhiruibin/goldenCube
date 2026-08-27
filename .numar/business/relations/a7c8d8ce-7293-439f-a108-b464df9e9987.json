@@ -1,0 +1,14 @@
+{
+	"id": "a7c8d8ce-7293-439f-a108-b464df9e9987",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "3fd96933-5757-4e8c-8326-66c9c01b8dfb",
+	"toNodeId": "5f240e9c-65b2-4613-a3d8-0c43eab695b9",
+	"type": "appliesTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"cloudfunctions/challenge/index.js:createChallenge"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1787229097872,
+	"updatedAt": 1787229097872
+}

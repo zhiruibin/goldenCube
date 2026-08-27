@@ -1,0 +1,28 @@
+{
+	"id": "aa3ff421-b1bc-42b7-9ed5-24d88c5d8ce3",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "tetris.drop-scoring.soft-hard-drops",
+	"title": "软降/硬降得分",
+	"statement": "软降每格计 1 分，硬降每格计 2 分。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787229097848,
+	"updatedAt": 1787229097848,
+	"createdByTaskId": "business-init",
+	"latestEventId": "56add772-7b9f-4b45-a5bd-128d6e1203c9",
+	"tags": [],
+	"aliases": [
+		"软降得分",
+		"硬降得分",
+		"drop score"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/tetris-engine.js",
+			"symbol": "SOFT_DROP_SCORE"
+		}
+	]
+}

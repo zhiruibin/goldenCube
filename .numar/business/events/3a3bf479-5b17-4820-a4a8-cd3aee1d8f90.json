@@ -1,0 +1,12 @@
+{
+	"id": "3a3bf479-5b17-4820-a4a8-cd3aee1d8f90",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "c293d091-a2dd-491e-baf5-551e9ba99636",
+	"operation": "create",
+	"after": "The service is documented to provide createChallenge, respondChallenge, getMyChallenges, getChallengeById, and cancelChallenge operations for challenge management.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/cloud-service.js header comment: capability list"
+	],
+	"createdAt": 1787015658091
+}

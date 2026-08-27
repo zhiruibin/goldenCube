@@ -1,0 +1,12 @@
+{
+	"id": "2cbcc3e3-5e23-423f-b15e-f2d365fca02e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "57565c18-0e81-487c-abda-d1b88df59dae",
+	"operation": "create",
+	"after": "The ad manager categorizes WeChat ad error codes into fatal errors (invalid ad unit, slot closed, unavailable), retryable errors (no fill, load timeout, network, component fail, not loaded), and rate-limit errors (rate limit, show rejected).",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/ad-manager.js: AD_ERROR_CODE, ERROR_CATEGORY"
+	],
+	"createdAt": 1787015657631
+}

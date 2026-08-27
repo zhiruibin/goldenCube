@@ -1,0 +1,12 @@
+{
+	"id": "bd534813-d94f-4fed-b292-ff8df415525e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "fb8757c9-f721-42b3-ab1f-4a259f082e94",
+	"operation": "create",
+	"after": "挑战发起者不能对自己发起的挑战进行应战；应战者必须是其他玩家。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/challenge/README.md"
+	],
+	"createdAt": 1787230425310
+}

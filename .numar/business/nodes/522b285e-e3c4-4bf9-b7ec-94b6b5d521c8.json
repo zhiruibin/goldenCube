@@ -1,0 +1,23 @@
+{
+	"id": "522b285e-e3c4-4bf9-b7ec-94b6b5d521c8",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "achievement.use-all-pieces.flag",
+	"title": "Using all seven pieces in one game is stored as a flag",
+	"statement": "reportUseAllPieces sets the stat_use_all_pieces value to 1, tracking that a player used all seven tetromino types in a single game.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015657481,
+	"updatedAt": 1787015657481,
+	"createdByTaskId": "business-init",
+	"latestEventId": "7447dbc5-f751-4c21-9e73-e5c51952c8ad",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/achievement-manager.js",
+			"symbol": "AchievementManager.reportUseAllPieces"
+		}
+	]
+}

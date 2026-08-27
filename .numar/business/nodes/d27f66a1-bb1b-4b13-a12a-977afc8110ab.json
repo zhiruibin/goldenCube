@@ -1,0 +1,23 @@
+{
+	"id": "d27f66a1-bb1b-4b13-a12a-977afc8110ab",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "home.pending-challenge-count",
+	"title": "Pending challenge count referenced by home",
+	"statement": "The home scene references a pending challenge count from the challenge scene module.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015836177,
+	"updatedAt": 1787015836177,
+	"createdByTaskId": "business-init",
+	"latestEventId": "6641b46f-92c6-4cc4-8274-fdf3a9c56fe0",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/home-scene.js",
+			"symbol": "getPendingChallengeCount"
+		}
+	]
+}

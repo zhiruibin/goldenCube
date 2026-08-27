@@ -1,0 +1,33 @@
+{
+	"id": "515bd2f8-df74-42ce-a400-64084f421cf8",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "tetris.board-dimensions",
+	"title": "棋盘尺寸",
+	"statement": "棋盘为 10 列 × 20 行可见区域，另含 2 行隐藏行，共 22 行。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015707404,
+	"updatedAt": 1787015707404,
+	"createdByTaskId": "business-init",
+	"latestEventId": "50834b52-42bf-4ce2-b931-dc18b0295ee8",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/tetris-engine.js",
+			"symbol": "BOARD_COLS"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/tetris-engine.js",
+			"symbol": "BOARD_ROWS"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/tetris-engine.js",
+			"symbol": "HIDDEN_ROWS"
+		}
+	]
+}

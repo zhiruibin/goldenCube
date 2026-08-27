@@ -1,0 +1,15 @@
+{
+	"id": "e02726c6-f904-41bf-801d-c94cf6d7cb11",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "47dfffe6-651a-478f-8a70-431f3dcc73a5",
+	"toNodeId": "d9db80b5-505e-40e4-a083-32b098bc7ac8",
+	"type": "belongsTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"js/scenes/shop-scene.js tabs and equipped defaults both use block/board/sound category keys",
+		"js/scenes/shop-scene.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1787229367549,
+	"updatedAt": 1787230069037
+}

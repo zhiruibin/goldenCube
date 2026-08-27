@@ -1,0 +1,32 @@
+{
+	"id": "47dfffe6-651a-478f-8a70-431f3dcc73a5",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "shop.tabs.block-board-sound",
+	"title": "Shop three category tabs",
+	"statement": "Shop scene presents three category tabs (block skins, board skins, sound packs) and defaults to the block tab on entry.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787229367537,
+	"updatedAt": 1787229367537,
+	"createdByTaskId": "business-init",
+	"latestEventId": "dc9fac47-2a92-4daf-a2a5-9c2a96d7d15f",
+	"tags": [],
+	"aliases": [
+		"商店三个页签",
+		"方块棋盘音效",
+		"商店默认方块页"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/shop-scene.js"
+		},
+		{
+			"type": "symbol",
+			"path": "js/scenes/shop-scene.js",
+			"symbol": "ShopScene._renderTabs"
+		}
+	]
+}

@@ -1,0 +1,23 @@
+{
+	"id": "a7b4b166-5657-46dd-ae38-98d935aa9de4",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.submit-on-new-record",
+	"title": "排行榜仅新高写入",
+	"statement": "提交分数仅当高于该用户在该模式的历史最高分时才写入，否则只返回是否新纪录与当前排名。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015708307,
+	"updatedAt": 1787015708307,
+	"createdByTaskId": "business-init",
+	"latestEventId": "d5f82f19-c71e-4266-862f-d4df229ddb2f",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "cloudfunctions/rank/index.js",
+			"symbol": "submitScore"
+		}
+	]
+}

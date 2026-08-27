@@ -1,0 +1,12 @@
+{
+	"id": "0eb1f39d-61de-41d0-824f-e353bcd98f46",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "d5e7fe79-3e5a-416a-b673-233aadf3577e",
+	"operation": "create",
+	"after": "When touch movement exceeds the swipe threshold, the input manager switches into dragging mode and cancels any pending long-press timer.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/runtime/input-manager.js"
+	],
+	"createdAt": 1787229255343
+}

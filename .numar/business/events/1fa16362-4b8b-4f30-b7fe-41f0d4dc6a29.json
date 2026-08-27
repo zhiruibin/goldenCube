@@ -1,0 +1,12 @@
+{
+	"id": "1fa16362-4b8b-4f30-b7fe-41f0d4dc6a29",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "a9bc0862-921f-4f53-9d85-63b63f6174ac",
+	"operation": "create",
+	"after": "The home screen offers four play modes: 经典模式 (classic), 限时赛 (timed), 马拉松 (marathon), and 方块实验室 (special); the selected mode is passed to the game scene.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/home-scene.js:modeItems"
+	],
+	"createdAt": 1787015834819
+}

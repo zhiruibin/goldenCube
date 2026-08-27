@@ -1,0 +1,12 @@
+{
+	"id": "a7cd93b0-45c8-4457-a641-f33878caf3bf",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "7774b1e4-aeab-44ec-a062-a59355614b2c",
+	"operation": "create",
+	"after": "Cloud-config defines the challenge collection as 'challenges', aligned with the challenge cloud function.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/cloud-config.js CHALLENGE_COLLECTION"
+	],
+	"createdAt": 1787227659796
+}

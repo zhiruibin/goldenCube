@@ -1,0 +1,27 @@
+{
+	"id": "6e96d6ee-af7e-497b-9736-702505ae5036",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "scenes.registered-set",
+	"title": "游戏注册九大场景",
+	"statement": "游戏启动时向场景管理器注册 home、game、result、rank、shop、settings、achievement、challenge、challengeResult 九个场景。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015608213,
+	"updatedAt": 1787015608213,
+	"createdByTaskId": "business-init",
+	"latestEventId": "08a78488-4d98-4230-8e60-f678cfd59740",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "game.js"
+		},
+		{
+			"type": "symbol",
+			"path": "game.js",
+			"symbol": "SceneManager"
+		}
+	]
+}

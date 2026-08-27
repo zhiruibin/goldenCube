@@ -1,0 +1,22 @@
+{
+	"id": "935d7b23-8f78-4971-968e-fff03e40654b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.concurrent-response-guard",
+	"title": "应战防并发重复",
+	"statement": "应战接口经过校验后原子更新，防止并发情况下同一挑战被重复应战。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015708246,
+	"updatedAt": 1787015708246,
+	"createdByTaskId": "business-init",
+	"latestEventId": "ae77ef06-13c3-41de-bf93-ce54ea3c5a0c",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "cloudfunctions/challenge/index.js"
+		}
+	]
+}

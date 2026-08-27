@@ -1,0 +1,27 @@
+{
+	"id": "493989e7-eed1-4512-a590-2e0da47e205a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "srs.rotation-state-convention",
+	"title": "SRS 旋转状态编号约定",
+	"statement": "SRS 模块为每类方块定义 4 个旋转状态，编号 0=初始、1=顺时针90°(R)、2=180°、3=逆时针90°(L)；坐标约定 dx 为列偏移（右正）、dy 为行偏移（下正）。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787229097841,
+	"updatedAt": 1787229097841,
+	"createdByTaskId": "business-init",
+	"latestEventId": "f596a7f2-1553-4d1e-b444-dd56b6bee0d6",
+	"tags": [],
+	"aliases": [
+		"旋转状态编号",
+		"SRS 状态约定",
+		"rotation state convention"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/srs-rotation.js"
+		}
+	]
+}

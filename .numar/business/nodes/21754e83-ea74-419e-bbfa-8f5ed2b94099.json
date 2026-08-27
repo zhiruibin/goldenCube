@@ -1,0 +1,25 @@
+{
+	"id": "21754e83-ea74-419e-bbfa-8f5ed2b94099",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.id-is-document-id",
+	"title": "challengeId 即挑战文档 _id",
+	"statement": "挑战集合（challenges）中文档的 _id 就是 createChallenge 返回的 challengeId，客户端用它引用挑战。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787230425321,
+	"updatedAt": 1787230425321,
+	"createdByTaskId": "business-init",
+	"latestEventId": "443d79ee-b30e-463c-a17e-73f0f4f4302b",
+	"tags": [],
+	"aliases": [
+		"挑战 ID 为文档 ID"
+	],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "cloudfunctions/challenge/README.md"
+		}
+	]
+}

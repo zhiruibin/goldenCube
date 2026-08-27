@@ -1,0 +1,12 @@
+{
+	"id": "316ad062-f818-459e-9017-57e7a640a0e4",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "8e2b80ad-f140-4c86-b306-c026b73b7d95",
+	"operation": "create",
+	"after": "小游戏冷启动时若启动参数 query 中包含 challengeId，会先登记该分享卡挑战，并直接进入挑战场景的「待我应战」页签。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"game.js onStart 读取 wx.getLaunchOptionsSync().query.challengeId，调用 _registerIncomingChallenge 并在存在 challengeId 时 sceneManager.switchTo('challenge', { tab: 'incoming' })"
+	],
+	"createdAt": 1787015608117
+}

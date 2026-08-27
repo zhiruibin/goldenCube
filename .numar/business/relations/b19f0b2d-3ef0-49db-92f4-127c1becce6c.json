@@ -1,0 +1,15 @@
+{
+	"id": "b19f0b2d-3ef0-49db-92f4-127c1becce6c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "60d047b9-4591-47be-9826-f36d55c2ae3d",
+	"toNodeId": "99823330-ef0d-4aaf-b305-b2d7f791596d",
+	"type": "appliesTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"utils/tetris-engine.js:LINES_PER_LEVEL / MAX_LEVEL / LEVEL_SPEEDS",
+		"utils/tetris-engine.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1787229097869,
+	"updatedAt": 1787230212275
+}

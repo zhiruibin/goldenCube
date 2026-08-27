@@ -1,0 +1,32 @@
+{
+	"id": "864bdc1a-ff44-4bc4-a3a3-e5e4fde3aa8d",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "settings.das-delay.range-50-500-default-170",
+	"title": "DAS delay slider range and default",
+	"statement": "Settings scene exposes a DAS delay slider from 50 to 500 ms with 10 ms steps, defaulting to 170 ms.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787229367535,
+	"updatedAt": 1787229367535,
+	"createdByTaskId": "business-init",
+	"latestEventId": "6cb34e7b-680b-48f4-945f-7ed9e451389b",
+	"tags": [],
+	"aliases": [
+		"DAS 延迟滑杆",
+		"DAS 50-500ms",
+		"默认 DAS 170"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/settings-scene.js"
+		},
+		{
+			"type": "symbol",
+			"path": "js/scenes/settings-scene.js",
+			"symbol": "SettingsScene._renderSettings"
+		}
+	]
+}

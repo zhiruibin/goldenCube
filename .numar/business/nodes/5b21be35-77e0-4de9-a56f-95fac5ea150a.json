@@ -1,0 +1,28 @@
+{
+	"id": "5b21be35-77e0-4de9-a56f-95fac5ea150a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "tetris.bag-randomizer.lab-pure-pool",
+	"title": "实验室模式纯新块池",
+	"statement": "BagRandomizer 在实验室模式下使用纯新方块池（LAB_PIECE_TYPES），标准模式使用标准 7-Bag；洗牌采用 Fisher-Yates。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787229097852,
+	"updatedAt": 1787229097852,
+	"createdByTaskId": "business-init",
+	"latestEventId": "1b245bd3-a243-49e1-9c51-d70246180883",
+	"tags": [],
+	"aliases": [
+		"实验室方块池",
+		"纯新池",
+		"lab piece pool"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/tetris-engine.js",
+			"symbol": "BagRandomizer"
+		}
+	]
+}

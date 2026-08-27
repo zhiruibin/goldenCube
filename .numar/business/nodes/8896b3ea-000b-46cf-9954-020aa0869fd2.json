@@ -1,0 +1,27 @@
+{
+	"id": "8896b3ea-000b-46cf-9954-020aa0869fd2",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "widgets.button.action-icon-set",
+	"title": "Button supports built-in action icons and falls back to text",
+	"statement": "Button renders built-in icons for hardDrop, rotate, hold, gear, pause, and play actions; an icon registered with IconRenderer is drawn with text, and otherwise the button falls back to plain text.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015891074,
+	"updatedAt": 1787015891074,
+	"createdByTaskId": "business-init",
+	"latestEventId": "f0385f65-a81b-48b1-a5aa-02baaf8971a3",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/widgets/button.js",
+			"symbol": "Button.render"
+		},
+		{
+			"type": "file",
+			"path": "js/widgets/button.js"
+		}
+	]
+}

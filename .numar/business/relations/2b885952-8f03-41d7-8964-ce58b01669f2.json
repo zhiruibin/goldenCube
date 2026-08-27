@@ -1,0 +1,15 @@
+{
+	"id": "2b885952-8f03-41d7-8964-ce58b01669f2",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "8cff076c-c99e-487c-aeae-0acd8ef94938",
+	"toNodeId": "49cd1fef-051c-4472-b8ab-5ec888bc1876",
+	"type": "constrains",
+	"verificationStatus": "verified",
+	"evidenceIds": [
+		"js/scenes/result-scene.js#_getAdCoinOffer",
+		"广告入口按剩余额度裁剪"
+	],
+	"createdByTaskId": "request_f0aaf24d-b35f-4102-8cd7-e93af669d924",
+	"createdAt": 1787309680938,
+	"updatedAt": 1787309680938
+}

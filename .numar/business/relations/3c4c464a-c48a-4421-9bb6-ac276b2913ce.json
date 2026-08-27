@@ -1,0 +1,14 @@
+{
+	"id": "3c4c464a-c48a-4421-9bb6-ac276b2913ce",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "410d7d34-f13c-4abd-b1eb-66a1152a67da",
+	"toNodeId": "e37303bd-e013-49e7-b133-91aea37e0d29",
+	"type": "appliesTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"utils/coin-manager.js:DAILY_LOGIN_REWARD"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1787229097866,
+	"updatedAt": 1787229097866
+}

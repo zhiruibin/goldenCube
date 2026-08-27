@@ -1,0 +1,15 @@
+{
+	"id": "c85768ee-642e-433c-a412-30f132414521",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "0ae38902-17f4-4b7b-b43b-7512227c671f",
+	"toNodeId": "24fd3549-c959-48ef-8b44-3e608c555453",
+	"type": "belongsTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"openDataContext/index.js",
+		"cloudfunctions/rank/README.md"
+	],
+	"createdByTaskId": "business-relationship-scan",
+	"createdAt": 1787229757971,
+	"updatedAt": 1787229757971
+}

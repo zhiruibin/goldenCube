@@ -1,0 +1,26 @@
+{
+	"id": "fb8757c9-f721-42b3-ab1f-4a259f082e94",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.self-respond-forbidden",
+	"title": "发起者不能应战自己的挑战",
+	"statement": "挑战发起者不能对自己发起的挑战进行应战；应战者必须是其他玩家。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787230425310,
+	"updatedAt": 1787230425310,
+	"createdByTaskId": "business-init",
+	"latestEventId": "bd534813-d94f-4fed-b292-ff8df415525e",
+	"tags": [],
+	"aliases": [
+		"不能自己应战",
+		"不可接受自己发起的挑战"
+	],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "cloudfunctions/challenge/README.md"
+		}
+	]
+}

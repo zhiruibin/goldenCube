@@ -1,0 +1,37 @@
+{
+	"id": "f47432d1-8abd-47f7-afce-c034853e3c34",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.scene.default-tab-friend",
+	"title": "排行榜首次进入默认好友榜，之后恢复上次浏览状态",
+	"statement": "排行榜场景首次进入或无历史状态时使用默认「好友榜/经典/总榜」；退出时保存 tab/mode/period/scrollY 到 lastViewState，再次进入优先恢复上次浏览状态，列表加载后不再重置滚动位置。",
+	"status": "active",
+	"verificationStatus": "verified",
+	"createdAt": 1787229367530,
+	"updatedAt": 1787590092632,
+	"createdByTaskId": "business-init",
+	"latestEventId": "484fbd0d-3792-4ae8-b28e-89d988916788",
+	"tags": [],
+	"aliases": [
+		"排行榜默认好友榜",
+		"进入排行默认好友"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/rank-scene.js",
+			"symbol": "lastViewState"
+		},
+		{
+			"type": "file",
+			"path": "js/scenes/rank-scene.js",
+			"symbol": "onEnter"
+		},
+		{
+			"type": "file",
+			"path": "js/scenes/rank-scene.js",
+			"symbol": "onExit"
+		}
+	]
+}

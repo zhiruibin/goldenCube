@@ -1,0 +1,32 @@
+{
+	"id": "34e05eb5-9091-49a0-bbdd-5fd34f54c942",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "game.input.touch-ownership-tracking",
+	"title": "Game scene tracks touch ownership by touchId",
+	"statement": "GameScene tracks active touch ownership by touchId, associating each touch with a dpad button or action button to support multi-touch input without conflicts.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787229367542,
+	"updatedAt": 1787229367542,
+	"createdByTaskId": "business-init",
+	"latestEventId": "0938e87c-2e0e-4d4f-9d82-acc608ad02d9",
+	"tags": [],
+	"aliases": [
+		"多指触控",
+		"触点归属追踪",
+		"方向键和按钮多指操作"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/game-scene.js"
+		},
+		{
+			"type": "symbol",
+			"path": "js/scenes/game-scene.js",
+			"symbol": "GameScene"
+		}
+	]
+}

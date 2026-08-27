@@ -1,0 +1,28 @@
+{
+	"id": "ef42ce27-cb7b-4550-b3af-95d981e6e8a5",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "profile.cache-only-no-autofetch",
+	"title": "不自动拉取微信用户资料",
+	"statement": "ensureUserProfile 仅读取本地缓存，不调用 wx.getUserProfile；无缓存时返回空昵称与头像，并提示用户在设置页主动设置。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015708008,
+	"updatedAt": 1787015708008,
+	"createdByTaskId": "business-init",
+	"latestEventId": "a856c63c-54cf-4e40-9caa-aa8206f7c46c",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/user-profile.js",
+			"symbol": "ensureUserProfile"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/user-profile.js",
+			"symbol": "PROFILE_KEY"
+		}
+	]
+}

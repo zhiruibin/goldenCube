@@ -1,0 +1,23 @@
+{
+	"id": "9e787ff8-2894-49e2-a6f2-160579e50e3e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "effects.mini-fx.setting-toggle-and-lowend",
+	"title": "底部迷你方块特效开关与低端设备关闭",
+	"statement": "底部迷你方块特效由本地存储 setting_miniFx 控制（默认开启），并在低端设备（benchmarkLevel 为 0 到 25 之间）上自动关闭。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015752893,
+	"updatedAt": 1787015752893,
+	"createdByTaskId": "business-init",
+	"latestEventId": "3ae951cb-4c2e-4182-9fc7-d83f2091fb98",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/render/mini-tetris-fx.js",
+			"symbol": "MiniTetrisFx.init"
+		}
+	]
+}

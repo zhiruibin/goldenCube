@@ -1,0 +1,27 @@
+{
+	"id": "a4a5236c-916f-48cb-8dd0-33b1a8321da5",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "input.gesture-thresholds",
+	"title": "Touch gestures use fixed thresholds and timings",
+	"statement": "The input manager treats movement beyond 20 pixels as a drag and cancels the pending long press, triggers a long press after 200 ms, and uses DAS delay of 170 ms with ARR repeat interval of 50 ms for continuous input.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015781558,
+	"updatedAt": 1787015781558,
+	"createdByTaskId": "business-init",
+	"latestEventId": "a8b29ea0-615f-4ee8-a44c-c6e2b7f41db3",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/runtime/input-manager.js"
+		},
+		{
+			"type": "symbol",
+			"path": "js/runtime/input-manager.js",
+			"symbol": "handleTouchStart"
+		}
+	]
+}

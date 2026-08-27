@@ -1,0 +1,23 @@
+{
+	"id": "d2b90340-f6ae-4061-b44f-ec05caa5862a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "cloud.rank.caching",
+	"title": "All-server rank results are cached locally by mode and period",
+	"statement": "The cloud service caches the most recent all-server leaderboard result under a key of the form rank_cache_<mode>_<period>.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015657914,
+	"updatedAt": 1787015657914,
+	"createdByTaskId": "business-init",
+	"latestEventId": "a0d57693-534e-4b35-944e-1309b24fc592",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/cloud-service.js",
+			"symbol": "cacheKey"
+		}
+	]
+}

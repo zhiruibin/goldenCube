@@ -1,0 +1,28 @@
+{
+	"id": "8dd19c2a-ac0b-4021-9f16-97c087df48c1",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "coin.reward-line-clear.clamped-payout",
+	"title": "消行金币每日上限约束（含 T-Spin 加成）",
+	"statement": "发放消行金币受每日 600 上限约束，含 T-Spin 加成（full +2 / mini +1）：已达上限返回 0，剩余额度小于本档奖励时只发放剩余额度（部分发放）。",
+	"status": "active",
+	"verificationStatus": "verified",
+	"createdAt": 1787229097833,
+	"updatedAt": 1787309680938,
+	"createdByTaskId": "business-init",
+	"latestEventId": "34928730-db21-416a-b509-feba489f3d6e",
+	"tags": [],
+	"aliases": [
+		"消行金币触顶",
+		"金币部分发放",
+		"daily cap payout"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "rewardLineClear"
+		}
+	]
+}

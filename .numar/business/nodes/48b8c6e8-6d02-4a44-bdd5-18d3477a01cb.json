@@ -1,0 +1,23 @@
+{
+	"id": "48b8c6e8-6d02-4a44-bdd5-18d3477a01cb",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "tetris.special-piece-score-multiplier",
+	"title": "特殊方块计分倍率",
+	"statement": "触发消行的方块为特殊或新方块时按倍率加成：D 2.0，C/X/K/W/N 1.5，P/M/Q/A 1.2，T 与 R 无加成。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015707619,
+	"updatedAt": 1787015707619,
+	"createdByTaskId": "business-init",
+	"latestEventId": "e26c87ee-5508-4603-998e-120c9303a73c",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/tetris-engine.js",
+			"symbol": "SPECIAL_SCORE_MULTIPLIERS"
+		}
+	]
+}

@@ -1,0 +1,28 @@
+{
+	"id": "eecbb8ae-14db-4aff-8d94-76afab94782e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "effects.background.meteor-spawn-bias",
+	"title": "背景流星生成偏向棋盘外沿避免抢戏",
+	"statement": "背景流星生成位置偏向上半屏与左右两侧（左 45% 或右 45% 宽度范围），避免从棋盘正中穿越干扰操作；同屏最多 3 条，生成间隔 1.2-2.8 秒。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015753026,
+	"updatedAt": 1787015753026,
+	"createdByTaskId": "business-init",
+	"latestEventId": "c657d50e-7bc6-4c1a-a354-5f17531a613a",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/render/background-effects.js",
+			"symbol": "BackgroundEffects._spawnMeteor"
+		},
+		{
+			"type": "symbol",
+			"path": "js/render/background-effects.js",
+			"symbol": "METEOR_MAX"
+		}
+	]
+}

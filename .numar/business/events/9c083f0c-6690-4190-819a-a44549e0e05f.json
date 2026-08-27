@@ -1,0 +1,12 @@
+{
+	"id": "9c083f0c-6690-4190-819a-a44549e0e05f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "18caf42e-f7a9-46bf-a1d4-69896315e0fd",
+	"operation": "create",
+	"after": "消行高潮演出（QUAD / T-Spin）模块注释声明 Tetris / T-Spin 为注册商标、文案避开商标字样：四行消使用文本 QUAD!（金色主题），T-Spin 使用文本 T-SPIN!（紫色主题）。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/effect-renderer.js CLIMAX_THEMES 的 text 值与模块注释中的商标回避说明"
+	],
+	"createdAt": 1787015753171
+}

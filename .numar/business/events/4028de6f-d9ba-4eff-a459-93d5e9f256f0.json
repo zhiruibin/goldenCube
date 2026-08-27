@@ -1,0 +1,12 @@
+{
+	"id": "4028de6f-d9ba-4eff-a459-93d5e9f256f0",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "1961bec1-ed7c-49c2-ad95-6a91ba1196da",
+	"operation": "create",
+	"after": "The result scene decides interstitial display by cumulative game count (first 5 games protected, then every 6 games), and challenge games are skipped by the caller.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/result-scene.js shouldShowInterstitial plus comment '挑战局由调用方另行跳过'"
+	],
+	"createdAt": 1787229367525
+}

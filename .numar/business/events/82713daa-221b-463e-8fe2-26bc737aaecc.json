@@ -1,0 +1,12 @@
+{
+	"id": "82713daa-221b-463e-8fe2-26bc737aaecc",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "529623cd-81bf-4d0d-b23c-e8ea07b5541b",
+	"operation": "create",
+	"after": "reportLineClear maps a line clear count to one of four counters (clear1-clear4), clamping the count to the 1-4 range before incrementing.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/achievement-manager.js reportLineClear"
+	],
+	"createdAt": 1787227659786
+}

@@ -1,0 +1,27 @@
+{
+	"id": "ab67526f-220d-4fec-9bdb-f331986f4e70",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "leaderboard.score-submit.normalization",
+	"title": "Score submission normalizes mode and score",
+	"statement": "When submitting a score, CloudService coerces an unsupported mode to 'classic' and coerces score to a non-negative integer before sending to the rank cloud function.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787227659799,
+	"updatedAt": 1787227659799,
+	"createdByTaskId": "business-init",
+	"latestEventId": "bd3986bf-accd-4b4a-a2fc-096d669ba80c",
+	"tags": [],
+	"aliases": [
+		"模式回退经典模式",
+		"分数上报归一化"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/cloud-service.js",
+			"symbol": "submitScore"
+		}
+	]
+}

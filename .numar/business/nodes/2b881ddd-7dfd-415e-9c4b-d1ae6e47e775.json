@@ -1,0 +1,31 @@
+{
+	"id": "2b881ddd-7dfd-415e-9c4b-d1ae6e47e775",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "leaderboard.period-select.global-tab-only",
+	"title": "Period selector only for global leaderboard",
+	"statement": "The leaderboard period selector (total/weekly/monthly) is rendered only when the global tab is active, not for the friend tab.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787229367532,
+	"updatedAt": 1787229367532,
+	"createdByTaskId": "business-init",
+	"latestEventId": "b22b9198-0c89-4578-8979-11963554b373",
+	"tags": [],
+	"aliases": [
+		"全服榜周期切换",
+		"好友榜无周期"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/rank-scene.js"
+		},
+		{
+			"type": "symbol",
+			"path": "js/scenes/rank-scene.js",
+			"symbol": "RankScene.render"
+		}
+	]
+}

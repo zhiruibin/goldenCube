@@ -1,0 +1,23 @@
+{
+	"id": "441906f1-fe94-4b02-bd07-045355b3b46e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "achievements.report-once-per-game",
+	"title": "Achievements reported once per game",
+	"statement": "Achievements are reported at most once per game session, with the game survival time in seconds used as statistics input.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015836085,
+	"updatedAt": 1787015836085,
+	"createdByTaskId": "business-init",
+	"latestEventId": "2d24abc5-4070-474e-b0e7-7bd8d02e5cc9",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/game-scene.js",
+			"symbol": "_achievementReported"
+		}
+	]
+}

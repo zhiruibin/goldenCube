@@ -1,0 +1,28 @@
+{
+	"id": "6a157d41-02d4-46c2-8275-71ef01b66e35",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.creation.pending-limit-check",
+	"title": "发起挑战前待处理数量检查",
+	"statement": "发起挑战前统计该发起者的 pending 挑战数量，达到 20 条时拒绝创建并返回 too many pending challenges。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787229097859,
+	"updatedAt": 1787229097859,
+	"createdByTaskId": "business-init",
+	"latestEventId": "21dadcd6-a0ff-4234-86b5-07b806b4e37e",
+	"tags": [],
+	"aliases": [
+		"待处理限制",
+		"pending 挑战上限",
+		"max pending challenges"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "cloudfunctions/challenge/index.js",
+			"symbol": "createChallenge"
+		}
+	]
+}

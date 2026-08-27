@@ -1,0 +1,12 @@
+{
+	"id": "f468efcf-ae9b-4015-a17f-ad3159e588a4",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "7af25ae8-e4e5-4bfc-a0a7-238838923a59",
+	"operation": "create",
+	"after": "棋盘皮肤包含经典（默认免费）、星空（400）、海洋（450）等主题，非默认棋盘皮肤需购买解锁，部分带特效（如星空背景）。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"data/skins.js"
+	],
+	"createdAt": 1787227474980
+}

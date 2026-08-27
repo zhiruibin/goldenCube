@@ -1,0 +1,27 @@
+{
+	"id": "607034f6-154d-4a71-911c-cc38b0adc099",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "skins.block.unlock-pricing",
+	"title": "方块皮肤解锁与定价",
+	"statement": "方块皮肤按价格与解锁条件区分：default 免费默认解锁；neon 400、wood 500、gradient 450、pastel 300、crystal 1000、gold 2000 需购买解锁；pixel 免费但要求累计得分达到 10000 解锁。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015608372,
+	"updatedAt": 1787015608372,
+	"createdByTaskId": "business-init",
+	"latestEventId": "6d55c20a-3003-43e9-84fe-ba1d51c08e37",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "data/skins.js"
+		},
+		{
+			"type": "symbol",
+			"path": "data/skins.js",
+			"symbol": "blockSkins"
+		}
+	]
+}

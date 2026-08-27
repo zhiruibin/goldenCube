@@ -1,0 +1,27 @@
+{
+	"id": "d466ca20-3181-4983-811c-cdc49fdebd8d",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.local-pending.prune-invalid-or-expired",
+	"title": "Local pending challenges pruned if invalid or expired",
+	"statement": "When the challenge scene reads the locally stored pending challenge list, entries that lack a challengeId or are older than 7 days are removed and the cleaned list is written back to storage.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787229255329,
+	"updatedAt": 1787229255329,
+	"createdByTaskId": "business-init",
+	"latestEventId": "86e00ea3-376d-479a-8f07-65127b56d0a9",
+	"tags": [],
+	"aliases": [
+		"待应战本地清理",
+		"本地挑战过期与脏数据清理"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/challenge-scene.js",
+			"symbol": "prunePendingChallenges"
+		}
+	]
+}

@@ -1,0 +1,22 @@
+{
+	"id": "24fd3549-c959-48ef-8b44-3e608c555453",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.friend-leaderboard-open-data-context",
+	"title": "Friend leaderboard uses the WeChat open data context, not the rank cloud function",
+	"statement": "Friend leaderboard functionality is implemented through the WeChat open data context (openDataContext/) rather than the rank cloud function.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015892166,
+	"updatedAt": 1787015892166,
+	"createdByTaskId": "business-init",
+	"latestEventId": "d73235bd-6784-4701-9b62-6749f3f22043",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "cloudfunctions/rank/README.md"
+		}
+	]
+}

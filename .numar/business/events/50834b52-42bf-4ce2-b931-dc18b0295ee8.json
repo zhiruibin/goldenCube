@@ -1,0 +1,12 @@
+{
+	"id": "50834b52-42bf-4ce2-b931-dc18b0295ee8",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "515bd2f8-df74-42ce-a400-64084f421cf8",
+	"operation": "create",
+	"after": "棋盘为 10 列 × 20 行可见区域，另含 2 行隐藏行，共 22 行。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/tetris-engine.js: BOARD_COLS=10, BOARD_ROWS=20, HIDDEN_ROWS=2"
+	],
+	"createdAt": 1787015707404
+}

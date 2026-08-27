@@ -1,0 +1,33 @@
+{
+	"id": "eaad2c36-9d5b-405f-ac7f-6bef13179c23",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "profile.max-length-rules",
+	"title": "用户资料长度限制",
+	"statement": "用户昵称最多 32 字符、头像 URL 最多 512 字符，超出时截断保存。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015707894,
+	"updatedAt": 1787015707894,
+	"createdByTaskId": "business-init",
+	"latestEventId": "ce08267e-d98f-4933-9c57-e5a2be8a77ce",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/user-profile.js",
+			"symbol": "MAX_NICKNAME_LENGTH"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/user-profile.js",
+			"symbol": "MAX_AVATAR_URL_LENGTH"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/user-profile.js",
+			"symbol": "truncate"
+		}
+	]
+}

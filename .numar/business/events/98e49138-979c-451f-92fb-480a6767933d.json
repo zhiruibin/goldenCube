@@ -1,0 +1,12 @@
+{
+	"id": "98e49138-979c-451f-92fb-480a6767933d",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "8653d760-7329-4dbd-ab3f-50327ead3c02",
+	"operation": "create",
+	"after": "Rank lists can be queried across three periods: total, week, and month.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/cloud-config.js: RANK_PERIODS"
+	],
+	"createdAt": 1787015657830
+}

@@ -1,0 +1,27 @@
+{
+	"id": "7774b1e4-aeab-44ec-a062-a59355614b2c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "cloud.challenges-collection-name",
+	"title": "Challenges use cloud collection 'challenges'",
+	"statement": "Cloud-config defines the challenge collection as 'challenges', aligned with the challenge cloud function.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787227659796,
+	"updatedAt": 1787227659796,
+	"createdByTaskId": "business-init",
+	"latestEventId": "a7cd93b0-45c8-4457-a641-f33878caf3bf",
+	"tags": [],
+	"aliases": [
+		"challenges 挑战集合",
+		"挑战集合名"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/cloud-config.js",
+			"symbol": "CHALLENGE_COLLECTION"
+		}
+	]
+}

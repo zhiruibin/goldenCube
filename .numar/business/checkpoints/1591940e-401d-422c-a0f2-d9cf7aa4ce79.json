@@ -1,0 +1,547 @@
+{
+	"id": "1591940e-401d-422c-a0f2-d9cf7aa4ce79",
+	"createdAt": 1787108806917,
+	"eventCount": 108,
+	"nodeSummaries": [
+		{
+			"id": "05d946c5-b697-49d9-8575-b9f668245817",
+			"key": "game.result.ad.reward.score-integrity",
+			"statement": "Rewarded video rewards only add coins; they never modify the current game score or re-report the leaderboard, to preserve leaderboard and challenge fairness."
+		},
+		{
+			"id": "0804e7ad-d08d-4603-a7c0-6a4f89fd9e9d",
+			"key": "rank.best-score-per-user-mode",
+			"statement": "The rankings collection keeps one record per user per mode and only updates it when the new score is higher than the stored historical best, preventing record spam."
+		},
+		{
+			"id": "082ae7a9-092b-48d3-bff6-6a12d577519e",
+			"key": "challenges.default-incoming-tab",
+			"statement": "On entering the challenge scene, the active tab is chosen from the incoming params.tab if provided; otherwise it becomes 'incoming' whenever local pending challenges exist, and 'sent' otherwise."
+		},
+		{
+			"id": "0ae38902-17f4-4b7b-b43b-7512227c671f",
+			"key": "leaderboard.mode-scoped-storage",
+			"statement": "好友排行榜分数按游戏模式存储在云存储键 rank_score_<mode> 下，加载与上报均使用该模式键。"
+		},
+		{
+			"id": "0c88e3de-7e85-402b-afec-474c01c01362",
+			"key": "audio.web-audio-synthesis",
+			"statement": "AudioManager generates sound effects using Web Audio API (wx.createWebAudioContext, AudioContext, or webkitAudioContext) and does not rely on external audio files."
+		},
+		{
+			"id": "0d75ea15-7bd4-4565-ab4e-6be12f1ed34e",
+			"key": "home.daily-login-reward",
+			"statement": "Entering the home scene triggers claiming a small daily login coin reward."
+		},
+		{
+			"id": "1237fa91-eaa2-4934-b6d8-1ef8cea03dfa",
+			"key": "coin.total-coins-statistic",
+			"statement": "累计获得金币写入 stat_total_coins，供收集系成就 total_coins 使用；成就奖励与消行金币共用累计统计但不影响每日上限。"
+		},
+		{
+			"id": "18caf42e-f7a9-46bf-a1d4-69896315e0fd",
+			"key": "effects.climax.trademark-safe-text",
+			"statement": "消行高潮演出（QUAD / T-Spin）模块注释声明 Tetris / T-Spin 为注册商标、文案避开商标字样：四行消使用文本 QUAD!（金色主题），T-Spin 使用文本 T-SPIN!（紫色主题）。"
+		},
+		{
+			"id": "18ec5697-0391-4a5a-aded-689a52acff62",
+			"key": "coin-hud.number-format",
+			"statement": "formatCoins displays 1 million or more as x.x万, 100 million or more as x.x亿, and otherwise as a plain integer string."
+		},
+		{
+			"id": "1b242372-c558-4749-877c-04ecb49a9d9b",
+			"key": "coin.daily-line-clear-limit",
+			"statement": "玩家每日通过消行可获得的金币上限为 600；已达上限时消行奖励返回 0，未达上限时按剩余额度部分发放。"
+		},
+		{
+			"id": "24fd3549-c959-48ef-8b44-3e608c555453",
+			"key": "rank.friend-leaderboard-open-data-context",
+			"statement": "Friend leaderboard functionality is implemented through the WeChat open data context (openDataContext/) rather than the rank cloud function."
+		},
+		{
+			"id": "25aafb68-b51a-49c4-8844-a5ddfd148993",
+			"key": "tetris.lock-delay-rules",
+			"statement": "方块落地后有 500ms 锁定延迟，最多允许 15 次移动操作。"
+		},
+		{
+			"id": "279f0a82-8873-4c47-b447-291f39c65962",
+			"key": "rank.leaderboard-types-and-periods",
+			"statement": "getRankList supports type all (global server) or friend (requires friendOpenIds), and period total, week (since Monday 00:00), or month (since the 1st of the month)."
+		},
+		{
+			"id": "29dda2da-7246-4edd-8f07-6b32b8447f53",
+			"key": "game.lucky-draw.once-per-game",
+			"statement": "The post-game lucky draw can be used at most once per game session; the usage flag resets when each game starts."
+		},
+		{
+			"id": "2a357731-ec7a-4aa9-8a0f-9dbc88b220b2",
+			"key": "effects.lucky-fx.setting-toggle",
+			"statement": "彩纸庆祝特效由本地存储 setting_luckyFx 控制，未显式设置为 false 时默认开启；特效关闭或粒子容量为 0 时不触发庆祝。"
+		},
+		{
+			"id": "349b7ff8-4673-4140-a9eb-af3f389b78bf",
+			"key": "achievement.game-result.statistics",
+			"statement": "When a game result is reported, the manager increments total games and total cleared lines, adds to cumulative score, updates best score, tetris count, max combo, max back-to-back count, max level, and max survival time when new records are achieved."
+		},
+		{
+			"id": "35a47b5e-68c4-485c-be20-3f739937091a",
+			"key": "challenges.local-pending-storage",
+			"statement": "The challenge scene keeps local pending incoming challenges in storage key 'pending_challenges', prunes entries that lack a challengeId or are older than 7 days, and writes the cleaned list back to storage."
+		},
+		{
+			"id": "39be3fcf-1e31-4531-a9d3-cf9bb1850185",
+			"key": "challenge.cloud-function-apis",
+			"statement": "The challenge cloud function provides createChallenge, respondChallenge, getMyChallenges, and getChallengeById, dispatched through an { action, data } structure."
+		},
+		{
+			"id": "3f0f7f5e-8b7d-4e17-8c92-44d49095dfcd",
+			"key": "game.input.hard-drop-cooldown",
+			"statement": "Hard drop inputs are ignored until 200ms after the previous hard drop, to prevent accidental immediate drops from rapid taps or multi-touch."
+		},
+		{
+			"id": "40fd5f63-f98a-4024-b441-bb7b746fd51c",
+			"key": "scenes.stack-navigation",
+			"statement": "SceneManager registers scenes by name; switchTo exits the current scene and pushes it onto a stack before entering the target scene, replace switches without pushing, and back restores the previous scene from the stack, invoking onExit/onEnter as applicable."
+		},
+		{
+			"id": "42eff11a-ed37-460c-a216-c19103f56e30",
+			"key": "widgets.button.rect-hit-test",
+			"statement": "A Button is considered hit when the queried point is inside its rectangle: x within [x, x+w] and y within [y, y+h]."
+		},
+		{
+			"id": "441906f1-fe94-4b02-bd07-045355b3b46e",
+			"key": "achievements.report-once-per-game",
+			"statement": "Achievements are reported at most once per game session, with the game survival time in seconds used as statistics input."
+		},
+		{
+			"id": "46ec0fe5-1adf-4d0c-841e-88876f85a5ec",
+			"key": "ad.configured.check",
+			"statement": "The ad manager skips creating rewarded video, banner, and interstitial ads when the ad unit ID is empty, whitespace, a placeholder (adunit-xxxxxxxxxxxxxxxx), or still contains 'xxxxxxxx'."
+		},
+		{
+			"id": "48b8c6e8-6d02-4a44-bdd5-18d3477a01cb",
+			"key": "tetris.special-piece-score-multiplier",
+			"statement": "触发消行的方块为特殊或新方块时按倍率加成：D 2.0，C/X/K/W/N 1.5，P/M/Q/A 1.2，T 与 R 无加成。"
+		},
+		{
+			"id": "4e112650-b5f8-43f0-afdb-f79bcb8174c1",
+			"key": "profile.avatar-cloud-upload",
+			"statement": "选择头像后上传至云存储并持久化为 cloud:// fileID，云存储路径以 avatars/ 前缀。"
+		},
+		{
+			"id": "515bd2f8-df74-42ce-a400-64084f421cf8",
+			"key": "tetris.board-dimensions",
+			"statement": "棋盘为 10 列 × 20 行可见区域，另含 2 行隐藏行，共 22 行。"
+		},
+		{
+			"id": "51ccd366-e92f-441b-a6cb-9d2376712481",
+			"key": "audio.autoplay.deferred-init",
+			"statement": "游戏启动时创建 AudioManager 实例，但实际初始化（init）延迟到首次用户交互时进行，以满足平台自动播放策略。"
+		},
+		{
+			"id": "522b285e-e3c4-4bf9-b7ec-94b6b5d521c8",
+			"key": "achievement.use-all-pieces.flag",
+			"statement": "reportUseAllPieces sets the stat_use_all_pieces value to 1, tracking that a player used all seven tetromino types in a single game."
+		},
+		{
+			"id": "529c75ef-c8be-4412-9f68-78db5a9ffbc0",
+			"key": "cloud.service.local-fallback",
+			"statement": "云服务初始化失败时自动降级为本地模式，不影响游戏启动。"
+		},
+		{
+			"id": "53972c30-67fa-4069-870e-7ceffe7d3c58",
+			"key": "coin.line-clear-reward-tiers",
+			"statement": "消行金币按档位发放：单消 1、双消 2、三消 3、四消 5。"
+		},
+		{
+			"id": "54987702-1d0c-4379-bc82-cb275cfe7918",
+			"key": "economy.coin.daily-cap-600",
+			"statement": "皮肤定价以每日 600 金币上限与消行 1/2/3/5 金币产出为锚点设计，可购总价约 8950，全收集约需 15 天满勤。"
+		},
+		{
+			"id": "55a4c605-8db4-4f3e-b244-4f2a9e84ff72",
+			"key": "leaderboard.filter-positive-desc",
+			"statement": "好友榜拉取后仅保留 score 大于 0 的好友，并按分数从高到低排序展示。"
+		},
+		{
+			"id": "5602449f-f435-4aa4-ad1b-9f671fcd45ef",
+			"key": "game.board.block-types",
+			"statement": "棋盘格子数值 1-18 对应 18 种方块字母（I、O、T、S、Z、J、L、C、D、P、M、R、Q、X、K、W、A、N），棋盘渲染与消行特效均按该映射使用固定颜色取色。"
+		},
+		{
+			"id": "57565c18-0e81-487c-abda-d1b88df59dae",
+			"key": "ad.error-categories",
+			"statement": "The ad manager categorizes WeChat ad error codes into fatal errors (invalid ad unit, slot closed, unavailable), retryable errors (no fill, load timeout, network, component fail, not loaded), and rate-limit errors (rate limit, show rejected)."
+		},
+		{
+			"id": "5c4ecfeb-02b8-485f-9e79-91e04d3fa76f",
+			"key": "challenge.allowed-modes",
+			"statement": "发起挑战仅支持 classic、timed、marathon、special 四种游戏模式。"
+		},
+		{
+			"id": "5f240e9c-65b2-4613-a3d8-0c43eab695b9",
+			"key": "challenge.score-validation",
+			"statement": "发起挑战时分数必须为大于 0 且不超过 99,999,999 的整数，昵称与头像分别截断到 32 与 512 字符。"
+		},
+		{
+			"id": "607034f6-154d-4a71-911c-cc38b0adc099",
+			"key": "skins.block.unlock-pricing",
+			"statement": "方块皮肤按价格与解锁条件区分：default 免费默认解锁；neon 400、wood 500、gradient 450、pastel 300、crystal 1000、gold 2000 需购买解锁；pixel 免费但要求累计得分达到 10000 解锁。"
+		},
+		{
+			"id": "61fc5083-0059-45ec-ae6d-ef769e1f1460",
+			"key": "settings.feature-toggles.default-enabled",
+			"statement": "Sound effects, background music, vibration feedback, background effects, and bottom mini effects all default to enabled unless a player disables them."
+		},
+		{
+			"id": "630d5fda-607d-45ee-ad31-808d1fcd76f1",
+			"key": "challenge.expiry-and-pending-limit",
+			"statement": "挑战记录 7 天后过期，同一玩家最多同时拥有 20 条 pending 挑战。"
+		},
+		{
+			"id": "63137351-2f1d-4e24-946b-4c120d971a4a",
+			"key": "game.result.ad.consolation-coins",
+			"statement": "When the daily coin limit causes a game to produce 0 coins, watching a rewarded ad still grants a consolation reward of 15 coins, without changing the game score."
+		},
+		{
+			"id": "6e96d6ee-af7e-497b-9736-702505ae5036",
+			"key": "scenes.registered-set",
+			"statement": "游戏启动时向场景管理器注册 home、game、result、rank、shop、settings、achievement、challenge、challengeResult 九个场景。"
+		},
+		{
+			"id": "73b479cc-e23c-4675-90af-22d03b2a2079",
+			"key": "achievement.local.persistence",
+			"statement": "AchievementManager reads and writes player statistics and unlocked achievement IDs using WeChat local storage APIs (wx.getStorageSync / wx.setStorageSync), under keys defined in STAT_KEYS plus unlockedAchievements."
+		},
+		{
+			"id": "778172c9-7703-4b5a-9b48-ae33e4382261",
+			"key": "achievement.line-clear.counters",
+			"statement": "reportLineClear increments one of four counters (clear1 through clear4) based on the number of lines cleared in a single action, with values outside the 1-4 range clamped."
+		},
+		{
+			"id": "78139e1d-1a9b-47c5-9d76-360ddc94daae",
+			"key": "cloud.allowed-modes",
+			"statement": "The allowed game modes for cloud features are 'classic', 'timed', and 'marathon'."
+		},
+		{
+			"id": "7834623d-060e-4636-b44a-2b8c808947b2",
+			"key": "challenge.storage-cloud-function-only",
+			"statement": "Challenge records live in the cloud database challenges collection; the client never connects to that collection directly and all reads and writes go through the challenge cloud function using admin permissions."
+		},
+		{
+			"id": "79914d97-f8d2-42fd-869a-655d2aed29c7",
+			"key": "rank.supported-modes",
+			"statement": "Ranking records use mode values classic, timed, or marathon."
+		},
+		{
+			"id": "7dfbd794-fdcb-4398-8416-fe154a122524",
+			"key": "rank.allowed-modes-periods-page-size",
+			"statement": "排行榜支持 classic、timed、marathon 三种模式与 week、month、total 三种周期，单页最多 50 条。"
+		},
+		{
+			"id": "821123dd-836e-48a1-85d3-b3757fb49588",
+			"key": "widgets.dpad-button.das-arr-autorepeat",
+			"statement": "Pressing a DPadButton fires onAction immediately, then after a 170ms DAS delay starts repeating onAction every 50ms (ARR interval) while held; releasing stops the repetition."
+		},
+		{
+			"id": "8369fee0-5cdf-42b5-bddd-dee55f908783",
+			"key": "skins.equipped-board.persisted",
+			"statement": "棋盘渲染器从本地存储键 equipped_board 读取已装备棋盘皮肤（未设置或读取失败时回退到默认皮肤），装备的皮肤决定棋盘背景色、网格色、边框色与动态特效类型。"
+		},
+		{
+			"id": "8653d760-7329-4dbd-ab3f-50327ead3c02",
+			"key": "cloud.rank-periods",
+			"statement": "Rank lists can be queried across three periods: total, week, and month."
+		},
+		{
+			"id": "8896b3ea-000b-46cf-9954-020aa0869fd2",
+			"key": "widgets.button.action-icon-set",
+			"statement": "Button renders built-in icons for hardDrop, rotate, hold, gear, pause, and play actions; an icon registered with IconRenderer is drawn with text, and otherwise the button falls back to plain text."
+		},
+		{
+			"id": "89955cc5-5814-441d-adc1-5c0241674977",
+			"key": "coin.daily-record-cross-day-reset",
+			"statement": "每日金币获取记录按 YYYY-MM-DD 存储，跨天后自动归零重新累计。"
+		},
+		{
+			"id": "89ca413f-97bf-48db-8bf1-f400daa9a16c",
+			"key": "coin-hud.capsule-avoidance",
+			"statement": "drawCoinHud calculates a right margin from wx.getMenuButtonBoundingClientRect, with a fallback of 90px, so the coin display does not overlap the WeChat capsule button."
+		},
+		{
+			"id": "8a89f486-aec0-43f2-a264-38efcabc275f",
+			"key": "cloud.config.centralized",
+			"statement": "Cloud development uses a configured environment ID and dedicated collection names 'rankings' for leaderboards and 'challenges' for challenge records, with the friend rank stored under key 'rank_score'."
+		},
+		{
+			"id": "8aea9f67-862c-48e0-8310-d3ddbf2b876d",
+			"key": "widgets.dpad-button.single-active-touch",
+			"statement": "Each DPadButton binds a single active touch identifier; a second press is ignored while one is active, and release only stops auto-repeat when the release touch matches the active touch."
+		},
+		{
+			"id": "8c84c6e9-f837-40a5-b2af-4714f0f82be8",
+			"key": "economy.coins.daily-limit",
+			"statement": "Coins earned from gameplay are capped at 600 coins per day."
+		},
+		{
+			"id": "8dcf8f0d-065f-477c-8fa9-2dd97dc32c20",
+			"key": "cloud.friend-score.open-data-domain",
+			"statement": "The main cloud service delegates friend leaderboard score updates to the open data context, which is required for wx.setUserCloudStorage with the friend rank key."
+		},
+		{
+			"id": "8e14922a-db36-4f43-89a8-c6b68320407f",
+			"key": "achievements.categories-order",
+			"statement": "The achievement scene displays achievements filtered by category and renders tabs in the fixed order beginner, expert, collection, social, defaulting to the beginner category on entry."
+		},
+		{
+			"id": "8e2b80ad-f140-4c86-b306-c026b73b7d95",
+			"key": "launch.challenge.deeplink",
+			"statement": "小游戏冷启动时若启动参数 query 中包含 challengeId，会先登记该分享卡挑战，并直接进入挑战场景的「待我应战」页签。"
+		},
+		{
+			"id": "935d7b23-8f78-4971-968e-fff03e40654b",
+			"key": "challenge.concurrent-response-guard",
+			"statement": "应战接口经过校验后原子更新，防止并发情况下同一挑战被重复应战。"
+		},
+		{
+			"id": "96d21c5a-0b19-4d08-9e2b-6eaaa15ecd4d",
+			"key": "challenge.target-score.accepts-string",
+			"statement": "A challenge target score may be provided as a number or a numeric string; invalid values are not displayed."
+		},
+		{
+			"id": "99823330-ef0d-4aaf-b305-b2d7f791596d",
+			"key": "tetris.level-speed-curve",
+			"statement": "游戏共 15 级，下落间隔随等级递增从 1 级 1000ms 递减至 15 级 7ms。"
+		},
+		{
+			"id": "9d6d7989-b42e-4a99-b2fd-7e516918fb04",
+			"key": "challenge.expiry-7-days",
+			"statement": "Challenges expire at expiresAt, set 7 days after creation; expired challenges no longer appear in the pending list and cannot be responded to."
+		},
+		{
+			"id": "9e787ff8-2894-49e2-a6f2-160579e50e3e",
+			"key": "effects.mini-fx.setting-toggle-and-lowend",
+			"statement": "底部迷你方块特效由本地存储 setting_miniFx 控制（默认开启），并在低端设备（benchmarkLevel 为 0 到 25 之间）上自动关闭。"
+		},
+		{
+			"id": "9ef27cd2-6fec-4120-acb3-bfb8fcd936a4",
+			"key": "challenge.status-lifecycle",
+			"statement": "A challenge starts in pending and becomes completed after one response; each challenge can be responded to at most once, and a challenger cannot respond to their own challenge."
+		},
+		{
+			"id": "9ef9ae0d-1c19-4124-aa6e-3eb390a26bb8",
+			"key": "challenge.result-outcomes",
+			"statement": "A completed challenge records result from the challenger's perspective with values challenger_win, responder_win, or tie."
+		},
+		{
+			"id": "a3efbac4-b114-4145-b7de-efde5335abd6",
+			"key": "skins.equipped-block.persisted",
+			"statement": "棋盘渲染器从本地存储键 equipped_block 读取已装备方块皮肤并应用到已锁定方块的颜色绘制，保证方块落地后与下落中（PieceRenderer）样式一致。"
+		},
+		{
+			"id": "a4a5236c-916f-48cb-8dd0-33b1a8321da5",
+			"key": "input.gesture-thresholds",
+			"statement": "The input manager treats movement beyond 20 pixels as a drag and cancels the pending long press, triggers a long press after 200 ms, and uses DAS delay of 170 ms with ARR repeat interval of 50 ms for continuous input."
+		},
+		{
+			"id": "a6c59031-8212-4069-8a69-938b110e0b81",
+			"key": "audio.equipped-sound-pack",
+			"statement": "The audio manager loads the equipped sound pack id from WeChat local storage key 'equipped_sound', falling back to 'default'; unknown pack ids also fall back to 'default'."
+		},
+		{
+			"id": "a7b4b166-5657-46dd-ae38-98d935aa9de4",
+			"key": "rank.submit-on-new-record",
+			"statement": "提交分数仅当高于该用户在该模式的历史最高分时才写入，否则只返回是否新纪录与当前排名。"
+		},
+		{
+			"id": "a81bb7d9-da4c-4b1b-893a-cc1eaff0ab86",
+			"key": "srs.lab-pieces-rotation",
+			"statement": "实验室模式引入新方块（R 光棱 / Q 方碑 / X 十字 / K 王冠 / W 折梯 / A 方舟）并纳入旋转系统；R 方块为 4×4 长条矩阵，旋转状态与 I 形一致。"
+		},
+		{
+			"id": "a983a240-ed3b-4d02-96a4-688905d967ef",
+			"key": "effects.performance.benchmark-tiering",
+			"statement": "动态特效根据设备 benchmarkLevel 分档：背景粒子数在 level>=3 时为 32、level===2 时为 16、其他为 8；彩纸庆祝粒子池在 level>=3 时为 140、level===2 时为 90、其他为 50，level<1 的过低端设备直接关闭彩纸特效。"
+		},
+		{
+			"id": "a9bc0862-921f-4f53-9d85-63b63f6174ac",
+			"key": "game.modes.supported",
+			"statement": "The home screen offers four play modes: 经典模式 (classic), 限时赛 (timed), 马拉松 (marathon), and 方块实验室 (special); the selected mode is passed to the game scene."
+		},
+		{
+			"id": "a9d85547-0f00-4550-be9d-812ec97b8e17",
+			"key": "achievement.reward.one-time",
+			"statement": "成就奖励是一次性收益，不计入每日消行金币上限。"
+		},
+		{
+			"id": "abd840af-7ecc-4a0e-bdfa-65cbce542ee5",
+			"key": "settings.das-arr-tuning",
+			"statement": "DAS delay is adjustable from 50ms to 500ms in 10ms steps, defaulting to 170ms; the settings list also includes an ARR speed slider."
+		},
+		{
+			"id": "b15df942-716f-4ebe-93b5-49102d05abcb",
+			"key": "skins.equipped-block-storage",
+			"statement": "The piece renderer reads the equipped block skin from local storage key 'equipped_block', falls back to the default/first skin when absent or unreadable, and applies the chosen skin's color overrides (arrays as gradients) plus glow, shimmer, texture, and transparency props."
+		},
+		{
+			"id": "b6b2a5bc-7e78-4f8a-ab50-150fbd3fea3f",
+			"key": "rank.ranking-calculation",
+			"statement": "当前排名由分数严格高于该用户的人数加 1 得出，同分玩家并列同排。"
+		},
+		{
+			"id": "b93079fb-d16a-4564-9982-26dc7cd9fb09",
+			"key": "achievement.tspin.double",
+			"statement": "reportTSpin increments the general T-Spin counter and additionally the double T-Spin counter when two or more lines are cleared."
+		},
+		{
+			"id": "b9f7b032-8528-4dcd-bc45-7cb4dc973597",
+			"key": "rank.cloud-function-apis",
+			"statement": "The rank cloud function provides submitScore to submit a score, getRankList to query the leaderboard, and getMyRank to query the user's own rank and score."
+		},
+		{
+			"id": "be58a634-7685-45c2-a69b-e43fd45eef35",
+			"key": "game.result.interstitial.frequency",
+			"statement": "Interstitial ads are never shown during the first 5 games; from game 6 onward they appear at most once every 6 games."
+		},
+		{
+			"id": "bf833453-6fd8-4984-8052-c4bca862b64c",
+			"key": "achievement.condition.types",
+			"statement": "成就判定条件包含 single_clear、multi_clear、single_score、total_games、total_clears、survive_time、tspin_clear、back_to_back、combo 等类型，并带 count、lines、score、seconds 等参数。"
+		},
+		{
+			"id": "c1cf7911-f844-41f5-b2fa-09d15ad402e0",
+			"key": "cloud.score-submit.fallback",
+			"statement": "submitScore sanitizes invalid modes to 'classic', converts scores to non-negative integers, submits the friend score, and returns an offline result (success false) when cloud development is not available."
+		},
+		{
+			"id": "c293d091-a2dd-491e-baf5-551e9ba99636",
+			"key": "cloud.challenge.api",
+			"statement": "The service is documented to provide createChallenge, respondChallenge, getMyChallenges, getChallengeById, and cancelChallenge operations for challenge management."
+		},
+		{
+			"id": "c650a7d2-6562-412f-911e-97e26dbf5ee6",
+			"key": "tetris.line-score-values",
+			"statement": "消行基础分：Single 100、Double 300、Triple 500、Tetris 800；软降每格 1 分、硬降每格 2 分。"
+		},
+		{
+			"id": "c6faeaf9-549e-4ec8-a48d-ce23e3d48135",
+			"key": "pieces.extended-set",
+			"statement": "方块数据除标准七种 I、O、T、S、Z、J、L 外，还定义了 C、D、P、M 等额外方块，每种方块包含 4 个旋转状态矩阵以及 color/shadowColor 值。"
+		},
+		{
+			"id": "cc6b68b3-df17-40ef-8ea5-2e4344513091",
+			"key": "challenges.mode-names",
+			"statement": "The challenge result scene maps mode identifiers classic, timed, marathon, and special to the Chinese labels 经典模式, 限时赛, 马拉松, and 方块实验室, and shows final score, level, and cleared lines for the finished challenge."
+		},
+		{
+			"id": "cd3e4a4e-33be-4f2a-ae0a-39581aead738",
+			"key": "srs.standard-piece-rotation-states",
+			"statement": "7 种标准方块各维护 4 个旋转状态（0、R、180°、L），O 方块四个旋转状态相同即不旋转。"
+		},
+		{
+			"id": "d147a0ad-fe25-461d-850e-c84044849f79",
+			"key": "effects.lucky-fx.burst-schedule",
+			"statement": "彩纸庆祝以面板中心为主爆点向上炸开，并预留约 45% 配额执行延迟补炸：0.45 秒中心二次爆点、0.9 秒左右两侧三次补炸，使庆祝持续更久；约 20% 概率生成白色菱形闪光粒子。"
+		},
+		{
+			"id": "d27f66a1-bb1b-4b13-a12a-977afc8110ab",
+			"key": "home.pending-challenge-count",
+			"statement": "The home scene references a pending challenge count from the challenge scene module."
+		},
+		{
+			"id": "d2b90340-f6ae-4061-b44f-ec05caa5862a",
+			"key": "cloud.rank.caching",
+			"statement": "The cloud service caches the most recent all-server leaderboard result under a key of the form rank_cache_<mode>_<period>."
+		},
+		{
+			"id": "d5875f3f-ac2d-4aac-a2ce-dc0bb93ee1e1",
+			"key": "widgets.button.trigger-onclick-and-pressed-feedback",
+			"statement": "Triggering a Button sets a pressed state with a 0.95 press scale, restores it after 100ms, and invokes the configured onClick callback."
+		},
+		{
+			"id": "d7cc9bd8-5e19-4ee2-a2b9-4103a830f468",
+			"key": "rank.friend.canvas.global.cloud",
+			"statement": "Friend leaderboard data is rendered through the open data domain sharedCanvas after postMessage; global leaderboard data is fetched via cloud functions with local cache fallback."
+		},
+		{
+			"id": "d9db80b5-505e-40e4-a083-32b098bc7ac8",
+			"key": "shop.categories.equipped-defaults",
+			"statement": "The shop organizes items into block, board, and sound categories; each category tracks its equipped item and defaults to 'default'."
+		},
+		{
+			"id": "da01e57a-7b0f-4278-922f-0adc23b90bbb",
+			"key": "rank.leaderboard.tabs-and-periods",
+			"statement": "The leaderboard has friend and global tabs covering classic, timed, and marathon modes, and the global tab supports total, weekly, and monthly periods."
+		},
+		{
+			"id": "da213011-65ea-477b-afc6-99568d9b15a0",
+			"key": "challenge.auto-response-on-result",
+			"statement": "When the result scene opens for a challenge game, it automatically responds to the active challenge."
+		},
+		{
+			"id": "e37303bd-e013-49e7-b133-91aea37e0d29",
+			"key": "coin.daily-login-reward",
+			"statement": "每日登录奖励为 20 金币，额度远小于消行产出，不占每日消行上限，作为回访钩子。"
+		},
+		{
+			"id": "e8a13588-4e30-4973-b721-da5b4c123bdc",
+			"key": "ad.retry.backoff",
+			"statement": "Failed ad loads are retried up to 3 times with an initial delay of 3 seconds doubling each time; after exhausting retries the ad is marked unavailable for 5 minutes before it can recover."
+		},
+		{
+			"id": "e931851d-4231-4ce3-9230-c5f41957fc78",
+			"key": "ad.frequency-limits",
+			"statement": "Rewarded video ads are limited to one show per 60 seconds and 10 per session; banner ads are limited to one show per 30 seconds and auto-close after 15 seconds; interstitial ads are limited to one show per 180 seconds and 3 per session."
+		},
+		{
+			"id": "eaad2c36-9d5b-405f-ac7f-6bef13179c23",
+			"key": "profile.max-length-rules",
+			"statement": "用户昵称最多 32 字符、头像 URL 最多 512 字符，超出时截断保存。"
+		},
+		{
+			"id": "eb6c6131-39eb-48d2-ae81-6bac354f1df9",
+			"key": "achievement.series.four-categories",
+			"statement": "成就按新手、高手、收集、社交四大系列组织，数据中以 beginner、expert 等键分组存放。"
+		},
+		{
+			"id": "eecbb8ae-14db-4aff-8d94-76afab94782e",
+			"key": "effects.background.meteor-spawn-bias",
+			"statement": "背景流星生成位置偏向上半屏与左右两侧（左 45% 或右 45% 宽度范围），避免从棋盘正中穿越干扰操作；同屏最多 3 条，生成间隔 1.2-2.8 秒。"
+		},
+		{
+			"id": "ef42ce27-cb7b-4550-b3af-95d981e6e8a5",
+			"key": "profile.cache-only-no-autofetch",
+			"statement": "ensureUserProfile 仅读取本地缓存，不调用 wx.getUserProfile；无缓存时返回空昵称与头像，并提示用户在设置页主动设置。"
+		},
+		{
+			"id": "f443d944-1ed5-4dfe-9a4d-240a36a0e32e",
+			"key": "achievement.icon.vector-renderer",
+			"statement": "成就图标字段使用统一矢量图标库 icon-renderer.js 中的图标名（非 emoji），由 IconRenderer.draw(ctx, icon, ...) 绘制，保证跨机型一致。"
+		},
+		{
+			"id": "f4def317-d381-4acb-a602-e2cc71c49948",
+			"key": "coin.ad-bonus-exempt-from-daily-limit",
+			"statement": "rewardAdBonus 发放的广告或活动加成金币不消耗每日消行上限，也不改变今日消行进度展示。"
+		},
+		{
+			"id": "f5277bba-d5ee-4c38-ab87-bc8823d570a6",
+			"key": "tetris.non-rotatable-piece-types",
+			"statement": "D、P、M、Q、N 方块不可旋转。"
+		},
+		{
+			"id": "fe2662ac-185d-46c7-948f-196a5917921d",
+			"key": "leaderboard.score-submission-format",
+			"statement": "好友榜通过 wx.setUserCloudStorage 上报 wxgame.score 格式的分数，分数取整，失败时静默忽略。"
+		},
+		{
+			"id": "fe4f5b33-2098-4cbb-8ab4-fac1f9f37fbd",
+			"key": "tetris.seven-bag-randomizer",
+			"statement": "标准模式按 7-Bag 洗牌生成方块序列；开启特殊模式后改用实验室纯新方块池 LAB_PIECE_TYPES，使用 Fisher-Yates 洗牌。"
+		},
+		{
+			"id": "12be3970-2087-4723-8fa9-a4be6c248bfa",
+			"key": "user.profile.acquisition-flow",
+			"statement": "用户点击一次微信授权后直接使用微信头像昵称，已授权用户后续自动获取"
+		}
+	]
+}

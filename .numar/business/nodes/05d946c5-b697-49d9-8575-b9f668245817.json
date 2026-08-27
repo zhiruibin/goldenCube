@@ -1,0 +1,22 @@
+{
+	"id": "05d946c5-b697-49d9-8575-b9f668245817",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "game.result.ad.reward.score-integrity",
+	"title": "Ad rewards never alter score or leaderboard",
+	"statement": "Rewarded video rewards only add coins; they never modify the current game score or re-report the leaderboard, to preserve leaderboard and challenge fairness.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015835074,
+	"updatedAt": 1787015835074,
+	"createdByTaskId": "business-init",
+	"latestEventId": "915889b5-bb3f-44e0-be72-808b2c87734b",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/result-scene.js"
+		}
+	]
+}

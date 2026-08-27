@@ -1,0 +1,12 @@
+{
+	"id": "0de67a3a-c97d-4208-a041-efdd51f61c30",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "fe2662ac-185d-46c7-948f-196a5917921d",
+	"operation": "create",
+	"after": "好友榜通过 wx.setUserCloudStorage 上报 wxgame.score 格式的分数，分数取整，失败时静默忽略。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"openDataContext/index.js submitScore 使用 wx.setUserCloudStorage 写入 { wxgame: { score, updateTime } }"
+	],
+	"createdAt": 1787015608473
+}

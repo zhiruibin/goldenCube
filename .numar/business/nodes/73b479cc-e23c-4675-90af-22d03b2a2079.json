@@ -1,0 +1,37 @@
+{
+	"id": "73b479cc-e23c-4675-90af-22d03b2a2079",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "achievement.local.persistence",
+	"title": "Achievements and player statistics are persisted locally",
+	"statement": "AchievementManager reads and writes player statistics and unlocked achievement IDs using WeChat local storage APIs (wx.getStorageSync / wx.setStorageSync), under keys defined in STAT_KEYS plus unlockedAchievements.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015657309,
+	"updatedAt": 1787015657309,
+	"createdByTaskId": "business-init",
+	"latestEventId": "80c120f0-f89c-4efc-9664-b1b00fac9acc",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/achievement-manager.js"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/achievement-manager.js",
+			"symbol": "AchievementManager.init"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/achievement-manager.js",
+			"symbol": "getStat"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/achievement-manager.js",
+			"symbol": "addStat"
+		}
+	]
+}

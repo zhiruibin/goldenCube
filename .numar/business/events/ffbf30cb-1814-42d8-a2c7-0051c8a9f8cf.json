@@ -1,0 +1,12 @@
+{
+	"id": "ffbf30cb-1814-42d8-a2c7-0051c8a9f8cf",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "96d21c5a-0b19-4d08-9e2b-6eaaa15ecd4d",
+	"operation": "create",
+	"after": "A challenge target score may be provided as a number or a numeric string; invalid values are not displayed.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/game-scene.js:onEnter-targetScore-parsing"
+	],
+	"createdAt": 1787015835999
+}

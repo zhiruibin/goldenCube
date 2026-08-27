@@ -1,0 +1,23 @@
+{
+	"id": "96d21c5a-0b19-4d08-9e2b-6eaaa15ecd4d",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.target-score.accepts-string",
+	"title": "Challenge target score number/string compatibility",
+	"statement": "A challenge target score may be provided as a number or a numeric string; invalid values are not displayed.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015835999,
+	"updatedAt": 1787015835999,
+	"createdByTaskId": "business-init",
+	"latestEventId": "ffbf30cb-1814-42d8-a2c7-0051c8a9f8cf",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/game-scene.js",
+			"symbol": "onEnter"
+		}
+	]
+}

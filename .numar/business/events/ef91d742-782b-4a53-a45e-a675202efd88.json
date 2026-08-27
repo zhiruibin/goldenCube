@@ -1,0 +1,12 @@
+{
+	"id": "ef91d742-782b-4a53-a45e-a675202efd88",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "c6faeaf9-549e-4ec8-a48d-ce23e3d48135",
+	"operation": "create",
+	"after": "方块数据除标准七种 I、O、T、S、Z、J、L 外，还定义了 C、D、P、M 等额外方块，每种方块包含 4 个旋转状态矩阵以及 color/shadowColor 值。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"data/pieces.js 中 PIECES 对象包含 I/O/T/S/Z/J/L/C/D/P/M 键及各自 shapes/color/shadowColor"
+	],
+	"createdAt": 1787015608338
+}

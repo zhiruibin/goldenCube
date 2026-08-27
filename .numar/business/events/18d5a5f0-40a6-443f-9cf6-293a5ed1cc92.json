@@ -1,0 +1,12 @@
+{
+	"id": "18d5a5f0-40a6-443f-9cf6-293a5ed1cc92",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "8dd19c2a-ac0b-4021-9f16-97c087df48c1",
+	"operation": "create",
+	"after": "发放消行金币受每日上限约束：已达上限返回 0，剩余额度小于本档奖励时只发放剩余额度（部分发放）。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/coin-manager.js:rewardLineClear"
+	],
+	"createdAt": 1787229097833
+}

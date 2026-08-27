@@ -1,0 +1,23 @@
+{
+	"id": "8369fee0-5cdf-42b5-bddd-dee55f908783",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "skins.equipped-board.persisted",
+	"title": "已装备棋盘皮肤从本地存储读取",
+	"statement": "棋盘渲染器从本地存储键 equipped_board 读取已装备棋盘皮肤（未设置或读取失败时回退到默认皮肤），装备的皮肤决定棋盘背景色、网格色、边框色与动态特效类型。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015752698,
+	"updatedAt": 1787015752698,
+	"createdByTaskId": "business-init",
+	"latestEventId": "ef7d031e-45d2-42d7-bdc7-10fc72bad1d3",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/render/board-renderer.js",
+			"symbol": "BoardRenderer._applySkin"
+		}
+	]
+}

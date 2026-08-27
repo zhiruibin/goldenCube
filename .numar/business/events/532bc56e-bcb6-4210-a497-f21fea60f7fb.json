@@ -1,0 +1,12 @@
+{
+	"id": "532bc56e-bcb6-4210-a497-f21fea60f7fb",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "c1cf7911-f844-41f5-b2fa-09d15ad402e0",
+	"operation": "create",
+	"after": "submitScore sanitizes invalid modes to 'classic', converts scores to non-negative integers, submits the friend score, and returns an offline result (success false) when cloud development is not available.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/cloud-service.js: submitScore()"
+	],
+	"createdAt": 1787015657872
+}

@@ -1,0 +1,27 @@
+{
+	"id": "5ee5d3aa-57c4-4965-a89e-dbc1af0b5073",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.friend-score.submit-before-cloud-check",
+	"title": "Friend leaderboard score submits independent of cloud availability",
+	"statement": "In submitScore, the friend leaderboard score is submitted through the open data domain before checking cloud availability; when cloud is unavailable only the all-server cloud function call is skipped.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787227659797,
+	"updatedAt": 1787227659797,
+	"createdByTaskId": "business-init",
+	"latestEventId": "b08995ef-e192-4f3b-a43c-296288205af8",
+	"tags": [],
+	"aliases": [
+		"好友榜上报不依赖云开发",
+		"先上报好友分再检查云可用"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/cloud-service.js",
+			"symbol": "submitScore"
+		}
+	]
+}

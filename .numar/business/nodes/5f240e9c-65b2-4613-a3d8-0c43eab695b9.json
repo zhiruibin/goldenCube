@@ -1,0 +1,23 @@
+{
+	"id": "5f240e9c-65b2-4613-a3d8-0c43eab695b9",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.score-validation",
+	"title": "挑战分数与资料校验",
+	"statement": "发起挑战时分数必须为大于 0 且不超过 99,999,999 的整数，昵称与头像分别截断到 32 与 512 字符。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015708185,
+	"updatedAt": 1787015708185,
+	"createdByTaskId": "business-init",
+	"latestEventId": "7a46de92-a713-4297-8df5-6ef7931f0e2e",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "cloudfunctions/challenge/index.js",
+			"symbol": "createChallenge"
+		}
+	]
+}

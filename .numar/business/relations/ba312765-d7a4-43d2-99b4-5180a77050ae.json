@@ -1,0 +1,14 @@
+{
+	"id": "ba312765-d7a4-43d2-99b4-5180a77050ae",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "529623cd-81bf-4d0d-b23c-e8ea07b5541b",
+	"toNodeId": "778172c9-7703-4b5a-9b48-ae33e4382261",
+	"type": "belongsTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"utils/achievement-manager.js reportLineClear"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1787227659803,
+	"updatedAt": 1787227659803
+}

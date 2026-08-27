@@ -1,0 +1,23 @@
+{
+	"id": "f4def317-d381-4acb-a602-e2cc71c49948",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "coin.ad-bonus-exempt-from-daily-limit",
+	"title": "广告/活动加成不计入每日上限",
+	"statement": "rewardAdBonus 发放的广告或活动加成金币不消耗每日消行上限，也不改变今日消行进度展示。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015707104,
+	"updatedAt": 1787015707104,
+	"createdByTaskId": "business-init",
+	"latestEventId": "c70da08f-8a5b-436a-97f8-ce703c20587c",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "rewardAdBonus"
+		}
+	]
+}

@@ -1,0 +1,12 @@
+{
+	"id": "44c6876e-41bc-452d-928c-673ff2cfa5e9",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "241aadbb-2cb4-4cb9-a778-397a4aa2c474",
+	"operation": "create",
+	"after": "今日消行金币记录以 { date, earned } 对象存于 'dailyCoinsEarned'；日期与今日不符时自动归零并重写记录。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/coin-manager.js:_loadDaily"
+	],
+	"createdAt": 1787229097836
+}

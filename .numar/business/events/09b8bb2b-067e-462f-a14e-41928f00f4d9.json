@@ -1,0 +1,12 @@
+{
+	"id": "09b8bb2b-067e-462f-a14e-41928f00f4d9",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "da01e57a-7b0f-4278-922f-0adc23b90bbb",
+	"operation": "create",
+	"after": "The leaderboard has friend and global tabs covering classic, timed, and marathon modes, and the global tab supports total, weekly, and monthly periods.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/rank-scene.js:_renderPeriodSelect"
+	],
+	"createdAt": 1787015835565
+}

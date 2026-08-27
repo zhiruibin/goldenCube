@@ -1,0 +1,12 @@
+{
+	"id": "fc57cbb8-dda5-45b1-8bba-881166174a31",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "79914d97-f8d2-42fd-869a-655d2aed29c7",
+	"operation": "create",
+	"after": "Ranking records use mode values classic, timed, or marathon.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/rank/README.md"
+	],
+	"createdAt": 1787015891882
+}

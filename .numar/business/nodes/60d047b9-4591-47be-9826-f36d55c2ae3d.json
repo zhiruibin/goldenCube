@@ -1,0 +1,28 @@
+{
+	"id": "60d047b9-4591-47be-9826-f36d55c2ae3d",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "tetris.level-progression.lines-and-max",
+	"title": "等级提升规则",
+	"statement": "每消除 10 行提升 1 级，最高 15 级；等级决定下落间隔（间隔表按等级-1 索引）。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787229097850,
+	"updatedAt": 1787229097850,
+	"createdByTaskId": "business-init",
+	"latestEventId": "2b21b8be-e097-4498-866f-c8a895833f70",
+	"tags": [],
+	"aliases": [
+		"10 行升一级",
+		"最高 15 级",
+		"level progression"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/tetris-engine.js",
+			"symbol": "LINES_PER_LEVEL"
+		}
+	]
+}

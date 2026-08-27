@@ -1,0 +1,32 @@
+{
+	"id": "40fd5f63-f98a-4024-b441-bb7b746fd51c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "scenes.stack-navigation",
+	"title": "Scene switching maintains a back stack and lifecycle callbacks",
+	"statement": "SceneManager registers scenes by name; switchTo exits the current scene and pushes it onto a stack before entering the target scene, replace switches without pushing, and back restores the previous scene from the stack, invoking onExit/onEnter as applicable.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015781627,
+	"updatedAt": 1787015781627,
+	"createdByTaskId": "business-init",
+	"latestEventId": "48700972-e024-4049-a83d-d43918192af3",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/runtime/scene-manager.js"
+		},
+		{
+			"type": "symbol",
+			"path": "js/runtime/scene-manager.js",
+			"symbol": "switchTo"
+		},
+		{
+			"type": "symbol",
+			"path": "js/runtime/scene-manager.js",
+			"symbol": "back"
+		}
+	]
+}

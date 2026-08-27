@@ -1,0 +1,15 @@
+{
+	"id": "7cc9e394-1bdb-4a29-85e3-c4cdff90a2a9",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "8cd16533-c6fc-440d-be03-8876494e9ba8",
+	"toNodeId": "e931851d-4231-4ce3-9230-c5f41957fc78",
+	"type": "belongsTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"utils/ad-manager.js FREQUENCY_CONFIG",
+		"utils/ad-manager.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1787227659804,
+	"updatedAt": 1787229438144
+}

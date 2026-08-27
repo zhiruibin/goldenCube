@@ -1,0 +1,12 @@
+{
+	"id": "8f155315-0ffa-4218-b93c-dab37424315d",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "36c225f8-9d6e-432f-8a26-545b1c42e8a3",
+	"operation": "create",
+	"after": "GameScene maintains mode timing state: timed mode uses a countdown timer (_modeTimeLeft/_modeTimeTotal) and marathon mode uses a target line count (_modeTargetLines).",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/game-scene.js constructor comment '模式计时（限时赛/马拉松）' and _modeTimeLeft/_modeTimeTotal/_modeTargetLines fields"
+	],
+	"createdAt": 1787229367518
+}

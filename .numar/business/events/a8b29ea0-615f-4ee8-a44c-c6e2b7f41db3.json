@@ -1,0 +1,13 @@
+{
+	"id": "a8b29ea0-615f-4ee8-a44c-c6e2b7f41db3",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "a4a5236c-916f-48cb-8dd0-33b1a8321da5",
+	"operation": "create",
+	"after": "The input manager treats movement beyond 20 pixels as a drag and cancels the pending long press, triggers a long press after 200 ms, and uses DAS delay of 170 ms with ARR repeat interval of 50 ms for continuous input.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/runtime/input-manager.js:constructor",
+		"js/runtime/input-manager.js:handleTouchMove"
+	],
+	"createdAt": 1787015781558
+}

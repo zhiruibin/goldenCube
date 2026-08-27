@@ -1,0 +1,23 @@
+{
+	"id": "da01e57a-7b0f-4278-922f-0adc23b90bbb",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.leaderboard.tabs-and-periods",
+	"title": "Leaderboard tabs, modes, and periods",
+	"statement": "The leaderboard has friend and global tabs covering classic, timed, and marathon modes, and the global tab supports total, weekly, and monthly periods.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015835565,
+	"updatedAt": 1787015835565,
+	"createdByTaskId": "business-init",
+	"latestEventId": "09b8bb2b-067e-462f-a14e-41928f00f4d9",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/rank-scene.js",
+			"symbol": "render"
+		}
+	]
+}

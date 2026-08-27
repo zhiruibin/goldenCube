@@ -1,0 +1,12 @@
+{
+	"id": "24451540-9171-4e5e-b674-481987f61d9f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "b254fbac-43f9-48f8-9f21-1d0207ec0ddd",
+	"operation": "create",
+	"after": "查询排行榜时 type=friend（好友榜）需要传入 friendOpenIds；type=all 表示全服榜。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/rank/README.md"
+	],
+	"createdAt": 1787230425324
+}

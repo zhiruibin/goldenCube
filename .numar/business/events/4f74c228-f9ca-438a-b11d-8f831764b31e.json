@@ -1,0 +1,12 @@
+{
+	"id": "4f74c228-f9ca-438a-b11d-8f831764b31e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "1c5893f3-87f2-4c44-93e2-794b0c4b4aa0",
+	"operation": "create",
+	"after": "像素方块皮肤价格 0，通过累计得分达到 10000 解锁；其他付费方块皮肤通过 purchase 条件购买解锁。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"data/skins.js"
+	],
+	"createdAt": 1787227474978
+}

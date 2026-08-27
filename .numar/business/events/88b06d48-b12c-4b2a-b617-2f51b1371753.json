@@ -1,0 +1,13 @@
+{
+	"id": "88b06d48-b12c-4b2a-b617-2f51b1371753",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "4e112650-b5f8-43f0-afdb-f79bcb8174c1",
+	"operation": "create",
+	"after": "选择头像后上传至云存储并持久化为 cloud:// fileID，云存储路径以 avatars/ 前缀。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/user-profile.js: chooseAvatar 调用 wx.chooseAvatar 后 wx.cloud.uploadFile",
+		"utils/user-profile.js: cloudPath = 'avatars/...'"
+	],
+	"createdAt": 1787015707952
+}

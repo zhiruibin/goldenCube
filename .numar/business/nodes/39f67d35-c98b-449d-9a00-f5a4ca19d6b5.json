@@ -1,0 +1,28 @@
+{
+	"id": "39f67d35-c98b-449d-9a00-f5a4ca19d6b5",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "coin.balance.storage-key",
+	"title": "金币余额存储键",
+	"statement": "金币余额统一通过本地存储键 'coins' 读写；读取异常时回退为 0。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787229097826,
+	"updatedAt": 1787229097826,
+	"createdByTaskId": "business-init",
+	"latestEventId": "79b7071f-f9b4-4f3b-a8e9-dd03eeff4159",
+	"tags": [],
+	"aliases": [
+		"金币余额",
+		"coins 存储键",
+		"coin balance key"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "COINS_KEY"
+		}
+	]
+}

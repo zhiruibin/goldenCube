@@ -1,0 +1,15 @@
+{
+	"id": "76dda3bb-7c23-4dd2-b3c9-95272572c6fd",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "12be3970-2087-4723-8fa9-a4be6c248bfa",
+	"operation": "update",
+	"before": "用户需要手动选择头像并输入昵称",
+	"after": "用户点击一次微信授权后直接使用微信头像昵称，已授权用户后续自动获取",
+	"taskId": "request_4cd0819e-0691-473a-9810-900dbac8c415",
+	"evidenceIds": [
+		"utils/user-profile.js",
+		"js/scenes/settings-scene.js",
+		"语法校验与残留引用检查"
+	],
+	"createdAt": 1787108806917
+}

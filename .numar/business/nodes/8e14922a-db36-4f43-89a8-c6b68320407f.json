@@ -1,0 +1,27 @@
+{
+	"id": "8e14922a-db36-4f43-89a8-c6b68320407f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "achievements.categories-order",
+	"title": "Achievement list is organized into four fixed category tabs",
+	"statement": "The achievement scene displays achievements filtered by category and renders tabs in the fixed order beginner, expert, collection, social, defaulting to the beginner category on entry.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015781698,
+	"updatedAt": 1787015781698,
+	"createdByTaskId": "business-init",
+	"latestEventId": "7d8b87bd-40ad-4c55-be41-72ddb91772f0",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/achievement-scene.js"
+		},
+		{
+			"type": "symbol",
+			"path": "js/scenes/achievement-scene.js",
+			"symbol": "CATEGORY_ORDER"
+		}
+	]
+}

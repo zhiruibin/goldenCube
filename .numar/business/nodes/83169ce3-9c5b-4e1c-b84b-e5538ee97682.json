@@ -1,0 +1,27 @@
+{
+	"id": "83169ce3-9c5b-4e1c-b84b-e5538ee97682",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "cloud.rankings-collection-name",
+	"title": "All-server leaderboard uses cloud collection 'rankings'",
+	"statement": "Cloud-config defines the all-server leaderboard collection as 'rankings', aligned with the rank cloud function.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787227659794,
+	"updatedAt": 1787227659794,
+	"createdByTaskId": "business-init",
+	"latestEventId": "a156d589-5e24-455b-8ecd-1f4cb6f31a40",
+	"tags": [],
+	"aliases": [
+		"rankings 排行榜集合",
+		"全服榜集合名"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/cloud-config.js",
+			"symbol": "RANK_COLLECTION"
+		}
+	]
+}

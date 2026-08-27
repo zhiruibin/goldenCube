@@ -1,0 +1,12 @@
+{
+	"id": "f1a898f8-0138-48f0-8339-b79521f4ecaa",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "8aea9f67-862c-48e0-8310-d3ddbf2b876d",
+	"operation": "create",
+	"after": "Each DPadButton binds a single active touch identifier; a second press is ignored while one is active, and release only stops auto-repeat when the release touch matches the active touch.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/widgets/dpad-button.js"
+	],
+	"createdAt": 1787015891248
+}

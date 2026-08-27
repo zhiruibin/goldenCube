@@ -1,0 +1,12 @@
+{
+	"id": "21dadcd6-a0ff-4234-86b5-07b806b4e37e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "6a157d41-02d4-46c2-8275-71ef01b66e35",
+	"operation": "create",
+	"after": "发起挑战前统计该发起者的 pending 挑战数量，达到 20 条时拒绝创建并返回 too many pending challenges。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/challenge/index.js:createChallenge"
+	],
+	"createdAt": 1787229097859
+}

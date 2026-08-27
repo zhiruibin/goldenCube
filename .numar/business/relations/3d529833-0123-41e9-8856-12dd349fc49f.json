@@ -1,0 +1,15 @@
+{
+	"id": "3d529833-0123-41e9-8856-12dd349fc49f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "9593bfbe-56f8-4ff3-8904-97318ab3b592",
+	"toNodeId": "12be3970-2087-4723-8fa9-a4be6c248bfa",
+	"type": "belongsTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"utils/user-profile.js:ensureUserProfile",
+		"js/scenes/settings-scene.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1787229097871,
+	"updatedAt": 1787231894682
+}

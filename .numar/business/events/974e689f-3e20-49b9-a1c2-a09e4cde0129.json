@@ -1,0 +1,12 @@
+{
+	"id": "974e689f-3e20-49b9-a1c2-a09e4cde0129",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "b9f7b032-8528-4dcd-bc45-7cb4dc973597",
+	"operation": "create",
+	"after": "The rank cloud function provides submitScore to submit a score, getRankList to query the leaderboard, and getMyRank to query the user's own rank and score.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/rank/README.md"
+	],
+	"createdAt": 1787015891789
+}

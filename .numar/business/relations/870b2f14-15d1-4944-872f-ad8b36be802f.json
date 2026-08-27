@@ -1,0 +1,14 @@
+{
+	"id": "870b2f14-15d1-4944-872f-ad8b36be802f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "89186931-b96d-496d-b478-8a9f7065bedc",
+	"toNodeId": "8e14922a-db36-4f43-89a8-c6b68320407f",
+	"type": "appliesTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"js/scenes/achievement-scene.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1787229255347,
+	"updatedAt": 1787229255347
+}

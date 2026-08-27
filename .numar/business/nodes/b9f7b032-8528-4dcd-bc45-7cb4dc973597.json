@@ -1,0 +1,39 @@
+{
+	"id": "b9f7b032-8528-4dcd-bc45-7cb4dc973597",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.cloud-function-apis",
+	"title": "Rank cloud function API surface extended with replay support",
+	"statement": "submitScore also accepts an optional replay payload, getRankList returns each list item with id and hasReplay, and a new getReplay(replayId) action retrieves a single stored replay.",
+	"status": "active",
+	"verificationStatus": "verified",
+	"createdAt": 1787015891789,
+	"updatedAt": 1787586320217,
+	"createdByTaskId": "business-init",
+	"latestEventId": "8672dc2e-8b5b-445c-800e-ec1d050ab794",
+	"tags": [],
+	"aliases": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "cloudfunctions/rank/index.js"
+		},
+		{
+			"type": "file",
+			"path": "utils/cloud-service.js"
+		},
+		{
+			"type": "endpoint",
+			"symbol": "submitScore"
+		},
+		{
+			"type": "endpoint",
+			"symbol": "getRankList"
+		},
+		{
+			"type": "endpoint",
+			"symbol": "getReplay"
+		}
+	]
+}

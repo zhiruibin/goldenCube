@@ -1,0 +1,22 @@
+{
+	"id": "39be3fcf-1e31-4531-a9d3-cf9bb1850185",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.cloud-function-apis",
+	"title": "Challenge cloud function exposes four APIs",
+	"statement": "The challenge cloud function provides createChallenge, respondChallenge, getMyChallenges, and getChallengeById, dispatched through an { action, data } structure.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015891338,
+	"updatedAt": 1787015891338,
+	"createdByTaskId": "business-init",
+	"latestEventId": "821c6f31-a7ee-4158-8a5e-05e15d1352c9",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "cloudfunctions/challenge/README.md"
+		}
+	]
+}

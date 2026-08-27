@@ -1,0 +1,14 @@
+{
+	"id": "c1221453-09f5-4b27-ae12-fa6f518bc42e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "49cd1fef-051c-4472-b8ab-5ec888bc1876",
+	"operation": "create",
+	"before": "广告双倍金额按本局产币发放，无独立额度裁剪",
+	"after": "结果场景 _getAdCoinOffer 金额 = min(本局产币, 剩余广告额度)；剩余额度为 0 时不再展示广告入口；安慰奖同样裁剪；_doubleCoins 改用 rewardAdBonusCapped 发放",
+	"taskId": "request_f0aaf24d-b35f-4102-8cd7-e93af669d924",
+	"evidenceIds": [
+		"js/scenes/result-scene.js#_getAdCoinOffer",
+		"金币经济 P0 调整（A + B）落地"
+	],
+	"createdAt": 1787309680938
+}

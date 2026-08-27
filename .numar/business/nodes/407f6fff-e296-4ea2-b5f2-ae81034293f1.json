@@ -1,0 +1,26 @@
+{
+	"id": "407f6fff-e296-4ea2-b5f2-ae81034293f1",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "leaderboard.main-context-touch-scrolling",
+	"title": "好友榜主域转发触摸滚动",
+	"statement": "开放数据域不能直接监听触摸事件，好友排行榜滚动由主域捕获触摸后转发到开放数据域处理。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787227474981,
+	"updatedAt": 1787227474981,
+	"createdByTaskId": "business-init",
+	"latestEventId": "71f55889-a0df-41ec-a342-c1487839521e",
+	"tags": [],
+	"aliases": [
+		"主域触摸转发",
+		"好友榜滚动"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "openDataContext/index.js"
+		}
+	]
+}

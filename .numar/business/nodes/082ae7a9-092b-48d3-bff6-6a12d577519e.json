@@ -1,0 +1,27 @@
+{
+	"id": "082ae7a9-092b-48d3-bff6-6a12d577519e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenges.default-incoming-tab",
+	"title": "Challenge tab defaults to incoming when pending challenges exist",
+	"statement": "On entering the challenge scene, the active tab is chosen from the incoming params.tab if provided; otherwise it becomes 'incoming' whenever local pending challenges exist, and 'sent' otherwise.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015781911,
+	"updatedAt": 1787015781911,
+	"createdByTaskId": "business-init",
+	"latestEventId": "7efc95bd-7c46-4a3a-99e9-4d6446bf1f48",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/challenge-scene.js"
+		},
+		{
+			"type": "symbol",
+			"path": "js/scenes/challenge-scene.js",
+			"symbol": "onEnter"
+		}
+	]
+}

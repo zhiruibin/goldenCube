@@ -1,0 +1,12 @@
+{
+	"id": "164ae6a2-a0d2-406a-b7e4-c5df7edac707",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "2a357731-ec7a-4aa9-8a0f-9dbc88b220b2",
+	"operation": "create",
+	"after": "彩纸庆祝特效由本地存储 setting_luckyFx 控制，未显式设置为 false 时默认开启；特效关闭或粒子容量为 0 时不触发庆祝。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/confetti-fx.js init() 读取 setting_luckyFx；trigger() 在 !enabled 或 capacity<=0 时 return"
+	],
+	"createdAt": 1787015752828
+}

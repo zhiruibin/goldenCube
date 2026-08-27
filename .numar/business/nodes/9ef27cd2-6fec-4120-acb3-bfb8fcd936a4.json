@@ -1,0 +1,22 @@
+{
+	"id": "9ef27cd2-6fec-4120-acb3-bfb8fcd936a4",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.status-lifecycle",
+	"title": "Challenge transitions from pending to completed and can be responded to once",
+	"statement": "A challenge starts in pending and becomes completed after one response; each challenge can be responded to at most once, and a challenger cannot respond to their own challenge.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015891515,
+	"updatedAt": 1787015891515,
+	"createdByTaskId": "business-init",
+	"latestEventId": "e4f1d384-016d-440b-857d-4e4edef103f9",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "cloudfunctions/challenge/README.md"
+		}
+	]
+}

@@ -1,0 +1,39 @@
+{
+	"id": "8eff5332-f7b2-4a3e-9196-245b1b1f5a5e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "replay.record-and-playback.flow",
+	"title": "对局输入录制与回放数据链路",
+	"statement": "每局生成随机种子注入引擎并按引擎返回值录制成功动作；结算时生成回放数据存入 replay_last 并传递 replayKey 给结算场景；结算场景新增回看入口，进入回放场景后可倍速、暂停、查看进度并返回。",
+	"status": "active",
+	"verificationStatus": "verified",
+	"createdAt": 1787448590857,
+	"updatedAt": 1787448590857,
+	"createdByTaskId": "request_a0a566ce-038c-4fdb-a10c-e14743bfb63b",
+	"latestEventId": "3b40dfdf-37a8-4919-96e2-d9213bd9fb4b",
+	"tags": [],
+	"aliases": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/replay-recorder.js"
+		},
+		{
+			"type": "file",
+			"path": "js/scenes/game-scene.js"
+		},
+		{
+			"type": "file",
+			"path": "js/scenes/result-scene.js"
+		},
+		{
+			"type": "file",
+			"path": "js/scenes/replay-scene.js"
+		},
+		{
+			"type": "file",
+			"path": "js/game.js"
+		}
+	]
+}

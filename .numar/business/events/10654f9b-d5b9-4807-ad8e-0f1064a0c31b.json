@@ -1,0 +1,12 @@
+{
+	"id": "10654f9b-d5b9-4807-ad8e-0f1064a0c31b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "97fc74d7-6eca-4c30-8da9-819ab2a77b15",
+	"operation": "create",
+	"after": "Result scene tracks its leaderboard sync through states idle/syncing/done/offline/failed, allowing offline or failed sync to be surfaced.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/result-scene.js constructor _syncState = 'idle' with comment 'idle | syncing | done | offline | failed'"
+	],
+	"createdAt": 1787229367540
+}

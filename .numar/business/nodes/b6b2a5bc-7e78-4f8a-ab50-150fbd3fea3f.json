@@ -1,0 +1,23 @@
+{
+	"id": "b6b2a5bc-7e78-4f8a-ab50-150fbd3fea3f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.ranking-calculation",
+	"title": "排名计算规则",
+	"statement": "当前排名由分数严格高于该用户的人数加 1 得出，同分玩家并列同排。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015708370,
+	"updatedAt": 1787015708370,
+	"createdByTaskId": "business-init",
+	"latestEventId": "15c2461f-7eb5-4845-883d-8d400053975f",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "cloudfunctions/rank/index.js",
+			"symbol": "submitScore"
+		}
+	]
+}

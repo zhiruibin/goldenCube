@@ -1,0 +1,12 @@
+{
+	"id": "f0385f65-a81b-48b1-a5aa-02baaf8971a3",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "8896b3ea-000b-46cf-9954-020aa0869fd2",
+	"operation": "create",
+	"after": "Button renders built-in icons for hardDrop, rotate, hold, gear, pause, and play actions; an icon registered with IconRenderer is drawn with text, and otherwise the button falls back to plain text.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/widgets/button.js"
+	],
+	"createdAt": 1787015891074
+}

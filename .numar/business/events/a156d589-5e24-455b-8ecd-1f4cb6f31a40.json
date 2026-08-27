@@ -1,0 +1,12 @@
+{
+	"id": "a156d589-5e24-455b-8ecd-1f4cb6f31a40",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "83169ce3-9c5b-4e1c-b84b-e5538ee97682",
+	"operation": "create",
+	"after": "Cloud-config defines the all-server leaderboard collection as 'rankings', aligned with the rank cloud function.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/cloud-config.js RANK_COLLECTION"
+	],
+	"createdAt": 1787227659794
+}

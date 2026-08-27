@@ -1,0 +1,12 @@
+{
+	"id": "e26c87ee-5508-4603-998e-120c9303a73c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "48b8c6e8-6d02-4a44-bdd5-18d3477a01cb",
+	"operation": "create",
+	"after": "触发消行的方块为特殊或新方块时按倍率加成：D 2.0，C/X/K/W/N 1.5，P/M/Q/A 1.2，T 与 R 无加成。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/tetris-engine.js: SPECIAL_SCORE_MULTIPLIERS 常量定义"
+	],
+	"createdAt": 1787015707619
+}

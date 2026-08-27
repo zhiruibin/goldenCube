@@ -1,0 +1,12 @@
+{
+	"id": "5215543d-4be8-439a-b980-3aeaae2eb56d",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "be58a634-7685-45c2-a69b-e43fd45eef35",
+	"operation": "create",
+	"after": "Interstitial ads are never shown during the first 5 games; from game 6 onward they appear at most once every 6 games.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/result-scene.js:shouldShowInterstitial"
+	],
+	"createdAt": 1787015834910
+}

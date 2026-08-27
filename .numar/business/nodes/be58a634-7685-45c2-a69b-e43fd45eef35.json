@@ -1,0 +1,23 @@
+{
+	"id": "be58a634-7685-45c2-a69b-e43fd45eef35",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "game.result.interstitial.frequency",
+	"title": "Interstitial ad frequency cap",
+	"statement": "Interstitial ads are never shown during the first 5 games; from game 6 onward they appear at most once every 6 games.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015834910,
+	"updatedAt": 1787015834910,
+	"createdByTaskId": "business-init",
+	"latestEventId": "5215543d-4be8-439a-b980-3aeaae2eb56d",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/result-scene.js",
+			"symbol": "shouldShowInterstitial"
+		}
+	]
+}

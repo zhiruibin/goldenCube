@@ -1,0 +1,12 @@
+{
+	"id": "c70da08f-8a5b-436a-97f8-ce703c20587c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "f4def317-d381-4acb-a602-e2cc71c49948",
+	"operation": "create",
+	"after": "rewardAdBonus 发放的广告或活动加成金币不消耗每日消行上限，也不改变今日消行进度展示。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/coin-manager.js: rewardAdBonus 仅调用 _addBalance，不更新 _todayEarned"
+	],
+	"createdAt": 1787015707104
+}

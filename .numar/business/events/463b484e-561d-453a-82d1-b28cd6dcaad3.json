@@ -1,0 +1,14 @@
+{
+	"id": "463b484e-561d-453a-82d1-b28cd6dcaad3",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "8cff076c-c99e-487c-aeae-0acd8ef94938",
+	"operation": "create",
+	"after": "广告双倍金币按独立日上限 300 发放：触顶返回 0、剩余额度不足只发剩余额度；不计入消行每日 600 上限；登录/抽奖等 rewardAdBonus 小额加成保持不受限且不计入广告上限",
+	"taskId": "request_f0aaf24d-b35f-4102-8cd7-e93af669d924",
+	"evidenceIds": [
+		"utils/coin-manager.js#AD_DAILY_CAP",
+		"utils/coin-manager.js#rewardAdBonusCapped",
+		"行为测试：广告独立 300 上限触顶返回 0"
+	],
+	"createdAt": 1787309680938
+}

@@ -1,0 +1,27 @@
+{
+	"id": "d5e7fe79-3e5a-416a-b673-233aadf3577e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "input.drag-aborts-long-press",
+	"title": "Dragging cancels long-press detection",
+	"statement": "When touch movement exceeds the swipe threshold, the input manager switches into dragging mode and cancels any pending long-press timer.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787229255343,
+	"updatedAt": 1787229255343,
+	"createdByTaskId": "business-init",
+	"latestEventId": "0eb1f39d-61de-41d0-824f-e353bcd98f46",
+	"tags": [],
+	"aliases": [
+		"拖动取消长按",
+		"滑动超过阈值进入拖动"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/runtime/input-manager.js",
+			"symbol": "InputManager.handleTouchMove"
+		}
+	]
+}

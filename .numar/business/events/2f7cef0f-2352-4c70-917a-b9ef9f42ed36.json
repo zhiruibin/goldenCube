@@ -1,0 +1,12 @@
+{
+	"id": "2f7cef0f-2352-4c70-917a-b9ef9f42ed36",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "5602449f-f435-4aa4-ad1b-9f671fcd45ef",
+	"operation": "create",
+	"after": "棋盘格子数值 1-18 对应 18 种方块字母（I、O、T、S、Z、J、L、C、D、P、M、R、Q、X、K、W、A、N），棋盘渲染与消行特效均按该映射使用固定颜色取色。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/board-renderer.js TYPE_LETTER 映射；js/render/effect-renderer.js TYPE_HEX 映射"
+	],
+	"createdAt": 1787015753095
+}

@@ -1,0 +1,12 @@
+{
+	"id": "fad2f479-47ac-4103-ae28-b2b2d945418c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "f5277bba-d5ee-4c38-ab87-bc8823d570a6",
+	"operation": "create",
+	"after": "D、P、M、Q、N 方块不可旋转。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/tetris-engine.js: NON_ROTATABLE_TYPES = { D: true, P: true, M: true, Q: true, N: true }"
+	],
+	"createdAt": 1787015707674
+}

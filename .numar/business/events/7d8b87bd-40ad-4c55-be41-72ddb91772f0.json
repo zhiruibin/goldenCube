@@ -1,0 +1,13 @@
+{
+	"id": "7d8b87bd-40ad-4c55-be41-72ddb91772f0",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "8e14922a-db36-4f43-89a8-c6b68320407f",
+	"operation": "create",
+	"after": "The achievement scene displays achievements filtered by category and renders tabs in the fixed order beginner, expert, collection, social, defaulting to the beginner category on entry.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/achievement-scene.js:CATEGORY_ORDER",
+		"js/scenes/achievement-scene.js:onEnter"
+	],
+	"createdAt": 1787015781698
+}

@@ -1,0 +1,12 @@
+{
+	"id": "ef7d031e-45d2-42d7-bdc7-10fc72bad1d3",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "8369fee0-5cdf-42b5-bddd-dee55f908783",
+	"operation": "create",
+	"after": "棋盘渲染器从本地存储键 equipped_board 读取已装备棋盘皮肤（未设置或读取失败时回退到默认皮肤），装备的皮肤决定棋盘背景色、网格色、边框色与动态特效类型。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/board-renderer.js _applySkin() 读取 equipped_board 并应用 skin.style"
+	],
+	"createdAt": 1787015752698
+}

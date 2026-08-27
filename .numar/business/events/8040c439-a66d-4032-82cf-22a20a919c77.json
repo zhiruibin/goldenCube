@@ -1,0 +1,12 @@
+{
+	"id": "8040c439-a66d-4032-82cf-22a20a919c77",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "28377bab-d677-4e35-8787-034ffded32a2",
+	"operation": "create",
+	"after": "皮肤定价锚定每日 600 金币上限与消行 1/2/3/5 金币产出：入门档 150-300、中档 400-600、高档 1000、最贵 gold 2000，可购总价约 8950，全收集约 15 天满勤。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"data/skins.js"
+	],
+	"createdAt": 1787227474976
+}

@@ -1,0 +1,12 @@
+{
+	"id": "7efc95bd-7c46-4a3a-99e9-4d6446bf1f48",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "082ae7a9-092b-48d3-bff6-6a12d577519e",
+	"operation": "create",
+	"after": "On entering the challenge scene, the active tab is chosen from the incoming params.tab if provided; otherwise it becomes 'incoming' whenever local pending challenges exist, and 'sent' otherwise.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/challenge-scene.js:onEnter"
+	],
+	"createdAt": 1787015781911
+}

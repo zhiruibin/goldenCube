@@ -1,0 +1,23 @@
+{
+	"id": "8c84c6e9-f837-40a5-b2af-4714f0f82be8",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "economy.coins.daily-limit",
+	"title": "Daily coin earning limit",
+	"statement": "Coins earned from gameplay are capped at 600 coins per day.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015835223,
+	"updatedAt": 1787015835223,
+	"createdByTaskId": "business-init",
+	"latestEventId": "b1fbfb02-37cf-4649-95a6-dd5a2536b61c",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/result-scene.js",
+			"symbol": "_dailyLimit"
+		}
+	]
+}

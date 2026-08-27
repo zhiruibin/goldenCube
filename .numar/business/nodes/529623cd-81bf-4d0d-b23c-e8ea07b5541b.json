@@ -1,0 +1,28 @@
+{
+	"id": "529623cd-81bf-4d0d-b23c-e8ea07b5541b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "achievement.line-clear.clamped-counters",
+	"title": "Per-line clear report is clamped to 1-4",
+	"statement": "reportLineClear maps a line clear count to one of four counters (clear1-clear4), clamping the count to the 1-4 range before incrementing.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787227659786,
+	"updatedAt": 1787227659786,
+	"createdByTaskId": "business-init",
+	"latestEventId": "82713daa-221b-463e-8fe2-26bc737aaecc",
+	"tags": [],
+	"aliases": [
+		"单次消行按 1-4 行计数",
+		"消行计数器 1-4",
+		"clear1~clear4"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/achievement-manager.js",
+			"symbol": "reportLineClear"
+		}
+	]
+}

@@ -1,0 +1,12 @@
+{
+	"id": "443d79ee-b30e-463c-a17e-73f0f4f4302b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "21754e83-ea74-419e-bbfa-8f5ed2b94099",
+	"operation": "create",
+	"after": "挑战集合（challenges）中文档的 _id 就是 createChallenge 返回的 challengeId，客户端用它引用挑战。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/challenge/README.md"
+	],
+	"createdAt": 1787230425321
+}

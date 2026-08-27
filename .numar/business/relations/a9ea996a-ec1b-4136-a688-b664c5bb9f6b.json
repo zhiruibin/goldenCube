@@ -1,0 +1,14 @@
+{
+	"id": "a9ea996a-ec1b-4136-a688-b664c5bb9f6b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "1b242372-c558-4749-877c-04ecb49a9d9b",
+	"toNodeId": "8dd19c2a-ac0b-4021-9f16-97c087df48c1",
+	"type": "constrains",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"utils/coin-manager.js:rewardLineClear"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1787229097863,
+	"updatedAt": 1787229097863
+}

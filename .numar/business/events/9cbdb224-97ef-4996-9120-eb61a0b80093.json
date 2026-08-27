@@ -1,0 +1,14 @@
+{
+	"id": "9cbdb224-97ef-4996-9120-eb61a0b80093",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "6eabea3a-0527-4564-a56f-2b61f9291fa9",
+	"operation": "create",
+	"after": "rewardLineClear(count, tSpinType) 支持 T-Spin 加成：full 额外 +2 金币、mini 额外 +1，加成计入原有每日 600 消行上限；game-scene 消行时传入 tSpinType 启用",
+	"taskId": "request_f0aaf24d-b35f-4102-8cd7-e93af669d924",
+	"evidenceIds": [
+		"utils/coin-manager.js#T_SPIN_BONUS",
+		"js/scenes/game-scene.js 消行调用传入 tSpinType",
+		"行为测试：T-Spin mini/full 加成"
+	],
+	"createdAt": 1787309680938
+}

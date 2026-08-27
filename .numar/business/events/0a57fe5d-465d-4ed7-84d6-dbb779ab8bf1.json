@@ -1,0 +1,12 @@
+{
+	"id": "0a57fe5d-465d-4ed7-84d6-dbb779ab8bf1",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "a6c59031-8212-4069-8a69-938b110e0b81",
+	"operation": "create",
+	"after": "The audio manager loads the equipped sound pack id from WeChat local storage key 'equipped_sound', falling back to 'default'; unknown pack ids also fall back to 'default'.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/audio-manager.js: _loadEquippedPack, applySoundPack"
+	],
+	"createdAt": 1787015657709
+}

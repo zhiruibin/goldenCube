@@ -1,0 +1,28 @@
+{
+	"id": "25aafb68-b51a-49c4-8844-a5ddfd148993",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "tetris.lock-delay-rules",
+	"title": "锁定延迟规则",
+	"statement": "方块落地后有 500ms 锁定延迟，最多允许 15 次移动操作。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015707731,
+	"updatedAt": 1787015707731,
+	"createdByTaskId": "business-init",
+	"latestEventId": "e2e792f2-a0f5-451a-a86d-e7a81809244d",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/tetris-engine.js",
+			"symbol": "LOCK_DELAY_MS"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/tetris-engine.js",
+			"symbol": "MAX_LOCK_MOVES"
+		}
+	]
+}

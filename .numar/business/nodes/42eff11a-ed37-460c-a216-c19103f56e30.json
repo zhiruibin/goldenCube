@@ -1,0 +1,27 @@
+{
+	"id": "42eff11a-ed37-460c-a216-c19103f56e30",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "widgets.button.rect-hit-test",
+	"title": "Button click detection uses rectangle bounds",
+	"statement": "A Button is considered hit when the queried point is inside its rectangle: x within [x, x+w] and y within [y, y+h].",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015890876,
+	"updatedAt": 1787015890876,
+	"createdByTaskId": "business-init",
+	"latestEventId": "4e4ecda2-7a6c-4ab7-b110-fe0028102fa9",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/widgets/button.js",
+			"symbol": "Button.hitTest"
+		},
+		{
+			"type": "file",
+			"path": "js/widgets/button.js"
+		}
+	]
+}

@@ -1,0 +1,13 @@
+{
+	"id": "d5f82f19-c71e-4266-862f-d4df229ddb2f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "a7b4b166-5657-46dd-ae38-98d935aa9de4",
+	"operation": "create",
+	"after": "提交分数仅当高于该用户在该模式的历史最高分时才写入，否则只返回是否新纪录与当前排名。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/rank/index.js: isNewRecord = !prev || score > (prev.score || 0)",
+		"cloudfunctions/rank/index.js: 仅 isNewRecord 时 update/add"
+	],
+	"createdAt": 1787015708307
+}

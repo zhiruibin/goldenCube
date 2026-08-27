@@ -1,0 +1,15 @@
+{
+	"id": "3b40dfdf-37a8-4919-96e2-d9213bd9fb4b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "8eff5332-f7b2-4a3e-9196-245b1b1f5a5e",
+	"operation": "create",
+	"after": "每局生成随机种子注入引擎并按引擎返回值录制成功动作；结算时生成回放数据存入 replay_last 并传递 replayKey 给结算场景；结算场景新增回看入口，进入回放场景后可倍速、暂停、查看进度并返回。",
+	"taskId": "request_a0a566ce-038c-4fdb-a10c-e14743bfb63b",
+	"evidenceIds": [
+		"utils/replay-recorder.js",
+		"js/scenes/game-scene.js",
+		"js/scenes/result-scene.js",
+		"js/scenes/replay-scene.js"
+	],
+	"createdAt": 1787448590857
+}

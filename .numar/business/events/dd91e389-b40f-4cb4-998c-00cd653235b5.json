@@ -1,0 +1,13 @@
+{
+	"id": "dd91e389-b40f-4cb4-998c-00cd653235b5",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "abd840af-7ecc-4a0e-bdfa-65cbce542ee5",
+	"operation": "create",
+	"after": "DAS delay is adjustable from 50ms to 500ms in 10ms steps, defaulting to 170ms; the settings list also includes an ARR speed slider.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/settings-scene.js:dasDelay-slider",
+		"js/scenes/settings-scene.js:arrRepeat-slider"
+	],
+	"createdAt": 1787015835398
+}

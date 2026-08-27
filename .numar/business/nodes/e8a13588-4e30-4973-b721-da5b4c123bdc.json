@@ -1,0 +1,28 @@
+{
+	"id": "e8a13588-4e30-4973-b721-da5b4c123bdc",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "ad.retry.backoff",
+	"title": "Ad failures are retried with exponential backoff and cooldown",
+	"statement": "Failed ad loads are retried up to 3 times with an initial delay of 3 seconds doubling each time; after exhausting retries the ad is marked unavailable for 5 minutes before it can recover.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015657593,
+	"updatedAt": 1787015657593,
+	"createdByTaskId": "business-init",
+	"latestEventId": "d01b5556-2a53-4f3c-93ba-c228318499b4",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/ad-manager.js",
+			"symbol": "RETRY_CONFIG"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/ad-manager.js",
+			"symbol": "COOLDOWN_MS"
+		}
+	]
+}

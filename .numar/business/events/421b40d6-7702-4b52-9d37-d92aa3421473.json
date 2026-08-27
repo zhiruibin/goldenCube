@@ -1,0 +1,12 @@
+{
+	"id": "421b40d6-7702-4b52-9d37-d92aa3421473",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "b75c57af-8b0d-4619-a50d-bc1f444ddf64",
+	"operation": "create",
+	"after": "静默获取微信资料时，昵称为『微信用户』的匿名返回会被忽略，避免污染本地缓存。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/user-profile.js:tryAutoFetchProfile"
+	],
+	"createdAt": 1787229097853
+}

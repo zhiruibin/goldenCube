@@ -1,0 +1,12 @@
+{
+	"id": "8ff3bf51-5daa-45d4-85cf-4d5bb6c38257",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "0d75ea15-7bd4-4565-ab4e-6be12f1ed34e",
+	"operation": "create",
+	"after": "Entering the home scene triggers claiming a small daily login coin reward.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/home-scene.js:_claimDailyLogin"
+	],
+	"createdAt": 1787015835901
+}

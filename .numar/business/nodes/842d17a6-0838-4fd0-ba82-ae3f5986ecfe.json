@@ -1,0 +1,26 @@
+{
+	"id": "842d17a6-0838-4fd0-ba82-ae3f5986ecfe",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "achievement.reward.economy-tiering",
+	"title": "成就奖励经济分层",
+	"statement": "2025-08 经济平衡调整下调零门槛/低难度成就奖励，保留高技术/肝帝证明类成就的高额奖励（如三万分 800、T-Spin Double 400）作为长期目标。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787227474974,
+	"updatedAt": 1787227474974,
+	"createdByTaskId": "business-init",
+	"latestEventId": "7701fda5-143e-4a08-aa69-95ed20b964bb",
+	"tags": [],
+	"aliases": [
+		"成就奖励分层",
+		"成就经济平衡"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "data/achievements.js"
+		}
+	]
+}

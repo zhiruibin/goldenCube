@@ -1,0 +1,12 @@
+{
+	"id": "b08995ef-e192-4f3b-a43c-296288205af8",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "5ee5d3aa-57c4-4965-a89e-dbc1af0b5073",
+	"operation": "create",
+	"after": "In submitScore, the friend leaderboard score is submitted through the open data domain before checking cloud availability; when cloud is unavailable only the all-server cloud function call is skipped.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/cloud-service.js submitScore"
+	],
+	"createdAt": 1787227659797
+}

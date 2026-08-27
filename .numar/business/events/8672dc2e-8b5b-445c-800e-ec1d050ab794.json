@@ -1,0 +1,14 @@
+{
+	"id": "8672dc2e-8b5b-445c-800e-ec1d050ab794",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "b9f7b032-8528-4dcd-bc45-7cb4dc973597",
+	"operation": "update",
+	"before": "submitScore submits a score, getRankList queries the leaderboard, getMyRank queries the user's own rank and score.",
+	"after": "submitScore also accepts an optional replay payload, getRankList returns each list item with id and hasReplay, and a new getReplay(replayId) action retrieves a single stored replay.",
+	"taskId": "request_8d5dfc6d-cdaa-49c8-8870-d4a88ceb6371",
+	"evidenceIds": [
+		"cloudfunctions/rank/index.js",
+		"utils/cloud-service.js"
+	],
+	"createdAt": 1787586320217
+}

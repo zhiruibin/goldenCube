@@ -1,0 +1,23 @@
+{
+	"id": "61fc5083-0059-45ec-ae6d-ef769e1f1460",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "settings.feature-toggles.default-enabled",
+	"title": "Settings toggles default to enabled",
+	"statement": "Sound effects, background music, vibration feedback, background effects, and bottom mini effects all default to enabled unless a player disables them.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015835314,
+	"updatedAt": 1787015835314,
+	"createdByTaskId": "business-init",
+	"latestEventId": "ae1e5e15-544b-4f29-b6e2-132ecf50c5b9",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/settings-scene.js",
+			"symbol": "_renderSettings"
+		}
+	]
+}

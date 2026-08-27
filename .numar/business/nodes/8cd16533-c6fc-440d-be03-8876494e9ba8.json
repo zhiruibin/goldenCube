@@ -1,0 +1,27 @@
+{
+	"id": "8cd16533-c6fc-440d-be03-8876494e9ba8",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "ad.banner.auto-hide-duration",
+	"title": "Banner ads auto-close after 15 seconds",
+	"statement": "The banner ad frequency config sets showDuration to 15000ms, so a banner is configured to close automatically after 15 seconds of display, with at least a 30s interval between banner shows.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787227659788,
+	"updatedAt": 1787227659788,
+	"createdByTaskId": "business-init",
+	"latestEventId": "8bc8e200-4436-4afb-95eb-c91024d4abda",
+	"tags": [],
+	"aliases": [
+		"banner 15秒自动关闭",
+		"Banner 展示时长 15s"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/ad-manager.js",
+			"symbol": "FREQUENCY_CONFIG"
+		}
+	]
+}

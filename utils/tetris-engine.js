@@ -1,0 +1,987 @@
+/*** 方块过把瘾 - 核心俄罗斯方块游戏引擎
+ * 职责：
+ *   - 游戏状态管理（初始化/开始/暂停/恢复/重置）
+ *   - 7-Bag 随机方块生成
+ *   - 碰撞检测
+ *   - 消行判定与执行
+ *   - 等级与速度系统
+ *   - Hold 逻辑
+ *   - Ghost Piece 计算
+ *   - T-Spin 检测
+ *   - Combo 与 Back-to-Back 计分
+ * 注意：本模块不依赖任何微信小游戏 API，保持纯逻辑可测试性。
+ * 注意：微信小游戏 require 为相对当前文件目录解析，此处使用 ./ 与 ../ 相对路径。
+ */
+
+const { PIECE_TYPES, PIECE_COLORS, LAB_PIECE_TYPES } = require('../data/pieces');
+const SRSRotation = require('./srs-rotation');
+
+// ---------------------------------------------------------------------------
+// 常量
+// ---------------------------------------------------------------------------
+
+const BOARD_COLS = 10;
+const BOARD_ROWS = 20;
+const HIDDEN_ROWS = 2;
+const TOTAL_ROWS = BOARD_ROWS + HIDDEN_ROWS;
+const EMPTY = 0;
+
+const GameState = {
+    IDLE: 'idle',
+    READY: 'ready',
+    PLAYING: 'playing',
+    PAUSED: 'paused',
+    OVER: 'over',
+};
+
+/** 等级对应的下落间隔（毫秒），索引 = 等级 - 1 */
+const LEVEL_SPEEDS = [
+    1000, 793, 618, 473, 355, 262, 190, 135, 94, 64,
+    43, 28, 18, 11, 7,
+];
+
+/** 消行基础分：Single / Double / Triple / Tetris */
+const LINE_SCORES = [100, 300, 500, 800];
+const SOFT_DROP_SCORE = 1;
+const HARD_DROP_SCORE = 2;
+const LINES_PER_LEVEL = 10;
+const MAX_LEVEL = 15;
+const LOCK_DELAY_MS = 500;
+const MAX_LOCK_MOVES = 15;
+
+/** 方块类型 → 棋盘存储值（1-7 标准，8-11 特殊，12-18 实验室新方块） */
+const TYPE_TO_VALUE = { I: 1, O: 2, T: 3, S: 4, Z: 5, J: 6, L: 7, C: 8, D: 9, P: 10, M: 11, R: 12, Q: 13, X: 14, K: 15, W: 16, A: 17, N: 18 };
+
+/** 不可旋转方块类型 */
+const NON_ROTATABLE_TYPES = { D: true, P: true, M: true, Q: true, N: true };
+
+/** 特殊方块计分倍率（触发消行的方块为特殊/新方块时按倍率加成；T/R 为标准锚点无加成） */
+const SPECIAL_SCORE_MULTIPLIERS = {
+    C: 1.5,
+    D: 2.0,
+    P: 1.2,
+    M: 1.2,
+    Q: 1.2,
+    X: 1.5,
+    K: 1.5,
+    W: 1.5,
+    A: 1.2,
+    N: 1.5,
+    R: 1.0,
+};
+
+/** 可复现伪随机数生成器（mulberry32）：同一 seed 产生同一序列 */
+function mulberry32(seed) {
+    let a = seed >>> 0;
+    return function () {
+        a = (a + 0x6D2B79F5) >>> 0;
+        let t = a;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+}
+
+class BagRandomizer {
+    constructor(seed) {
+        this._bags = [];
+        this._bagIdx = 0;
+        this._pieceIdx = 0;
+        this._specialMode = false;
+        this._seed = typeof seed === 'number' ? seed : null;
+        this._rng = this._seed !== null ? mulberry32(this._seed) : Math.random;
+    }
+
+    /** 启用/关闭特殊模式（true 时实验室模式使用纯新池） */
+    setSpecialMode(enabled) {
+        this._specialMode = !!enabled;
+    }
+
+    /** 取出下一个方块类型 */
+    next() {
+        this._ensure(1);
+        const bag = this._bags[this._bagIdx];
+        const type = bag[this._pieceIdx++];
+        if (this._pieceIdx >= bag.length) {
+            this._bagIdx++;
+            this._pieceIdx = 0;
+        }
+        return type;
+    }
+
+    /** 预览接下来 count 个方块（不消耗） */
+    peek(count) {
+        this._ensure(count);
+        const result = [];
+        let bi = this._bagIdx;
+        let pi = this._pieceIdx;
+        for (let i = 0; i < count; i++) {
+            const bag = this._bags[bi];
+            result.push(bag[pi++]);
+            if (pi >= bag.length) { bi++; pi = 0; }
+        }
+        return result;
+    }
+
+    /** 确保剩余方块数 >= count，不足时预生成新 bag */
+    _ensure(count) {
+        while (this._remaining() < count) {
+            this._bags.push(this._shuffle());
+        }
+    }
+
+    /** 剩余方块数（当前袋未消耗部分 + 后续袋全部） */
+    _remaining() {
+        let total = 0;
+        for (let i = this._bagIdx; i < this._bags.length; i++) {
+            const bag = this._bags[i];
+            total += i === this._bagIdx ? bag.length - this._pieceIdx : bag.length;
+        }
+        return total;
+    }
+
+    /** Fisher-Yates 洗牌；实验室模式使用纯新池，标准模式使用标准 7-Bag */
+    _shuffle() {
+        const bag = this._specialMode ? [...LAB_PIECE_TYPES] : [...PIECE_TYPES];
+        for (let i = bag.length - 1; i > 0; i--) {
+            const j = Math.floor(this._rng() * (i + 1));
+            [bag[i], bag[j]] = [bag[j], bag[i]];
+        }
+        return bag;
+    }
+
+    reset() {
+        this._bags = [];
+        this._bagIdx = 0;
+        this._pieceIdx = 0;
+        if (this._seed !== null) {
+            this._rng = mulberry32(this._seed);
+        }
+    }
+}
+
+
+// ---------------------------------------------------------------------------
+// TetrisEngine 主类
+// ---------------------------------------------------------------------------
+
+class TetrisEngine {
+    constructor(seed) {
+        this._board = this._createEmptyBoard();
+        this._currentPiece = null;
+        this._holdPiece = null;
+        this._canHold = true;
+        this._seed = typeof seed === 'number' ? seed : null;
+        this._bag = new BagRandomizer(seed);
+        this._state = GameState.IDLE;
+
+        this._score = 0;
+        this._level = 1;
+        this._lines = 0;
+        this._combo = -1;
+        this._lastClearWasDifficult = false;
+        this._lastLockType = null;
+        this._dropTimer = null;
+        this._dropInterval = LEVEL_SPEEDS[0];
+        this._lockTimer = null;
+        this._engineTime = 0;
+        this._dropDeadline = 0;
+        this._lockDeadline = 0;
+        this._inLockDelay = false;
+        this._lockMoves = 0;
+
+        this._lastAction = 'spawn';
+        this._tSpinType = null;
+        this._mode = 'classic';
+        this._stats = this._createStats();
+
+        // 回调
+        this._onStateChange = null;
+        this._onBoardChange = null;
+        this._onPieceSpawn = null;
+        this._onLineClear = null;
+        this._onPieceLock = null;
+        this._onScoreChange = null;
+        this._onLevelChange = null;
+        this._onGameOver = null;
+        this._onHoldChange = null;
+        this._onCombo = null;
+    }
+
+    // ========================================================================
+    // 生命周期
+    // ========================================================================
+
+    init() {
+        this._clearTimers();
+        this._board = this._createEmptyBoard();
+        this._currentPiece = null;
+        this._holdPiece = null;
+        this._canHold = true;
+        this._bag.reset();
+        this._score = 0;
+        this._level = 1;
+        this._lines = 0;
+        this._combo = -1;
+        this._lastClearWasDifficult = false;
+        this._lastLockType = null;
+        this._dropInterval = LEVEL_SPEEDS[0];
+        this._tSpinType = null;
+        this._stats = this._createStats();
+        this._state = GameState.READY;
+        this._emit(this._onStateChange, this._state);
+    }
+
+    /** 开始游戏（从 READY 进入 PLAYING） */
+    start() {
+        this._state = GameState.PLAYING;
+        // 首次开始：生成第一个方块（init 只创建空棋盘，不生成方块）
+        if (!this._currentPiece) {
+            this._spawnPiece();
+        }
+        if (this._state === GameState.PLAYING) {
+            this._startDropTimer();
+        }
+        this._emit(this._onStateChange, this._state);
+    }
+
+    pause() {
+        if (this._state !== GameState.PLAYING) return;
+        this._clearTimers();
+        this._state = GameState.PAUSED;
+        this._emit(this._onStateChange, this._state);
+    }
+
+    resume() {
+        if (this._state !== GameState.PAUSED) return;
+        this._state = GameState.PLAYING;
+        this._startDropTimer();
+        if (this._inLockDelay && this._currentPiece) {
+            this._startLockTimer();
+        }
+        this._emit(this._onStateChange, this._state);
+    }
+
+    reset() {
+        this._clearTimers();
+        this.init();
+    }
+
+    destroy() {
+        this._clearTimers();
+        this._onStateChange = null;
+        this._onBoardChange = null;
+        this._onPieceSpawn = null;
+        this._onLineClear = null;
+        this._onPieceLock = null;
+        this._onScoreChange = null;
+        this._onLevelChange = null;
+        this._onGameOver = null;
+        this._onHoldChange = null;
+        this._onCombo = null;
+        this._state = GameState.IDLE;
+    }
+
+    // ========================================================================
+    // 操作
+    // ========================================================================
+
+    moveLeft() {
+        if (this._state !== GameState.PLAYING || !this._currentPiece) return false;
+        const p = this._currentPiece;
+        if (this._isValidPosition(p.type, p.rotation, p.row, p.col - 1)) {
+            p.col--;
+            this._lastAction = 'move';
+            this._onLockDelayMove();
+            this._emit(this._onBoardChange, this.getVisibleBoard(), this.getCurrentPiece());
+            return true;
+        }
+        return false;
+    }
+
+    moveRight() {
+        if (this._state !== GameState.PLAYING || !this._currentPiece) return false;
+        const p = this._currentPiece;
+        if (this._isValidPosition(p.type, p.rotation, p.row, p.col + 1)) {
+            p.col++;
+            this._lastAction = 'move';
+            this._onLockDelayMove();
+            this._emit(this._onBoardChange, this.getVisibleBoard(), this.getCurrentPiece());
+            return true;
+        }
+        return false;
+    }
+
+    softDrop() {
+        if (this._state !== GameState.PLAYING || !this._currentPiece) return false;
+        const p = this._currentPiece;
+        if (this._isValidPosition(p.type, p.rotation, p.row + 1, p.col)) {
+            p.row++;
+            this._lastAction = 'drop';
+            this._addScore(SOFT_DROP_SCORE);
+            if (this._inLockDelay) {
+                this._cancelLockDelay();
+            }
+            this._restartDropTimer();
+            this._emit(this._onBoardChange, this.getVisibleBoard(), this.getCurrentPiece());
+            return true;
+        }
+        return false;
+    }
+
+    hardDrop() {
+        if (this._state !== GameState.PLAYING || !this._currentPiece) return 0;
+
+        // 钻头块 D：硬降时穿透整列清空，直达棋盘底部
+        if (this._currentPiece.type === 'D') {
+            return this._drillDrop();
+        }
+
+        const ghostRow = this.getGhostRow();
+        const dropDist = ghostRow - this._currentPiece.row;
+        this._currentPiece.row = ghostRow;
+        this._addScore(HARD_DROP_SCORE * dropDist);
+        this._lastAction = 'hardDrop';
+        this._stats.hardDropCount++;
+        this._cancelLockDelay();
+        this._lockPiece();
+        return dropDist;
+    }
+
+    /**
+     * 钻头块穿透硬降：从当前行向下清空整列已锁定方块，直达棋盘底部
+     * @returns {number} 下落距离
+     */
+    _drillDrop() {
+        const p = this._currentPiece;
+        const col = p.col;
+        // 从当前行向下清空整列（穿透）
+        for (let row = p.row; row < TOTAL_ROWS; row++) {
+            this._board[row][col] = EMPTY;
+        }
+        // 钻头直达底部
+        const dropDist = (TOTAL_ROWS - 1) - p.row;
+        this._currentPiece.row = TOTAL_ROWS - 1;
+        this._addScore(HARD_DROP_SCORE * dropDist);
+        this._lastAction = 'hardDrop';
+        this._stats.hardDropCount++;
+        this._cancelLockDelay();
+        this._lockPiece();
+        return dropDist;
+    }
+
+    rotateCW() {
+        return this._rotate(1);
+    }
+
+    rotateCCW() {
+        return this._rotate(-1);
+    }
+
+    hold() {
+        if (this._state !== GameState.PLAYING || !this._canHold || !this._currentPiece) return false;
+        this._cancelLockDelay();
+        const currentType = this._currentPiece.type;
+        if (this._holdPiece) {
+            const holdType = this._holdPiece.type;
+            this._holdPiece = { type: currentType, rotation: 0 };
+            this._initPiece(holdType, 0);
+        } else {
+            this._holdPiece = { type: currentType, rotation: 0 };
+            this._spawnPiece();
+        }
+        this._canHold = false;
+        this._emit(this._onHoldChange, this.getHoldPiece());
+        return true;
+    }
+
+    // ========================================================================
+    // 查询
+    // ========================================================================
+
+    getBoard() {
+        return this._cloneBoard(this._board);
+    }
+
+    getVisibleBoard() {
+        return this._board.slice(HIDDEN_ROWS);
+    }
+
+    getCurrentPiece() {
+        if (!this._currentPiece) return null;
+        const p = this._currentPiece;
+        return {
+            type: p.type,
+            rotation: p.rotation,
+            row: p.row,
+            col: p.col,
+            matrix: SRSRotation.getState(p.type, p.rotation),
+        };
+    }
+
+    getHoldPiece() {
+        if (!this._holdPiece) return null;
+        return {
+            type: this._holdPiece.type,
+            rotation: this._holdPiece.rotation,
+            matrix: SRSRotation.getState(this._holdPiece.type, this._holdPiece.rotation),
+        };
+    }
+
+    getNextPieces(count = 3) {
+        const types = this._bag.peek(count);
+        return types.map(type => ({
+            type,
+            rotation: 0,
+            matrix: SRSRotation.getState(type, 0),
+        }));
+    }
+
+    getGhostRow() {
+        if (!this._currentPiece) return -1;
+        const p = this._currentPiece;
+        let row = p.row;
+        while (this._isValidPosition(p.type, p.rotation, row + 1, p.col)) {
+            row++;
+        }
+        return row;
+    }
+
+    getState() { return this._state; }
+    getScore() { return this._score; }
+    getLevel() { return this._level; }
+    getLines() { return this._lines; }
+    getCombo() { return Math.max(0, this._combo); }
+    getSeed() { return this._seed; }
+    getEngineTime() { return this._engineTime; }
+
+
+    /** 逐帧驱动入口（虚拟时钟驱动）：引擎时间由外部每帧调用 update(dt) 累加，自动下落与锁定延迟通过截止点检查触发 */
+    update(dt) {
+        if (this._state !== GameState.PLAYING) return;
+        this._engineTime += dt * 1000;
+        if (this._dropDeadline > 0 && this._engineTime >= this._dropDeadline) {
+            this._dropDeadline = 0;
+            this._autoDrop();
+        }
+        if (this._lockDeadline > 0 && this._engineTime >= this._lockDeadline) {
+            this._lockDeadline = 0;
+            if (this._state === GameState.PLAYING && this._currentPiece && this._inLockDelay) {
+                this._lockPiece();
+            }
+        }
+    }
+    // ========================================================================
+    // 回调注册
+    // ========================================================================
+
+    onStateChange(cb) { this._onStateChange = cb; }
+    onBoardChange(cb) { this._onBoardChange = cb; }
+    onPieceSpawn(cb) { this._onPieceSpawn = cb; }
+    onLineClear(cb) { this._onLineClear = cb; }
+    onPieceLock(cb) { this._onPieceLock = cb; }
+    onScoreChange(cb) { this._onScoreChange = cb; }
+    onHoldChange(cb) { this._onHoldChange = cb; }
+    onLevelChange(cb) { this._onLevelChange = cb; }
+    onGameOver(cb) { this._onGameOver = cb; }
+    onCombo(cb) { this._onCombo = cb; }
+
+    // ========================================================================
+    // 私有 — 碰撞检测
+    // ========================================================================
+
+    _isValidPosition(type, rotation, row, col) {
+        const matrix = SRSRotation.getState(type, rotation);
+        for (let r = 0; r < matrix.length; r++) {
+            for (let c = 0; c < matrix[r].length; c++) {
+                if (matrix[r][c] !== 1) continue;
+                const br = row + r;
+                const bc = col + c;
+                if (bc < 0 || bc >= BOARD_COLS) return false;
+                if (br < 0 || br >= TOTAL_ROWS) return false;
+                if (this._board[br][bc] !== EMPTY) return false;
+            }
+        }
+        return true;
+    }
+
+    // ========================================================================
+    // 私有 — 旋转
+    // ========================================================================
+
+    _rotate(direction) {
+        if (this._state !== GameState.PLAYING || !this._currentPiece) return false;
+        const p = this._currentPiece;
+        // 特殊方块 D/P/M/Q/X 不可旋转
+        if (NON_ROTATABLE_TYPES[p.type]) return false;
+        const result = SRSRotation.tryRotate(
+            p.type, p.rotation, direction, p.col, p.row,
+            (col, row) => {
+                if (col < 0 || col >= BOARD_COLS) return false;
+                if (row < 0 || row >= TOTAL_ROWS) return false;
+                return this._board[row][col] === EMPTY;
+            }
+        );
+        if (result) {
+            p.rotation = result.newState;
+            p.col = result.newX;
+            p.row = result.newY;
+            this._lastAction = 'rotate';
+            this._onLockDelayMove();
+            this._emit(this._onBoardChange, this.getVisibleBoard(), this.getCurrentPiece());
+            return true;
+        }
+        return false;
+    }
+
+    // ========================================================================
+    // 私有 — 方块生成与锁定
+    // ========================================================================
+
+    _spawnPiece() {
+        const type = this._bag.next();
+        this._initPiece(type, 0);
+        this._canHold = true;
+    }
+
+    _initPiece(type, rotation) {
+        const matrix = SRSRotation.getState(type, rotation);
+        const col = Math.floor((BOARD_COLS - matrix[0].length) / 2);
+        const row = HIDDEN_ROWS;
+        if (!this._isValidPosition(type, rotation, row, col)) {
+            this._gameOver();
+            return;
+        }
+        this._currentPiece = { type, rotation, row, col };
+        this._lastAction = 'spawn';
+        this._tSpinType = null;
+        this._inLockDelay = false;
+        this._lockMoves = 0;
+        this._emit(this._onPieceSpawn, this.getCurrentPiece());
+        this._emit(this._onBoardChange, this.getVisibleBoard(), this.getCurrentPiece());
+    }
+
+    _lockPiece() {
+        const p = this._currentPiece;
+        if (!p) return;
+
+        // 写盘前检测 T-Spin（依赖当前棋盘与最后一次操作，修复死代码问题）
+        this._detectTSpin();
+
+        // 记录锁定方块类型（特殊方块计分倍率依赖）
+        this._lastLockType = p.type;
+
+        // 将方块写入棋盘
+        const matrix = SRSRotation.getState(p.type, p.rotation);
+        const value = TYPE_TO_VALUE[p.type];
+        for (let r = 0; r < matrix.length; r++) {
+            for (let c = 0; c < matrix[r].length; c++) {
+                if (matrix[r][c] !== 1) continue;
+                const br = p.row + r;
+                const bc = p.col + c;
+                if (br >= 0 && br < TOTAL_ROWS && bc >= 0 && bc < BOARD_COLS) {
+                    this._board[br][bc] = value;
+                }
+            }
+        }
+        const clearResult = this._checkLines();
+        if (clearResult.cleared > 0) {
+            this._combo++;
+            this._calculateScore(clearResult);
+            this._emit(this._onLineClear, clearResult.visibleRows, clearResult.cleared, clearResult.isTetris, clearResult.clearedColors, this._tSpinType, this._combo);
+            if (this._combo > 0) {
+                this._emit(this._onCombo, this._combo);
+            }
+        } else {
+            this._combo = -1;
+        }
+        // 落地反馈（无论是否消行都触发，供落地音效/波纹使用）
+        this._emit(this._onPieceLock, { type: p.type, hardDrop: this._lastAction === 'hardDrop' });
+
+        this._currentPiece = null;
+        this._inLockDelay = false;
+        this._lockMoves = 0;
+
+        if (this._state === GameState.PLAYING) {
+            this._spawnPiece();
+            if (this._state === GameState.PLAYING) {
+                this._restartDropTimer();
+            }
+        }
+    }
+
+    // ========================================================================
+    // 私有 — T-Spin 检测
+    // ========================================================================
+
+    _detectTSpin() {
+        this._tSpinType = null;
+        const p = this._currentPiece;
+        if (!p || p.type !== 'T' || this._lastAction !== 'rotate') return;
+
+        // T 方块中心在矩阵 [1][1]，检查四个对角
+        const corners = [
+            [p.row + 0, p.col + 0],
+            [p.row + 0, p.col + 2],
+            [p.row + 2, p.col + 0],
+            [p.row + 2, p.col + 2],
+        ];
+        let filled = 0;
+        for (const [r, c] of corners) {
+            if (r < 0 || r >= TOTAL_ROWS || c < 0 || c >= BOARD_COLS) {
+                filled++;
+            } else if (this._board[r][c] !== EMPTY) {
+                filled++;
+            }
+        }
+
+        if (filled >= 3) {
+            // 判断前方两角是否都被占据
+            const frontPairs = {
+                0: [[2, 0], [2, 2]],
+                1: [[0, 2], [2, 2]],
+                2: [[0, 0], [0, 2]],
+                3: [[0, 0], [2, 0]],
+            };
+            const [f1, f2] = frontPairs[p.rotation] || frontPairs[0];
+            const isFilled = (r, c) => {
+                if (r < 0 || r >= TOTAL_ROWS || c < 0 || c >= BOARD_COLS) return true;
+                return this._board[r][c] !== EMPTY;
+            };
+            if (filled === 4 || (isFilled(p.row + f1[0], p.col + f1[1])
+                && isFilled(p.row + f2[0], p.col + f2[1]))) {
+                this._tSpinType = 'full';
+            } else {
+                this._tSpinType = 'mini';
+            }
+        }
+    }
+
+    // ========================================================================
+    // 私有 — 消行与计分
+    // ========================================================================
+
+    _checkLines() {
+        const fullRows = [];
+        for (let r = HIDDEN_ROWS; r < TOTAL_ROWS; r++) {
+            if (this._board[r].every(cell => cell !== EMPTY)) {
+                fullRows.push(r);
+            }
+        }
+        if (fullRows.length === 0) {
+            return { cleared: 0, lines: [], visibleRows: [], clearedColors: [], isTetris: false, isDifficult: false };
+        }
+
+        // 记录被消除行的颜色快照（供粒子特效取色）
+        const clearedColors = fullRows.map(r => this._board[r].slice());
+
+        const isTetris = fullRows.length === 4;
+        const visibleRows = fullRows.map(r => r - HIDDEN_ROWS);
+
+        // 从下往上移除满行，顶部补空行
+        for (let i = fullRows.length - 1; i >= 0; i--) {
+            this._board.splice(fullRows[i], 1);
+        }
+        for (let i = 0; i < fullRows.length; i++) {
+            this._board.unshift(new Array(BOARD_COLS).fill(EMPTY));
+        }
+
+        const isDifficult = isTetris || this._tSpinType !== null;
+        return { cleared: fullRows.length, lines: fullRows, visibleRows, clearedColors, isTetris, isDifficult };
+    }
+
+    _calculateScore(result) {
+        const { cleared, isTetris, isDifficult } = result;
+        let base = LINE_SCORES[cleared - 1] * this._level;
+
+        // T-Spin 加分
+        if (this._tSpinType === 'full') {
+            base += 400 * this._level;
+            this._stats.tSpinFullCount++;
+        } else if (this._tSpinType === 'mini') {
+            base += 100 * this._level;
+            this._stats.tSpinMiniCount++;
+        }
+        if (this._tSpinType) {
+            this._stats.tSpinCount++;
+        }
+
+        // Tetris 计数
+        if (isTetris) {
+            this._stats.tetrisCount++;
+        }
+
+        // Back-to-Back 加成（1.5×）
+        if (isDifficult && this._lastClearWasDifficult) {
+            base = Math.floor(base * 1.5);
+            this._stats.b2bCount++;
+        }
+
+        // Combo 加成
+        if (this._combo > 0) {
+            base += 50 * this._combo * this._level;
+        }
+        if (this._combo > this._stats.maxCombo) {
+            this._stats.maxCombo = this._combo;
+        }
+
+        // 特殊方块计分倍率（触发消行的方块为特殊/新方块时）
+        const specialMultiplier = SPECIAL_SCORE_MULTIPLIERS[this._lastLockType] || 1;
+        if (specialMultiplier !== 1) {
+            base = Math.floor(base * specialMultiplier);
+        }
+
+        this._lastClearWasDifficult = isDifficult;
+        this._addScore(base);
+
+        // 更新消行数并检查升级
+        this._lines += cleared;
+        this._checkLevelUp();
+    }
+
+    _addScore(delta) {
+        this._score += delta;
+        this._emit(this._onScoreChange, this._score, delta);
+    }
+
+    // ========================================================================
+    // 私有 — 等级系统
+    // ========================================================================
+
+    _checkLevelUp() {
+        const targetLevel = Math.min(
+            Math.floor(this._lines / LINES_PER_LEVEL) + 1,
+            MAX_LEVEL
+        );
+        if (targetLevel > this._level) {
+            this._level = targetLevel;
+            this._dropInterval = this._getDropInterval(this._level);
+            if (this._state === GameState.PLAYING) {
+                this._restartDropTimer();
+            }
+            this._emit(this._onLevelChange, this._level);
+        }
+    }
+
+    _getDropInterval(level) {
+        const idx = Math.min(level - 1, LEVEL_SPEEDS.length - 1);
+        return LEVEL_SPEEDS[idx];
+    }
+
+    // ========================================================================
+    // 私有 — 下落计时
+    // ========================================================================
+
+    _startDropTimer() {
+        this._stopDropTimer();
+        this._scheduleDrop();
+    }
+
+    _restartDropTimer() {
+        this._stopDropTimer();
+        this._scheduleDrop();
+    }
+
+    _scheduleDrop() {
+        this._dropDeadline = this._engineTime + this._dropInterval;
+    }
+
+    _stopDropTimer() {
+        this._dropDeadline = 0;
+    }
+
+    _autoDrop() {
+        if (this._state !== GameState.PLAYING || !this._currentPiece) return;
+        const p = this._currentPiece;
+        if (this._isValidPosition(p.type, p.rotation, p.row + 1, p.col)) {
+            p.row++;
+            if (this._inLockDelay) {
+                this._cancelLockDelay();
+            }
+            this._emit(this._onBoardChange, this.getVisibleBoard(), this.getCurrentPiece());
+            this._scheduleDrop();
+        } else {
+            if (!this._inLockDelay) {
+                this._startLockDelay();
+            }
+        }
+    }
+
+    // ========================================================================
+    // 私有 — 锁定延迟
+    // ========================================================================
+
+    _startLockDelay() {
+        this._inLockDelay = true;
+        this._lockMoves = 0;
+        this._startLockTimer();
+    }
+
+    _startLockTimer() {
+        this._stopLockTimer();
+        this._lockDeadline = this._engineTime + LOCK_DELAY_MS;
+    }
+
+    _stopLockTimer() {
+        this._lockDeadline = 0;
+    }
+
+    /** 锁定延迟期间成功移动/旋转后调用 */
+    _onLockDelayMove() {
+        if (!this._inLockDelay) return;
+        const p = this._currentPiece;
+        // 若移动/旋转后下方出现空位（方块悬空），则脱离锁定延迟并恢复下落，
+        // 避免方块在空中悬停后原地锁定
+        if (p && this._isValidPosition(p.type, p.rotation, p.row + 1, p.col)) {
+            this._cancelLockDelay();
+            this._restartDropTimer();
+            return;
+        }
+        this._lockMoves++;
+        if (this._lockMoves >= MAX_LOCK_MOVES) {
+            this._stopLockTimer();
+            this._lockPiece();
+        } else {
+            this._startLockTimer();
+        }
+    }
+
+    _cancelLockDelay() {
+        this._stopLockTimer();
+        this._inLockDelay = false;
+        this._lockMoves = 0;
+    }
+
+    // ========================================================================
+    // 私有 — 游戏结束
+    // ========================================================================
+
+    _gameOver(reason) {
+        this._clearTimers();
+        this._state = GameState.OVER;
+        this._emit(this._onStateChange, this._state);
+        this._emit(this._onGameOver, this._score, this._level, this._lines, reason || 'topOut');
+    }
+
+    // ========================================================================
+    // 公共 — 模式与统计
+    // ========================================================================
+
+    /** 获取本局统计信息（T-Spin 次数 / Tetris 次数 / 最大 Combo / B2B 次数 / 硬降次数） */
+    getStats() {
+        return {
+            tSpinCount: this._stats.tSpinCount || 0,
+            tSpinMiniCount: this._stats.tSpinMiniCount || 0,
+            tSpinFullCount: this._stats.tSpinFullCount || 0,
+            tetrisCount: this._stats.tetrisCount || 0,
+            maxCombo: this._stats.maxCombo || 0,
+            b2bCount: this._stats.b2bCount || 0,
+            hardDropCount: this._stats.hardDropCount || 0,
+        };
+    }
+
+    /** 设置游戏模式（classic / timed / marathon / special） */
+    setMode(mode) {
+        this._mode = mode || 'classic';
+        this._bag.setSpecialMode(this._mode === 'special');
+    }
+
+    /** 获取当前游戏模式 */
+    getMode() {
+        return this._mode;
+    }
+
+    /** 模式目标达成时结束游戏（限时赛倒计时结束 / 马拉松达成目标行数） */
+    finishGame(reason) {
+        if (this._state !== GameState.PLAYING) return;
+        this._gameOver(reason || 'modeFinish');
+    }
+
+    /** 看广告复活：清除顶部溢出区域后恢复游戏（仅经典模式、每局最多 1 次） */
+    revive() {
+        if (this._state !== GameState.OVER) return false;
+
+        // 清除顶部溢出区域，为新方块留出生成空间
+        const clearTo = Math.min(HIDDEN_ROWS + 4, TOTAL_ROWS);
+        for (let r = 0; r < clearTo; r++) {
+            for (let c = 0; c < BOARD_COLS; c++) {
+                this._board[r][c] = EMPTY;
+            }
+        }
+
+        this._state = GameState.PLAYING;
+        this._currentPiece = null;
+        this._inLockDelay = false;
+        this._lockMoves = 0;
+        this._spawnPiece();
+        if (this._state === GameState.PLAYING) {
+            this._startDropTimer();
+        }
+        this._emit(this._onStateChange, this._state);
+        this._emit(this._onBoardChange, this.getVisibleBoard(), this.getCurrentPiece());
+        return true;
+    }
+
+    // ========================================================================
+    // 私有 — 工具
+    // ========================================================================
+
+    _clearTimers() {
+        this._stopDropTimer();
+        this._stopLockTimer();
+    }
+
+    _createStats() {
+        return {
+            tSpinCount: 0,
+            tSpinMiniCount: 0,
+            tSpinFullCount: 0,
+            tetrisCount: 0,
+            maxCombo: 0,
+            b2bCount: 0,
+            hardDropCount: 0,
+        };
+    }
+
+    _createEmptyBoard() {
+        const board = [];
+        for (let r = 0; r < TOTAL_ROWS; r++) {
+            board.push(new Array(BOARD_COLS).fill(EMPTY));
+        }
+        return board;
+    }
+
+    _cloneBoard(board) {
+        return board.map(row => row.slice());
+    }
+
+    _emit(fn, ...args) {
+        if (typeof fn === 'function') {
+            try { fn(...args); } catch (e) {
+                console.error('[TetrisEngine] callback error:', e);
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 导出
+// ---------------------------------------------------------------------------
+
+module.exports = {
+    TetrisEngine,
+    BagRandomizer,
+    GameState,
+    BOARD_COLS,
+    BOARD_ROWS,
+    HIDDEN_ROWS,
+    TOTAL_ROWS,
+    EMPTY,
+    LEVEL_SPEEDS,
+    LINE_SCORES,
+    SOFT_DROP_SCORE,
+    HARD_DROP_SCORE,
+    LINES_PER_LEVEL,
+    MAX_LEVEL,
+    TYPE_TO_VALUE,
+};

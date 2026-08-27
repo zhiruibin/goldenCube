@@ -1,0 +1,23 @@
+{
+	"id": "78139e1d-1a9b-47c5-9d76-360ddc94daae",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "cloud.allowed-modes",
+	"title": "Cloud ranking supports three game modes",
+	"statement": "The allowed game modes for cloud features are 'classic', 'timed', and 'marathon'.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015657789,
+	"updatedAt": 1787015657789,
+	"createdByTaskId": "business-init",
+	"latestEventId": "4217c537-e550-4117-b6bd-1d612e239ca3",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/cloud-config.js",
+			"symbol": "GAME_MODES"
+		}
+	]
+}

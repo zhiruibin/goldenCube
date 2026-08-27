@@ -1,0 +1,32 @@
+{
+	"id": "35a47b5e-68c4-485c-be20-3f739937091a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenges.local-pending-storage",
+	"title": "Pending challenges are cached locally with id and expiry",
+	"statement": "The challenge scene keeps local pending incoming challenges in storage key 'pending_challenges', prunes entries that lack a challengeId or are older than 7 days, and writes the cleaned list back to storage.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015781839,
+	"updatedAt": 1787015781839,
+	"createdByTaskId": "business-init",
+	"latestEventId": "962ac382-d04f-4e4b-9fe1-9439f45ae52d",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/challenge-scene.js"
+		},
+		{
+			"type": "symbol",
+			"path": "js/scenes/challenge-scene.js",
+			"symbol": "prunePendingChallenges"
+		},
+		{
+			"type": "symbol",
+			"path": "js/scenes/challenge-scene.js",
+			"symbol": "PENDING_EXPIRY_MS"
+		}
+	]
+}

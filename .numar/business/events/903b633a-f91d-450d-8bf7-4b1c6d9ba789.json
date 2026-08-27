@@ -1,0 +1,12 @@
+{
+	"id": "903b633a-f91d-450d-8bf7-4b1c6d9ba789",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "a9d85547-0f00-4550-be9d-812ec97b8e17",
+	"operation": "create",
+	"after": "成就奖励是一次性收益，不计入每日消行金币上限。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"data/achievements.js 文件注释：成就奖励为一次性收益，不计入每日消行金币上限"
+	],
+	"createdAt": 1787015608273
+}

@@ -1,0 +1,13 @@
+{
+	"id": "ecfed2d7-60d1-4bb8-b380-30b739b38742",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "c650a7d2-6562-412f-911e-97e26dbf5ee6",
+	"operation": "create",
+	"after": "消行基础分：Single 100、Double 300、Triple 500、Tetris 800；软降每格 1 分、硬降每格 2 分。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/tetris-engine.js: LINE_SCORES = [100, 300, 500, 800]",
+		"utils/tetris-engine.js: SOFT_DROP_SCORE = 1, HARD_DROP_SCORE = 2"
+	],
+	"createdAt": 1787015707508
+}

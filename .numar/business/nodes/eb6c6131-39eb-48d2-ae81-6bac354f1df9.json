@@ -1,0 +1,27 @@
+{
+	"id": "eb6c6131-39eb-48d2-ae81-6bac354f1df9",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "achievement.series.four-categories",
+	"title": "成就分四大系列",
+	"statement": "成就按新手、高手、收集、社交四大系列组织，数据中以 beginner、expert 等键分组存放。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015608244,
+	"updatedAt": 1787015608244,
+	"createdByTaskId": "business-init",
+	"latestEventId": "279dce85-3c9d-409c-add7-50ff8158f321",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "data/achievements.js"
+		},
+		{
+			"type": "symbol",
+			"path": "data/achievements.js",
+			"symbol": "achievements"
+		}
+	]
+}

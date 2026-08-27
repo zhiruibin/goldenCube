@@ -1,0 +1,32 @@
+{
+	"id": "1b242372-c558-4749-877c-04ecb49a9d9b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "coin.daily-line-clear-limit",
+	"title": "每日消行金币上限",
+	"statement": "玩家每日通过消行可获得的金币上限为 600；已达上限时消行奖励返回 0，未达上限时按剩余额度部分发放。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015706947,
+	"updatedAt": 1787015706947,
+	"createdByTaskId": "business-init",
+	"latestEventId": "40da26fe-ddc1-4003-90c8-ded2d9e1ce4b",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/coin-manager.js"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "DAILY_LIMIT"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "rewardLineClear"
+		}
+	]
+}

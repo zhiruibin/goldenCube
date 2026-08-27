@@ -1,0 +1,12 @@
+{
+	"id": "6641b46f-92c6-4cc4-8274-fdf3a9c56fe0",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "d27f66a1-bb1b-4b13-a12a-977afc8110ab",
+	"operation": "create",
+	"after": "The home scene references a pending challenge count from the challenge scene module.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/home-scene.js:import-getPendingChallengeCount"
+	],
+	"createdAt": 1787015836177
+}

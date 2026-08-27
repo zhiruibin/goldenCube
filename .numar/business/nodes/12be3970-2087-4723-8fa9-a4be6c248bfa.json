@@ -1,0 +1,37 @@
+{
+	"id": "12be3970-2087-4723-8fa9-a4be6c248bfa",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "user.profile.acquisition-flow",
+	"title": "头像昵称获取流程改为微信授权一键同步",
+	"statement": "用户点击一次微信授权后直接使用微信头像昵称，已授权用户后续自动获取",
+	"status": "active",
+	"verificationStatus": "verified",
+	"createdAt": 1787108806917,
+	"updatedAt": 1787108806917,
+	"createdByTaskId": "request_4cd0819e-0691-473a-9810-900dbac8c415",
+	"latestEventId": "76dda3bb-7c23-4dd2-b3c9-95272572c6fd",
+	"tags": [],
+	"aliases": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/user-profile.js"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/user-profile.js",
+			"symbol": "requestWechatProfile"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/user-profile.js",
+			"symbol": "tryAutoFetchProfile"
+		},
+		{
+			"type": "file",
+			"path": "js/scenes/settings-scene.js"
+		}
+	]
+}

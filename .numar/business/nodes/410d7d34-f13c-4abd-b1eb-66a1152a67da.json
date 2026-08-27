@@ -1,0 +1,28 @@
+{
+	"id": "410d7d34-f13c-4abd-b1eb-66a1152a67da",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "coin.daily-login-reward.amount-20",
+	"title": "每日登录奖励 20 金币",
+	"statement": "每日登录奖励固定为 20 金币，远小于消行产出，且不占每日消行金币上限。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787229097838,
+	"updatedAt": 1787229097838,
+	"createdByTaskId": "business-init",
+	"latestEventId": "4d75a398-3e47-402b-a55b-89188f37fe5a",
+	"tags": [],
+	"aliases": [
+		"每日登录金币",
+		"登录奖励 20",
+		"daily login reward"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "DAILY_LOGIN_REWARD"
+		}
+	]
+}

@@ -1,0 +1,23 @@
+{
+	"id": "2980f2fd-17c3-4c9e-a039-6c6c8cdabbda",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.replay.size-cap-60kb",
+	"title": "Replay payload accepted only when valid and no larger than 60KB",
+	"statement": "submitScore stores the replay field only when its structure is valid and its JSON serialization is at most 60KB.",
+	"status": "active",
+	"verificationStatus": "verified",
+	"createdAt": 1787586320217,
+	"updatedAt": 1787586320217,
+	"createdByTaskId": "request_8d5dfc6d-cdaa-49c8-8870-d4a88ceb6371",
+	"latestEventId": "60e3bb2e-0285-4726-ad66-257461c8a903",
+	"tags": [],
+	"aliases": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "cloudfunctions/rank/index.js"
+		}
+	]
+}

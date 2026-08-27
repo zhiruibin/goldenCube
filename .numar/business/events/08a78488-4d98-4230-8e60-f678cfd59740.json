@@ -1,0 +1,12 @@
+{
+	"id": "08a78488-4d98-4230-8e60-f678cfd59740",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "6e96d6ee-af7e-497b-9736-702505ae5036",
+	"operation": "create",
+	"after": "游戏启动时向场景管理器注册 home、game、result、rank、shop、settings、achievement、challenge、challengeResult 九个场景。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"game.js 中 sceneManager.register 对 9 个场景的逐一注册"
+	],
+	"createdAt": 1787015608213
+}

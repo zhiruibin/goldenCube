@@ -1,0 +1,13 @@
+{
+	"id": "7583e429-e8a6-4005-9301-7db11e39dfa7",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "367c6394-d3c9-48d8-b666-62d495393fa8",
+	"operation": "create",
+	"after": "The result scene attaches the current game's replay data during score submission; the cloud function persists it only when the score updates the user's historical best, so stored replays correspond to leaderboard-visible record games.",
+	"taskId": "request_8d5dfc6d-cdaa-49c8-8870-d4a88ceb6371",
+	"evidenceIds": [
+		"cloudfunctions/rank/index.js",
+		"js/scenes/result-scene.js"
+	],
+	"createdAt": 1787586320217
+}

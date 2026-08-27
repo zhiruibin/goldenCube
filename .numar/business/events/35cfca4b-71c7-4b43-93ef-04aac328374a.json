@@ -1,0 +1,12 @@
+{
+	"id": "35cfca4b-71c7-4b43-93ef-04aac328374a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "54987702-1d0c-4379-bc82-cb275cfe7918",
+	"operation": "create",
+	"after": "皮肤定价以每日 600 金币上限与消行 1/2/3/5 金币产出为锚点设计，可购总价约 8950，全收集约需 15 天满勤。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"data/skins.js 文件注释中的 2025-08 经济平衡调整说明"
+	],
+	"createdAt": 1787015608506
+}

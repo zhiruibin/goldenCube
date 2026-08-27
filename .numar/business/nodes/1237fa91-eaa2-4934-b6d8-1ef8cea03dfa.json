@@ -1,0 +1,23 @@
+{
+	"id": "1237fa91-eaa2-4934-b6d8-1ef8cea03dfa",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "coin.total-coins-statistic",
+	"title": "累计金币统计",
+	"statement": "累计获得金币写入 stat_total_coins，供收集系成就 total_coins 使用；成就奖励与消行金币共用累计统计但不影响每日上限。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015707202,
+	"updatedAt": 1787015707202,
+	"createdByTaskId": "business-init",
+	"latestEventId": "a401f0cd-89a1-45f9-b1f5-5d51e2602852",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "TOTAL_COINS_KEY"
+		}
+	]
+}

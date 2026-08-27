@@ -1,0 +1,32 @@
+{
+	"id": "1961bec1-ed7c-49c2-ad95-6a91ba1196da",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "result.interstitial.challenge-games-skip",
+	"title": "Challenge games skip result interstitial",
+	"statement": "The result scene decides interstitial display by cumulative game count (first 5 games protected, then every 6 games), and challenge games are skipped by the caller.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787229367525,
+	"updatedAt": 1787229367525,
+	"createdByTaskId": "business-init",
+	"latestEventId": "4028de6f-d9ba-4eff-a459-93d5e9f256f0",
+	"tags": [],
+	"aliases": [
+		"挑战局不弹插屏",
+		"插屏跳过挑战",
+		"挑战结算无插屏"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/result-scene.js"
+		},
+		{
+			"type": "symbol",
+			"path": "js/scenes/result-scene.js",
+			"symbol": "shouldShowInterstitial"
+		}
+	]
+}

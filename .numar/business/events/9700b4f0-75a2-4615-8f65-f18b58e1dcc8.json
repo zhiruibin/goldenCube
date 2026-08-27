@@ -1,0 +1,12 @@
+{
+	"id": "9700b4f0-75a2-4615-8f65-f18b58e1dcc8",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "3fd96933-5757-4e8c-8326-66c9c01b8dfb",
+	"operation": "create",
+	"after": "发起挑战时挑战分数必须为正整数且不超过 99,999,999，否则创建被拒绝并返回 invalid score。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/challenge/index.js:createChallenge"
+	],
+	"createdAt": 1787229097858
+}

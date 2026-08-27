@@ -1,0 +1,28 @@
+{
+	"id": "89955cc5-5814-441d-adc1-5c0241674977",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "coin.daily-record-cross-day-reset",
+	"title": "跨天自动归零",
+	"statement": "每日金币获取记录按 YYYY-MM-DD 存储，跨天后自动归零重新累计。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015707250,
+	"updatedAt": 1787015707250,
+	"createdByTaskId": "business-init",
+	"latestEventId": "032e9af8-dfc2-4b45-af96-72088977b5e0",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "_loadDaily"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "_today"
+		}
+	]
+}

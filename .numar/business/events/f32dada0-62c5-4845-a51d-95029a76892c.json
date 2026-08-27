@@ -1,0 +1,12 @@
+{
+	"id": "f32dada0-62c5-4845-a51d-95029a76892c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "0c88e3de-7e85-402b-afec-474c01c01362",
+	"operation": "create",
+	"after": "AudioManager generates sound effects using Web Audio API (wx.createWebAudioContext, AudioContext, or webkitAudioContext) and does not rely on external audio files.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/audio-manager.js: init()"
+	],
+	"createdAt": 1787015657669
+}

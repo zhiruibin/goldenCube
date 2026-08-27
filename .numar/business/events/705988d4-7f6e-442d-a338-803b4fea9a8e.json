@@ -1,0 +1,12 @@
+{
+	"id": "705988d4-7f6e-442d-a338-803b4fea9a8e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "e4f32986-c490-4100-8c72-5617f083dff5",
+	"operation": "create",
+	"after": "O 方块的 4 个旋转状态矩阵完全相同，且无需 Wall Kick 偏移。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/srs-rotation.js:O_STATES"
+	],
+	"createdAt": 1787229097843
+}

@@ -1,0 +1,32 @@
+{
+	"id": "cd3e4a4e-33be-4f2a-ae0a-39581aead738",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "srs.standard-piece-rotation-states",
+	"title": "标准方块旋转状态",
+	"statement": "7 种标准方块各维护 4 个旋转状态（0、R、180°、L），O 方块四个旋转状态相同即不旋转。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015707299,
+	"updatedAt": 1787015707299,
+	"createdByTaskId": "business-init",
+	"latestEventId": "622ecffb-f9ad-4a26-83ee-d5ba2aaa4fc4",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/srs-rotation.js"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/srs-rotation.js",
+			"symbol": "I_STATES"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/srs-rotation.js",
+			"symbol": "O_STATES"
+		}
+	]
+}

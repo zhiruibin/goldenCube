@@ -1,0 +1,28 @@
+{
+	"id": "8dcf8f0d-065f-477c-8fa9-2dd97dc32c20",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "cloud.friend-score.open-data-domain",
+	"title": "Friend score upload is handled by the open data domain",
+	"statement": "The main cloud service delegates friend leaderboard score updates to the open data context, which is required for wx.setUserCloudStorage with the friend rank key.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015658042,
+	"updatedAt": 1787015658042,
+	"createdByTaskId": "business-init",
+	"latestEventId": "9d8a8b5e-e064-4c0e-a241-264e20f54652",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/cloud-service.js",
+			"symbol": "CloudService.submitScore"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/cloud-config.js",
+			"symbol": "FRIEND_RANK_KEY"
+		}
+	]
+}

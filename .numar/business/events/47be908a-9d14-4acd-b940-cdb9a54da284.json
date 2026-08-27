@@ -1,0 +1,13 @@
+{
+	"id": "47be908a-9d14-4acd-b940-cdb9a54da284",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "fe4f5b33-2098-4cbb-8ab4-fac1f9f37fbd",
+	"operation": "create",
+	"after": "标准模式按 7-Bag 洗牌生成方块序列；开启特殊模式后改用实验室纯新方块池 LAB_PIECE_TYPES，使用 Fisher-Yates 洗牌。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/tetris-engine.js: _shuffle 中 _specialMode ? LAB_PIECE_TYPES : PIECE_TYPES",
+		"utils/tetris-engine.js: _shuffle 使用 Fisher-Yates"
+	],
+	"createdAt": 1787015707561
+}

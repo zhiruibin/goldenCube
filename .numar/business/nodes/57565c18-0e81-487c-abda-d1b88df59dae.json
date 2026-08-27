@@ -1,0 +1,28 @@
+{
+	"id": "57565c18-0e81-487c-abda-d1b88df59dae",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "ad.error-categories",
+	"title": "WeChat ad errors are classified into three recovery classes",
+	"statement": "The ad manager categorizes WeChat ad error codes into fatal errors (invalid ad unit, slot closed, unavailable), retryable errors (no fill, load timeout, network, component fail, not loaded), and rate-limit errors (rate limit, show rejected).",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015657631,
+	"updatedAt": 1787015657631,
+	"createdByTaskId": "business-init",
+	"latestEventId": "2cbcc3e3-5e23-423f-b15e-f2d365fca02e",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/ad-manager.js",
+			"symbol": "AD_ERROR_CODE"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/ad-manager.js",
+			"symbol": "ERROR_CATEGORY"
+		}
+	]
+}

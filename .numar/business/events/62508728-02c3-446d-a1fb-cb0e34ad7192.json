@@ -1,0 +1,12 @@
+{
+	"id": "62508728-02c3-446d-a1fb-cb0e34ad7192",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "349b7ff8-4673-4140-a9eb-af3f389b78bf",
+	"operation": "create",
+	"after": "When a game result is reported, the manager increments total games and total cleared lines, adds to cumulative score, updates best score, tetris count, max combo, max back-to-back count, max level, and max survival time when new records are achieved.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/achievement-manager.js: reportGameResult"
+	],
+	"createdAt": 1787015657362
+}

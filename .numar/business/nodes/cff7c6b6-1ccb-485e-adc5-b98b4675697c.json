@@ -1,0 +1,28 @@
+{
+	"id": "cff7c6b6-1ccb-485e-adc5-b98b4675697c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "achievement.best-record.stats-tracking",
+	"title": "Achievement manager tracks best/maximum stats from game results",
+	"statement": "On each game result report, the achievement manager increments total games, total score and total clears; it updates bestScore, maxCombo, maxB2B, maxLevel, and maxSurvive only when the new value is higher.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787227659782,
+	"updatedAt": 1787227659782,
+	"createdByTaskId": "business-init",
+	"latestEventId": "2455d899-b152-4be5-87d7-b7f2dfea275f",
+	"tags": [],
+	"aliases": [
+		"最高分与最大连击记录",
+		"成就最佳记录统计",
+		"bestScore 只在更高时更新"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/achievement-manager.js",
+			"symbol": "reportGameResult"
+		}
+	]
+}

@@ -1,0 +1,12 @@
+{
+	"id": "c1b0ca5e-1715-4ae2-8880-23c6ebc26d46",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "e6722664-2f62-4a3b-844b-e99cf6461037",
+	"operation": "create",
+	"after": "挑战超过 expiresAt 后即过期，不再出现在待应战列表中，且不可被应战。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/challenge/README.md"
+	],
+	"createdAt": 1787230425315
+}

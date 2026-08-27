@@ -1,0 +1,13 @@
+{
+	"id": "a856c63c-54cf-4e40-9caa-aa8206f7c46c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "ef42ce27-cb7b-4550-b3af-95d981e6e8a5",
+	"operation": "create",
+	"after": "ensureUserProfile 仅读取本地缓存，不调用 wx.getUserProfile；无缓存时返回空昵称与头像，并提示用户在设置页主动设置。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/user-profile.js: ensureUserProfile 返回缓存或空资料，不调用 wx.getUserProfile",
+		"utils/user-profile.js 注释：wx.getUserProfile 自 2022-10-25 起仅返回匿名资料"
+	],
+	"createdAt": 1787015708008
+}

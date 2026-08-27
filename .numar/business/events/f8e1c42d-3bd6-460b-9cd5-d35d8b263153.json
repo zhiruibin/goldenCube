@@ -1,0 +1,12 @@
+{
+	"id": "f8e1c42d-3bd6-460b-9cd5-d35d8b263153",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "35762176-afd6-4417-b698-1ea03942900f",
+	"operation": "create",
+	"after": "RankScene renders an inline replay button for top10 all-server entries with hasReplay, prevents duplicate clicks, fetches the cloud replay via getReplay, and navigates to the replay scene.",
+	"taskId": "request_8d5dfc6d-cdaa-49c8-8870-d4a88ceb6371",
+	"evidenceIds": [
+		"js/scenes/rank-scene.js"
+	],
+	"createdAt": 1787586320217
+}

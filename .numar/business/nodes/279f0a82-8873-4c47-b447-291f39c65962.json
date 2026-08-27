@@ -1,0 +1,22 @@
+{
+	"id": "279f0a82-8873-4c47-b447-291f39c65962",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.leaderboard-types-and-periods",
+	"title": "Leaderboard queries support all/friend types and total/week/month periods",
+	"statement": "getRankList supports type all (global server) or friend (requires friendOpenIds), and period total, week (since Monday 00:00), or month (since the 1st of the month).",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015892073,
+	"updatedAt": 1787015892073,
+	"createdByTaskId": "business-init",
+	"latestEventId": "cf9123a7-774d-4ea5-945e-0dadccf2801d",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "cloudfunctions/rank/README.md"
+		}
+	]
+}

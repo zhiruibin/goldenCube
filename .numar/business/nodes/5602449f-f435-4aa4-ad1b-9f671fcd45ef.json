@@ -1,0 +1,28 @@
+{
+	"id": "5602449f-f435-4aa4-ad1b-9f671fcd45ef",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "game.board.block-types",
+	"title": "棋盘支持 18 种方块类型",
+	"statement": "棋盘格子数值 1-18 对应 18 种方块字母（I、O、T、S、Z、J、L、C、D、P、M、R、Q、X、K、W、A、N），棋盘渲染与消行特效均按该映射使用固定颜色取色。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015753095,
+	"updatedAt": 1787015753095,
+	"createdByTaskId": "business-init",
+	"latestEventId": "2f7cef0f-2352-4c70-917a-b9ef9f42ed36",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/render/board-renderer.js",
+			"symbol": "TYPE_LETTER"
+		},
+		{
+			"type": "symbol",
+			"path": "js/render/effect-renderer.js",
+			"symbol": "TYPE_HEX"
+		}
+	]
+}

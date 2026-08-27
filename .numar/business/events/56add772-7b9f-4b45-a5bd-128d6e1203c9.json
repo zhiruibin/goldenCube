@@ -1,0 +1,12 @@
+{
+	"id": "56add772-7b9f-4b45-a5bd-128d6e1203c9",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "aa3ff421-b1bc-42b7-9ed5-24d88c5d8ce3",
+	"operation": "create",
+	"after": "软降每格计 1 分，硬降每格计 2 分。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/tetris-engine.js:SOFT_DROP_SCORE"
+	],
+	"createdAt": 1787229097848
+}

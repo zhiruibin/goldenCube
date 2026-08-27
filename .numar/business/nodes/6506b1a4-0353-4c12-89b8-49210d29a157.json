@@ -1,0 +1,28 @@
+{
+	"id": "6506b1a4-0353-4c12-89b8-49210d29a157",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.tie-handling.same-rank",
+	"title": "排行榜并列同排名",
+	"statement": "排名按『分数严格高于本人的人数 + 1』计算，分数相同者并列同一名次（并列同排）。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787229097862,
+	"updatedAt": 1787229097862,
+	"createdByTaskId": "business-init",
+	"latestEventId": "cbe87bf5-007e-495a-a2c0-8da056bc1016",
+	"tags": [],
+	"aliases": [
+		"并列排名",
+		"同分同名次",
+		"rank ties"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "cloudfunctions/rank/index.js",
+			"symbol": "submitScore"
+		}
+	]
+}

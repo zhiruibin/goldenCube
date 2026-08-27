@@ -1,0 +1,22 @@
+{
+	"id": "7834623d-060e-4636-b44a-2b8c808947b2",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.storage-cloud-function-only",
+	"title": "Challenge records are stored in the challenges collection with cloud-function-only access",
+	"statement": "Challenge records live in the cloud database challenges collection; the client never connects to that collection directly and all reads and writes go through the challenge cloud function using admin permissions.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015891425,
+	"updatedAt": 1787015891425,
+	"createdByTaskId": "business-init",
+	"latestEventId": "738bfd97-6452-4a53-9e8d-06f80894b832",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "cloudfunctions/challenge/README.md"
+		}
+	]
+}

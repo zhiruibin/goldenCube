@@ -1,0 +1,12 @@
+{
+	"id": "032e9af8-dfc2-4b45-af96-72088977b5e0",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "89955cc5-5814-441d-adc1-5c0241674977",
+	"operation": "create",
+	"after": "每日金币获取记录按 YYYY-MM-DD 存储，跨天后自动归零重新累计。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/coin-manager.js: _loadDaily 在日期变化时重置 _todayEarned 并写入当日记录"
+	],
+	"createdAt": 1787015707250
+}

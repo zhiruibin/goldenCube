@@ -1,0 +1,15 @@
+{
+	"id": "f6fd1c3e-cb55-417b-8c30-f426d22630c2",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "f47432d1-8abd-47f7-afce-c034853e3c34",
+	"toNodeId": "da01e57a-7b0f-4278-922f-0adc23b90bbb",
+	"type": "belongsTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"js/scenes/rank-scene.js onEnter defaults tab/mode/period",
+		"js/scenes/rank-scene.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1787229367546,
+	"updatedAt": 1787229949949
+}

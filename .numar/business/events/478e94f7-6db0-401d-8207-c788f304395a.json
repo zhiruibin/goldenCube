@@ -1,0 +1,12 @@
+{
+	"id": "478e94f7-6db0-401d-8207-c788f304395a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "89186931-b96d-496d-b478-8a9f7065bedc",
+	"operation": "create",
+	"after": "The achievement scene opens with the beginner category selected and filters the displayed achievement list to that category until the player switches tabs.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/achievement-scene.js"
+	],
+	"createdAt": 1787229255338
+}

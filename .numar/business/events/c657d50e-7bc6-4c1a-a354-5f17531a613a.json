@@ -1,0 +1,12 @@
+{
+	"id": "c657d50e-7bc6-4c1a-a354-5f17531a613a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "eecbb8ae-14db-4aff-8d94-76afab94782e",
+	"operation": "create",
+	"after": "背景流星生成位置偏向上半屏与左右两侧（左 45% 或右 45% 宽度范围），避免从棋盘正中穿越干扰操作；同屏最多 3 条，生成间隔 1.2-2.8 秒。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/background-effects.js _spawnMeteor() 偏向两侧的 x 计算与 METEOR_MAX/METEOR_SPAWN 常量"
+	],
+	"createdAt": 1787015753026
+}

@@ -1,0 +1,12 @@
+{
+	"id": "ef0720d1-2e8d-405b-b226-1946949cd75d",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "1d2c4683-f6b0-48a1-a000-8e6975aa50ab",
+	"operation": "create",
+	"after": "The equipped block skin, selected via the equipped_block storage key, is applied by the board renderer to locked board cells so settled blocks use the same colors/gradients as the active falling piece, keeping the look consistent before and after landing.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/board-renderer.js"
+	],
+	"createdAt": 1787229159313
+}

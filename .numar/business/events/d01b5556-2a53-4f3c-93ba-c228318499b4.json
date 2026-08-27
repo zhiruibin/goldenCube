@@ -1,0 +1,12 @@
+{
+	"id": "d01b5556-2a53-4f3c-93ba-c228318499b4",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "e8a13588-4e30-4973-b721-da5b4c123bdc",
+	"operation": "create",
+	"after": "Failed ad loads are retried up to 3 times with an initial delay of 3 seconds doubling each time; after exhausting retries the ad is marked unavailable for 5 minutes before it can recover.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/ad-manager.js: RETRY_CONFIG, COOLDOWN_MS"
+	],
+	"createdAt": 1787015657593
+}

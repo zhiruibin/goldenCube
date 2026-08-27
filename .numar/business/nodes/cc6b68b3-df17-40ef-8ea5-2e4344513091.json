@@ -1,0 +1,27 @@
+{
+	"id": "cc6b68b3-df17-40ef-8ea5-2e4344513091",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenges.mode-names",
+	"title": "Challenge result screen maps mode keys to localized names",
+	"statement": "The challenge result scene maps mode identifiers classic, timed, marathon, and special to the Chinese labels 经典模式, 限时赛, 马拉松, and 方块实验室, and shows final score, level, and cleared lines for the finished challenge.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015781767,
+	"updatedAt": 1787015781767,
+	"createdByTaskId": "business-init",
+	"latestEventId": "a8737be8-722c-458c-80bf-7db0793302f0",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/challenge-result-scene.js"
+		},
+		{
+			"type": "symbol",
+			"path": "js/scenes/challenge-result-scene.js",
+			"symbol": "MODE_NAMES"
+		}
+	]
+}

@@ -1,0 +1,31 @@
+{
+	"id": "63e24531-8a8e-4cad-a96e-4e33ee0225fa",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "game.canvas.dpr-scaling",
+	"title": "主画布高分屏适配",
+	"statement": "游戏启动时按设备像素比（pixelRatio）设置主画布物理尺寸，并对 2D 上下文调用 ctx.scale(dpr, dpr) 缩放；逻辑宽高按窗口尺寸记录，实现高清屏适配。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787227474969,
+	"updatedAt": 1787227474969,
+	"createdByTaskId": "business-init",
+	"latestEventId": "10d59dd6-983b-421f-a4fb-a0c160f3be83",
+	"tags": [],
+	"aliases": [
+		"画布 DPR 缩放",
+		"高清屏适配"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "game.js"
+		},
+		{
+			"type": "symbol",
+			"path": "game.js",
+			"symbol": "onStart"
+		}
+	]
+}

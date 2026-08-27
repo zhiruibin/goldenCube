@@ -1,0 +1,28 @@
+{
+	"id": "89ca413f-97bf-48db-8bf1-f400daa9a16c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "coin-hud.capsule-avoidance",
+	"title": "Right-aligned coin HUD avoids WeChat capsule button",
+	"statement": "drawCoinHud calculates a right margin from wx.getMenuButtonBoundingClientRect, with a fallback of 90px, so the coin display does not overlap the WeChat capsule button.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015657999,
+	"updatedAt": 1787015657999,
+	"createdByTaskId": "business-init",
+	"latestEventId": "8595cfab-c9e4-46c3-b129-d9fa37d15e0a",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/coin-hud.js",
+			"symbol": "_getCapsuleInset"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/coin-hud.js",
+			"symbol": "drawCoinHud"
+		}
+	]
+}

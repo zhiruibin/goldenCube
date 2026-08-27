@@ -1,0 +1,14 @@
+{
+	"id": "d6e4c107-dabc-48fd-a74b-f1731168ff1b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "d466ca20-3181-4983-811c-cdc49fdebd8d",
+	"toNodeId": "35a47b5e-68c4-485c-be20-3f739937091a",
+	"type": "belongsTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"js/scenes/challenge-scene.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1787229255345,
+	"updatedAt": 1787229255345
+}

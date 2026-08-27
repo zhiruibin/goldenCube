@@ -1,0 +1,32 @@
+{
+	"id": "821123dd-836e-48a1-85d3-b3757fb49588",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "widgets.dpad-button.das-arr-autorepeat",
+	"title": "Direction pad button auto-repeats via DAS/ARR after first action",
+	"statement": "Pressing a DPadButton fires onAction immediately, then after a 170ms DAS delay starts repeating onAction every 50ms (ARR interval) while held; releasing stops the repetition.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015891162,
+	"updatedAt": 1787015891162,
+	"createdByTaskId": "business-init",
+	"latestEventId": "a6ff9990-4611-47c3-8c0c-a348f8cb4074",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/widgets/dpad-button.js",
+			"symbol": "DPadButton.press"
+		},
+		{
+			"type": "symbol",
+			"path": "js/widgets/dpad-button.js",
+			"symbol": "DPadButton._startDAS"
+		},
+		{
+			"type": "file",
+			"path": "js/widgets/dpad-button.js"
+		}
+	]
+}

@@ -1,0 +1,12 @@
+{
+	"id": "6cb34e7b-680b-48f4-945f-7ed9e451389b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "864bdc1a-ff44-4bc4-a3a3-e5e4fde3aa8d",
+	"operation": "create",
+	"after": "Settings scene exposes a DAS delay slider from 50 to 500 ms with 10 ms steps, defaulting to 170 ms.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/settings-scene.js slider item min:50 max:500 step:10 value: this._settings.dasDelay || 170"
+	],
+	"createdAt": 1787229367535
+}

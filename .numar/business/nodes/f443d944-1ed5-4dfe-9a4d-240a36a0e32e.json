@@ -1,0 +1,26 @@
+{
+	"id": "f443d944-1ed5-4dfe-9a4d-240a36a0e32e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "achievement.icon.vector-renderer",
+	"title": "成就图标统一矢量渲染",
+	"statement": "成就图标字段使用统一矢量图标库 icon-renderer.js 中的图标名（非 emoji），由 IconRenderer.draw(ctx, icon, ...) 绘制，保证跨机型一致。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015608538,
+	"updatedAt": 1787015608538,
+	"createdByTaskId": "business-init",
+	"latestEventId": "e1e447d1-f03d-4683-b51e-9368d91d2fc0",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "data/achievements.js"
+		},
+		{
+			"type": "symbol",
+			"symbol": "IconRenderer"
+		}
+	]
+}

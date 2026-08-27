@@ -1,0 +1,12 @@
+{
+	"id": "2455d899-b152-4be5-87d7-b7f2dfea275f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "cff7c6b6-1ccb-485e-adc5-b98b4675697c",
+	"operation": "create",
+	"after": "On each game result report, the achievement manager increments total games, total score and total clears; it updates bestScore, maxCombo, maxB2B, maxLevel, and maxSurvive only when the new value is higher.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/achievement-manager.js reportGameResult"
+	],
+	"createdAt": 1787227659782
+}

@@ -1,0 +1,12 @@
+{
+	"id": "ae77ef06-13c3-41de-bf93-ce54ea3c5a0c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "935d7b23-8f78-4971-968e-fff03e40654b",
+	"operation": "create",
+	"after": "应战接口经过校验后原子更新，防止并发情况下同一挑战被重复应战。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/challenge/index.js 头部注释：respondChallenge 校验后原子更新，防止并发重复应战"
+	],
+	"createdAt": 1787015708246
+}

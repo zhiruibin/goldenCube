@@ -1,0 +1,12 @@
+{
+	"id": "9d482002-9623-4d35-8773-b3e6f7d2febc",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "8a89f486-aec0-43f2-a264-38efcabc275f",
+	"operation": "create",
+	"after": "Cloud development uses a configured environment ID and dedicated collection names 'rankings' for leaderboards and 'challenges' for challenge records, with the friend rank stored under key 'rank_score'.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/cloud-config.js: CLOUD_ENV, RANK_COLLECTION, CHALLENGE_COLLECTION, FRIEND_RANK_KEY"
+	],
+	"createdAt": 1787015657748
+}

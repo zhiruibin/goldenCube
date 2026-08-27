@@ -1,0 +1,14 @@
+{
+	"id": "1e129e1a-2507-40e7-9fa2-2dc06103877a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "4ed65a09-c6c0-4959-928e-b44cc626fef4",
+	"operation": "update",
+	"before": "wx.createUserInfoButton 的 onTap 回调未返回真实 userInfo 或只返回匿名用户时，直接判定失败并弹提示",
+	"after": "onTap 回调拿不到真实资料时，追加 wx.getUserInfo 兜底获取真实头像昵称；仍失败才提示「未获取到微信头像昵称（可能已拒绝授权），请重试」",
+	"taskId": "request_a254336e-c359-402e-a39e-a7e26186273d",
+	"evidenceIds": [
+		"fix-summary",
+		"node --check"
+	],
+	"createdAt": 1787109870459
+}

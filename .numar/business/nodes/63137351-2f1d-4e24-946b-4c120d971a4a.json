@@ -1,0 +1,23 @@
+{
+	"id": "63137351-2f1d-4e24-946b-4c120d971a4a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "game.result.ad.consolation-coins",
+	"title": "Consolation coins when daily cap reached",
+	"statement": "When the daily coin limit causes a game to produce 0 coins, watching a rewarded ad still grants a consolation reward of 15 coins, without changing the game score.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015834983,
+	"updatedAt": 1787015834983,
+	"createdByTaskId": "business-init",
+	"latestEventId": "c5328f31-4875-4c03-85e7-edd7e55893b8",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/result-scene.js",
+			"symbol": "AD_CONSOLATION_COINS"
+		}
+	]
+}

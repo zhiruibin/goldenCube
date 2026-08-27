@@ -1,0 +1,13 @@
+{
+	"id": "b55aafd1-2108-4173-a705-e360f40c49e1",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "a983a240-ed3b-4d02-96a4-688905d967ef",
+	"operation": "create",
+	"after": "动态特效根据设备 benchmarkLevel 分档：背景粒子数在 level>=3 时为 32、level===2 时为 16、其他为 8；彩纸庆祝粒子池在 level>=3 时为 140、level===2 时为 90、其他为 50，level<1 的过低端设备直接关闭彩纸特效。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/background-effects.js constructor 按 benchmarkLevel 设置 _maxParticles",
+		"js/render/confetti-fx.js init() 按 benchmarkLevel 设置 capacity"
+	],
+	"createdAt": 1787015752612
+}

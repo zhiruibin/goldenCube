@@ -1,0 +1,12 @@
+{
+	"id": "f909e24f-9d7a-4d08-99ca-62542656e76d",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "28ee96ba-089b-49d4-b342-ede7eef64705",
+	"operation": "create",
+	"after": "AudioManager initializes the Web Audio context by trying wx.createWebAudioContext first, then AudioContext, then webkitAudioContext; if none are available it logs that audio is unavailable.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/audio-manager.js init"
+	],
+	"createdAt": 1787227659791
+}

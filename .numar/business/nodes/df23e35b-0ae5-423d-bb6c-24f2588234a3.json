@@ -1,0 +1,27 @@
+{
+	"id": "df23e35b-0ae5-423d-bb6c-24f2588234a3",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.friend-name-display-truncation",
+	"title": "Challenge friend names truncated to 6 characters",
+	"statement": "Player names shown in the challenge scene are trimmed and truncated to at most 6 characters with an ellipsis when longer.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787229255336,
+	"updatedAt": 1787229255336,
+	"createdByTaskId": "business-init",
+	"latestEventId": "8a702163-d161-4c71-be9e-c92e1226c6ea",
+	"tags": [],
+	"aliases": [
+		"好友昵称截断",
+		"挑战列表昵称6字省略"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/challenge-scene.js",
+			"symbol": "_shortName"
+		}
+	]
+}

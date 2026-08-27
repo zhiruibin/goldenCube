@@ -1,0 +1,12 @@
+{
+	"id": "a475e2b2-0d0a-4035-a7e6-a18668b0c6af",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "da213011-65ea-477b-afc6-99568d9b15a0",
+	"operation": "create",
+	"after": "When the result scene opens for a challenge game, it automatically responds to the active challenge.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/result-scene.js:_respondChallenge"
+	],
+	"createdAt": 1787015835822
+}

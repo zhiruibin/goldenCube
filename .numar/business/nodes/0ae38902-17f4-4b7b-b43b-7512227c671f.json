@@ -1,0 +1,27 @@
+{
+	"id": "0ae38902-17f4-4b7b-b43b-7512227c671f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "leaderboard.mode-scoped-storage",
+	"title": "好友榜按模式分键存储",
+	"statement": "好友排行榜分数按游戏模式存储在云存储键 rank_score_<mode> 下，加载与上报均使用该模式键。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015608404,
+	"updatedAt": 1787015608404,
+	"createdByTaskId": "business-init",
+	"latestEventId": "9561969b-8524-471d-85ec-2b443700e3b0",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "openDataContext/index.js"
+		},
+		{
+			"type": "symbol",
+			"path": "openDataContext/index.js",
+			"symbol": "friendKey"
+		}
+	]
+}

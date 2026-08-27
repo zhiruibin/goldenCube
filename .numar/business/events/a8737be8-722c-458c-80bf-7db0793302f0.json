@@ -1,0 +1,13 @@
+{
+	"id": "a8737be8-722c-458c-80bf-7db0793302f0",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "cc6b68b3-df17-40ef-8ea5-2e4344513091",
+	"operation": "create",
+	"after": "The challenge result scene maps mode identifiers classic, timed, marathon, and special to the Chinese labels 经典模式, 限时赛, 马拉松, and 方块实验室, and shows final score, level, and cleared lines for the finished challenge.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/challenge-result-scene.js:MODE_NAMES",
+		"js/scenes/challenge-result-scene.js:render"
+	],
+	"createdAt": 1787015781767
+}

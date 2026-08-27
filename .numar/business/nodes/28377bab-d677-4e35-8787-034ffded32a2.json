@@ -1,0 +1,32 @@
+{
+	"id": "28377bab-d677-4e35-8787-034ffded32a2",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "skins.economy.pricing-calibration",
+	"title": "皮肤经济校准（日收入上限与收集周期调整）",
+	"statement": "锚定日收入上限约 920（消行 600 + 广告双倍 300 + 登录 20）与消行 1/2/3/5 金币产出（T-Spin 另有加成）；全收集约 10 天满勤（不计成就/抽奖）。",
+	"status": "active",
+	"verificationStatus": "verified",
+	"createdAt": 1787227474976,
+	"updatedAt": 1787309680938,
+	"createdByTaskId": "business-init",
+	"latestEventId": "a314d0e1-7d4a-45a3-9b18-39cbf672e82e",
+	"tags": [],
+	"aliases": [
+		"皮肤定价锚定",
+		"皮肤经济校准"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "AD_DAILY_CAP"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "T_SPIN_BONUS"
+		}
+	]
+}

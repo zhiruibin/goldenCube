@@ -1,0 +1,12 @@
+{
+	"id": "8bc8e200-4436-4afb-95eb-c91024d4abda",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "8cd16533-c6fc-440d-be03-8876494e9ba8",
+	"operation": "create",
+	"after": "The banner ad frequency config sets showDuration to 15000ms, so a banner is configured to close automatically after 15 seconds of display, with at least a 30s interval between banner shows.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/ad-manager.js FREQUENCY_CONFIG.banner.showDuration"
+	],
+	"createdAt": 1787227659788
+}

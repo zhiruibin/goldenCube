@@ -1,0 +1,27 @@
+{
+	"id": "51ccd366-e92f-441b-a6cb-9d2376712481",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "audio.autoplay.deferred-init",
+	"title": "音频延迟到首次用户交互初始化",
+	"statement": "游戏启动时创建 AudioManager 实例，但实际初始化（init）延迟到首次用户交互时进行，以满足平台自动播放策略。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015608182,
+	"updatedAt": 1787015608182,
+	"createdByTaskId": "business-init",
+	"latestEventId": "3579ab85-eedb-4cc5-a054-c40d2d41ea21",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "game.js"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/audio-manager.js",
+			"symbol": "AudioManager"
+		}
+	]
+}

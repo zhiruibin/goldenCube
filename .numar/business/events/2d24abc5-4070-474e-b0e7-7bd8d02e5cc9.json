@@ -1,0 +1,12 @@
+{
+	"id": "2d24abc5-4070-474e-b0e7-7bd8d02e5cc9",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "441906f1-fe94-4b02-bd07-045355b3b46e",
+	"operation": "create",
+	"after": "Achievements are reported at most once per game session, with the game survival time in seconds used as statistics input.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/game-scene.js:_achievementReported"
+	],
+	"createdAt": 1787015836085
+}

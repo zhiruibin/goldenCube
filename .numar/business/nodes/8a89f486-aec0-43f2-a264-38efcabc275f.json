@@ -1,0 +1,38 @@
+{
+	"id": "8a89f486-aec0-43f2-a264-38efcabc275f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "cloud.config.centralized",
+	"title": "Cloud environment and collections are centralized in config",
+	"statement": "Cloud development uses a configured environment ID and dedicated collection names 'rankings' for leaderboards and 'challenges' for challenge records, with the friend rank stored under key 'rank_score'.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015657748,
+	"updatedAt": 1787015657748,
+	"createdByTaskId": "business-init",
+	"latestEventId": "9d482002-9623-4d35-8773-b3e6f7d2febc",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/cloud-config.js",
+			"symbol": "CLOUD_ENV"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/cloud-config.js",
+			"symbol": "RANK_COLLECTION"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/cloud-config.js",
+			"symbol": "CHALLENGE_COLLECTION"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/cloud-config.js",
+			"symbol": "FRIEND_RANK_KEY"
+		}
+	]
+}

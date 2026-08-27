@@ -1,0 +1,12 @@
+{
+	"id": "8a702163-d161-4c71-be9e-c92e1226c6ea",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "df23e35b-0ae5-423d-bb6c-24f2588234a3",
+	"operation": "create",
+	"after": "Player names shown in the challenge scene are trimmed and truncated to at most 6 characters with an ellipsis when longer.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/challenge-scene.js"
+	],
+	"createdAt": 1787229255336
+}

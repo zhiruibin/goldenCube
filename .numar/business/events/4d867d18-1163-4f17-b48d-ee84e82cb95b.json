@@ -1,0 +1,12 @@
+{
+	"id": "4d867d18-1163-4f17-b48d-ee84e82cb95b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "b93079fb-d16a-4564-9982-26dc7cd9fb09",
+	"operation": "create",
+	"after": "reportTSpin increments the general T-Spin counter and additionally the double T-Spin counter when two or more lines are cleared.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/achievement-manager.js: reportTSpin"
+	],
+	"createdAt": 1787015657444
+}

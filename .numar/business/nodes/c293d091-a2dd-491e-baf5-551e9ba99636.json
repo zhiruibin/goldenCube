@@ -1,0 +1,43 @@
+{
+	"id": "c293d091-a2dd-491e-baf5-551e9ba99636",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "cloud.challenge.api",
+	"title": "Cloud service exposes challenge management API",
+	"statement": "The service is documented to provide createChallenge, respondChallenge, getMyChallenges, getChallengeById, and cancelChallenge operations for challenge management.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015658091,
+	"updatedAt": 1787015658091,
+	"createdByTaskId": "business-init",
+	"latestEventId": "3a3bf479-5b17-4820-a4a8-cd3aee1d8f90",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/cloud-service.js",
+			"symbol": "createChallenge"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/cloud-service.js",
+			"symbol": "respondChallenge"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/cloud-service.js",
+			"symbol": "getMyChallenges"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/cloud-service.js",
+			"symbol": "getChallengeById"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/cloud-service.js",
+			"symbol": "cancelChallenge"
+		}
+	]
+}

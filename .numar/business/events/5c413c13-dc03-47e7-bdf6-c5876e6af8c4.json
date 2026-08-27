@@ -1,0 +1,12 @@
+{
+	"id": "5c413c13-dc03-47e7-bdf6-c5876e6af8c4",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "bf833453-6fd8-4984-8052-c4bca862b64c",
+	"operation": "create",
+	"after": "成就判定条件包含 single_clear、multi_clear、single_score、total_games、total_clears、survive_time、tspin_clear、back_to_back、combo 等类型，并带 count、lines、score、seconds 等参数。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"data/achievements.js 各成就 condition.type 及参数取值"
+	],
+	"createdAt": 1787015608304
+}

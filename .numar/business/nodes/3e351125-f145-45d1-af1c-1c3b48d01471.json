@@ -1,0 +1,27 @@
+{
+	"id": "3e351125-f145-45d1-af1c-1c3b48d01471",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "cloud.friend-rank.storage-key",
+	"title": "Friend leaderboard uses storage key 'rank_score'",
+	"statement": "Friend leaderboard scores are stored under the open data domain key 'rank_score' via wx.setUserCloudStorage.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787227659800,
+	"updatedAt": 1787227659800,
+	"createdByTaskId": "business-init",
+	"latestEventId": "ed12791c-b7d6-453c-b90f-8de216a1aacb",
+	"tags": [],
+	"aliases": [
+		"好友榜 rank_score",
+		"开放数据域存储键"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/cloud-config.js",
+			"symbol": "FRIEND_RANK_KEY"
+		}
+	]
+}

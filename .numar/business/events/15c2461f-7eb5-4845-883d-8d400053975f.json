@@ -1,0 +1,12 @@
+{
+	"id": "15c2461f-7eb5-4845-883d-8d400053975f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "b6b2a5bc-7e78-4f8a-ab50-150fbd3fea3f",
+	"operation": "create",
+	"after": "当前排名由分数严格高于该用户的人数加 1 得出，同分玩家并列同排。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/rank/index.js: better = where({ mode, score: _.gt(myScore) }).count(); rank = better.total + 1"
+	],
+	"createdAt": 1787015708370
+}

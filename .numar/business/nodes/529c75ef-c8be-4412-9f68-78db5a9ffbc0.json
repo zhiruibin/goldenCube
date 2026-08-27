@@ -1,0 +1,27 @@
+{
+	"id": "529c75ef-c8be-4412-9f68-78db5a9ffbc0",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "cloud.service.local-fallback",
+	"title": "云服务失败自动降级本地模式",
+	"statement": "云服务初始化失败时自动降级为本地模式，不影响游戏启动。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015608154,
+	"updatedAt": 1787015608154,
+	"createdByTaskId": "business-init",
+	"latestEventId": "17416dc2-5802-42a8-a787-b0a11ed04431",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "game.js"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/cloud-service.js",
+			"symbol": "cloudService"
+		}
+	]
+}

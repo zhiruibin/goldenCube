@@ -1,0 +1,12 @@
+{
+	"id": "d16412b4-37a6-49c3-8a1f-6d1d2dd97b82",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "d4a1cc91-934e-4f17-86e5-0f65ca8074ac",
+	"operation": "create",
+	"after": "DPadButton 的 hitTest 以圆心到触点距离不超过半径作为命中判定（圆形区域），与普通 Button 的矩形检测不同。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/widgets/dpad-button.js"
+	],
+	"createdAt": 1787230425326
+}

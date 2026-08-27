@@ -1,0 +1,12 @@
+{
+	"id": "86e00ea3-376d-479a-8f07-65127b56d0a9",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "d466ca20-3181-4983-811c-cdc49fdebd8d",
+	"operation": "create",
+	"after": "When the challenge scene reads the locally stored pending challenge list, entries that lack a challengeId or are older than 7 days are removed and the cleaned list is written back to storage.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/challenge-scene.js"
+	],
+	"createdAt": 1787229255329
+}

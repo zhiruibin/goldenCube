@@ -1,0 +1,31 @@
+{
+	"id": "7af25ae8-e4e5-4bfc-a0a7-238838923a59",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "skins.board.catalog-pricing",
+	"title": "棋盘皮肤目录与定价",
+	"statement": "棋盘皮肤包含经典（默认免费）、星空（400）、海洋（450）等主题，非默认棋盘皮肤需购买解锁，部分带特效（如星空背景）。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787227474980,
+	"updatedAt": 1787227474980,
+	"createdByTaskId": "business-init",
+	"latestEventId": "f468efcf-ae9b-4015-a17f-ad3159e588a4",
+	"tags": [],
+	"aliases": [
+		"棋盘皮肤",
+		"棋盘主题"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "data/skins.js"
+		},
+		{
+			"type": "symbol",
+			"path": "data/skins.js",
+			"symbol": "boardSkins"
+		}
+	]
+}

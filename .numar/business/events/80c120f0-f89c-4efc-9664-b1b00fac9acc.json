@@ -1,0 +1,12 @@
+{
+	"id": "80c120f0-f89c-4efc-9664-b1b00fac9acc",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "73b479cc-e23c-4675-90af-22d03b2a2079",
+	"operation": "create",
+	"after": "AchievementManager reads and writes player statistics and unlocked achievement IDs using WeChat local storage APIs (wx.getStorageSync / wx.setStorageSync), under keys defined in STAT_KEYS plus unlockedAchievements.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/achievement-manager.js: STAT_KEYS, UNLOCKED_KEY, init/getStat/setStat"
+	],
+	"createdAt": 1787015657309
+}

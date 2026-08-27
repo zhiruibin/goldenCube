@@ -1,0 +1,23 @@
+{
+	"id": "29dda2da-7246-4edd-8f07-6b32b8447f53",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "game.lucky-draw.once-per-game",
+	"title": "Lucky draw once per game",
+	"statement": "The post-game lucky draw can be used at most once per game session; the usage flag resets when each game starts.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015835741,
+	"updatedAt": 1787015835741,
+	"createdByTaskId": "business-init",
+	"latestEventId": "191c9a0c-521c-43be-b7a2-624216204b4c",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/game-scene.js",
+			"symbol": "_luckyDrawUsed"
+		}
+	]
+}

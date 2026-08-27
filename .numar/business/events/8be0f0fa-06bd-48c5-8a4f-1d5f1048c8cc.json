@@ -1,0 +1,13 @@
+{
+	"id": "8be0f0fa-06bd-48c5-8a4f-1d5f1048c8cc",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "99823330-ef0d-4aaf-b305-b2d7f791596d",
+	"operation": "create",
+	"after": "游戏共 15 级，下落间隔随等级递增从 1 级 1000ms 递减至 15 级 7ms。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/tetris-engine.js: LEVEL_SPEEDS 索引 = 等级-1",
+		"utils/tetris-engine.js: MAX_LEVEL = 15"
+	],
+	"createdAt": 1787015707456
+}

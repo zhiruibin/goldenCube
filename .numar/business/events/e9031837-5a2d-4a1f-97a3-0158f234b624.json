@@ -1,0 +1,12 @@
+{
+	"id": "e9031837-5a2d-4a1f-97a3-0158f234b624",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "a3efbac4-b114-4145-b7de-efde5335abd6",
+	"operation": "create",
+	"after": "棋盘渲染器从本地存储键 equipped_block 读取已装备方块皮肤并应用到已锁定方块的颜色绘制，保证方块落地后与下落中（PieceRenderer）样式一致。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/board-renderer.js _applyBlockSkin() 读取 equipped_block 并构建方块渐变映射"
+	],
+	"createdAt": 1787015752762
+}

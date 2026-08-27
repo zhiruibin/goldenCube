@@ -1,0 +1,27 @@
+{
+	"id": "d5875f3f-ac2d-4aac-a2ce-dc0bb93ee1e1",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "widgets.button.trigger-onclick-and-pressed-feedback",
+	"title": "Button trigger applies press feedback and invokes onClick",
+	"statement": "Triggering a Button sets a pressed state with a 0.95 press scale, restores it after 100ms, and invokes the configured onClick callback.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015890980,
+	"updatedAt": 1787015890980,
+	"createdByTaskId": "business-init",
+	"latestEventId": "a515cd0d-9672-483c-b88f-26eeb6c9c755",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/widgets/button.js",
+			"symbol": "Button.trigger"
+		},
+		{
+			"type": "file",
+			"path": "js/widgets/button.js"
+		}
+	]
+}

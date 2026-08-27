@@ -1,0 +1,27 @@
+{
+	"id": "951edf04-236c-4223-8ded-292acfd9d8a9",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "skins.equipped-block.renderer-application",
+	"title": "Piece renderer applies equipped block skin with default fallback",
+	"statement": "PieceRenderer reads the equipped block skin id from local storage when constructed, falls back to the default skin when the id is absent or unknown, and builds per-piece fill colors; skin colors defined as arrays are retained as full gradients while non-array colors are used as flat colors.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787229255341,
+	"updatedAt": 1787229255341,
+	"createdByTaskId": "business-init",
+	"latestEventId": "ee9a2e2b-66a2-41b6-8068-fa95a4da9325",
+	"tags": [],
+	"aliases": [
+		"方块皮肤渲染映射",
+		"装扮方块渐变与回退"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/render/piece-renderer.js",
+			"symbol": "PieceRenderer._applySkin"
+		}
+	]
+}

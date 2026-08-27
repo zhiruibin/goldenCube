@@ -1,0 +1,12 @@
+{
+	"id": "2c509684-e997-45dc-add8-feaeb7cdcee5",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "46ec0fe5-1adf-4d0c-841e-88876f85a5ec",
+	"operation": "create",
+	"after": "The ad manager skips creating rewarded video, banner, and interstitial ads when the ad unit ID is empty, whitespace, a placeholder (adunit-xxxxxxxxxxxxxxxx), or still contains 'xxxxxxxx'.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/ad-manager.js: isAdUnitIdReady, AD_UNIT_IDS"
+	],
+	"createdAt": 1787015657518
+}

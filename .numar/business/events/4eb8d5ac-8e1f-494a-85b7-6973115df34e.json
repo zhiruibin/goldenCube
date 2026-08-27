@@ -1,0 +1,14 @@
+{
+	"id": "4eb8d5ac-8e1f-494a-85b7-6973115df34e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "421037eb-4bec-44c3-9802-d877df01076d",
+	"operation": "update",
+	"before": "回放场景优先使用传入的云回放数据，本地回放数据兜底；从排行榜进入时，返回操作通过 switchTo('rank') 回到排行榜。",
+	"after": "回放场景优先使用传入的云回放数据，本地回放数据兜底；返回操作改为 sceneManager.back() 弹出场景栈回到上一场景（通常为排行榜），不再 switchTo('rank') 压入新排行榜实例，避免 rank/replay 场景栈无限累积。",
+	"taskId": "request_1ed20aee-0ec5-449f-9f20-a9a239986a27",
+	"evidenceIds": [
+		"js/scenes/replay-scene.js#L452-461",
+		"修复摘要：回放返回循环与场景栈膨胀已解决"
+	],
+	"createdAt": 1787590092632
+}

@@ -1,0 +1,26 @@
+{
+	"id": "0ccc55c4-a0b3-45c8-b1da-bfcef49fc37d",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.api.success-error-envelope",
+	"title": "挑战云函数统一 success/errMsg 响应结构",
+	"statement": "挑战云函数所有接口统一返回 { success: true, ... }，失败时返回 { success: false, errMsg: '...' }。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787230425318,
+	"updatedAt": 1787230425318,
+	"createdByTaskId": "business-init",
+	"latestEventId": "70ef020b-d649-40ca-830f-d4d5a47520bb",
+	"tags": [],
+	"aliases": [
+		"统一响应结构",
+		"success/errMsg 返回格式"
+	],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "cloudfunctions/challenge/README.md"
+		}
+	]
+}

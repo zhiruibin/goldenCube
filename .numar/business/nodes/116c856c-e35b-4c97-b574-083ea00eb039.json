@@ -1,0 +1,27 @@
+{
+	"id": "116c856c-e35b-4c97-b574-083ea00eb039",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "tetris.engine.pure-logic-no-wx-api",
+	"title": "引擎不依赖微信 API",
+	"statement": "核心俄罗斯方块引擎不依赖任何微信小游戏 API，保持纯逻辑可测试性；模块加载使用相对路径解析。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787229097845,
+	"updatedAt": 1787229097845,
+	"createdByTaskId": "business-init",
+	"latestEventId": "957d2b40-952d-471c-bedf-9c2313c02342",
+	"tags": [],
+	"aliases": [
+		"纯逻辑引擎",
+		"无微信依赖",
+		"pure logic engine"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/tetris-engine.js"
+		}
+	]
+}

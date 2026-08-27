@@ -1,0 +1,27 @@
+{
+	"id": "a9d85547-0f00-4550-be9d-812ec97b8e17",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "achievement.reward.one-time",
+	"title": "成就奖励为一次性收益",
+	"statement": "成就奖励是一次性收益，不计入每日消行金币上限。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015608273,
+	"updatedAt": 1787015608273,
+	"createdByTaskId": "business-init",
+	"latestEventId": "903b633a-f91d-450d-8bf7-4b1c6d9ba789",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "data/achievements.js"
+		},
+		{
+			"type": "symbol",
+			"path": "data/achievements.js",
+			"symbol": "achievements"
+		}
+	]
+}

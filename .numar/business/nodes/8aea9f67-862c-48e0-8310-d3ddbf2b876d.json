@@ -1,0 +1,32 @@
+{
+	"id": "8aea9f67-862c-48e0-8310-d3ddbf2b876d",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "widgets.dpad-button.single-active-touch",
+	"title": "Direction pad button tracks one active touch at a time",
+	"statement": "Each DPadButton binds a single active touch identifier; a second press is ignored while one is active, and release only stops auto-repeat when the release touch matches the active touch.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015891248,
+	"updatedAt": 1787015891248,
+	"createdByTaskId": "business-init",
+	"latestEventId": "f1a898f8-0138-48f0-8339-b79521f4ecaa",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/widgets/dpad-button.js",
+			"symbol": "DPadButton.press"
+		},
+		{
+			"type": "symbol",
+			"path": "js/widgets/dpad-button.js",
+			"symbol": "DPadButton.release"
+		},
+		{
+			"type": "file",
+			"path": "js/widgets/dpad-button.js"
+		}
+	]
+}

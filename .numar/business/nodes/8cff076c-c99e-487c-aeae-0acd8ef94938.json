@@ -1,0 +1,44 @@
+{
+	"id": "8cff076c-c99e-487c-aeae-0acd8ef94938",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "coin.ad-bonus.daily-cap-300",
+	"title": "广告双倍金币独立日上限 300",
+	"statement": "广告双倍金币按独立日上限 300 发放：触顶返回 0、剩余额度不足只发剩余额度；不计入消行每日 600 上限；登录/抽奖等 rewardAdBonus 小额加成保持不受限且不计入广告上限",
+	"status": "active",
+	"verificationStatus": "verified",
+	"createdAt": 1787309680938,
+	"updatedAt": 1787309680938,
+	"createdByTaskId": "request_f0aaf24d-b35f-4102-8cd7-e93af669d924",
+	"latestEventId": "463b484e-561d-453a-82d1-b28cd6dcaad3",
+	"tags": [],
+	"aliases": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "AD_DAILY_CAP"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "rewardAdBonusCapped"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "getAdBonusRemaining"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "isAdBonusFull"
+		},
+		{
+			"type": "symbol",
+			"path": "js/scenes/result-scene.js",
+			"symbol": "_doubleCoins"
+		}
+	]
+}

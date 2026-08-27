@@ -1,0 +1,27 @@
+{
+	"id": "89186931-b96d-496d-b478-8a9f7065bedc",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "achievement.scene.default-beginner-tab",
+	"title": "Achievement scene defaults to beginner category tab",
+	"statement": "The achievement scene opens with the beginner category selected and filters the displayed achievement list to that category until the player switches tabs.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787229255338,
+	"updatedAt": 1787229255338,
+	"createdByTaskId": "business-init",
+	"latestEventId": "478e94f7-6db0-401d-8207-c788f304395a",
+	"tags": [],
+	"aliases": [
+		"成就默认新手系列",
+		"成就页默认新手Tab"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/achievement-scene.js",
+			"symbol": "AchievementScene.onEnter"
+		}
+	]
+}

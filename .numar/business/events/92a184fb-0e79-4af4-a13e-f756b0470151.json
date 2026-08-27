@@ -1,0 +1,13 @@
+{
+	"id": "92a184fb-0e79-4af4-a13e-f756b0470151",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "a81bb7d9-da4c-4b1b-893a-cc1eaff0ab86",
+	"operation": "create",
+	"after": "实验室模式引入新方块（R 光棱 / Q 方碑 / X 十字 / K 王冠 / W 折梯 / A 方舟）并纳入旋转系统；R 方块为 4×4 长条矩阵，旋转状态与 I 形一致。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/srs-rotation.js 头部注释：列出 R/Q/X/K/W/A 新方块",
+		"utils/srs-rotation.js: R_STATES 为 4×4 矩阵"
+	],
+	"createdAt": 1787015707350
+}

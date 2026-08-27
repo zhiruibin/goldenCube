@@ -1,0 +1,12 @@
+{
+	"id": "4a05ad02-3ff9-4f19-9ae6-5738e253fea7",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "3f0f7f5e-8b7d-4e17-8c92-44d49095dfcd",
+	"operation": "create",
+	"after": "Hard drop inputs are ignored until 200ms after the previous hard drop, to prevent accidental immediate drops from rapid taps or multi-touch.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/game-scene.js:HARD_DROP_COOLDOWN_MS"
+	],
+	"createdAt": 1787015835148
+}

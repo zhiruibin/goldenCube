@@ -1,0 +1,28 @@
+{
+	"id": "630d5fda-607d-45ee-ad31-808d1fcd76f1",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.expiry-and-pending-limit",
+	"title": "挑战有效期与待处理上限",
+	"statement": "挑战记录 7 天后过期，同一玩家最多同时拥有 20 条 pending 挑战。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015708126,
+	"updatedAt": 1787015708126,
+	"createdByTaskId": "business-init",
+	"latestEventId": "aa9e382c-ffb0-4196-9eb0-dfa83363853e",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "cloudfunctions/challenge/index.js",
+			"symbol": "EXPIRY_MS"
+		},
+		{
+			"type": "symbol",
+			"path": "cloudfunctions/challenge/index.js",
+			"symbol": "MAX_PENDING"
+		}
+	]
+}

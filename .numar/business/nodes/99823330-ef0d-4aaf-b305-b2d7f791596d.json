@@ -1,0 +1,28 @@
+{
+	"id": "99823330-ef0d-4aaf-b305-b2d7f791596d",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "tetris.level-speed-curve",
+	"title": "等级速度曲线",
+	"statement": "游戏共 15 级，下落间隔随等级递增从 1 级 1000ms 递减至 15 级 7ms。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015707456,
+	"updatedAt": 1787015707456,
+	"createdByTaskId": "business-init",
+	"latestEventId": "8be0f0fa-06bd-48c5-8a4f-1d5f1048c8cc",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/tetris-engine.js",
+			"symbol": "LEVEL_SPEEDS"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/tetris-engine.js",
+			"symbol": "MAX_LEVEL"
+		}
+	]
+}

@@ -1,0 +1,12 @@
+{
+	"id": "ee9a2e2b-66a2-41b6-8068-fa95a4da9325",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "951edf04-236c-4223-8ded-292acfd9d8a9",
+	"operation": "create",
+	"after": "PieceRenderer reads the equipped block skin id from local storage when constructed, falls back to the default skin when the id is absent or unknown, and builds per-piece fill colors; skin colors defined as arrays are retained as full gradients while non-array colors are used as flat colors.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/piece-renderer.js"
+	],
+	"createdAt": 1787229255341
+}

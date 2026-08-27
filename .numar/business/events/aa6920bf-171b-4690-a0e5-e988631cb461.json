@@ -1,0 +1,12 @@
+{
+	"id": "aa6920bf-171b-4690-a0e5-e988631cb461",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "b3f95891-49de-4991-851b-5cc66a760c53",
+	"operation": "create",
+	"after": "引擎定义 idle、ready、playing、paused、over 五种游戏状态，负责初始化/开始/暂停/恢复/重置的状态流转。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/tetris-engine.js:GameState"
+	],
+	"createdAt": 1787229097846
+}

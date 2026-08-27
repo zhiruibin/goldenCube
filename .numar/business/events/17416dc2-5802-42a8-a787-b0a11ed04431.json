@@ -1,0 +1,12 @@
+{
+	"id": "17416dc2-5802-42a8-a787-b0a11ed04431",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "529c75ef-c8be-4412-9f68-78db5a9ffbc0",
+	"operation": "create",
+	"after": "云服务初始化失败时自动降级为本地模式，不影响游戏启动。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"game.js 中以 try/catch 包裹 cloudService.init()，catch 中 console.warn 并继续启动流程"
+	],
+	"createdAt": 1787015608154
+}

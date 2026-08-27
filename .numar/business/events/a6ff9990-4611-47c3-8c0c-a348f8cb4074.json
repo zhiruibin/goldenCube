@@ -1,0 +1,12 @@
+{
+	"id": "a6ff9990-4611-47c3-8c0c-a348f8cb4074",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "821123dd-836e-48a1-85d3-b3757fb49588",
+	"operation": "create",
+	"after": "Pressing a DPadButton fires onAction immediately, then after a 170ms DAS delay starts repeating onAction every 50ms (ARR interval) while held; releasing stops the repetition.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/widgets/dpad-button.js"
+	],
+	"createdAt": 1787015891162
+}

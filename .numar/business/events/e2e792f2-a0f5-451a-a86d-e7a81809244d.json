@@ -1,0 +1,12 @@
+{
+	"id": "e2e792f2-a0f5-451a-a86d-e7a81809244d",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "25aafb68-b51a-49c4-8844-a5ddfd148993",
+	"operation": "create",
+	"after": "方块落地后有 500ms 锁定延迟，最多允许 15 次移动操作。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/tetris-engine.js: LOCK_DELAY_MS = 500, MAX_LOCK_MOVES = 15"
+	],
+	"createdAt": 1787015707731
+}

@@ -1,0 +1,14 @@
+{
+	"id": "34928730-db21-416a-b509-feba489f3d6e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "8dd19c2a-ac0b-4021-9f16-97c087df48c1",
+	"operation": "update",
+	"before": "发放消行金币受每日上限约束：已达上限返回 0，剩余额度小于本档奖励时只发放剩余额度（部分发放）。",
+	"after": "发放消行金币受每日 600 上限约束，含 T-Spin 加成（full +2 / mini +1）：已达上限返回 0，剩余额度小于本档奖励时只发放剩余额度（部分发放）。",
+	"taskId": "request_f0aaf24d-b35f-4102-8cd7-e93af669d924",
+	"evidenceIds": [
+		"utils/coin-manager.js#rewardLineClear",
+		"行为测试：每日 600 上限触顶返回 0、T-Spin 加成计入上限"
+	],
+	"createdAt": 1787309680938
+}

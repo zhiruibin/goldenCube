@@ -1,0 +1,12 @@
+{
+	"id": "ed12791c-b7d6-453c-b90f-8de216a1aacb",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "3e351125-f145-45d1-af1c-1c3b48d01471",
+	"operation": "create",
+	"after": "Friend leaderboard scores are stored under the open data domain key 'rank_score' via wx.setUserCloudStorage.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/cloud-config.js FRIEND_RANK_KEY"
+	],
+	"createdAt": 1787227659800
+}

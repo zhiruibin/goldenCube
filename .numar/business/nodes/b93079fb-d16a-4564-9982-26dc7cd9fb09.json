@@ -1,0 +1,23 @@
+{
+	"id": "b93079fb-d16a-4564-9982-26dc7cd9fb09",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "achievement.tspin.double",
+	"title": "T-Spin clears are tracked separately",
+	"statement": "reportTSpin increments the general T-Spin counter and additionally the double T-Spin counter when two or more lines are cleared.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015657444,
+	"updatedAt": 1787015657444,
+	"createdByTaskId": "business-init",
+	"latestEventId": "4d867d18-1163-4f17-b48d-ee84e82cb95b",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/achievement-manager.js",
+			"symbol": "AchievementManager.reportTSpin"
+		}
+	]
+}

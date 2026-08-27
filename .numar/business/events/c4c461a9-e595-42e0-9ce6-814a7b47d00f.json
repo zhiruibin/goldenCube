@@ -1,0 +1,12 @@
+{
+	"id": "c4c461a9-e595-42e0-9ce6-814a7b47d00f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "421037eb-4bec-44c3-9802-d877df01076d",
+	"operation": "create",
+	"after": "ReplayScene uses the passed cloud replayData first and falls back to local replay data; when launched from the leaderboard, its back action returns to the rank scene.",
+	"taskId": "request_8d5dfc6d-cdaa-49c8-8870-d4a88ceb6371",
+	"evidenceIds": [
+		"js/scenes/replay-scene.js"
+	],
+	"createdAt": 1787586320217
+}

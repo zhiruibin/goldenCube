@@ -1,0 +1,33 @@
+{
+	"id": "46ec0fe5-1adf-4d0c-841e-88876f85a5ec",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "ad.configured.check",
+	"title": "Ad units are created only when a real ad unit ID is configured",
+	"statement": "The ad manager skips creating rewarded video, banner, and interstitial ads when the ad unit ID is empty, whitespace, a placeholder (adunit-xxxxxxxxxxxxxxxx), or still contains 'xxxxxxxx'.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015657518,
+	"updatedAt": 1787015657518,
+	"createdByTaskId": "business-init",
+	"latestEventId": "2c509684-e997-45dc-add8-feaeb7cdcee5",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/ad-manager.js",
+			"symbol": "isAdUnitIdReady"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/ad-manager.js",
+			"symbol": "AD_UNIT_IDS"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/ad-manager.js",
+			"symbol": "isRewardedVideoConfigured"
+		}
+	]
+}

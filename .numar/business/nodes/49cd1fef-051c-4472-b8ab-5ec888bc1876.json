@@ -1,0 +1,29 @@
+{
+	"id": "49cd1fef-051c-4472-b8ab-5ec888bc1876",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "game.result.ad-double-offer.quota-gated",
+	"title": "广告双倍入口按剩余广告额度裁剪与隐藏",
+	"statement": "结果场景 _getAdCoinOffer 金额 = min(本局产币, 剩余广告额度)；剩余额度为 0 时不再展示广告入口；安慰奖同样裁剪；_doubleCoins 改用 rewardAdBonusCapped 发放",
+	"status": "active",
+	"verificationStatus": "verified",
+	"createdAt": 1787309680938,
+	"updatedAt": 1787309680938,
+	"createdByTaskId": "request_f0aaf24d-b35f-4102-8cd7-e93af669d924",
+	"latestEventId": "c1221453-09f5-4b27-ae12-fa6f518bc42e",
+	"tags": [],
+	"aliases": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/result-scene.js",
+			"symbol": "_getAdCoinOffer"
+		},
+		{
+			"type": "symbol",
+			"path": "js/scenes/result-scene.js",
+			"symbol": "_doubleCoins"
+		}
+	]
+}

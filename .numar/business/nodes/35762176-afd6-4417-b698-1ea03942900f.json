@@ -1,0 +1,23 @@
+{
+	"id": "35762176-afd6-4417-b698-1ea03942900f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.replay.top10-view-entry",
+	"title": "All-server top10 rows show a replay entry when replay data exists",
+	"statement": "RankScene renders an inline replay button for top10 all-server entries with hasReplay, prevents duplicate clicks, fetches the cloud replay via getReplay, and navigates to the replay scene.",
+	"status": "active",
+	"verificationStatus": "verified",
+	"createdAt": 1787586320217,
+	"updatedAt": 1787586320217,
+	"createdByTaskId": "request_8d5dfc6d-cdaa-49c8-8870-d4a88ceb6371",
+	"latestEventId": "f8e1c42d-3bd6-460b-9cd5-d35d8b263153",
+	"tags": [],
+	"aliases": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/rank-scene.js"
+		}
+	]
+}

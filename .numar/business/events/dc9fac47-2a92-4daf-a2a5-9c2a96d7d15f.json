@@ -1,0 +1,12 @@
+{
+	"id": "dc9fac47-2a92-4daf-a2a5-9c2a96d7d15f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "47dfffe6-651a-478f-8a70-431f3dcc73a5",
+	"operation": "create",
+	"after": "Shop scene presents three category tabs (block skins, board skins, sound packs) and defaults to the block tab on entry.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/shop-scene.js tabs array in _renderTabs listing block/board/sound and _tab='block' default"
+	],
+	"createdAt": 1787229367537
+}

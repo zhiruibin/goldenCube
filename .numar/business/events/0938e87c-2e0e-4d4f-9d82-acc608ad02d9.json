@@ -1,0 +1,12 @@
+{
+	"id": "0938e87c-2e0e-4d4f-9d82-acc608ad02d9",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "34e05eb5-9091-49a0-bbdd-5fd34f54c942",
+	"operation": "create",
+	"after": "GameScene tracks active touch ownership by touchId, associating each touch with a dpad button or action button to support multi-touch input without conflicts.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/game-scene.js _activeTouches map 'touchId -> dpad | button | null'"
+	],
+	"createdAt": 1787229367542
+}

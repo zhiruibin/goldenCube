@@ -1,0 +1,32 @@
+{
+	"id": "36c225f8-9d6e-432f-8a26-545b1c42e8a3",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "game.modes.timed-marathon-timers",
+	"title": "Timed and marathon mode timers",
+	"statement": "GameScene maintains mode timing state: timed mode uses a countdown timer (_modeTimeLeft/_modeTimeTotal) and marathon mode uses a target line count (_modeTargetLines).",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787229367518,
+	"updatedAt": 1787229367518,
+	"createdByTaskId": "business-init",
+	"latestEventId": "8f155315-0ffa-4218-b93c-dab37424315d",
+	"tags": [],
+	"aliases": [
+		"限时赛倒计时",
+		"马拉松目标行数",
+		"模式计时"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/game-scene.js"
+		},
+		{
+			"type": "symbol",
+			"path": "js/scenes/game-scene.js",
+			"symbol": "GameScene"
+		}
+	]
+}

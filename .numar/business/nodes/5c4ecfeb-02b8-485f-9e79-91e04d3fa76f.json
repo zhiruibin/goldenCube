@@ -1,0 +1,23 @@
+{
+	"id": "5c4ecfeb-02b8-485f-9e79-91e04d3fa76f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.allowed-modes",
+	"title": "挑战允许模式",
+	"statement": "发起挑战仅支持 classic、timed、marathon、special 四种游戏模式。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015708066,
+	"updatedAt": 1787015708066,
+	"createdByTaskId": "business-init",
+	"latestEventId": "db5fd0b0-b024-47d1-8603-dd1f413087ed",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "cloudfunctions/challenge/index.js",
+			"symbol": "ALLOWED_MODES"
+		}
+	]
+}

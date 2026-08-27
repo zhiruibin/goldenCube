@@ -1,0 +1,23 @@
+{
+	"id": "349b7ff8-4673-4140-a9eb-af3f389b78bf",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "achievement.game-result.statistics",
+	"title": "Game result report updates core player statistics",
+	"statement": "When a game result is reported, the manager increments total games and total cleared lines, adds to cumulative score, updates best score, tetris count, max combo, max back-to-back count, max level, and max survival time when new records are achieved.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015657362,
+	"updatedAt": 1787015657362,
+	"createdByTaskId": "business-init",
+	"latestEventId": "62508728-02c3-446d-a1fb-cb0e34ad7192",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/achievement-manager.js",
+			"symbol": "AchievementManager.reportGameResult"
+		}
+	]
+}

@@ -1,0 +1,23 @@
+{
+	"id": "e931851d-4231-4ce3-9230-c5f41957fc78",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "ad.frequency-limits",
+	"title": "Ad display is rate-limited per ad type",
+	"statement": "Rewarded video ads are limited to one show per 60 seconds and 10 per session; banner ads are limited to one show per 30 seconds and auto-close after 15 seconds; interstitial ads are limited to one show per 180 seconds and 3 per session.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015657556,
+	"updatedAt": 1787015657556,
+	"createdByTaskId": "business-init",
+	"latestEventId": "d777b177-f165-40c1-8b41-935992648f18",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/ad-manager.js",
+			"symbol": "FREQUENCY_CONFIG"
+		}
+	]
+}

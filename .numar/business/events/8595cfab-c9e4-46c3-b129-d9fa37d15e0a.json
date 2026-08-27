@@ -1,0 +1,12 @@
+{
+	"id": "8595cfab-c9e4-46c3-b129-d9fa37d15e0a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "89ca413f-97bf-48db-8bf1-f400daa9a16c",
+	"operation": "create",
+	"after": "drawCoinHud calculates a right margin from wx.getMenuButtonBoundingClientRect, with a fallback of 90px, so the coin display does not overlap the WeChat capsule button.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/coin-hud.js: _getCapsuleInset(), drawCoinHud()"
+	],
+	"createdAt": 1787015657999
+}

@@ -1,0 +1,26 @@
+{
+	"id": "b254fbac-43f9-48f8-9f21-1d0207ec0ddd",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.leaderboard.friend-type-needs-openids",
+	"title": "好友排行榜 type=friend 需要 friendOpenIds",
+	"statement": "查询排行榜时 type=friend（好友榜）需要传入 friendOpenIds；type=all 表示全服榜。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787230425324,
+	"updatedAt": 1787230425324,
+	"createdByTaskId": "business-init",
+	"latestEventId": "24451540-9171-4e5e-b674-481987f61d9f",
+	"tags": [],
+	"aliases": [
+		"好友榜需要好友 openid 列表",
+		"type friend 传 friendOpenIds"
+	],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "cloudfunctions/rank/README.md"
+		}
+	]
+}

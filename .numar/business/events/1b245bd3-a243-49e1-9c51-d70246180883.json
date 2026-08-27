@@ -1,0 +1,12 @@
+{
+	"id": "1b245bd3-a243-49e1-9c51-d70246180883",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "5b21be35-77e0-4de9-a56f-95fac5ea150a",
+	"operation": "create",
+	"after": "BagRandomizer 在实验室模式下使用纯新方块池（LAB_PIECE_TYPES），标准模式使用标准 7-Bag；洗牌采用 Fisher-Yates。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/tetris-engine.js:BagRandomizer._shuffle"
+	],
+	"createdAt": 1787229097852
+}

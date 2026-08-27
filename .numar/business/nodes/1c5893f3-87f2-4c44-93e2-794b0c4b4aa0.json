@@ -1,0 +1,31 @@
+{
+	"id": "1c5893f3-87f2-4c44-93e2-794b0c4b4aa0",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "skins.block.score-unlock",
+	"title": "方块皮肤分数解锁",
+	"statement": "像素方块皮肤价格 0，通过累计得分达到 10000 解锁；其他付费方块皮肤通过 purchase 条件购买解锁。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787227474978,
+	"updatedAt": 1787227474978,
+	"createdByTaskId": "business-init",
+	"latestEventId": "4f74c228-f9ca-438a-b11d-8f831764b31e",
+	"tags": [],
+	"aliases": [
+		"像素皮肤分数解锁",
+		"分数解锁皮肤"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "data/skins.js"
+		},
+		{
+			"type": "symbol",
+			"path": "data/skins.js",
+			"symbol": "blockSkins"
+		}
+	]
+}

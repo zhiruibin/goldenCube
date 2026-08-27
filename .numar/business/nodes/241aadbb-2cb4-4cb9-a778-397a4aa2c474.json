@@ -1,0 +1,28 @@
+{
+	"id": "241aadbb-2cb4-4cb9-a778-397a4aa2c474",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "coin.daily-record.storage-format",
+	"title": "金币每日记录与跨天重置",
+	"statement": "今日消行金币记录以 { date, earned } 对象存于 'dailyCoinsEarned'；日期与今日不符时自动归零并重写记录。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787229097836,
+	"updatedAt": 1787229097836,
+	"createdByTaskId": "business-init",
+	"latestEventId": "44c6876e-41bc-452d-928c-673ff2cfa5e9",
+	"tags": [],
+	"aliases": [
+		"每日金币记录",
+		"dailyCoinsEarned",
+		"跨天归零"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "_loadDaily"
+		}
+	]
+}

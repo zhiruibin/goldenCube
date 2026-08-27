@@ -1,0 +1,15 @@
+{
+	"id": "b0680c88-1dc5-4a5a-84fd-5616a82ec1ec",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "b75c57af-8b0d-4619-a50d-bc1f444ddf64",
+	"toNodeId": "4ed65a09-c6c0-4959-928e-b44cc626fef4",
+	"type": "constrains",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"utils/user-profile.js:tryAutoFetchProfile",
+		"utils/user-profile.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1787229097870,
+	"updatedAt": 1787231932289
+}

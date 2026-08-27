@@ -1,0 +1,12 @@
+{
+	"id": "4e4ecda2-7a6c-4ab7-b110-fe0028102fa9",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "42eff11a-ed37-460c-a216-c19103f56e30",
+	"operation": "create",
+	"after": "A Button is considered hit when the queried point is inside its rectangle: x within [x, x+w] and y within [y, y+h].",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/widgets/button.js"
+	],
+	"createdAt": 1787015890876
+}

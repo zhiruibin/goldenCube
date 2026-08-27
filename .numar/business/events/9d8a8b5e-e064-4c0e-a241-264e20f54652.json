@@ -1,0 +1,13 @@
+{
+	"id": "9d8a8b5e-e064-4c0e-a241-264e20f54652",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "8dcf8f0d-065f-477c-8fa9-2dd97dc32c20",
+	"operation": "create",
+	"after": "The main cloud service delegates friend leaderboard score updates to the open data context, which is required for wx.setUserCloudStorage with the friend rank key.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/cloud-service.js: _submitFriendScore call and architecture comment",
+		"utils/cloud-service.js header comment"
+	],
+	"createdAt": 1787015658042
+}

@@ -1,0 +1,13 @@
+{
+	"id": "622ecffb-f9ad-4a26-83ee-d5ba2aaa4fc4",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "cd3e4a4e-33be-4f2a-ae0a-39581aead738",
+	"operation": "create",
+	"after": "7 种标准方块各维护 4 个旋转状态（0、R、180°、L），O 方块四个旋转状态相同即不旋转。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/srs-rotation.js: 定义 I/O/T/S/Z/J/L 各 4 个旋转状态矩阵",
+		"utils/srs-rotation.js: O_STATES 四个状态内容相同"
+	],
+	"createdAt": 1787015707299
+}

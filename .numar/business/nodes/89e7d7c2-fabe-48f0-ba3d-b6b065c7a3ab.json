@@ -1,0 +1,31 @@
+{
+	"id": "89e7d7c2-fabe-48f0-ba3d-b6b065c7a3ab",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "leaderboard.top-three-medals",
+	"title": "好友榜前三奖牌",
+	"statement": "好友排行榜前 3 名分别以金、银、铜色（#ffd700、#c0c0c0、#cd7f32）显示奖牌标记。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787227474983,
+	"updatedAt": 1787227474983,
+	"createdByTaskId": "business-init",
+	"latestEventId": "94e06f40-7dc5-4543-83c7-4329198b0457",
+	"tags": [],
+	"aliases": [
+		"前三奖牌",
+		"排行榜奖牌"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "openDataContext/index.js"
+		},
+		{
+			"type": "symbol",
+			"path": "openDataContext/index.js",
+			"symbol": "MEDAL_COLORS"
+		}
+	]
+}

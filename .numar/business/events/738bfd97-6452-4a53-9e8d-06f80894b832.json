@@ -1,0 +1,12 @@
+{
+	"id": "738bfd97-6452-4a53-9e8d-06f80894b832",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "7834623d-060e-4636-b44a-2b8c808947b2",
+	"operation": "create",
+	"after": "Challenge records live in the cloud database challenges collection; the client never connects to that collection directly and all reads and writes go through the challenge cloud function using admin permissions.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/challenge/README.md"
+	],
+	"createdAt": 1787015891425
+}

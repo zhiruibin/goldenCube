@@ -1,0 +1,28 @@
+{
+	"id": "b3f95891-49de-4991-851b-5cc66a760c53",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "tetris.game-state-lifecycle",
+	"title": "游戏状态机",
+	"statement": "引擎定义 idle、ready、playing、paused、over 五种游戏状态，负责初始化/开始/暂停/恢复/重置的状态流转。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787229097846,
+	"updatedAt": 1787229097846,
+	"createdByTaskId": "business-init",
+	"latestEventId": "aa6920bf-171b-4690-a0e5-e988631cb461",
+	"tags": [],
+	"aliases": [
+		"游戏状态",
+		"GameState",
+		"playing/over 状态"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/tetris-engine.js",
+			"symbol": "GameState"
+		}
+	]
+}

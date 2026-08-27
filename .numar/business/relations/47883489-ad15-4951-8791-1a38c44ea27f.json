@@ -1,0 +1,14 @@
+{
+	"id": "47883489-ad15-4951-8791-1a38c44ea27f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "b254fbac-43f9-48f8-9f21-1d0207ec0ddd",
+	"toNodeId": "279f0a82-8873-4c47-b447-291f39c65962",
+	"type": "belongsTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"cloudfunctions/rank/README.md"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1787230425331,
+	"updatedAt": 1787230425331
+}

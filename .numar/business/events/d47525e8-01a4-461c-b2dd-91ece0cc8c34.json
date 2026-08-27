@@ -1,0 +1,12 @@
+{
+	"id": "d47525e8-01a4-461c-b2dd-91ece0cc8c34",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "a9fd61cb-0ce3-4bea-b95f-3ad060dd4edd",
+	"operation": "create",
+	"after": "挑战云函数所有 action 均要求有效 OPENID，未取到 OPENID 时返回 { success:false, errMsg:'unauthorized' }。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/challenge/index.js:main"
+	],
+	"createdAt": 1787229097856
+}

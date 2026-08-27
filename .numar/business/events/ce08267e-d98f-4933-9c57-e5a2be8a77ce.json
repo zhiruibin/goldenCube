@@ -1,0 +1,13 @@
+{
+	"id": "ce08267e-d98f-4933-9c57-e5a2be8a77ce",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "eaad2c36-9d5b-405f-ac7f-6bef13179c23",
+	"operation": "create",
+	"after": "用户昵称最多 32 字符、头像 URL 最多 512 字符，超出时截断保存。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/user-profile.js: MAX_NICKNAME_LENGTH = 32, MAX_AVATAR_URL_LENGTH = 512",
+		"utils/user-profile.js: truncate 超出保留前 maxLength 字符"
+	],
+	"createdAt": 1787015707894
+}

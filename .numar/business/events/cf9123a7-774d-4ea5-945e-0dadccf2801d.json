@@ -1,0 +1,12 @@
+{
+	"id": "cf9123a7-774d-4ea5-945e-0dadccf2801d",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "279f0a82-8873-4c47-b447-291f39c65962",
+	"operation": "create",
+	"after": "getRankList supports type all (global server) or friend (requires friendOpenIds), and period total, week (since Monday 00:00), or month (since the 1st of the month).",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/rank/README.md"
+	],
+	"createdAt": 1787015892073
+}

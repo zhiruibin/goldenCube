@@ -1,0 +1,12 @@
+{
+	"id": "ae1e5e15-544b-4f29-b6e2-132ecf50c5b9",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "61fc5083-0059-45ec-ae6d-ef769e1f1460",
+	"operation": "create",
+	"after": "Sound effects, background music, vibration feedback, background effects, and bottom mini effects all default to enabled unless a player disables them.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/settings-scene.js:settings-items"
+	],
+	"createdAt": 1787015835314
+}

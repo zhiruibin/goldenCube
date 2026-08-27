@@ -1,0 +1,12 @@
+{
+	"id": "4d75a398-3e47-402b-a55b-89188f37fe5a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "410d7d34-f13c-4abd-b1eb-66a1152a67da",
+	"operation": "create",
+	"after": "每日登录奖励固定为 20 金币，远小于消行产出，且不占每日消行金币上限。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/coin-manager.js:DAILY_LOGIN_REWARD"
+	],
+	"createdAt": 1787229097838
+}

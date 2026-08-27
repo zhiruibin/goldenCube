@@ -1,0 +1,12 @@
+{
+	"id": "4217c537-e550-4117-b6bd-1d612e239ca3",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "78139e1d-1a9b-47c5-9d76-360ddc94daae",
+	"operation": "create",
+	"after": "The allowed game modes for cloud features are 'classic', 'timed', and 'marathon'.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/cloud-config.js: GAME_MODES"
+	],
+	"createdAt": 1787015657789
+}

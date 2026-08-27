@@ -1,0 +1,12 @@
+{
+	"id": "3714992d-cec1-4b03-9c6a-ef33d6ca514c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "0804e7ad-d08d-4603-a7c0-6a4f89fd9e9d",
+	"operation": "create",
+	"after": "The rankings collection keeps one record per user per mode and only updates it when the new score is higher than the stored historical best, preventing record spam.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/rank/README.md"
+	],
+	"createdAt": 1787015891978
+}

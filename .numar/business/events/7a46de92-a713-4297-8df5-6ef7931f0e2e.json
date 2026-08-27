@@ -1,0 +1,13 @@
+{
+	"id": "7a46de92-a713-4297-8df5-6ef7931f0e2e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "5f240e9c-65b2-4613-a3d8-0c43eab695b9",
+	"operation": "create",
+	"after": "发起挑战时分数必须为大于 0 且不超过 99,999,999 的整数，昵称与头像分别截断到 32 与 512 字符。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/challenge/index.js: 分数校验 !(score > 0) || score > 99999999",
+		"cloudfunctions/challenge/index.js: nickname 截断 32、avatarUrl 截断 512"
+	],
+	"createdAt": 1787015708185
+}

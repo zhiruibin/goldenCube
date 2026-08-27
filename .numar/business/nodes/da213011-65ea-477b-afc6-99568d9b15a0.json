@@ -1,0 +1,23 @@
+{
+	"id": "da213011-65ea-477b-afc6-99568d9b15a0",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.auto-response-on-result",
+	"title": "Challenge auto-response on result",
+	"statement": "When the result scene opens for a challenge game, it automatically responds to the active challenge.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015835822,
+	"updatedAt": 1787015835822,
+	"createdByTaskId": "business-init",
+	"latestEventId": "a475e2b2-0d0a-4035-a7e6-a18668b0c6af",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/result-scene.js",
+			"symbol": "_respondChallenge"
+		}
+	]
+}

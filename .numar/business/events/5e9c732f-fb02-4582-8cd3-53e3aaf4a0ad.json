@@ -1,0 +1,12 @@
+{
+	"id": "5e9c732f-fb02-4582-8cd3-53e3aaf4a0ad",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "d147a0ad-fe25-461d-850e-c84044849f79",
+	"operation": "create",
+	"after": "彩纸庆祝以面板中心为主爆点向上炸开，并预留约 45% 配额执行延迟补炸：0.45 秒中心二次爆点、0.9 秒左右两侧三次补炸，使庆祝持续更久；约 20% 概率生成白色菱形闪光粒子。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/confetti-fx.js 模块头注释描述 0.45s/0.9s 补炸与 20% 闪光粒子；init() 预分配 8 个延迟爆点槽位"
+	],
+	"createdAt": 1787015752956
+}

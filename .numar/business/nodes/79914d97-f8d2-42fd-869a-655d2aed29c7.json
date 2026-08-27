@@ -1,0 +1,22 @@
+{
+	"id": "79914d97-f8d2-42fd-869a-655d2aed29c7",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.supported-modes",
+	"title": "Rankings support classic, timed, and marathon modes",
+	"statement": "Ranking records use mode values classic, timed, or marathon.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015891882,
+	"updatedAt": 1787015891882,
+	"createdByTaskId": "business-init",
+	"latestEventId": "fc57cbb8-dda5-45b1-8bba-881166174a31",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "cloudfunctions/rank/README.md"
+		}
+	]
+}

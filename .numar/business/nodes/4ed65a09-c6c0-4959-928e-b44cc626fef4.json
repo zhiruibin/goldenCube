@@ -1,0 +1,31 @@
+{
+	"id": "4ed65a09-c6c0-4959-928e-b44cc626fef4",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "wechat.user.profile.fetch",
+	"title": "微信头像昵称获取增加 getUserInfo 兜底",
+	"statement": "onTap 回调拿不到真实资料时，追加 wx.getUserInfo 兜底获取真实头像昵称；仍失败才提示「未获取到微信头像昵称（可能已拒绝授权），请重试」",
+	"status": "active",
+	"verificationStatus": "verified",
+	"createdAt": 1787109870459,
+	"updatedAt": 1787109870459,
+	"createdByTaskId": "request_a254336e-c359-402e-a39e-a7e26186273d",
+	"latestEventId": "1e129e1a-2507-40e7-9fa2-2dc06103877a",
+	"tags": [],
+	"aliases": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/user-profile.js"
+		},
+		{
+			"type": "symbol",
+			"symbol": "wx.createUserInfoButton"
+		},
+		{
+			"type": "symbol",
+			"symbol": "wx.getUserInfo"
+		}
+	]
+}

@@ -1,0 +1,23 @@
+{
+	"id": "778172c9-7703-4b5a-9b48-ae33e4382261",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "achievement.line-clear.counters",
+	"title": "Line clear counts are grouped by cleared line count",
+	"statement": "reportLineClear increments one of four counters (clear1 through clear4) based on the number of lines cleared in a single action, with values outside the 1-4 range clamped.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015657404,
+	"updatedAt": 1787015657404,
+	"createdByTaskId": "business-init",
+	"latestEventId": "f61fc661-584e-4ddf-bb12-5d250026542a",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/achievement-manager.js",
+			"symbol": "AchievementManager.reportLineClear"
+		}
+	]
+}

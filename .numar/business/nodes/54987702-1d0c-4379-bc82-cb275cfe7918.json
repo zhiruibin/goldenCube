@@ -1,0 +1,27 @@
+{
+	"id": "54987702-1d0c-4379-bc82-cb275cfe7918",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "economy.coin.daily-cap-600",
+	"title": "每日金币上限 600 的定价锚点",
+	"statement": "皮肤定价以每日 600 金币上限与消行 1/2/3/5 金币产出为锚点设计，可购总价约 8950，全收集约需 15 天满勤。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015608506,
+	"updatedAt": 1787015608506,
+	"createdByTaskId": "business-init",
+	"latestEventId": "35cfca4b-71c7-4b43-93ef-04aac328374a",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "data/skins.js"
+		},
+		{
+			"type": "symbol",
+			"path": "data/skins.js",
+			"symbol": "blockSkins"
+		}
+	]
+}

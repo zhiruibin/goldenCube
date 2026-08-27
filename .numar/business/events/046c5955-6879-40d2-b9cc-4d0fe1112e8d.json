@@ -1,0 +1,12 @@
+{
+	"id": "046c5955-6879-40d2-b9cc-4d0fe1112e8d",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "55a4c605-8db4-4f3e-b244-4f2a9e84ff72",
+	"operation": "create",
+	"after": "好友榜拉取后仅保留 score 大于 0 的好友，并按分数从高到低排序展示。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"openDataContext/index.js loadRank 中 .filter((u) => u.score > 0).sort((a, b) => b.score - a.score)"
+	],
+	"createdAt": 1787015608441
+}

@@ -1,0 +1,12 @@
+{
+	"id": "c5328f31-4875-4c03-85e7-edd7e55893b8",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "63137351-2f1d-4e24-946b-4c120d971a4a",
+	"operation": "create",
+	"after": "When the daily coin limit causes a game to produce 0 coins, watching a rewarded ad still grants a consolation reward of 15 coins, without changing the game score.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/result-scene.js:AD_CONSOLATION_COINS"
+	],
+	"createdAt": 1787015834983
+}

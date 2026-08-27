@@ -1,0 +1,12 @@
+{
+	"id": "b22b9198-0c89-4578-8979-11963554b373",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "2b881ddd-7dfd-415e-9c4b-d1ae6e47e775",
+	"operation": "create",
+	"after": "The leaderboard period selector (total/weekly/monthly) is rendered only when the global tab is active, not for the friend tab.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/rank-scene.js render() gates _renderPeriodSelect on this._tab === 'global'"
+	],
+	"createdAt": 1787229367532
+}

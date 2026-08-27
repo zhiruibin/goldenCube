@@ -1,0 +1,12 @@
+{
+	"id": "7447dbc5-f751-4c21-9e73-e5c51952c8ad",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "522b285e-e3c4-4bf9-b7ec-94b6b5d521c8",
+	"operation": "create",
+	"after": "reportUseAllPieces sets the stat_use_all_pieces value to 1, tracking that a player used all seven tetromino types in a single game.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/achievement-manager.js: reportUseAllPieces"
+	],
+	"createdAt": 1787015657481
+}

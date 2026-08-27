@@ -1,0 +1,23 @@
+{
+	"id": "18ec5697-0391-4a5a-aded-689a52acff62",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "coin-hud.number-format",
+	"title": "Coin display uses compact Chinese units for large values",
+	"statement": "formatCoins displays 1 million or more as x.x万, 100 million or more as x.x亿, and otherwise as a plain integer string.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015657956,
+	"updatedAt": 1787015657956,
+	"createdByTaskId": "business-init",
+	"latestEventId": "c96c66f5-9767-4f46-9073-5018fa3c61f4",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/coin-hud.js",
+			"symbol": "formatCoins"
+		}
+	]
+}

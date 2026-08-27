@@ -1,0 +1,12 @@
+{
+	"id": "dc90b30b-6b3f-4f06-90cd-3c69dd9fabbe",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "50a6921a-f801-4101-be51-5f81e0e3422a",
+	"operation": "create",
+	"after": "AudioManager reads the equipped sound pack id from wx storage key 'equipped_sound' on init and applies that sound pack, falling back to the default pack when the key is missing or invalid.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/audio-manager.js _loadEquippedPack"
+	],
+	"createdAt": 1787227659792
+}

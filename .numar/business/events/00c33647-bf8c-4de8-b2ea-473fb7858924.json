@@ -1,0 +1,12 @@
+{
+	"id": "00c33647-bf8c-4de8-b2ea-473fb7858924",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "f47432d1-8abd-47f7-afce-c034853e3c34",
+	"operation": "create",
+	"after": "RankScene enters with friend tab selected by default, mode classic, and period total on entering the scene.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/rank-scene.js onEnter sets _tab='friend', _mode='classic', _period='total'"
+	],
+	"createdAt": 1787229367530
+}

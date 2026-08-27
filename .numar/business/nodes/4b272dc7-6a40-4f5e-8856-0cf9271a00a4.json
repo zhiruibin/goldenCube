@@ -1,0 +1,27 @@
+{
+	"id": "4b272dc7-6a40-4f5e-8856-0cf9271a00a4",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "replay.engine.seed-injection",
+	"title": "种子注入的确定性方块序列",
+	"statement": "BagRandomizer 使用注入的 mulberry32 PRNG 洗牌，同一 seed 可复现同一方块序列；引擎提供 getSeed/getEngineTime。",
+	"status": "active",
+	"verificationStatus": "verified",
+	"createdAt": 1787448590857,
+	"updatedAt": 1787448590857,
+	"createdByTaskId": "request_a0a566ce-038c-4fdb-a10c-e14743bfb63b",
+	"latestEventId": "79748164-e61b-4a86-bdb9-7eaf5e820dd9",
+	"tags": [],
+	"aliases": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/tetris-engine.js"
+		},
+		{
+			"type": "symbol",
+			"symbol": "BagRandomizer"
+		}
+	]
+}

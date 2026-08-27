@@ -1,0 +1,27 @@
+{
+	"id": "367c6394-d3c9-48d8-b666-62d495393fa8",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.replay.stored-on-record-break",
+	"title": "Replay is stored only when the submitted score breaks the stored best",
+	"statement": "The result scene attaches the current game's replay data during score submission; the cloud function persists it only when the score updates the user's historical best, so stored replays correspond to leaderboard-visible record games.",
+	"status": "active",
+	"verificationStatus": "verified",
+	"createdAt": 1787586320217,
+	"updatedAt": 1787586320217,
+	"createdByTaskId": "request_8d5dfc6d-cdaa-49c8-8870-d4a88ceb6371",
+	"latestEventId": "7583e429-e8a6-4005-9301-7db11e39dfa7",
+	"tags": [],
+	"aliases": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "cloudfunctions/rank/index.js"
+		},
+		{
+			"type": "file",
+			"path": "js/scenes/result-scene.js"
+		}
+	]
+}

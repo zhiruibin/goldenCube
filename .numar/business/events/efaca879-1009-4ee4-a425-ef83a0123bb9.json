@@ -1,0 +1,12 @@
+{
+	"id": "efaca879-1009-4ee4-a425-ef83a0123bb9",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "9d6d7989-b42e-4a99-b2fd-7e516918fb04",
+	"operation": "create",
+	"after": "Challenges expire at expiresAt, set 7 days after creation; expired challenges no longer appear in the pending list and cannot be responded to.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/challenge/README.md"
+	],
+	"createdAt": 1787015891607
+}

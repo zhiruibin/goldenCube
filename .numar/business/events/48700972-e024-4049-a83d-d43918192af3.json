@@ -1,0 +1,14 @@
+{
+	"id": "48700972-e024-4049-a83d-d43918192af3",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "40fd5f63-f98a-4024-b441-bb7b746fd51c",
+	"operation": "create",
+	"after": "SceneManager registers scenes by name; switchTo exits the current scene and pushes it onto a stack before entering the target scene, replace switches without pushing, and back restores the previous scene from the stack, invoking onExit/onEnter as applicable.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/runtime/scene-manager.js:switchTo",
+		"js/runtime/scene-manager.js:replace",
+		"js/runtime/scene-manager.js:back"
+	],
+	"createdAt": 1787015781627
+}

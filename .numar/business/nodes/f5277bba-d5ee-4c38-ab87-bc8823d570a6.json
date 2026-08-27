@@ -1,0 +1,23 @@
+{
+	"id": "f5277bba-d5ee-4c38-ab87-bc8823d570a6",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "tetris.non-rotatable-piece-types",
+	"title": "不可旋转方块类型",
+	"statement": "D、P、M、Q、N 方块不可旋转。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015707674,
+	"updatedAt": 1787015707674,
+	"createdByTaskId": "business-init",
+	"latestEventId": "fad2f479-47ac-4103-ae28-b2b2d945418c",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/tetris-engine.js",
+			"symbol": "NON_ROTATABLE_TYPES"
+		}
+	]
+}

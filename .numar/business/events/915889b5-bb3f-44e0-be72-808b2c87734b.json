@@ -1,0 +1,12 @@
+{
+	"id": "915889b5-bb3f-44e0-be72-808b2c87734b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "05d946c5-b697-49d9-8575-b9f668245817",
+	"operation": "create",
+	"after": "Rewarded video rewards only add coins; they never modify the current game score or re-report the leaderboard, to preserve leaderboard and challenge fairness.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/result-scene.js:header-comment"
+	],
+	"createdAt": 1787015835074
+}

@@ -1,0 +1,12 @@
+{
+	"id": "b1fbfb02-37cf-4649-95a6-dd5a2536b61c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "8c84c6e9-f837-40a5-b2af-4714f0f82be8",
+	"operation": "create",
+	"after": "Coins earned from gameplay are capped at 600 coins per day.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/result-scene.js:_dailyLimit"
+	],
+	"createdAt": 1787015835223
+}

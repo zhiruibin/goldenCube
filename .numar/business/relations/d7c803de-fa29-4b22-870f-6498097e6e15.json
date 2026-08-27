@@ -1,0 +1,15 @@
+{
+	"id": "d7c803de-fa29-4b22-870f-6498097e6e15",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "8dd19c2a-ac0b-4021-9f16-97c087df48c1",
+	"toNodeId": "6eabea3a-0527-4564-a56f-2b61f9291fa9",
+	"type": "constrains",
+	"verificationStatus": "verified",
+	"evidenceIds": [
+		"utils/coin-manager.js#rewardLineClear",
+		"行为测试：T-Spin 加成计入每日 600 上限"
+	],
+	"createdByTaskId": "request_f0aaf24d-b35f-4102-8cd7-e93af669d924",
+	"createdAt": 1787309680938,
+	"updatedAt": 1787309680938
+}

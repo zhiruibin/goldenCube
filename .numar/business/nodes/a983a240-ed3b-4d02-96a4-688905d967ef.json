@@ -1,0 +1,28 @@
+{
+	"id": "a983a240-ed3b-4d02-96a4-688905d967ef",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "effects.performance.benchmark-tiering",
+	"title": "特效按设备 benchmarkLevel 分档与低端机降级",
+	"statement": "动态特效根据设备 benchmarkLevel 分档：背景粒子数在 level>=3 时为 32、level===2 时为 16、其他为 8；彩纸庆祝粒子池在 level>=3 时为 140、level===2 时为 90、其他为 50，level<1 的过低端设备直接关闭彩纸特效。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015752612,
+	"updatedAt": 1787015752612,
+	"createdByTaskId": "business-init",
+	"latestEventId": "b55aafd1-2108-4173-a705-e360f40c49e1",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/render/background-effects.js",
+			"symbol": "BackgroundEffects"
+		},
+		{
+			"type": "symbol",
+			"path": "js/render/confetti-fx.js",
+			"symbol": "ConfettiFx.init"
+		}
+	]
+}

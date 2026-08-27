@@ -1,0 +1,12 @@
+{
+	"id": "6faef00d-8fbd-4c81-a747-bd10e8935912",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "b15df942-716f-4ebe-93b5-49102d05abcb",
+	"operation": "create",
+	"after": "The piece renderer reads the equipped block skin from local storage key 'equipped_block', falls back to the default/first skin when absent or unreadable, and applies the chosen skin's color overrides (arrays as gradients) plus glow, shimmer, texture, and transparency props.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/piece-renderer.js:_applySkin"
+	],
+	"createdAt": 1787015781470
+}

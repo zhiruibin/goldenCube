@@ -1,0 +1,12 @@
+{
+	"id": "e1e447d1-f03d-4683-b51e-9368d91d2fc0",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "f443d944-1ed5-4dfe-9a4d-240a36a0e32e",
+	"operation": "create",
+	"after": "成就图标字段使用统一矢量图标库 icon-renderer.js 中的图标名（非 emoji），由 IconRenderer.draw(ctx, icon, ...) 绘制，保证跨机型一致。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"data/achievements.js 文件注释对 icon 字段及 icon-renderer.js 的说明"
+	],
+	"createdAt": 1787015608538
+}

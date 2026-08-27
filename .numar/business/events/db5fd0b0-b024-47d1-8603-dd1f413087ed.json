@@ -1,0 +1,12 @@
+{
+	"id": "db5fd0b0-b024-47d1-8603-dd1f413087ed",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "5c4ecfeb-02b8-485f-9e79-91e04d3fa76f",
+	"operation": "create",
+	"after": "发起挑战仅支持 classic、timed、marathon、special 四种游戏模式。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/challenge/index.js: ALLOWED_MODES = ['classic', 'timed', 'marathon', 'special']"
+	],
+	"createdAt": 1787015708066
+}

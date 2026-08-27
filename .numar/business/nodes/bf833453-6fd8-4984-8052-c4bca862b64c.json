@@ -1,0 +1,27 @@
+{
+	"id": "bf833453-6fd8-4984-8052-c4bca862b64c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "achievement.condition.types",
+	"title": "成就条件类型",
+	"statement": "成就判定条件包含 single_clear、multi_clear、single_score、total_games、total_clears、survive_time、tspin_clear、back_to_back、combo 等类型，并带 count、lines、score、seconds 等参数。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1787015608304,
+	"updatedAt": 1787015608304,
+	"createdByTaskId": "business-init",
+	"latestEventId": "5c413c13-dc03-47e7-bdf6-c5876e6af8c4",
+	"tags": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "data/achievements.js"
+		},
+		{
+			"type": "symbol",
+			"path": "data/achievements.js",
+			"symbol": "condition"
+		}
+	]
+}

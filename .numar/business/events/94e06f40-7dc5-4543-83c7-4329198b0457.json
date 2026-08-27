@@ -1,0 +1,12 @@
+{
+	"id": "94e06f40-7dc5-4543-83c7-4329198b0457",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "89e7d7c2-fabe-48f0-ba3d-b6b065c7a3ab",
+	"operation": "create",
+	"after": "好友排行榜前 3 名分别以金、银、铜色（#ffd700、#c0c0c0、#cd7f32）显示奖牌标记。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"openDataContext/index.js"
+	],
+	"createdAt": 1787227474983
+}

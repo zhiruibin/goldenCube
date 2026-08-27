@@ -1,0 +1,12 @@
+{
+	"id": "a515cd0d-9672-483c-b88f-26eeb6c9c755",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "d5875f3f-ac2d-4aac-a2ce-dc0bb93ee1e1",
+	"operation": "create",
+	"after": "Triggering a Button sets a pressed state with a 0.95 press scale, restores it after 100ms, and invokes the configured onClick callback.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/widgets/button.js"
+	],
+	"createdAt": 1787015890980
+}

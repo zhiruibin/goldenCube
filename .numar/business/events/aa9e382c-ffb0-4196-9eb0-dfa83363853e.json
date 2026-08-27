@@ -1,0 +1,13 @@
+{
+	"id": "aa9e382c-ffb0-4196-9eb0-dfa83363853e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "630d5fda-607d-45ee-ad31-808d1fcd76f1",
+	"operation": "create",
+	"after": "挑战记录 7 天后过期，同一玩家最多同时拥有 20 条 pending 挑战。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/challenge/index.js: EXPIRY_MS = 7 * 24 * 60 * 60 * 1000",
+		"cloudfunctions/challenge/index.js: MAX_PENDING = 20，createChallenge 按 pending 计数校验"
+	],
+	"createdAt": 1787015708126
+}

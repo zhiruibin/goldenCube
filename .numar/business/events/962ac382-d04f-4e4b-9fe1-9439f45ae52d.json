@@ -1,0 +1,13 @@
+{
+	"id": "962ac382-d04f-4e4b-9fe1-9439f45ae52d",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "35a47b5e-68c4-485c-be20-3f739937091a",
+	"operation": "create",
+	"after": "The challenge scene keeps local pending incoming challenges in storage key 'pending_challenges', prunes entries that lack a challengeId or are older than 7 days, and writes the cleaned list back to storage.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/challenge-scene.js:prunePendingChallenges",
+		"js/scenes/challenge-scene.js:PENDING_EXPIRY_MS"
+	],
+	"createdAt": 1787015781839
+}

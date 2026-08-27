@@ -1,0 +1,12 @@
+{
+	"id": "70ef020b-d649-40ca-830f-d4d5a47520bb",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "0ccc55c4-a0b3-45c8-b1da-bfcef49fc37d",
+	"operation": "create",
+	"after": "挑战云函数所有接口统一返回 { success: true, ... }，失败时返回 { success: false, errMsg: '...' }。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/challenge/README.md"
+	],
+	"createdAt": 1787230425318
+}
