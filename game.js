@@ -47,8 +47,44 @@ function onStart() {
     GameGlobal.game.ctx = ctx;
     GameGlobal.game.width = info.windowWidth;
     GameGlobal.game.height = info.windowHeight;
-    GameGlobal.game.dpr = dpr;
     GameGlobal.game.systemInfo = info;
+
+    // 全屏沉浸：隐藏「回到首页」圆形胶囊按钮（基础库 2.16+），并把「···」菜单胶囊设为白色融入深色背景
+    try {
+        if (typeof wx.hideHomeButton === 'function') {
+            wx.hideHomeButton();
+        }
+        if (typeof wx.setMenuStyle === 'function') {
+            wx.setMenuStyle({ style: 'white' });
+        }
+    } catch (e) { /* 低版本/模拟器忽略 */ }
+
+    // 窗口尺寸变化时保持画布满屏（模拟器切换机型 / 真机环境变化）
+    // 画布覆盖整屏后，右上角「···」菜单胶囊悬浮在背景之上，背景自然包住胶囊
+    try {
+        if (typeof wx.onWindowResize === 'function') {
+            wx.onWindowResize(function (res) {
+                const size = res && res.size;
+                if (!size || !size.windowWidth || !size.windowHeight) return;
+                const w = size.windowWidth;
+                const h = size.windowHeight;
+                const sys = GameGlobal.game.systemInfo || {};
+                const newDpr = Number(sys.pixelRatio) || GameGlobal.game.dpr || 1;
+                canvas.width = Math.round(w * newDpr);
+                canvas.height = Math.round(h * newDpr);
+                if (typeof ctx.setTransform === 'function') {
+                    ctx.setTransform(newDpr, 0, 0, newDpr, 0, 0);
+                } else {
+                    ctx.setTransform(1, 0, 0, 1, 0, 0);
+                    ctx.scale(newDpr, newDpr);
+                }
+                GameGlobal.game.width = w;
+                GameGlobal.game.height = h;
+                GameGlobal.game.dpr = newDpr;
+            });
+        }
+    } catch (e) { /* 忽略 */ }
+
 
     // 初始化运行时
     GameGlobal.game.sceneManager = new SceneManager();
