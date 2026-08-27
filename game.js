@@ -83,6 +83,8 @@ function onStart() {
     const ChallengeScene = require('./js/scenes/challenge-scene');
     const ChallengeResultScene = require('./js/scenes/challenge-result-scene');
     const ReplayScene = require('./js/scenes/replay-scene');
+    const StageSelectScene = require('./js/scenes/stage-select-scene');
+    const StageResultScene = require('./js/scenes/stage-result-scene');
     GameGlobal.game.sceneManager.register('home', HomeScene);
     GameGlobal.game.sceneManager.register('game', GameScene);
     GameGlobal.game.sceneManager.register('result', ResultScene);
@@ -93,7 +95,9 @@ function onStart() {
     GameGlobal.game.sceneManager.register('challenge', ChallengeScene);
     GameGlobal.game.sceneManager.register('challengeResult', ChallengeResultScene);
     GameGlobal.game.sceneManager.register('replay', ReplayScene);
-    // 冷启动：先首页；若带挑战分享卡，再按身份分流（发起方不进待应战）
+    GameGlobal.game.sceneManager.register('stageSelect', StageSelectScene);
+    GameGlobal.game.sceneManager.register('stageResult', StageResultScene);
+    // 冷启动：直接进入关卡选择（挖个方块无四模式首页）；若带挑战分享卡再按身份分流
     let launchQuery = null;
     try {
         const _launch = wx.getLaunchOptionsSync ? wx.getLaunchOptionsSync() : null;
@@ -103,10 +107,12 @@ function onStart() {
     } catch (e) {
         console.warn('[Game] 读取启动参数失败', e);
     }
-    GameGlobal.game.sceneManager.switchTo('home');
+    GameGlobal.game.sceneManager.switchTo('stageSelect');
     if (launchQuery) {
         _handleShareChallengeEntry(launchQuery, { fromLaunch: true });
     }
+
+    // 启动主循环
 
     // 启动主循环
     GameGlobal.game._lastTime = Date.now();

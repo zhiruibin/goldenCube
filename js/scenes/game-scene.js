@@ -18,6 +18,7 @@ const { adManager, isRewardedVideoConfigured } = require('../../utils/ad-manager
 const IconRenderer = require('../render/icon-renderer');
 const { MiniTetrisFx } = require('../render/mini-tetris-fx');
 const { ConfettiFx } = require('../render/confetti-fx');
+const goldenBlock = require('../../utils/golden-block-manager');
 
 /** 硬降短时冷却：防止连点/多指瞬时误砸下一块（不改按钮布局） */
 const HARD_DROP_COOLDOWN_MS = 200;
@@ -35,6 +36,11 @@ class GameScene {
         this._dirButtons = [];
         this._buttons = [];
         this._mode = 'classic';
+        this._stageId = null;
+        this._stageInfo = null;
+        this._stageOverReason = null;
+        this._pieceCount = 0;
+        this._stageStartTime = 0;
 
         // 成就系统：本局已上报标记 / 已使用方块类型集合
         this._achievementReported = false;
@@ -99,6 +105,10 @@ class GameScene {
     onEnter(params) {
         this._params = params || {};
         this._mode = this._params.mode || 'classic';
+        this._stageId = this._params.stageId || null;
+        this._pieceCount = 0;
+        this._stageStartTime = Date.now();
+        this._stageInfo = null;
         this._challengeId = this._params.challengeId || '';
         // 挑战目标分：兼容 number / 数字字符串；无效则不展示
         if (typeof this._params.targetScore === 'number' && !isNaN(this._params.targetScore)) {
@@ -452,15 +462,40 @@ class GameScene {
     _initEngine() {
         this._engine = new TetrisEngine(this._replaySeed);
         this._engine.setMode(this._mode);
+        this._stageOverReason = null;
+        if (this._mode === 'stage' && this._stageId) {
+            const stage = goldenBlock.getStage(this._stageId);
+            if (stage) {
+                this._stageInfo = this._engine.initStage(stage.rows, {
+                    dropIntervalMs: stage.dropIntervalMs,
+                });
+            }
+        }
     }
 
     _bindEngineEvents() {
+        this._engine.onGameOver((score, level, lines, reason) => {
+            if (this._mode === 'stage') this._stageOverReason = reason;
+        });
         this._engine.onStateChange((state) => {
             if (state === 'over') {
                 const score = this._engine.getScore();
                 const level = this._engine.getLevel();
                 const lines = this._engine.getLines();
                 const stats = this._engine.getStats();
+                // 闯关模式：过关直进关卡结算；失败走复活/重开
+                if (this._mode === 'stage') {
+                    setTimeout(() => {
+                        if (this._stageOverReason === 'stageClear') {
+                            this._goToStageResult(lines);
+                        } else if (!this._reviveConsumed && isRewardedVideoConfigured() === true) {
+                            this._revivePending = true;
+                        } else {
+                            this._goToStageFail();
+                        }
+                    }, 0);
+                    return;
+                }
                 if (this._audio) {
                     this._audio.playGameOver();
                     this._audio.stopBGM();
@@ -530,9 +565,9 @@ class GameScene {
         });
 
         this._engine.onPieceLock((info) => {
+            this._pieceCount++;
             // 落地波纹（文档 3.3.5）
             if (this._effectRenderer) {
-                const current = this._engine.getCurrentPiece();
                 this._effectRenderer.addLandRipple(
                     this._boardX, this._boardY, this._cellSize,
                     current || info, !!info.hardDrop
@@ -806,6 +841,11 @@ class GameScene {
         } else if (this._mode === 'marathon') {
             const remaining = Math.max(0, this._modeTargetLines - this._engine.getLines());
             curY = this._renderInfoItem(ctx, x, curY, pw, '目标', `剩 ${remaining} 行`, '#ff6b6b', 14);
+        } else if (this._mode === 'stage') {
+            const remaining = this._engine.getGarbageRemaining ? this._engine.getGarbageRemaining() : 0;
+            const theory = this._stageInfo ? this._stageInfo.minLines : 0;
+            curY = this._renderInfoItem(ctx, x, curY, pw, '垃圾', `剩 ${remaining} 格`, '#ffcc57', 14);
+            curY = this._renderInfoItem(ctx, x, curY, pw, '消行', `${this._engine.getLines()} / 理论 ${theory}`, '#ff6b6b', 14);
         }
 
         // 挑战局：侧栏展示目标分与还差（不改操作区布局）
@@ -1586,6 +1626,38 @@ class GameScene {
         return { x: bx, y: by, w: bw, h: bh };
     }
 
+    /** 闯关过关：结算并发放金色方块（首通+1/破纪录+1/重复通关不给） */
+    _goToStageResult(lines) {
+        const timeMs = Date.now() - this._stageStartTime;
+        const result = goldenBlock.rewardClear(
+            this._stageId,
+            lines,
+            this._pieceCount || 0,
+            timeMs
+        );
+        if (this._audio) {
+            this._audio.stopBGM();
+        }
+        setTimeout(() => {
+            GameGlobal.game.sceneManager.switchTo('stageResult', {
+                stageId: this._stageId,
+                result: Object.assign({}, result, {
+                    lines,
+                    pieces: this._pieceCount || 0,
+                    timeMs,
+                }),
+            });
+        }, 400);
+    }
+
+    /** 闯关失败：返回关卡选择（重开=重新选关） */
+    _goToStageFail() {
+        if (this._audio) {
+            this._audio.stopBGM();
+        }
+        GameGlobal.game.sceneManager.switchTo('stageSelect');
+    }
+
     _goToResult(score, level, lines, stats) {
         // 成就系统：上报本局结果（仅一次），解锁成就并发放金币
         if (!this._achievementReported) {
@@ -1641,26 +1713,25 @@ class GameScene {
                 this._reviveConsumed = true;
                 const ok = this._engine.revive();
                 if (!ok) {
-                    this._goToResult(
-                        this._engine.getScore(),
-                        this._engine.getLevel(),
-                        this._engine.getLines(),
-                        this._engine.getStats()
-                    );
+                    this._routeEnding();
                 }
             })
             .catch(() => {
-                this._goToResult(
-                    this._engine.getScore(),
-                    this._engine.getLevel(),
-                    this._engine.getLines(),
-                    this._engine.getStats()
-                );
+                this._routeEnding();
             });
     }
 
     _declineRevive() {
         this._revivePending = false;
+        this._routeEnding();
+    }
+
+    /** 闯关失败：返回关选重开；经典：进结算 */
+    _routeEnding() {
+        if (this._mode === 'stage') {
+            this._goToStageFail();
+            return;
+        }
         this._goToResult(
             this._engine.getScore(),
             this._engine.getLevel(),
@@ -1676,7 +1747,7 @@ class GameScene {
         this._paused = false;
         this._revivePending = false;
         this._tapConsumed = false;
-        GameGlobal.game.sceneManager.switchTo('home');
+        GameGlobal.game.sceneManager.switchTo(this._mode === 'stage' ? 'stageSelect' : 'home');
     }
 
     /**
