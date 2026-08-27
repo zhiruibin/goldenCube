@@ -35,12 +35,24 @@ class StageSelectScene {
 
     onExit() {}
 
+    /**
+     * iOS 刘海/状态栏避让：返回头部内容的安全起始 Y。
+     * 取 statusBarHeight 与 safeArea.top 的较大者（iPhone X+ 约 44），
+     * 再叠加额外留白，保证大标题/金方块数量不被刘海遮挡。
+     */
+    _getTopInset() {
+        const sys = (GameGlobal && GameGlobal.game && GameGlobal.game.systemInfo) || {};
+        const statusBarHeight = Number(sys.statusBarHeight) || 0;
+        const safeTop = (sys.safeArea && Number(sys.safeArea.top)) || 0;
+        return Math.max(statusBarHeight, safeTop) + 16;
+    }
+
     _buildCards() {
         const stages = goldenBlock.getStages();
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
         const cardW = (W - 24 - (COLS - 1) * CARD_GAP) / COLS;
-        const topY = HEADER_H;
+        const topY = this._getTopInset() + HEADER_H;
         this._cards = [];
         this._hitRects = [];
         stages.forEach((stage, i) => {
@@ -141,10 +153,15 @@ class StageSelectScene {
         ctx.font = '12px sans-serif';
         ctx.fillStyle = MUTED;
         ctx.textAlign = 'right';
-        const status = unlocked
-            ? (cleared ? '最佳 ' + best.lines + ' 行' : '理论 ' + stage.minLines + ' 行')
-            : '🔒 ' + stage.unlockCost;
-        ctx.fillText(status, x + w - 12, y + 56);
+        let status;
+        if (!unlocked) {
+            status = '🔒 解锁 ' + (stage.unlockCost || 0) + ' 块';
+        } else if (cleared) {
+            status = '最佳 ' + best.lines + ' 行';
+        } else {
+            status = '理论 ' + (stage.minLines || 0) + ' 行';
+        }
+        ctx.fillText(status, x + w - 12, y + 12);
         ctx.textAlign = 'left';
     }
 
@@ -153,19 +170,21 @@ class StageSelectScene {
         const H = GameGlobal.game.height;
         fillNightBackground(ctx, W, H);
 
-        drawBrandTitle(ctx, '挖个方块', 12, 14, 'bold 26px sans-serif');
+        const topInset = this._getTopInset();
+
+        drawBrandTitle(ctx, '挖个方块', 12, topInset, 'bold 26px sans-serif');
 
         // 金色方块余额
         const balance = goldenBlock.getBalance();
         ctx.fillStyle = ACCENT;
         ctx.font = 'bold 18px sans-serif';
         ctx.textAlign = 'right';
-        ctx.fillText('◆ ' + balance, W - 16, 24);
+        ctx.fillText('◆ ' + balance, W - 16, topInset + 10);
         ctx.textAlign = 'left';
 
         ctx.fillStyle = SUBTITLE;
         ctx.font = '14px sans-serif';
-        ctx.fillText('清掉垃圾过关 · 最少消行', 14, 56);
+        ctx.fillText('清掉垃圾过关 · 最少消行', 14, topInset + 42);
 
         this._cards.forEach((card) => this._drawCard(ctx, card));
 

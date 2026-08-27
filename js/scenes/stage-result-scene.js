@@ -32,6 +32,17 @@ class StageResultScene {
 
     onExit() {}
 
+    /**
+     * iOS 刘海/状态栏避让：返回头部内容的安全起始 Y。
+     * 取 statusBarHeight 与 safeArea.top 的较大者，再叠加额外留白。
+     */
+    _getTopInset() {
+        const sys = (GameGlobal && GameGlobal.game && GameGlobal.game.systemInfo) || {};
+        const statusBarHeight = Number(sys.statusBarHeight) || 0;
+        const safeTop = (sys.safeArea && Number(sys.safeArea.top)) || 0;
+        return Math.max(statusBarHeight, safeTop) + 16;
+    }
+
     _buildButtons() {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
@@ -93,15 +104,11 @@ class StageResultScene {
     handleTap(x, y) {
         for (let i = 0; i < this._buttons.length; i++) {
             const btn = this._buttons[i];
-            if (btn.hitTest(x, y)) {
-                btn.trigger();
+            if (x >= btn.x && x <= btn.x + btn.w && y >= btn.y && y <= btn.y + btn.h) {
+                btn.onClick();
                 return;
             }
         }
-    }
-
-    update(dt) {
-        this._animTime += dt;
     }
 
     render(ctx) {
@@ -109,20 +116,19 @@ class StageResultScene {
         const H = GameGlobal.game.height;
         fillNightBackground(ctx, W, H);
 
-        drawBrandTitle(ctx, '过关', 12, 14, 'bold 30px sans-serif');
+        const topInset = this._getTopInset();
+
+        drawBrandTitle(ctx, '过关', 12, topInset, 'bold 30px sans-serif');
 
         const stageName = this._stage ? this._stage.name : '';
         ctx.fillStyle = SUBTITLE;
         ctx.font = '16px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('第 ' + (this._stage ? this._stage.id : '?') + ' 关 · ' + stageName, W / 2, 80);
+        ctx.fillText('第 ' + (this._stage ? this._stage.id : '?') + ' 关 · ' + stageName, W / 2, topInset + 66);
         ctx.textAlign = 'left';
 
         const cx = W / 2;
-        let y = 150;
-        ctx.textAlign = 'center';
-
-        // 消行数 vs 理论
+        let y = topInset + 136;
         if (this._result) {
             const lines = this._result.lines || 0;
             const theory = this._stage ? this._stage.minLines : 0;
