@@ -7,31 +7,31 @@ const { getAllAchievements, getAchievementById } = require('../data/achievements
 
 /** 统计项存储键 */
 const STAT_KEYS = {
-    totalGames: 'stat_total_games',
-    totalScore: 'stat_total_score',
-    bestScore: 'stat_best_score',
-    totalClears: 'stat_total_clears',
-    clear1: 'stat_clear_1',
-    clear2: 'stat_clear_2',
-    clear3: 'stat_clear_3',
-    clear4: 'stat_clear_4',
-    tetrisCount: 'stat_tetris_count',
-    tspinCount: 'stat_tspin_count',
-    tspinDoubleCount: 'stat_tspin_double_count',
-    maxCombo: 'stat_max_combo',
-    maxB2B: 'stat_max_b2b',
-    maxLevel: 'stat_max_level',
-    maxSurvive: 'stat_max_survive',
-    totalCoins: 'stat_total_coins',
-    shareCount: 'stat_share_count',
-    rankEnters: 'stat_rank_enters',
-    bestRank: 'stat_best_rank',
-    inviteCount: 'stat_invite_count',
-    useAllPieces: 'stat_use_all_pieces',
+    totalGames: 'gc_stat_total_games',
+    totalScore: 'gc_stat_total_score',
+    bestScore: 'gc_stat_best_score',
+    totalClears: 'gc_stat_total_clears',
+    clear1: 'gc_stat_clear_1',
+    clear2: 'gc_stat_clear_2',
+    clear3: 'gc_stat_clear_3',
+    clear4: 'gc_stat_clear_4',
+    tetrisCount: 'gc_stat_tetris_count',
+    tspinCount: 'gc_stat_tspin_count',
+    tspinDoubleCount: 'gc_stat_tspin_double_count',
+    maxCombo: 'gc_stat_max_combo',
+    maxB2B: 'gc_stat_max_b2b',
+    maxLevel: 'gc_stat_max_level',
+    maxSurvive: 'gc_stat_max_survive',
+    totalCoins: 'gc_stat_total_coins',
+    shareCount: 'gc_stat_share_count',
+    rankEnters: 'gc_stat_rank_enters',
+    bestRank: 'gc_stat_best_rank',
+    inviteCount: 'gc_stat_invite_count',
+    useAllPieces: 'gc_stat_use_all_pieces',
 };
 
-const UNLOCKED_KEY = 'unlockedAchievements';
-const LAST_NEW_KEY = 'lastNewAchievements';
+const UNLOCKED_KEY = 'gc_unlockedAchievements';
+const LAST_NEW_KEY = 'gc_lastNewAchievements';
 
 class AchievementManager {
     constructor() {
@@ -227,8 +227,8 @@ class AchievementManager {
             // 忽略存储异常
         }
         if (a.reward) {
-            const coins = wx.getStorageSync('coins') || 0;
-            wx.setStorageSync('coins', coins + a.reward);
+            const coins = wx.getStorageSync('gc_coins') || 0;
+            wx.setStorageSync('gc_coins', coins + a.reward);
             this.addStat('totalCoins', a.reward);
         }
         return true;

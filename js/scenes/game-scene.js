@@ -159,10 +159,10 @@ class GameScene {
 
         // 读取设置
         this._settings = {
-            sfx: wx.getStorageSync('setting_sfx') !== false,
-            bgm: wx.getStorageSync('setting_bgm') !== false,
-            vibrate: wx.getStorageSync('setting_vibrate') !== false,
-            bgEffects: wx.getStorageSync('setting_bgEffects') !== false,
+            sfx: wx.getStorageSync('gc_setting_sfx') !== false,
+            bgm: wx.getStorageSync('gc_setting_bgm') !== false,
+            vibrate: wx.getStorageSync('gc_setting_vibrate') !== false,
+            bgEffects: wx.getStorageSync('gc_setting_bgEffects') !== false,
         };
 
         // 初始化音频
@@ -638,7 +638,7 @@ class GameScene {
 
     /** 按模式保存最高分 */
     _saveBestScore(score, mode) {
-        const key = 'bestScore_' + (mode || 'classic');
+        const key = 'gc_bestScore_' + (mode || 'classic');
         const prev = wx.getStorageSync(key) || 0;
         if (score > prev) {
             wx.setStorageSync(key, score);
@@ -649,7 +649,7 @@ class GameScene {
 
     /** 获取指定模式最高分 */
     _getBestScore(mode) {
-        const key = 'bestScore_' + (mode || 'classic');
+        const key = 'gc_bestScore_' + (mode || 'classic');
         return wx.getStorageSync(key) || 0;
     }
 
@@ -1302,11 +1302,11 @@ class GameScene {
         if (tier === 3) {
             this._luckyDrawPrize = this._mode === 'classic'
                 ? { type: 'revive' }
-                : { type: 'coins', amount: 20 };
+                : { type: 'gc_coins', amount: 20 };
         } else if (tier === 2) {
-            this._luckyDrawPrize = { type: 'coins', amount: 10 };
+            this._luckyDrawPrize = { type: 'gc_coins', amount: 10 };
         } else {
-            this._luckyDrawPrize = { type: 'coins', amount: 5 };
+            this._luckyDrawPrize = { type: 'gc_coins', amount: 5 };
         }
 
         // 5) 匹配组符号（出现次数≥2）去重写入，result 阶段描金高亮
@@ -1608,7 +1608,7 @@ class GameScene {
         }
         // 生成回放数据并持久化（仅当本局录入了有效输入）
         const replayData = this._recorder ? this._recorder.finish({ score, level, lines, mode: this._mode, duration: Math.floor(this._surviveTime || 0) }) : null;
-        const replayKey = (replayData && replayData.inputs && replayData.inputs.length > 0) ? 'replay_last' : '';
+        const replayKey = (replayData && replayData.inputs && replayData.inputs.length > 0) ? 'gc_replay_last' : '';
         if (replayKey) {
             this._recorder.save(replayKey, replayData);
         }

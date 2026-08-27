@@ -164,9 +164,9 @@ class ResultScene {
         this._submitScore();
 
         // 插屏：新手前 5 局跳过；之后每 6 局 1 次；挑战结算不打断社交流程
-        const prevCount = wx.getStorageSync('gameCount') || 0;
+        const prevCount = wx.getStorageSync('gc_gameCount') || 0;
         const gameCount = prevCount + 1;
-        wx.setStorageSync('gameCount', gameCount);
+        wx.setStorageSync('gc_gameCount', gameCount);
         const skipForChallenge = !!this._challengeId;
         if (this._adManager && !skipForChallenge && shouldShowInterstitial(gameCount)) {
             setTimeout(() => {
@@ -964,13 +964,13 @@ class ResultScene {
 
     /** 获取指定模式最高分 */
     _getBestScore(mode) {
-        const key = 'bestScore_' + (mode || 'classic');
+        const key = 'gc_bestScore_' + (mode || 'classic');
         return wx.getStorageSync(key) || 0;
     }
 
     /** 判断是否为新模式最高分（首次进入结算时记录） */
     _isNewRecord(score, mode) {
-        const key = 'bestScore_' + (mode || 'classic');
+        const key = 'gc_bestScore_' + (mode || 'classic');
         const prev = wx.getStorageSync(key) || 0;
         if (score > prev) {
             wx.setStorageSync(key, score);
@@ -981,7 +981,7 @@ class ResultScene {
 
     /** 保存指定模式最高分 */
     _saveBestScore(score, mode) {
-        const key = 'bestScore_' + (mode || 'classic');
+        const key = 'gc_bestScore_' + (mode || 'classic');
         const prev = wx.getStorageSync(key) || 0;
         if (score > prev) {
             wx.setStorageSync(key, score);

@@ -5,9 +5,9 @@
  * 不再让用户手动上传头像或输入昵称。
  */
 
-const PROFILE_KEY = 'user_profile';
+const PROFILE_KEY = 'gc_user_profile';
 /** 用户在首页授权层点过「稍后再说」后不再首启强提示（设置里仍可授权） */
-const PROFILE_SKIP_KEY = 'profile_auth_skipped';
+const PROFILE_SKIP_KEY = 'gc_profile_auth_skipped';
 const { CLOUD_ENV } = require('./cloud-config');
 
 const MAX_NICKNAME_LENGTH = 32;

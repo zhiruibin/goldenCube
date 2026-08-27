@@ -14,7 +14,7 @@ class MiniTetrisFx {
 
   init(layout) {
     this._layout = layout || {};
-    let on = wx.getStorageSync('setting_miniFx') !== false;
+    let on = wx.getStorageSync('gc_setting_miniFx') !== false;
     let lowEnd = false;
     try {
       const info = wx.getSystemInfoSync();

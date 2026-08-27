@@ -520,7 +520,7 @@ class RankScene {
         const mode = this._mode || 'classic';
         let score = 0;
         try {
-            score = wx.getStorageSync('bestScore_' + mode) || 0;
+            score = wx.getStorageSync('gc_bestScore_' + mode) || 0;
         } catch (e) {
             score = 0;
         }

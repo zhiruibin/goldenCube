@@ -95,7 +95,7 @@ class BoardRenderer {
     _applySkin() {
         let skinId = 'default';
         try {
-            skinId = wx.getStorageSync('equipped_board') || 'default';
+            skinId = wx.getStorageSync('gc_equipped_board') || 'default';
         } catch (e) {
             // 忽略，使用默认皮肤
         }
@@ -118,7 +118,7 @@ class BoardRenderer {
     _applyBlockSkin() {
         let skinId = 'default';
         try {
-            skinId = wx.getStorageSync('equipped_block') || 'default';
+            skinId = wx.getStorageSync('gc_equipped_block') || 'default';
         } catch (e) {
             // 忽略，使用默认皮肤
         }

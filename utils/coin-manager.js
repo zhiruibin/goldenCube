@@ -1,10 +1,10 @@
 /**
  * CoinManager - 金币经济管理器
  * 职责：
- *  - 统一读写金币余额（'coins'）
+ *  - 统一读写金币余额（'gc_coins'）
  *  - 发放消行金币（单消 1 / 双消 2 / 三消 3 / 四消 5）
  *  - 每日获取上限（默认 600/天，仅限消行金币；成就/广告加成不计入上限）
- *  - 累计金币统计（'stat_total_coins'，供收集系成就 total_coins 使用）
+ *  - 累计金币统计（'gc_stat_total_coins'，供收集系成就 total_coins 使用）
  *
  * 经济平衡目标（2025-08 调整）：
  *  - 技术决定单局收益：四消单行收益（2/行）是单消（1/行）的 2 倍
@@ -41,11 +41,11 @@ const LINE_CLEAR_REWARDS = {
 };
 
 /** 存储键 */
-const COINS_KEY = 'coins';
-const DAILY_KEY = 'dailyCoinsEarned';
-const DAILY_LOGIN_KEY = 'dailyLoginClaimed';
-const AD_DAILY_KEY = 'dailyAdCoinsEarned';
-const TOTAL_COINS_KEY = 'stat_total_coins';
+const COINS_KEY = 'gc_coins';
+const DAILY_KEY = 'gc_dailyCoinsEarned';
+const DAILY_LOGIN_KEY = 'gc_dailyLoginClaimed';
+const AD_DAILY_KEY = 'gc_dailyAdCoinsEarned';
+const TOTAL_COINS_KEY = 'gc_stat_total_coins';
 
 class CoinManager {
     constructor() {

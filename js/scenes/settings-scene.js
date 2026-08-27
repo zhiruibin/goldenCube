@@ -320,24 +320,24 @@ class SettingsScene {
 
     _loadSettings() {
         this._settings = {
-            sfx: wx.getStorageSync('setting_sfx') !== false,
-            bgm: wx.getStorageSync('setting_bgm') !== false,
-            vibrate: wx.getStorageSync('setting_vibrate') !== false,
-            bgEffects: wx.getStorageSync('setting_bgEffects') !== false,
-            miniFx: wx.getStorageSync('setting_miniFx') !== false,
-            dasDelay: wx.getStorageSync('setting_dasDelay') || 170,
-            arrRepeat: wx.getStorageSync('setting_arrRepeat') || 50,
+            sfx: wx.getStorageSync('gc_setting_sfx') !== false,
+            bgm: wx.getStorageSync('gc_setting_bgm') !== false,
+            vibrate: wx.getStorageSync('gc_setting_vibrate') !== false,
+            bgEffects: wx.getStorageSync('gc_setting_bgEffects') !== false,
+            miniFx: wx.getStorageSync('gc_setting_miniFx') !== false,
+            dasDelay: wx.getStorageSync('gc_setting_dasDelay') || 170,
+            arrRepeat: wx.getStorageSync('gc_setting_arrRepeat') || 50,
         };
     }
 
     _saveSettings() {
-        wx.setStorageSync('setting_sfx', this._settings.sfx);
-        wx.setStorageSync('setting_bgm', this._settings.bgm);
-        wx.setStorageSync('setting_vibrate', this._settings.vibrate);
-        wx.setStorageSync('setting_bgEffects', this._settings.bgEffects);
-        wx.setStorageSync('setting_miniFx', this._settings.miniFx);
-        wx.setStorageSync('setting_dasDelay', this._settings.dasDelay);
-        wx.setStorageSync('setting_arrRepeat', this._settings.arrRepeat);
+        wx.setStorageSync('gc_setting_sfx', this._settings.sfx);
+        wx.setStorageSync('gc_setting_bgm', this._settings.bgm);
+        wx.setStorageSync('gc_setting_vibrate', this._settings.vibrate);
+        wx.setStorageSync('gc_setting_bgEffects', this._settings.bgEffects);
+        wx.setStorageSync('gc_setting_miniFx', this._settings.miniFx);
+        wx.setStorageSync('gc_setting_dasDelay', this._settings.dasDelay);
+        wx.setStorageSync('gc_setting_arrRepeat', this._settings.arrRepeat);
     }
 
     _resetDefaults() {

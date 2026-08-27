@@ -40,12 +40,12 @@ class ShopScene {
 
     /** 从本地存储刷新一次缓存（进入场景时调用） */
     _refreshCache() {
-        this._coins = wx.getStorageSync('coins') || 0;
-        this._owned = wx.getStorageSync('ownedItems') || [];
+        this._coins = wx.getStorageSync('gc_coins') || 0;
+        this._owned = wx.getStorageSync('gc_ownedItems') || [];
         this._equipped = {
-            block: wx.getStorageSync('equipped_block') || 'default',
-            board: wx.getStorageSync('equipped_board') || 'default',
-            sound: wx.getStorageSync('equipped_sound') || 'default',
+            block: wx.getStorageSync('gc_equipped_block') || 'default',
+            board: wx.getStorageSync('gc_equipped_board') || 'default',
+            sound: wx.getStorageSync('gc_equipped_sound') || 'default',
         };
     }
 
@@ -444,7 +444,7 @@ class ShopScene {
         // 读取当前装备的方块皮肤颜色
         let blockColors = null;
         try {
-            const equippedId = wx.getStorageSync('equipped_block') || 'default';
+            const equippedId = wx.getStorageSync('gc_equipped_block') || 'default';
             const skin = blockSkins.find((s) => s.id === equippedId) || blockSkins[0];
             blockColors = skin.colors || {};
         } catch (e) {
@@ -689,7 +689,7 @@ class ShopScene {
         const items = this._currentItems();
 
         const owned = this._owned;
-        const equippedKey = 'equipped_' + this._tab;
+        const equippedKey = 'gc_equipped_' + this._tab;
         const equipped = this._equipped[this._tab] || 'default';
 
         for (let i = 0; i < items.length; i++) {
@@ -714,7 +714,7 @@ class ShopScene {
             // 未拥有：先判断是否满足条件解锁
             if (this._canUnlockByCondition(item)) {
                 this._owned = owned.concat(item.id);
-                wx.setStorageSync('ownedItems', this._owned);
+                wx.setStorageSync('gc_ownedItems', this._owned);
                 this._equipped[this._tab] = item.id;
                 wx.setStorageSync(equippedKey, item.id);
                 wx.showToast({ title: '已解锁：' + item.name, icon: 'none' });
@@ -726,9 +726,9 @@ class ShopScene {
                 const coins = this._coins;
                 if (coins >= item.price) {
                     this._coins = coins - item.price;
-                    wx.setStorageSync('coins', this._coins);
+                    wx.setStorageSync('gc_coins', this._coins);
                     this._owned = owned.concat(item.id);
-                    wx.setStorageSync('ownedItems', this._owned);
+                    wx.setStorageSync('gc_ownedItems', this._owned);
                     this._equipped[this._tab] = item.id;
                     wx.setStorageSync(equippedKey, item.id);
                     wx.showToast({ title: '购买成功：' + item.name, icon: 'none' });
@@ -748,9 +748,9 @@ class ShopScene {
         const cond = item.unlockCondition;
         if (!cond || cond === 'purchase') return false;
         if (cond === 'default') return true;
-        if (cond === 'score_10000') return (wx.getStorageSync('stat_total_score') || 0) >= 10000;
-        if (cond === 'games_50') return (wx.getStorageSync('stat_total_games') || 0) >= 50;
-        if (cond === 'tetris_count_100') return (wx.getStorageSync('stat_tetris_count') || 0) >= 100;
+        if (cond === 'score_10000') return (wx.getStorageSync('gc_stat_total_score') || 0) >= 10000;
+        if (cond === 'games_50') return (wx.getStorageSync('gc_stat_total_games') || 0) >= 50;
+        if (cond === 'tetris_count_100') return (wx.getStorageSync('gc_stat_tetris_count') || 0) >= 100;
         return false;
     }
 

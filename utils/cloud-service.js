@@ -31,7 +31,7 @@ const {
 
 /** 本地缓存键（按 模式_周期 维度缓存最近一次全服榜结果） */
 function cacheKey(mode, period) {
-    return 'rank_cache_' + mode + '_' + period;
+    return 'gc_rank_cache_' + mode + '_' + period;
 }
 
 class CloudService {

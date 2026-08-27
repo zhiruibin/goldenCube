@@ -369,7 +369,7 @@ wx.onTouchStart(function (e) {
         if (!audio.isInitialized()) {
             audio.init();
         }
-        if (wx.getStorageSync('setting_bgm') !== false && !audio.isBgmPlaying()) {
+        if (wx.getStorageSync('gc_setting_bgm') !== false && !audio.isBgmPlaying()) {
             audio.playBGM();
         }
     }
@@ -507,7 +507,7 @@ wx.onShow(function (res) {
     const audio = GameGlobal.game.audioManager;
     if (audio && audio.isInitialized()) {
         try {
-            if (wx.getStorageSync('setting_bgm') !== false) {
+            if (wx.getStorageSync('gc_setting_bgm') !== false) {
                 audio.resumeBGM();
             }
         } catch (err) { /* 忽略存储异常 */ }

@@ -22,7 +22,7 @@ class PieceRenderer {
     _applySkin() {
         let skinId = 'default';
         try {
-            skinId = wx.getStorageSync('equipped_block') || 'default';
+            skinId = wx.getStorageSync('gc_equipped_block') || 'default';
         } catch (e) {
             // 忽略，使用默认皮肤
         }

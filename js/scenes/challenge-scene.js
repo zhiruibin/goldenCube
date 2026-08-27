@@ -5,7 +5,7 @@ const IconRenderer = require('../render/icon-renderer');
 const { resolveAvatarUrl, ensureProfileForAction, getCachedProfile } = require('../../utils/user-profile');
 const { achievementManager } = require('../../utils/achievement-manager');
 
-const PENDING_CHALLENGES_KEY = 'pending_challenges';
+const PENDING_CHALLENGES_KEY = 'gc_pending_challenges';
 /** 与云函数挑战过期一致：本地待应战超过 7 天视为失效 */
 const PENDING_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
 

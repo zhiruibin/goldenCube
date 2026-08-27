@@ -49,7 +49,7 @@ let selfOpenId = '';
 
 
 /** 好友榜存储键前缀（与 utils/cloud-config.js FRIEND_RANK_KEY 一致） */
-const KEY_PREFIX = 'rank_score_';
+const KEY_PREFIX = 'gc_rank_score_';
 
 let loading = false;
 let fetchFailed = false;

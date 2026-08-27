@@ -19,7 +19,7 @@ const RANK_COLLECTION = 'rankings';
 const CHALLENGE_COLLECTION = 'challenges';
 
 /** 好友榜存储键（微信开放数据域 wx.setUserCloudStorage 使用） */
-const FRIEND_RANK_KEY = 'rank_score';
+const FRIEND_RANK_KEY = 'gc_rank_score';
 
 /** 允许的游戏模式 */
 const GAME_MODES = ['classic', 'timed', 'marathon'];

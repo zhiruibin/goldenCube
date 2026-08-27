@@ -43,7 +43,7 @@ class ConfettiFx {
         }
 
         // 存储开关 setting_luckyFx：默认开启
-        this.enabled = wx.getStorageSync('setting_luckyFx') !== false;
+        this.enabled = wx.getStorageSync('gc_setting_luckyFx') !== false;
 
         // benchmarkLevel 分档硬上限
         let level = 1;

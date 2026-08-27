@@ -109,7 +109,7 @@ class ReplayScene {
         this._initRenderers();
         this._bgEffects = new BackgroundEffects();
         this._bgEffects.init();
-        this._bgEffects.setEnabled(wx.getStorageSync('setting_bgEffects') !== false);
+        this._bgEffects.setEnabled(wx.getStorageSync('gc_setting_bgEffects') !== false);
 
         // 用回放种子重建引擎（BagRandomizer 可复现，保证方块序列一致）
         this._engine = new TetrisEngine(data.seed);

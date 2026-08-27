@@ -68,7 +68,7 @@ class AudioManager {
   _loadEquippedPack() {
     let packId = 'default'
     try {
-      packId = wx.getStorageSync('equipped_sound') || 'default'
+      packId = wx.getStorageSync('gc_equipped_sound') || 'default'
     } catch (e) {
       // 忽略，使用默认音效包
     }

@@ -82,7 +82,7 @@ class AchievementScene {
         ctx.fillText(`${unlockedCount}/${total}`, 20, this._topInset() + 16);
 
         // 金币（Title 下方居中一行，避免与居中标题抢横向空间）
-        drawCoinHudCentered(ctx, W, titleY + 30, wx.getStorageSync('coins') || 0);
+        drawCoinHudCentered(ctx, W, titleY + 30, wx.getStorageSync('gc_coins') || 0);
 
         this._renderTabs(ctx);
         this._renderList(ctx);
