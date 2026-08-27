@@ -3,16 +3,16 @@
   "packOptions": {
     "ignore": [
       {
-        "type": "folder",
-        "value": "cloudfunctions"
+        "value": "cloudfunctions",
+        "type": "folder"
       },
       {
-        "type": "folder",
-        "value": ".numar"
+        "value": ".numar",
+        "type": "folder"
       },
       {
-        "type": "folder",
-        "value": "tools"
+        "value": "tools",
+        "type": "folder"
       }
     ],
     "include": []
@@ -59,7 +59,7 @@
   },
   "compileType": "game",
   "libVersion": "3.17.0",
-  "appid": "touristappid",
+  "appid": "wxaf95434d9f7c7962",
   "projectname": "goldenCube-app",
   "cloudfunctionRoot": "cloudfunctions/",
   "condition": {},

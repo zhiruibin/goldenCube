@@ -8,7 +8,7 @@
  * 与 tetris-mini 数据完全隔离（gc_ 前缀）。
  */
 
-const STAGES_DATA = require('../data/stages-v1.json');
+const STAGES_DATA = require('../data/stages-v1.js');
 
 const KEYS = {
     balance: 'gc_goldenBlocks',
