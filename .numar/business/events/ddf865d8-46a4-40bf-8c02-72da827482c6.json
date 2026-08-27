@@ -1,0 +1,12 @@
+{
+	"id": "ddf865d8-46a4-40bf-8c02-72da827482c6",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "96f0ea2b-9746-415d-880a-8a7b8daf398a",
+	"operation": "create",
+	"after": "golden-block-manager 新增 getChapters()、getStagesByChapter(id)、isChapterUnlocked(id)；第一章恒解锁，后续章节要求上一章全部通关。",
+	"taskId": "request_09732711-119d-4513-a438-bb6d4bbc849d",
+	"evidenceIds": [
+		"utils/golden-block-manager.js"
+	],
+	"createdAt": 1787813486391
+}

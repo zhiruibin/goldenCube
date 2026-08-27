@@ -1,0 +1,28 @@
+{
+	"id": "9d563c68-fe03-423a-bb21-c058dd8b3a15",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "home.entry-hub",
+	"title": "首页改造为入口 Hub",
+	"statement": "首页为「挖个方块」入口 Hub，副标题「残局闯关 · 好友挑战」，右上显示金方块余额；整宽「闯关」按钮进入 stageSelect，下方 2x2 功能网格（排行/成就/商店/设置）与底部好友挑战入口保留",
+	"status": "active",
+	"verificationStatus": "verified",
+	"createdAt": 1787809299314,
+	"updatedAt": 1787809299314,
+	"createdByTaskId": "request_a2195155-87f9-4ebf-a6ab-ad3a57c0989e",
+	"latestEventId": "462f3e31-ffa3-4743-8ab0-e0821fb2c5c5",
+	"tags": [],
+	"aliases": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/home-scene.js"
+		},
+		{
+			"type": "symbol",
+			"path": "js/scenes/home-scene.js",
+			"symbol": "_startGame"
+		}
+	]
+}

@@ -28,6 +28,7 @@ const {
     CLOUD_ENV,
     GAME_MODES,
 } = require('./cloud-config');
+const { encodeRankScore } = require('./rank-score');
 
 /** 本地缓存键（按 模式_周期 维度缓存最近一次全服榜结果） */
 function cacheKey(mode, period) {
@@ -72,18 +73,36 @@ class CloudService {
     }
 
     /**
-     * 上报本局分数
-     * @param {object} payload { mode, score, detail, nickname, avatarUrl }
-     * @returns {Promise<{success:boolean, isNewRecord:boolean, rank:number|null}>}
+     * 上报闯关榜复合键（通关数 / 消行和 / 块和 / 时和）
+     * @param {object} payload { clearedCount, linesSum, piecesSum, timeSum, nickname, avatarUrl, detail }
+     * @returns {Promise<{success, isNewRecord, rank, score, clearedCount}>}
      */
     async submitScore(payload) {
-        const mode = GAME_MODES.indexOf(payload && payload.mode) >= 0 ? payload.mode : 'classic';
-        const score = Math.max(0, Math.floor(Number(payload && payload.score) || 0));
+        const mode = GAME_MODES.indexOf(payload && payload.mode) >= 0
+            ? payload.mode
+            : 'stage';
+        const sums = {
+            clearedCount: Math.max(0, Math.floor(Number(payload && payload.clearedCount) || 0)),
+            linesSum: Math.max(0, Math.floor(Number(payload && payload.linesSum) || 0)),
+            piecesSum: Math.max(0, Math.floor(Number(payload && payload.piecesSum) || 0)),
+            timeSum: Math.max(0, Math.floor(Number(payload && payload.timeSum) || 0)),
+        };
+        // 兼容旧调用：仅传 score 时当作编码分
+        let score = encodeRankScore(sums);
+        if (!(sums.clearedCount > 0) && payload && payload.score != null) {
+            score = Math.max(0, Math.floor(Number(payload.score) || 0));
+        }
 
         if (!this.isAvailable()) {
-            // 离线仍更新好友榜分数（无回放 id）
             this._submitFriendScore(mode, score);
-            return { success: false, isNewRecord: false, rank: null, offline: true };
+            return {
+                success: false,
+                isNewRecord: false,
+                rank: null,
+                score,
+                clearedCount: sums.clearedCount,
+                offline: true,
+            };
         }
 
         try {
@@ -94,6 +113,10 @@ class CloudService {
                     data: {
                         mode,
                         score,
+                        clearedCount: sums.clearedCount,
+                        linesSum: sums.linesSum,
+                        piecesSum: sums.piecesSum,
+                        timeSum: sums.timeSum,
                         detail: (payload && payload.detail) || null,
                         nickname: (payload && payload.nickname) || '',
                         avatarUrl: (payload && payload.avatarUrl) || '',
@@ -103,26 +126,34 @@ class CloudService {
             });
             const r = (res && res.result) || {};
             if (!r.success) {
-                // 便于排查：云函数未部署 / 集合不存在 / 参数校验失败时控制台可见
                 console.warn('[Cloud] 上报分数未成功', {
                     errMsg: r.errMsg || '(无 errMsg，请确认已上传部署云函数 rank)',
                     result: r,
                     raw: res,
                 });
             }
-            // 无论云端是否成功，都上报好友榜分数，保证好友可见成绩
             this._submitFriendScore(mode, score);
             return {
                 success: !!r.success,
                 isNewRecord: !!r.isNewRecord,
                 rank: typeof r.rank === 'number' ? r.rank : null,
+                score: typeof r.score === 'number' ? r.score : score,
+                clearedCount: typeof r.clearedCount === 'number' ? r.clearedCount : sums.clearedCount,
                 offline: false,
                 errMsg: r.errMsg || '',
             };
         } catch (e) {
             console.warn('[Cloud] 上报分数失败（callFunction 异常）', e);
             this._submitFriendScore(mode, score);
-            return { success: false, isNewRecord: false, rank: null, offline: false, errMsg: (e && e.errMsg) || String(e) };
+            return {
+                success: false,
+                isNewRecord: false,
+                rank: null,
+                score,
+                clearedCount: sums.clearedCount,
+                offline: false,
+                errMsg: (e && e.errMsg) || String(e),
+            };
         }
     }
 
@@ -132,7 +163,7 @@ class CloudService {
      * @returns {Promise<{success:boolean, list:Array, total:number, myRank:number|null, myScore:number|null, offline:boolean, fromCache:boolean}>}
      */
     async getRankList(opts) {
-        const mode = GAME_MODES.indexOf(opts && opts.mode) >= 0 ? opts.mode : 'classic';
+        const mode = GAME_MODES.indexOf(opts && opts.mode) >= 0 ? opts.mode : 'stage';
         const period = (opts && opts.period) || 'total';
         const page = Math.max(1, Math.floor(Number(opts && opts.page) || 1));
         const pageSize = Math.min(50, Math.max(1, Math.floor(Number(opts && opts.pageSize) || 20)));
@@ -217,7 +248,7 @@ class CloudService {
      * @param {object} opts { mode }
      */
     async getMyRank(opts) {
-        const mode = GAME_MODES.indexOf(opts && opts.mode) >= 0 ? opts.mode : 'classic';
+        const mode = GAME_MODES.indexOf(opts && opts.mode) >= 0 ? opts.mode : 'stage';
         if (!this.isAvailable()) {
             return { success: false, myRank: null, myScore: null, offline: true };
         }
@@ -245,7 +276,7 @@ class CloudService {
      * @returns {Promise<{success:boolean, challengeId:string, challenge:object|null, offline:boolean, errMsg?:string}>}
      */
     async createChallenge(payload) {
-        const mode = GAME_MODES.indexOf(payload && payload.mode) >= 0 ? payload.mode : 'classic';
+        const mode = GAME_MODES.indexOf(payload && payload.mode) >= 0 ? payload.mode : 'stage';
         const score = Math.max(0, Math.floor(Number(payload && payload.score) || 0));
 
         if (!this.isAvailable()) {
@@ -461,7 +492,7 @@ class CloudService {
             if (!od) return;
             od.postMessage({
                 action: 'render',
-                mode: (opts && opts.mode) || 'classic',
+                mode: (opts && opts.mode) || 'stage',
                 x: opts && opts.x,
                 y: opts && opts.y,
                 width: opts && opts.width,

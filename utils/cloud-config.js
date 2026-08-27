@@ -21,11 +21,12 @@ const CHALLENGE_COLLECTION = 'challenges';
 /** 好友榜存储键（微信开放数据域 wx.setUserCloudStorage 使用） */
 const FRIEND_RANK_KEY = 'gc_rank_score';
 
-/** 允许的游戏模式 */
-const GAME_MODES = ['classic', 'timed', 'marathon'];
+/** 允许的游戏模式（挖个方块主榜仅闯关复合键） */
+const GAME_MODES = ['stage'];
 
 /** 模式显示名 */
 const MODE_NAMES = {
+    stage: '闯关榜',
     classic: '经典模式',
     timed: '限时赛',
     marathon: '马拉松',

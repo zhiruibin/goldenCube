@@ -1,0 +1,14 @@
+{
+	"id": "cd8ecf45-7a9a-4c8f-aef8-523ff048a5f7",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "11fce392-2344-40a6-a83f-a988c5383941",
+	"toNodeId": "29abe178-71b8-4f37-a117-2a5e52060f03",
+	"type": "dependsOn",
+	"verificationStatus": "verified",
+	"evidenceIds": [
+		"js/scenes/stage-select-scene.js"
+	],
+	"createdByTaskId": "request_09732711-119d-4513-a438-bb6d4bbc849d",
+	"createdAt": 1787813486391,
+	"updatedAt": 1787813486391
+}

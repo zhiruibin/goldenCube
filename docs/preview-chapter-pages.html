@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>挖个方块 · 十章关卡页样式预览</title>
+<style>
+  :root {
+    --bg0: #2a3358;
+    --bg1: #1c2440;
+    --bg2: #12182c;
+    --title: #FFE566;
+    --sub: rgba(255,236,210,0.75);
+    --muted: rgba(255,245,230,0.42);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", system-ui, sans-serif;
+    color: #fff;
+    background: linear-gradient(180deg, var(--bg0), var(--bg1) 55%, var(--bg2));
+    min-height: 100vh;
+  }
+  header { padding: 28px 24px 8px; text-align: center; }
+  header h1 { margin: 0; font-size: 28px; color: var(--title); letter-spacing: 0.04em; }
+  header p { margin: 8px 0 0; color: var(--sub); font-size: 14px; }
+  .hint { text-align: center; color: var(--muted); font-size: 12px; margin: 6px 0 18px; }
+
+  .hardest {
+    max-width: 720px;
+    margin: 0 auto 28px;
+    padding: 18px 18px 20px;
+    border-radius: 24px;
+    border: 1px solid rgba(255,200,87,0.55);
+    background: rgba(0,0,0,0.35);
+    position: relative;
+    overflow: hidden;
+  }
+  .hardest::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% -20%, rgba(255,200,87,0.28), transparent 60%);
+    pointer-events: none;
+  }
+  .hardest .tag {
+    position: relative; z-index: 1;
+    display: inline-block;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: #1a1408;
+    background: #FFC857;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-weight: 700;
+  }
+  .hardest h2 {
+    position: relative; z-index: 1;
+    margin: 10px 0 4px;
+    font-size: 24px;
+    color: #FFC857;
+  }
+  .hardest .sub {
+    position: relative; z-index: 1;
+    margin: 0 0 12px;
+    color: var(--sub);
+    font-size: 13px;
+  }
+  .hardest .board-wrap {
+    position: relative; z-index: 1;
+    display: flex;
+    justify-content: center;
+    padding: 8px 0 12px;
+  }
+  .hardest .meta {
+    position: relative; z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .hardest .meta div {
+    background: rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+  }
+  .hardest .meta span { display: block; color: var(--muted); font-size: 11px; margin-bottom: 4px; }
+  .hardest .meta b { color: #FFC857; font-size: 18px; }
+
+  .section-title {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px 10px;
+    color: var(--sub);
+    font-size: 13px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 22px;
+    padding: 12px 20px 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .phone {
+    background: rgba(0,0,0,0.28);
+    border: 1px solid rgba(255,200,87,0.22);
+    border-radius: 22px;
+    padding: 14px 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  .phone::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% -10%, color-mix(in srgb, var(--accent) 28%, transparent), transparent 55%);
+    pointer-events: none;
+  }
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    position: relative;
+    z-index: 1;
+  }
+  .ch-title { font-size: 20px; font-weight: 700; color: var(--accent); margin: 0; }
+  .ch-sub { margin: 2px 0 0; font-size: 12px; color: var(--sub); }
+  .badge {
+    font-size: 11px;
+    color: var(--accent);
+    border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+    border-radius: 999px;
+    padding: 3px 8px;
+    white-space: nowrap;
+  }
+  .intro {
+    position: relative; z-index: 1;
+    font-size: 12px; color: var(--muted); line-height: 1.45; min-height: 34px;
+  }
+  .boards {
+    position: relative; z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .board-card { text-align: center; }
+  .board-card .label {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .board-card .label strong { color: var(--accent); font-weight: 600; }
+  canvas.board {
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: #0a0e18;
+    image-rendering: pixelated;
+    width: 100%;
+    height: auto;
+  }
+  .meta {
+    position: relative; z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 10px;
+    font-size: 12px;
+  }
+  .meta div {
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    padding: 7px 9px;
+  }
+  .meta b { color: var(--accent); font-weight: 600; }
+  .meta span { color: var(--muted); }
+  @media (max-width: 520px) {
+    .hardest .meta { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>挖个方块</h1>
+    <p>十章关卡页样式预览 · 含全游戏最难关</p>
+  </header>
+  <p class="hint">数据来自 stages-v1.json（v3 剪影重构）· 顶部为最难关 · 下方每章：第 1 关 + 最后一关（Boss）</p>
+
+  <section class="hardest" id="hardest"></section>
+
+  <p class="section-title">各章样式（左：第 1 关 · 右：最后一关 / Boss）</p>
+  <div class="grid" id="grid"></div>
+
+  <script>
+    const DATA = {"hardest":{"chapterName":"金方块殿","theme":"黄金圣物 / 终章","intro":"圣物剪影；终关高位王冠与搭梯","drop":750,"accent":"#FFC857","garbage":"#C4922E","hole":"#1a1408","colorLabel":"暖金","stage":{"id":100,"chapterId":10,"localId":10,"name":"方块之神","minLines":15,"coinThreshold":30,"garbageCount":63,"unlockCost":1,"dropIntervalMs":750,"kind":"ladder","rows":{"4":"...####...","5":"..####....","6":"..##.##...","7":"..####....","8":".####.....","9":".###.#....","10":"..##.##...","11":".##...##..","12":".#######..","13":".####.....","14":"###...#...","15":".##...##..","16":"..####....","17":".####.....","18":".###..#..."}}},"chapters":[{"id":1,"name":"数字课","theme":"数字 0–9","intro":"正形数字剪影，学会读图填洞；中段体验高位搭梯","drop":1000,"accent":"#E8EEF8","garbage":"#A8B4C8","hole":"#1a2238","colorLabel":"粉笔白","mlRange":"3–8","TRange":"6–16","firstName":"竖一","lastName":"圆环零","firstStage":{"id":1,"chapterId":1,"localId":1,"name":"竖一","minLines":3,"coinThreshold":6,"garbageCount":6,"unlockCost":0,"dropIntervalMs":1000,"kind":"silhouette","rows":{"17":"....##....","18":"....##....","19":"....##...."}},"lastStage":{"id":10,"chapterId":1,"localId":10,"name":"圆环零","minLines":8,"coinThreshold":16,"garbageCount":32,"unlockCost":1,"dropIntervalMs":1000,"kind":"silhouette","rows":{"10":"...####...","11":"..##..##..","12":".##....##.","13":".##....##.","14":".##....##.","15":".##....##.","16":"..##..##..","17":"...####..."}}},{"id":2,"name":"字母墙","theme":"大写字母","intro":"字母正形剪影，练习对称与断笔","drop":1000,"accent":"#F2D6A2","garbage":"#C4A574","hole":"#2a2218","colorLabel":"牛皮纸","mlRange":"5–10","TRange":"10–20","firstName":"大写 A","lastName":"大写 T","firstStage":{"id":11,"chapterId":2,"localId":1,"name":"大写 A","minLines":5,"coinThreshold":10,"garbageCount":21,"unlockCost":1,"dropIntervalMs":1000,"kind":"silhouette","rows":{"15":"...##.....","16":"..##.##...","17":".##...##..","18":".#######..","19":".##...##.."}},"lastStage":{"id":20,"chapterId":2,"localId":10,"name":"大写 T","minLines":10,"coinThreshold":20,"garbageCount":26,"unlockCost":1,"dropIntervalMs":1000,"kind":"silhouette","rows":{"8":"..#...#...","9":".########.","10":"....##....","11":"....##....","12":"....##....","13":"....##....","14":"....##....","15":"....##....","16":"....##....","17":"....##...."}}},{"id":3,"name":"花田日记","theme":"花朵 / 植物","intro":"花茎剪影与浮空花瓣，练习搭梯","drop":950,"accent":"#F6A5C0","garbage":"#D4789A","hole":"#2a1820","colorLabel":"花粉","mlRange":"6–10","TRange":"12–20","firstName":"新芽","lastName":"花园圆心","firstStage":{"id":21,"chapterId":3,"localId":1,"name":"新芽","minLines":6,"coinThreshold":12,"garbageCount":8,"unlockCost":1,"dropIntervalMs":950,"kind":"silhouette","rows":{"12":"....#.....","13":"...###....","14":"....#.....","15":"....#.....","16":"....#.....","17":"....#....."}},"lastStage":{"id":30,"chapterId":3,"localId":10,"name":"花园圆心","minLines":10,"coinThreshold":20,"garbageCount":19,"unlockCost":1,"dropIntervalMs":950,"kind":"ladder","rows":{"4":"...#.#....","5":"...#.#....","6":"..##.##...","7":"...###....","8":"....#.....","9":".....#....","10":"....#.....","11":"...#.#....","13":"....#.....","15":"...#.#...."}}},{"id":4,"name":"萌宠园","theme":"动物剪影","intro":"正形兽影，耳朵尾巴可悬空","drop":950,"accent":"#F0C27A","garbage":"#C9954A","hole":"#241a10","colorLabel":"暖毛","mlRange":"7–11","TRange":"14–22","firstName":"猫耳","lastName":"幼龙影","firstStage":{"id":31,"chapterId":4,"localId":1,"name":"猫耳","minLines":7,"coinThreshold":14,"garbageCount":28,"unlockCost":1,"dropIntervalMs":950,"kind":"silhouette","rows":{"12":"..##..##..","13":".########.","14":"..######..","15":"...####...","16":"....##....","17":"....##....","18":"....##...."}},"lastStage":{"id":40,"chapterId":4,"localId":10,"name":"幼龙影","minLines":11,"coinThreshold":22,"garbageCount":44,"unlockCost":1,"dropIntervalMs":950,"kind":"silhouette","rows":{"6":"...#..#...","7":"..##..##..","8":".########.","9":"..######..","10":"...####...","11":"..##..##..","12":".##....##.","13":"..##..##..","14":"...####...","15":"....##....","16":"...#..#..."}}},{"id":5,"name":"积木城","theme":"建筑","intro":"天际线轮廓贴地为主，偶有浮空楼阁","drop":900,"accent":"#9BB7D4","garbage":"#6E8FB0","hole":"#141c28","colorLabel":"钢筋蓝","mlRange":"8–13","TRange":"16–26","firstName":"平房","lastName":"城邦天际","firstStage":{"id":41,"chapterId":5,"localId":1,"name":"平房","minLines":8,"coinThreshold":16,"garbageCount":39,"unlockCost":1,"dropIntervalMs":900,"kind":"silhouette","rows":{"12":"..######..","13":".##....##.","14":".##....##.","15":".##.#..##.","16":".##....##.","17":".##....##.","18":".##....##.","19":".########."}},"lastStage":{"id":50,"chapterId":5,"localId":10,"name":"城邦天际","minLines":13,"coinThreshold":26,"garbageCount":53,"unlockCost":1,"dropIntervalMs":900,"kind":"silhouette","rows":{"4":"....#.....","7":"#........#","8":"##......##","9":"#.#....#.#","10":"#..#..#..#","11":"#...##...#","12":"#..#..#..#","13":"#.#....#.#","14":"##......##","15":"#.##..##.#","16":"##.#..#.##","17":"#..####..#","18":"##......##"}}},{"id":6,"name":"车水马龙","theme":"交通工具","intro":"车船贴地，火箭等离地升空","drop":900,"accent":"#7EC8E3","garbage":"#4A9BB8","hole":"#102028","colorLabel":"流线青","mlRange":"8–13","TRange":"16–26","firstName":"小轿车","lastName":"车队巡游","firstStage":{"id":51,"chapterId":6,"localId":1,"name":"小轿车","minLines":8,"coinThreshold":16,"garbageCount":35,"unlockCost":1,"dropIntervalMs":900,"kind":"silhouette","rows":{"12":"..###.....","13":"..######..","14":".##....##.","15":".########.","16":".##....##.","17":"..######..","18":"...#..#...","19":"...#..#..."}},"lastStage":{"id":60,"chapterId":6,"localId":10,"name":"车队巡游","minLines":13,"coinThreshold":26,"garbageCount":61,"unlockCost":1,"dropIntervalMs":900,"kind":"silhouette","rows":{"7":"#.#.#.#.#.","8":".##.#.##..","9":"#.#.#.#.#.","10":".##.#.##..","11":"#.#.#.#.#.","12":"..#...#...","13":".##.#.##..","14":"#.#.#.#.#.","15":".##.#.##..","16":"#.#.#.#.#.","17":".##.#.##..","18":"#.#.#.#.#.","19":"..##.##..."}}},{"id":7,"name":"星象台","theme":"星座 / 天体","intro":"星点浮在中盘，远程搭梯","drop":850,"accent":"#B8A6FF","garbage":"#8B7AD4","hole":"#161228","colorLabel":"夜紫","mlRange":"9–13","TRange":"18–26","firstName":"孤星","lastName":"北天王座","firstStage":{"id":61,"chapterId":7,"localId":1,"name":"孤星","minLines":9,"coinThreshold":18,"garbageCount":9,"unlockCost":1,"dropIntervalMs":850,"kind":"ladder","rows":{"6":"....#.....","7":".....#....","8":"..#.......","9":".......#..","10":"........#.","11":"....#.....","12":".....#....","13":"...#......","14":"......#..."}},"lastStage":{"id":70,"chapterId":7,"localId":10,"name":"北天王座","minLines":13,"coinThreshold":26,"garbageCount":16,"unlockCost":1,"dropIntervalMs":850,"kind":"ladder","rows":{"4":"....#.....","5":"..#.......","6":"......#...","7":".#........","8":"....#.....","9":".#.....#..","10":"#.........","11":"....#.....","12":"..#...#...","13":".........#","14":"....#.....","15":"...#.#....","16":"....#....."}}},{"id":8,"name":"几何馆","theme":"几何图形","intro":"空心几何边框悬空","drop":850,"accent":"#A8E6CF","garbage":"#6FB89A","hole":"#12201a","colorLabel":"青绿","mlRange":"9–15","TRange":"18–30","firstName":"正三角","lastName":"多面晶体","firstStage":{"id":71,"chapterId":8,"localId":1,"name":"正三角","minLines":9,"coinThreshold":18,"garbageCount":27,"unlockCost":1,"dropIntervalMs":850,"kind":"silhouette","rows":{"9":"....#.....","10":"...###....","11":"..##.##...","12":".##...##..","13":".##...##..","14":"..##.##...","15":"...###....","16":"....#.....","17":"...###...."}},"lastStage":{"id":80,"chapterId":8,"localId":10,"name":"多面晶体","minLines":15,"coinThreshold":30,"garbageCount":53,"unlockCost":1,"dropIntervalMs":850,"kind":"silhouette","rows":{"4":"..###.....","5":".###.#....","6":".##.#.#...","7":".#.#.#.#..","8":"#.#.#.#.#.","9":".#.#.#.#..","10":"..#.#.#...","11":"...###....","12":"....###...","13":"...#.##...","14":"..#.#.#...","15":".#.#.#.#..","16":"#.#.#.#.#.","17":".#.#.#.#..","18":"......#..."}}},{"id":9,"name":"地宫迷阵","theme":"迷宫","intro":"廊道墙与浮桥","drop":800,"accent":"#D4A574","garbage":"#A67C52","hole":"#1c1410","colorLabel":"砂岩","mlRange":"10–14","TRange":"20–28","firstName":"单廊","lastName":"地心漩涡","firstStage":{"id":81,"chapterId":9,"localId":1,"name":"单廊","minLines":10,"coinThreshold":20,"garbageCount":40,"unlockCost":1,"dropIntervalMs":800,"kind":"silhouette","rows":{"10":"##......##","11":"##......##","12":"##......##","13":"##......##","14":"##......##","15":"##......##","16":"##......##","17":"##......##","18":"##......##","19":"##......##"}},"lastStage":{"id":90,"chapterId":9,"localId":10,"name":"地心漩涡","minLines":14,"coinThreshold":28,"garbageCount":52,"unlockCost":1,"dropIntervalMs":800,"kind":"silhouette","rows":{"4":"..###.....","5":"..####....","6":"..##.##...","7":".##...##..","8":"##.....##.","9":".##...##..","10":"..##.##...","11":"...###....","12":"...###....","13":"...###....","14":"..##.##...","15":".##...##..","16":"##.....##.","17":".##...##.."}}},{"id":10,"name":"金方块殿","theme":"黄金圣物 / 终章","intro":"圣物剪影；终关高位王冠与搭梯","drop":750,"accent":"#FFC857","garbage":"#C4922E","hole":"#1a1408","colorLabel":"暖金","mlRange":"11–15","TRange":"22–30","firstName":"金砖阵","lastName":"方块之神","firstStage":{"id":91,"chapterId":10,"localId":1,"name":"金砖阵","minLines":11,"coinThreshold":22,"garbageCount":49,"unlockCost":1,"dropIntervalMs":750,"kind":"silhouette","rows":{"7":".#.#.#.#..","8":"#.#.#.#.#.","9":".#.#.#.#..","10":"#.#.#.#.#.","11":".#.#.#.#..","12":"#.#.#.#.#.","13":".#.#.#.#..","14":"#.#.#.#.#.","15":".#.#.#.#..","16":"#.#.#.#.#.","17":".#.#.#.#.."}},"lastStage":{"id":100,"chapterId":10,"localId":10,"name":"方块之神","minLines":15,"coinThreshold":30,"garbageCount":63,"unlockCost":1,"dropIntervalMs":750,"kind":"ladder","rows":{"4":"...####...","5":"..####....","6":"..##.##...","7":"..####....","8":".####.....","9":".###.#....","10":"..##.##...","11":".##...##..","12":".#######..","13":".####.....","14":"###...#...","15":".##...##..","16":"..####....","17":".####.....","18":".###..#..."}}}]};
+
+    function drawBoard(canvas, stage, colors, cell) {
+      const cols = 10, rows = 20;
+      const pad = 2;
+      cell = cell || 14;
+      canvas.width = cols * cell + pad * 2;
+      canvas.height = rows * cell + pad * 2;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#0a0e18';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const x = pad + c * cell;
+          const y = pad + r * cell;
+          const line = stage.rows[String(r)];
+          const filled = line && line[c] === '#';
+          ctx.fillStyle = filled ? colors.garbage : colors.hole;
+          ctx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
+          if (filled) {
+            ctx.fillStyle = 'rgba(255,255,255,0.14)';
+            ctx.fillRect(x + 1, y + 1, cell - 2, Math.max(2, cell * 0.2));
+          }
+        }
+      }
+      ctx.strokeStyle = colors.accent;
+      ctx.globalAlpha = 0.45;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
+      ctx.globalAlpha = 1;
+    }
+
+    // Hardest feature
+    const H = DATA.hardest;
+    const s = H.stage;
+    const hardestEl = document.getElementById('hardest');
+    hardestEl.innerHTML = `
+      <span class="tag">全游戏最难关</span>
+      <h2>第${s.chapterId}章 · ${H.chapterName} · 关${s.localId} ${s.name}</h2>
+      <p class="sub">${H.theme} · ${H.intro}</p>
+      <div class="board-wrap"><canvas id="hardCanvas"></canvas></div>
+      <div class="meta">
+        <div><span>最少消行</span><b>${s.minLines}</b></div>
+        <div><span>金币阈值 T</span><b>${s.coinThreshold}</b></div>
+        <div><span>垃圾格</span><b>${s.garbageCount}</b></div>
+        <div><span>下落间隔</span><b>${H.drop}ms</b></div>
+      </div>
+    `;
+    drawBoard(document.getElementById('hardCanvas'), s, {
+      accent: H.accent, garbage: H.garbage, hole: H.hole
+    }, 18);
+
+    // Chapters
+    const grid = document.getElementById('grid');
+    DATA.chapters.forEach((ch) => {
+      const el = document.createElement('article');
+      el.className = 'phone';
+      el.style.setProperty('--accent', ch.accent);
+      el.innerHTML = `
+        <div class="topbar">
+          <div>
+            <h2 class="ch-title">第${ch.id}章 · ${ch.name}</h2>
+            <p class="ch-sub">${ch.theme}</p>
+          </div>
+          <span class="badge">${ch.colorLabel}</span>
+        </div>
+        <p class="intro">${ch.intro}</p>
+        <div class="boards">
+          <div class="board-card">
+            <div class="label">第1关 · <strong>${ch.firstStage.name}</strong> · ${ch.firstStage.kind || ""}</div>
+            <canvas class="board mid"></canvas>
+          </div>
+          <div class="board-card">
+            <div class="label">最后一关 · <strong>${ch.lastStage.name}</strong> · ${ch.lastStage.kind || ""}</div>
+            <canvas class="board boss"></canvas>
+          </div>
+        </div>
+        <div class="meta">
+          <div><span>第1关 minLines / T</span><br><b>${ch.firstStage.minLines} / ${ch.firstStage.coinThreshold}</b></div>
+          <div><span>最后一关 minLines / T</span><br><b>${ch.lastStage.minLines} / ${ch.lastStage.coinThreshold}</b></div>
+          <div><span>章内 minLines</span><br><b>${ch.mlRange}</b></div>
+          <div><span>章内 T 范围</span><br><b>${ch.TRange}</b></div>
+        </div>
+      `;
+      grid.appendChild(el);
+      const colors = { accent: ch.accent, garbage: ch.garbage, hole: ch.hole };
+      drawBoard(el.querySelector('canvas.mid'), ch.firstStage, colors, 11);
+      drawBoard(el.querySelector('canvas.boss'), ch.lastStage, colors, 11);
+    });
+  </script>
+</body>
+</html>

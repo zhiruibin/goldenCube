@@ -1,0 +1,14 @@
+{
+	"id": "8d105fcd-0f0c-4288-8a82-7a4cd596570c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "b351546b-cbf3-40f5-b87f-0f5be2fdc47e",
+	"toNodeId": "9d563c68-fe03-423a-bb21-c058dd8b3a15",
+	"type": "transitionsTo",
+	"verificationStatus": "verified",
+	"evidenceIds": [
+		"js/scenes/stage-select-scene.js: 返回按钮调用 sceneManager.back() 回到首页"
+	],
+	"createdByTaskId": "request_a2195155-87f9-4ebf-a6ab-ad3a57c0989e",
+	"createdAt": 1787809299314,
+	"updatedAt": 1787809299314
+}

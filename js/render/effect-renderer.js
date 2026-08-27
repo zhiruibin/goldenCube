@@ -61,6 +61,7 @@ const PIECE_TYPE_COLOR_HEX = {
     C: '#FF6B81', D: '#FFD700', P: '#8E9EAB', M: '#B33771',
     Q: '#F5F5F5', R: '#00BFA5', X: '#C8A2C8', K: '#FF7F50',
     W: '#98FB98', A: '#87CEEB', N: '#FFE08A',
+    G: '#A8B0C0', // 闯关垃圾
 };
 
 /** 震屏参数（轻微） */
@@ -370,7 +371,8 @@ class EffectRenderer {
      * @param {number} startRow - 硬降起始可见行
      * @param {number} endRow - 硬降落点可见行
      */
-    addDropTrail(boardX, boardY, cellSize, piece, startRow, endRow) {
+    addDropTrail(boardX, boardY, cellSize, piece, startRow, endRow, options) {
+        const opts = options || {};
         const type = piece && piece.type ? piece.type : 'T';
         const color = PIECE_TYPE_COLOR_HEX[type] || '#ffffff';
         const matrix = piece && piece.matrix;
@@ -378,12 +380,13 @@ class EffectRenderer {
         const dist = endRow - startRow;
         if (!matrix || !matrix.length || dist <= 0) return;
 
-        // 同屏最多保留 2 条残影：超出时移除最早一条
+        // 同屏最多保留若干条残影：开场掉落可放宽，局内硬降仍限 2
+        const maxTrails = opts.maxTrails != null ? opts.maxTrails : 2;
         let trailCount = 0;
         for (let i = this._effects.length - 1; i >= 0; i--) {
             if (this._effects[i].type !== 'dropTrail') continue;
             trailCount++;
-            if (trailCount >= 2) {
+            if (trailCount >= maxTrails) {
                 this._effects.splice(i, 1);
             }
         }
@@ -392,7 +395,7 @@ class EffectRenderer {
         const n = Math.min(6, Math.max(2, Math.ceil(dist / 3)));
         const rects = [];
         for (let i = 0; i < n; i++) {
-            const t = i / (n - 1);
+            const t = n === 1 ? 1 : i / (n - 1);
             const row = startRow + dist * t;
             const alpha = 0.08 + 0.32 * t;
             for (let r = 0; r < matrix.length; r++) {
@@ -414,9 +417,35 @@ class EffectRenderer {
             color: color,
             rects: rects,
             time: 0,
-            duration: 0.32,
+            duration: opts.duration != null ? opts.duration : 0.32,
             done: false,
         });
+    }
+
+    /**
+     * 单格掉落残影（关卡垃圾开场用，等价一键到底的单块版）
+     */
+    addCellDropTrail(boardX, boardY, cellSize, col, startRow, endRow, color) {
+        this.addDropTrail(
+            boardX, boardY, cellSize,
+            {
+                type: 'G',
+                col: col,
+                matrix: [[1]],
+            },
+            startRow,
+            endRow,
+            { maxTrails: 14, duration: 0.42 }
+        );
+        if (color) {
+            // 覆盖默认垃圾色（若传入主题色）
+            for (let i = this._effects.length - 1; i >= 0; i--) {
+                if (this._effects[i].type === 'dropTrail') {
+                    this._effects[i].color = color;
+                    break;
+                }
+            }
+        }
     }
 
     /**

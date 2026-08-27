@@ -1,18 +1,10 @@
 /**
  * tools/gc-test-stage-render.js
- * 渲染回归测试：参考 tetris-mini 首页样式
- *  - 背景必须满屏：首个 fillRect 为 (0, 0, W, H)
- *  - 大标题水平居中：drawBrandTitle 以 x=W/2 为中心、textAlign=center
- *  - 小标题水平居中
- *  - 金方块余额仍绘制（右上角）
+ * 渲染回归：关选章节标题 / 结算「过关」/ 满屏背景
  *
  * 运行：node tools/gc-test-stage-render.js
  */
 'use strict';
-
-// ---------------------------------------------------------------------------
-// 环境桩（GameGlobal / wx / 记录型 ctx）
-// ---------------------------------------------------------------------------
 
 const W = 375;
 const H = 667;
@@ -36,6 +28,9 @@ global.wx = {
     getStorageSync() { return null; },
     setStorageSync() {},
     removeStorageSync() {},
+    getMenuButtonBoundingClientRect() {
+        return { left: 281, right: 368, top: 48, bottom: 80, width: 87, height: 32 };
+    },
 };
 
 const ops = [];
@@ -74,10 +69,6 @@ function assert(cond, msg) {
     }
 }
 
-// ---------------------------------------------------------------------------
-// 关卡选择场景渲染断言
-// ---------------------------------------------------------------------------
-
 const StageSelectScene = require('../js/scenes/stage-select-scene');
 const select = new StageSelectScene();
 select.onEnter();
@@ -92,26 +83,40 @@ assert(bgFills[0].args[0] === 0 && bgFills[0].args[1] === 0
     && bgFills[0].args[2] === W && bgFills[0].args[3] === H,
     '背景首个 fillRect = (0, 0, ' + W + ', ' + H + ') 满屏');
 
-const titleOps = ops.filter((o) => o.m === 'fillText' && o.args[0] === '挖个方块');
-assert(titleOps.length > 0, '大标题「挖个方块」已绘制');
-const title = titleOps[titleOps.length - 1];
-assert(title.args[1] === W / 2, '大标题 x = W/2 水平居中 (got=' + title.args[1] + ')');
-assert(title.textAlign === 'center', '大标题 textAlign=center (got=' + title.textAlign + ')');
-
-const subOps = ops.filter((o) => o.m === 'fillText' && String(o.args[0]).indexOf('清掉垃圾') === 0);
-assert(subOps.length > 0, '小标题已绘制');
-assert(subOps[0].args[1] === W / 2, '小标题 x = W/2 水平居中 (got=' + subOps[0].args[1] + ')');
+const chapterTitleOps = ops.filter((o) => o.m === 'fillText'
+    && String(o.args[0]).indexOf('第') === 0
+    && String(o.args[0]).indexOf('章') >= 0
+    && o.args[1] === 16);
+assert(chapterTitleOps.length > 0, '章节大标题已绘制（左对齐）');
+const title = chapterTitleOps[chapterTitleOps.length - 1];
+assert(title.args[1] === 16, '章节标题 x = contentLeft (got=' + title.args[1] + ')');
+assert(title.textAlign === 'left', '章节标题 textAlign=left (got=' + title.textAlign + ')');
 
 const balanceOps = ops.filter((o) => o.m === 'fillText' && String(o.args[0]).indexOf('◆') === 0);
-assert(balanceOps.length > 0, '金方块余额「◆ N」已绘制');
+assert(balanceOps.length > 0, '金方块/金币余额已绘制');
+assert(balanceOps[0].args[1] === 16, '余额左对齐于 contentLeft (got x=' + balanceOps[0].args[1] + ')');
+assert(balanceOps[0].textAlign === 'left', '余额 textAlign=left');
+// 测试桩胶囊 top=48 bottom=80 → 垂直中心 64
+assert(balanceOps[0].args[2] === 64, '余额与胶囊垂直居中对齐 (got y=' + balanceOps[0].args[2] + ')');
+assert(title.args[2] > balanceOps[0].args[2], '章节标题在货币条下方');
 
 // ---------------------------------------------------------------------------
-// 结算场景渲染断言
-// ---------------------------------------------------------------------------
-
 const StageResultScene = require('../js/scenes/stage-result-scene');
 const result = new StageResultScene();
-result.onEnter({ stageId: 1, result: { lines: 4, pieces: 10, timeMs: 30000, reward: 1, first: true } });
+result.onEnter({
+    stageId: 1,
+    result: {
+        lines: 4,
+        pieces: 10,
+        timeMs: 30000,
+        reward: 1,
+        first: true,
+        coinWant: 100,
+        coinGained: 100,
+        coinThreshold: 6,
+        minLines: 3,
+    },
+});
 ops.length = 0;
 result.render(ctxStub);
 
@@ -128,7 +133,6 @@ assert(resBg.length > 0 && resBg[0].args[0] === 0 && resBg[0].args[1] === 0
     && resBg[0].args[2] === W && resBg[0].args[3] === H,
     '结算背景满屏 fillRect(0,0,W,H)');
 
-// ---------------------------------------------------------------------------
 console.log('\n==== RESULT ====');
 console.log('passed:', passed, 'failed:', failed);
 if (failed > 0) process.exit(1);

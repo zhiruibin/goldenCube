@@ -1,0 +1,12 @@
+{
+	"id": "c8171abd-a5e8-4c5c-94ab-577511c9875b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "11fce392-2344-40a6-a83f-a988c5383941",
+	"operation": "create",
+	"after": "stage-select-scene 实现横向分页翻章、吸附动画、触摸分发（滑动翻页、抑制翻页后误触）、锁定章节灰色展示、余额固定右上角不随滑动、每章独立卡片与布局行数计算。",
+	"taskId": "request_09732711-119d-4513-a438-bb6d4bbc849d",
+	"evidenceIds": [
+		"js/scenes/stage-select-scene.js"
+	],
+	"createdAt": 1787813486391
+}

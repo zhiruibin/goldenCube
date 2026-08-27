@@ -88,6 +88,39 @@ class SceneManager {
     }
 
     /**
+     * 结束当前流程并跳转：不把当前页压栈，并重置返回栈。
+     * 用于「暂停退出 / 通关结算 / 失败回关选」等不应再回到对局页的跳转。
+     * @param {string} name 目标场景
+     * @param {Object} [params]
+     * @param {string[]} [stackNames] 重置后的底层栈（默认 ['home']；目标为 home 时栈空）
+     */
+    leaveTo(name, params, stackNames) {
+        if (!this._registry[name]) {
+            console.error(`[SceneManager] 场景 "${name}" 未注册`);
+            return;
+        }
+
+        if (this.current) {
+            this.current.onExit && this.current.onExit();
+        }
+
+        if (name === 'home') {
+            this._stack = [];
+        } else {
+            const names = Array.isArray(stackNames) ? stackNames : ['home'];
+            this._stack = names
+                .filter((n) => n && n !== name && this._registry[n])
+                .map((n) => ({ name: n, params: null }));
+        }
+
+        const SceneClass = this._registry[name];
+        this.current = new SceneClass();
+        this.currentName = name;
+        this.current._params = params || null;
+        this.current.onEnter && this.current.onEnter(params);
+    }
+
+    /**
      * 返回上一个场景
      */
     back() {

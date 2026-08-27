@@ -1,0 +1,28 @@
+{
+	"id": "b351546b-cbf3-40f5-b87f-0f5be2fdc47e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage-select.back-to-home",
+	"title": "关卡选择页新增返回首页",
+	"statement": "左上角新增「‹ 返回」按钮，点击调用 sceneManager.back() 返回首页",
+	"status": "active",
+	"verificationStatus": "verified",
+	"createdAt": 1787809299314,
+	"updatedAt": 1787809299314,
+	"createdByTaskId": "request_a2195155-87f9-4ebf-a6ab-ad3a57c0989e",
+	"latestEventId": "1db2275c-5a41-4383-976e-1d634f41ab55",
+	"tags": [],
+	"aliases": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/stage-select-scene.js"
+		},
+		{
+			"type": "symbol",
+			"path": "js/scenes/stage-select-scene.js",
+			"symbol": "_backRect"
+		}
+	]
+}

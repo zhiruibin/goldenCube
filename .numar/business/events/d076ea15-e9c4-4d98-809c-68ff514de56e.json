@@ -1,0 +1,13 @@
+{
+	"id": "d076ea15-e9c4-4d98-809c-68ff514de56e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "246ea847-ba9a-488c-9766-d256062c4896",
+	"operation": "create",
+	"before": "touch start/move/end 直接使用 clientX/clientY（窗口空间坐标），与按整屏布局的画布坐标空间不一致，状态栏可见时按钮命中检测错位。",
+	"after": "新增 _toCanvasXY，依据 systemInfo 的 screenWidth/windowWidth 补正状态栏偏移，返回画布逻辑坐标；handleTouchStart、handleTouchMove 和 onTouchEnd 的 tap 命中均先经该换算再路由，状态栏可见时按钮恢复可点。",
+	"taskId": "request_7f2783a6-85ee-4675-85c1-43ff7bce711a",
+	"evidenceIds": [
+		"按钮无反应回归修复落地摘要"
+	],
+	"createdAt": 1787811230808
+}

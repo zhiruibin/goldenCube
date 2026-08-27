@@ -1,0 +1,13 @@
+{
+	"id": "1db2275c-5a41-4383-976e-1d634f41ab55",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "b351546b-cbf3-40f5-b87f-0f5be2fdc47e",
+	"operation": "create",
+	"before": "关卡选择页无返回入口",
+	"after": "左上角新增「‹ 返回」按钮，点击调用 sceneManager.back() 返回首页",
+	"taskId": "request_a2195155-87f9-4ebf-a6ab-ad3a57c0989e",
+	"evidenceIds": [
+		"js/scenes/stage-select-scene.js: _backRect 绘制、命中检测并调用 sceneManager.back()"
+	],
+	"createdAt": 1787809299314
+}

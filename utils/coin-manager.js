@@ -1,51 +1,36 @@
 /**
- * CoinManager - 金币经济管理器
- * 职责：
- *  - 统一读写金币余额（'gc_coins'）
- *  - 发放消行金币（单消 1 / 双消 2 / 三消 3 / 四消 5）
- *  - 每日获取上限（默认 600/天，仅限消行金币；成就/广告加成不计入上限）
- *  - 累计金币统计（'gc_stat_total_coins'，供收集系成就 total_coins 使用）
- *
- * 经济平衡目标（2025-08 调整）：
- *  - 技术决定单局收益：四消单行收益（2/行）是单消（1/行）的 2 倍
- *  - 每日上限决定日收益天花板：普通玩家 35-40 分钟触顶，肝帝 15-20 分钟触顶
- *  - 成就奖励与消行金币共用累计统计，但互不影响每日上限
- *  - 结算「看广告双倍金币」按本局已发消行币再发一份，不改分数/排行榜
- *
- * 2025-09 经济调整：
- *  - 广告双倍金币设独立日上限（AD_DAILY_CAP=300，单独统计；登录/抽奖等小额加成不设限）
- *  - T-Spin 消行金币加成：full +2 / mini +1（计入每日消行上限，激励技巧）
+ * CoinManager - 金币经济（挖个方块）
+ *  - 通关效率结算 rewardStageClear（日限 DAILY_LIMIT=300）
+ *  - 广告翻倍 rewardAdDouble（独立 AD_DOUBLE_LIMIT=300）
+ *  - 入场费 spendEntryFee / 失败退还 refundEntryFee
+ *  - 每日登录 +20；每日福利广告走 rewardDailyWelfare(+30)
+ * 废弃：消行即时发币 rewardLineClear（保留空壳兼容旧调用，恒返回 0）
  */
 
-/** 每日消行金币上限 */
-const DAILY_LIMIT = 600;
-
-/** 每日登录奖励（远小于消行产出，仅作回访钩子；不占日上限） */
+const DAILY_LIMIT = 300;
+const AD_DOUBLE_LIMIT = 300;
 const DAILY_LOGIN_REWARD = 20;
+const DAILY_WELFARE_REWARD = 30;
 
-/** 广告双倍金币独立日上限（不计入消行每日上限，单独统计） */
-const AD_DAILY_CAP = 300;
+/** 兼容导出：旧消行表已废弃 */
+const LINE_CLEAR_REWARDS = {};
+const T_SPIN_BONUS = {};
+const AD_DAILY_CAP = AD_DOUBLE_LIMIT;
 
-/** T-Spin 消行金币加成：full +2 / mini +1（计入每日消行上限） */
-const T_SPIN_BONUS = {
-    full: 2,
-    mini: 1,
-};
-
-/** 消行档位奖励：单消1 / 双消2 / 三消3 / 四消5 */
-const LINE_CLEAR_REWARDS = {
-    1: 1,
-    2: 2,
-    3: 3,
-    4: 5,
-};
-
-/** 存储键 */
 const COINS_KEY = 'gc_coins';
 const DAILY_KEY = 'gc_dailyCoinsEarned';
 const DAILY_LOGIN_KEY = 'gc_dailyLoginClaimed';
 const AD_DAILY_KEY = 'gc_dailyAdCoinsEarned';
+const WELFARE_KEY = 'gc_dailyWelfareClaimed';
 const TOTAL_COINS_KEY = 'gc_stat_total_coins';
+const FREE_ENTRY_KEY = 'gc_dailyFreeEntry';
+const FREE_RETRY_KEY = 'gc_dailyFreeRetry';
+
+const FREE_ENTRY_DAILY = 10;
+const FREE_RETRY_DAILY = 3;
+/** 工坊广场通关独立日池（不产金方块） */
+const WORKSHOP_CLEAR_DAILY = 120;
+const WORKSHOP_DAILY_KEY = 'gc_workshopDailyCoins';
 
 class CoinManager {
     constructor() {
@@ -57,7 +42,6 @@ class CoinManager {
         this._adDailyLoaded = false;
     }
 
-    /** 今日日期字符串 YYYY-MM-DD */
     _today() {
         const d = new Date();
         const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -65,12 +49,9 @@ class CoinManager {
         return d.getFullYear() + '-' + m + '-' + day;
     }
 
-    /** 加载/刷新今日记录（跨天自动归零） */
     _loadDaily() {
         const dateStr = this._today();
-        if (this._dailyLoaded && this._todayDate === dateStr) {
-            return;
-        }
+        if (this._dailyLoaded && this._todayDate === dateStr) return;
         try {
             const rec = wx.getStorageSync(DAILY_KEY) || {};
             if (rec && rec.date === dateStr) {
@@ -91,17 +72,12 @@ class CoinManager {
     _persistDaily() {
         try {
             wx.setStorageSync(DAILY_KEY, { date: this._todayDate, earned: this._todayEarned });
-        } catch (e) {
-            // 忽略存储异常
-        }
+        } catch (e) { /* ignore */ }
     }
 
-    /** 加载/刷新今日广告金币记录（跨天自动归零） */
     _loadAdDaily() {
         const dateStr = this._today();
-        if (this._adDailyLoaded && this._adTodayDate === dateStr) {
-            return;
-        }
+        if (this._adDailyLoaded && this._adTodayDate === dateStr) return;
         try {
             const rec = wx.getStorageSync(AD_DAILY_KEY) || {};
             if (rec && rec.date === dateStr) {
@@ -122,79 +98,93 @@ class CoinManager {
     _persistAdDaily() {
         try {
             wx.setStorageSync(AD_DAILY_KEY, { date: this._adTodayDate, earned: this._adTodayEarned });
-        } catch (e) {
-            // 忽略存储异常
-        }
+        } catch (e) { /* ignore */ }
     }
 
-    /** 金币余额 */
     getCoins() {
         try {
-            return wx.getStorageSync(COINS_KEY) || 0;
+            return Number(wx.getStorageSync(COINS_KEY)) || 0;
         } catch (e) {
             return 0;
         }
     }
 
-    /** 今日已获得消行金币 */
     getTodayEarned() {
         this._loadDaily();
         return this._todayEarned;
     }
 
-    /** 今日剩余可获消行金币 */
     getTodayRemaining() {
         return Math.max(0, DAILY_LIMIT - this.getTodayEarned());
     }
 
-    /** 今日是否已达上限 */
     isTodayFull() {
         return this.getTodayEarned() >= DAILY_LIMIT;
     }
 
-    /** 今日已获得广告双倍金币 */
     getTodayAdBonus() {
         this._loadAdDaily();
         return this._adTodayEarned;
     }
 
-    /** 今日广告双倍剩余可获 */
     getAdBonusRemaining() {
-        return Math.max(0, AD_DAILY_CAP - this.getTodayAdBonus());
+        return Math.max(0, AD_DOUBLE_LIMIT - this.getTodayAdBonus());
     }
 
-    /** 今日广告双倍是否已达上限 */
     isAdBonusFull() {
-        return this.getTodayAdBonus() >= AD_DAILY_CAP;
+        return this.getTodayAdBonus() >= AD_DOUBLE_LIMIT;
     }
 
     /**
-     * 发放消行金币（受每日上限约束；T-Spin 加成计入同一上限）
-     * @param {number} count 本次消行数 1-4
-     * @param {string} [tSpinType] T-Spin 类型 'full' | 'mini'，非 T-Spin 可省略
-     * @returns {number} 实际发放金币数（触顶后为 0，或部分发放）
+     * 计算通关效率金币（不计日限，纯公式）
+     * @param {number} lines 实际消行
+     * @param {number} minLines 理论最少
+     * @param {number} [coinThreshold] T，缺省 minLines*2
      */
-    rewardLineClear(count, tSpinType) {
-        const base = LINE_CLEAR_REWARDS[Math.max(1, Math.min(4, count))] || 0;
-        const spinBonus = T_SPIN_BONUS[tSpinType] || 0;
-        const total = base + spinBonus;
-        if (total <= 0) return 0;
+    calcStageClearReward(lines, minLines, coinThreshold) {
+        const ml = Math.max(1, Number(minLines) || 1);
+        const T = Math.max(ml, Number(coinThreshold) || ml * 2);
+        const raw = Number(lines);
+        const linesP = isNaN(raw) ? T : Math.max(ml, Math.min(T, raw));
+        if (T === ml) {
+            return linesP <= ml ? 100 : 20;
+        }
+        const gold = 20 + Math.round(((T - linesP) / (T - ml)) * 80);
+        return Math.max(20, Math.min(100, gold));
+    }
+
+    /**
+     * 通关效率结算（基础池日限 300）
+     * @returns {{ want: number, gained: number, remaining: number }}
+     */
+    rewardStageClear(lines, minLines, coinThreshold) {
+        const want = this.calcStageClearReward(lines, minLines, coinThreshold);
         this._loadDaily();
-        if (this._todayEarned >= DAILY_LIMIT) return 0;
-        const gain = Math.min(total, DAILY_LIMIT - this._todayEarned);
-        if (gain <= 0) return 0;
-        this._todayEarned += gain;
-        this._addBalance(gain);
-        this._persistDaily();
-        return gain;
+        if (this._todayEarned >= DAILY_LIMIT) {
+            return { want, gained: 0, remaining: 0 };
+        }
+        const gained = Math.min(want, DAILY_LIMIT - this._todayEarned);
+        if (gained > 0) {
+            this._todayEarned += gained;
+            this._addBalance(gained);
+            this._persistDaily();
+        }
+        return { want, gained, remaining: Math.max(0, DAILY_LIMIT - this._todayEarned) };
     }
 
     /**
-     * 发放广告/活动加成金币（不计入每日消行上限，也不改今日进度展示）
-     * 注意：结算「看广告双倍」请使用 rewardAdBonusCapped，本方法不设限
-     * @param {number} amount 期望发放数量
-     * @returns {number} 实际发放数量
+     * 结算广告再领一份（翻倍池，独立日限 300）
+     * @param {number} baseAmount 本局基础结算 want（或实际 gained）
      */
+    rewardAdDouble(baseAmount) {
+        return this.rewardAdBonusCapped(baseAmount);
+    }
+
+    /** @deprecated 消行即时发币已废弃，恒返回 0 */
+    rewardLineClear() {
+        return 0;
+    }
+
     rewardAdBonus(amount) {
         const gain = Math.max(0, Math.floor(Number(amount) || 0));
         if (gain <= 0) return 0;
@@ -202,17 +192,12 @@ class CoinManager {
         return gain;
     }
 
-    /**
-     * 发放广告双倍金币（受独立日上限 AD_DAILY_CAP 约束；仅用于结算广告，登录/抽奖不走此接口）
-     * @param {number} amount 期望发放数量
-     * @returns {number} 实际发放数量（触顶后为 0，或部分发放）
-     */
     rewardAdBonusCapped(amount) {
         const want = Math.max(0, Math.floor(Number(amount) || 0));
         if (want <= 0) return 0;
         this._loadAdDaily();
-        if (this._adTodayEarned >= AD_DAILY_CAP) return 0;
-        const gain = Math.min(want, AD_DAILY_CAP - this._adTodayEarned);
+        if (this._adTodayEarned >= AD_DOUBLE_LIMIT) return 0;
+        const gain = Math.min(want, AD_DOUBLE_LIMIT - this._adTodayEarned);
         if (gain <= 0) return 0;
         this._adTodayEarned += gain;
         this._addBalance(gain);
@@ -220,41 +205,185 @@ class CoinManager {
         return gain;
     }
 
-    /**
-     * 尝试领取每日登录奖励（每天一次）
-     * @returns {{ claimed: boolean, amount: number }} claimed=true 表示本次新领取成功
-     */
     tryClaimDailyLogin() {
         const today = this._today();
         try {
             const last = wx.getStorageSync(DAILY_LOGIN_KEY) || '';
-            if (last === today) {
-                return { claimed: false, amount: 0 };
-            }
+            if (last === today) return { claimed: false, amount: 0 };
             const amount = this.rewardAdBonus(DAILY_LOGIN_REWARD);
             if (amount > 0) {
                 wx.setStorageSync(DAILY_LOGIN_KEY, today);
                 return { claimed: true, amount };
             }
-        } catch (e) {
-            // 存储异常时不阻断首页
-        }
+        } catch (e) { /* ignore */ }
         return { claimed: false, amount: 0 };
     }
 
-    /** 增加余额与累计统计 */
+    /** 每日福利广告 +30（日 1 次，不占基础/翻倍池） */
+    tryClaimDailyWelfare() {
+        const today = this._today();
+        try {
+            const last = wx.getStorageSync(WELFARE_KEY) || '';
+            if (last === today) return { claimed: false, amount: 0 };
+            const amount = this.rewardAdBonus(DAILY_WELFARE_REWARD);
+            if (amount > 0) {
+                wx.setStorageSync(WELFARE_KEY, today);
+                return { claimed: true, amount };
+            }
+        } catch (e) { /* ignore */ }
+        return { claimed: false, amount: 0 };
+    }
+
+    isDailyWelfareClaimed() {
+        try {
+            return (wx.getStorageSync(WELFARE_KEY) || '') === this._today();
+        } catch (e) {
+            return false;
+        }
+    }
+
+    // ---------- 入场费 ----------
+
+    /** 章节 id：1..n（按每章 10 关） */
+    getChapterIdByStageId(stageId) {
+        const id = Number(stageId) || 1;
+        return Math.floor((id - 1) / 10) + 1;
+    }
+
+    /** 入场费：前 3 关 0；第 1 章 5；第 2 章 10；第 3 章及以后 15 */
+    getEntryFee(stageId) {
+        const id = Number(stageId) || 0;
+        if (id <= 3) return 0;
+        const chapter = this.getChapterIdByStageId(id);
+        if (chapter <= 1) return 5;
+        if (chapter === 2) return 10;
+        return 15;
+    }
+
+    /**
+     * 扣入场费
+     * @returns {{ ok: boolean, fee: number, paid: number, reason?: string }}
+     */
+    spendEntryFee(stageId) {
+        const fee = this.getEntryFee(stageId);
+        if (fee <= 0) return { ok: true, fee: 0, paid: 0 };
+        const bal = this.getCoins();
+        if (bal < fee) return { ok: false, fee, paid: 0, reason: 'no-coins' };
+        try {
+            wx.setStorageSync(COINS_KEY, bal - fee);
+        } catch (e) {
+            return { ok: false, fee, paid: 0, reason: 'storage' };
+        }
+        return { ok: true, fee, paid: fee };
+    }
+
+    /** 失败退还 50%（向下取整），仅对实付金额 */
+    refundEntryFee(paidAmount) {
+        const paid = Math.max(0, Math.floor(Number(paidAmount) || 0));
+        const refund = Math.floor(paid * 0.5);
+        if (refund > 0) this._addBalance(refund);
+        return refund;
+    }
+
+    // ---------- 广告免费入场 / 重试次数 ----------
+
+    _loadCountKey(key) {
+        const today = this._today();
+        try {
+            const rec = wx.getStorageSync(key) || {};
+            if (rec && rec.date === today) return rec.count || 0;
+            wx.setStorageSync(key, { date: today, count: 0 });
+            return 0;
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    _bumpCountKey(key, max) {
+        const today = this._today();
+        const n = this._loadCountKey(key);
+        if (n >= max) return false;
+        try {
+            wx.setStorageSync(key, { date: today, count: n + 1 });
+        } catch (e) {
+            return false;
+        }
+        return true;
+    }
+
+    getFreeEntryRemaining() {
+        return Math.max(0, FREE_ENTRY_DAILY - this._loadCountKey(FREE_ENTRY_KEY));
+    }
+
+    consumeFreeEntry() {
+        return this._bumpCountKey(FREE_ENTRY_KEY, FREE_ENTRY_DAILY);
+    }
+
+    getFreeRetryRemaining() {
+        return Math.max(0, FREE_RETRY_DAILY - this._loadCountKey(FREE_RETRY_KEY));
+    }
+
+    consumeFreeRetry() {
+        return this._bumpCountKey(FREE_RETRY_KEY, FREE_RETRY_DAILY);
+    }
+
+    // ---------- 工坊通关日池（与主线 300 分离） ----------
+
+    _loadWorkshopDaily() {
+        const dateStr = this._today();
+        try {
+            const rec = wx.getStorageSync(WORKSHOP_DAILY_KEY) || {};
+            if (rec && rec.date === dateStr) {
+                this._workshopTodayEarned = rec.earned || 0;
+                this._workshopTodayDate = dateStr;
+                return;
+            }
+            wx.setStorageSync(WORKSHOP_DAILY_KEY, { date: dateStr, earned: 0 });
+        } catch (e) { /* ignore */ }
+        this._workshopTodayEarned = 0;
+        this._workshopTodayDate = dateStr;
+    }
+
+    _persistWorkshopDaily() {
+        try {
+            wx.setStorageSync(WORKSHOP_DAILY_KEY, {
+                date: this._workshopTodayDate || this._today(),
+                earned: this._workshopTodayEarned || 0,
+            });
+        } catch (e) { /* ignore */ }
+    }
+
+    getWorkshopTodayRemaining() {
+        this._loadWorkshopDaily();
+        return Math.max(0, WORKSHOP_CLEAR_DAILY - (this._workshopTodayEarned || 0));
+    }
+
+    /**
+     * 工坊/广场通关发币（独立日限；永不发金方块）
+     * @returns {number} 实际获得
+     */
+    rewardWorkshopClear(wantAmount) {
+        const want = Math.max(0, Math.floor(Number(wantAmount) || 0));
+        if (want <= 0) return 0;
+        this._loadWorkshopDaily();
+        if (this._workshopTodayEarned >= WORKSHOP_CLEAR_DAILY) return 0;
+        const gained = Math.min(want, WORKSHOP_CLEAR_DAILY - this._workshopTodayEarned);
+        if (gained <= 0) return 0;
+        this._workshopTodayEarned += gained;
+        this._addBalance(gained);
+        this._persistWorkshopDaily();
+        return gained;
+    }
+
     _addBalance(gain) {
         try {
             wx.setStorageSync(COINS_KEY, this.getCoins() + gain);
             const total = wx.getStorageSync(TOTAL_COINS_KEY) || 0;
             wx.setStorageSync(TOTAL_COINS_KEY, total + gain);
-        } catch (e) {
-            // 忽略存储异常
-        }
+        } catch (e) { /* ignore */ }
     }
 }
 
-/** 全局单例 */
 const coinManager = new CoinManager();
 
 module.exports = {
@@ -262,7 +391,12 @@ module.exports = {
     coinManager,
     DAILY_LIMIT,
     DAILY_LOGIN_REWARD,
+    DAILY_WELFARE_REWARD,
+    AD_DOUBLE_LIMIT,
     AD_DAILY_CAP,
     T_SPIN_BONUS,
     LINE_CLEAR_REWARDS,
+    FREE_ENTRY_DAILY,
+    FREE_RETRY_DAILY,
+    WORKSHOP_CLEAR_DAILY,
 };

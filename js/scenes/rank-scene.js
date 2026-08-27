@@ -9,9 +9,10 @@
 
 const { Button } = require('../widgets/button');
 const { cloudService } = require('../../utils/cloud-service');
-const { MODE_NAMES, RANK_PERIODS } = require('../../utils/cloud-config');
+const { decodeClearedCount } = require('../../utils/rank-score');
 const IconRenderer = require('../render/icon-renderer');
 const { achievementManager } = require('../../utils/achievement-manager');
+const goldenBlock = require('../../utils/golden-block-manager');
 
 let lastViewState = null;
 
@@ -22,13 +23,14 @@ class RankScene {
         this._rankData = [];
         this._total = 0;
         this._tab = 'friend'; // 'friend' | 'global'
-        this._mode = 'classic';
+        this._mode = 'stage';
         this._period = 'total';
         this._loading = false;
         this._error = '';
         this._offline = false;
         this._myRank = null;
         this._myScore = null;
+        this._myCleared = null;
 
         // 好友榜 sharedCanvas 区域
         this._friendArea = { x: 0, y: 0, w: 0, h: 0 };
@@ -43,13 +45,10 @@ class RankScene {
         this._isScrolling = false;
         this._suppressTap = false;
 
-        // 模式/周期选择按钮区域
-        // 模式/周期选择按钮区域
         this._modeAreas = [];
         this._periodAreas = [];
         this._tabAreas = [];
 
-        // 全服榜行内回放/挑战按钮（命中区 + 防重复点击）
         this._replayBtns = [];
         this._challengeBtns = [];
         this._replayLoading = false;
@@ -60,7 +59,7 @@ class RankScene {
         this._params = params || {};
         const s = lastViewState || {};
         this._tab = s.tab || 'friend';
-        this._mode = s.mode || 'classic';
+        this._mode = 'stage';
         this._period = s.period || 'total';
         this._scrollY = s.scrollY || 0;
         this._initUI();
@@ -105,8 +104,8 @@ class RankScene {
         // Tab 切换
         this._renderTabs(ctx);
 
-        // 模式切换（经典/限时/马拉松）
-        this._renderModeSelect(ctx);
+        // 闯关榜说明（无 classic/timed/marathon 切换）
+        this._renderStageHint(ctx);
 
         // 周期切换（全服榜：总榜/周榜/月榜）
         if (this._tab === 'global') {
@@ -280,7 +279,8 @@ class RankScene {
 
             const hasReplay = !!item.hasReplay && i < 10;
             const isMe = typeof this._myRank === 'number' && this._myRank === i + 1;
-            const showChallenge = !isMe && (item.score || 0) > 0;
+            // 闯关复合榜不以分数发起经典挑战
+            const showChallenge = false;
             const btnW = 48;
             const btnH = 24;
             const btnGap = 6;
@@ -330,11 +330,14 @@ class RankScene {
                 right = btnX - btnGap;
             }
 
-            // 分数（有按钮时右移让位）
+            // 通关数（主展示）
+            const cleared = typeof item.clearedCount === 'number'
+                ? item.clearedCount
+                : decodeClearedCount(item.score || 0);
             ctx.textAlign = 'right';
             ctx.fillStyle = '#FFC857';
-            ctx.font = 'bold 18px sans-serif';
-            ctx.fillText(String(item.score || 0), right - 4, y + itemH / 2 - 2);
+            ctx.font = 'bold 16px sans-serif';
+            ctx.fillText(cleared + ' 关', right - 4, y + itemH / 2 - 2);
         }
 
         ctx.restore();
@@ -362,13 +365,18 @@ class RankScene {
         ctx.textBaseline = 'middle';
         ctx.fillText(`我的排名: ${this._myRank}`, barX + 14, barY + barH / 2);
 
-        let rightText = `最高 ${this._myScore || 0} 分`;
+        let rightText = `通关 ${this._myCleared != null ? this._myCleared : decodeClearedCount(this._myScore || 0)} 关`;
         if (typeof this._myRank === 'number' && this._myRank > 1 && this._rankData.length >= this._myRank) {
             const ahead = this._rankData[this._myRank - 2];
-            if (ahead && typeof ahead.score === 'number') {
-                const gap = ahead.score - (this._myScore || 0);
-                if (gap > 0) {
-                    rightText = `距上一名还差 ${gap}`;
+            if (ahead) {
+                const aheadCleared = typeof ahead.clearedCount === 'number'
+                    ? ahead.clearedCount
+                    : decodeClearedCount(ahead.score || 0);
+                const mine = this._myCleared != null ? this._myCleared : decodeClearedCount(this._myScore || 0);
+                if (aheadCleared > mine) {
+                    rightText = `距上一名还差 ${aheadCleared - mine} 关`;
+                } else {
+                    rightText = '同关数 · 比效率';
                 }
             }
         } else if (this._myRank === 1) {
@@ -410,34 +418,16 @@ class RankScene {
         ];
     }
 
-    /** 渲染模式切换（经典/限时/马拉松） */
-    _renderModeSelect(ctx) {
+    /** 闯关榜副标题 */
+    _renderStageHint(ctx) {
         const W = GameGlobal.game.width;
-        const names = [['classic', '经典'], ['timed', '限时'], ['marathon', '马拉松']];
-        const itemW = 76;
-        const itemH = 30;
-        const gap = 8;
-        const totalW = names.length * itemW + (names.length - 1) * gap;
-        const startX = (W - totalW) / 2;
         const y = this._topInset() + 100;
-
         this._modeAreas = [];
-        for (let i = 0; i < names.length; i++) {
-            const x = startX + i * (itemW + gap);
-            ctx.fillStyle = this._mode === names[i][0] ? 'rgba(0,198,255,0.3)' : 'rgba(255,255,255,0.08)';
-            this._roundRect(ctx, x, y, itemW, itemH, 6);
-            ctx.fill();
-            ctx.strokeStyle = this._mode === names[i][0] ? 'rgba(0,198,255,0.6)' : 'rgba(255,255,255,0.15)';
-            ctx.lineWidth = 1;
-            this._roundRect(ctx, x, y, itemW, itemH, 6);
-            ctx.stroke();
-            ctx.fillStyle = this._mode === names[i][0] ? '#fff' : 'rgba(255,255,255,0.5)';
-            ctx.font = '13px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(names[i][1], x + itemW / 2, y + itemH / 2);
-            this._modeAreas.push({ x, y, w: itemW, h: itemH, mode: names[i][0] });
-        }
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        ctx.font = '13px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('闯关榜 · 通关数优先，同则比消行效率', W / 2, y + 15);
     }
 
     /** 渲染周期切换（全服榜） */
@@ -449,7 +439,7 @@ class RankScene {
         const gap = 8;
         const totalW = names.length * itemW + (names.length - 1) * gap;
         const startX = (W - totalW) / 2;
-        const y = this._topInset() + 144;
+        const y = this._topInset() + 130;
 
         this._periodAreas = [];
         for (let i = 0; i < names.length; i++) {
@@ -470,9 +460,9 @@ class RankScene {
         }
     }
 
-    /** 列表顶部 y（好友榜：模式按钮下方；全服榜：周期按钮下方） */
+    /** 列表顶部 y */
     _listTop() {
-        return this._tab === 'global' ? this._topInset() + 180 : this._topInset() + 140;
+        return this._tab === 'global' ? this._topInset() + 168 : this._topInset() + 128;
     }
 
     /** 列表底部：好友榜预留「发起挑战」+ 返回；全服榜预留返回 */
@@ -517,24 +507,18 @@ class RankScene {
     /** 用本模式本地最高分创建挑战并分享（好友榜无法读对方分，主路径用自己成绩） */
     _shareMyBestChallenge() {
         if (this._shareBusy) return;
-        const mode = this._mode || 'classic';
-        let score = 0;
-        try {
-            score = wx.getStorageSync('gc_bestScore_' + mode) || 0;
-        } catch (e) {
-            score = 0;
-        }
-        score = Math.floor(Number(score) || 0);
-        if (score <= 0) {
-            wx.showToast({ title: '先打一局再发起挑战', icon: 'none' });
+        const mode = 'stage';
+        const sums = goldenBlock.getRankSums();
+        const cleared = sums.clearedCount || 0;
+        if (cleared <= 0) {
+            wx.showToast({ title: '先通关一关再发起挑战', icon: 'none' });
             return;
         }
 
-        const modeNames = MODE_NAMES || {};
-        const modeLabel = modeNames[mode] || '经典模式';
+        const modeLabel = '闯关榜';
         const fallbackShare = () => {
             wx.shareAppMessage({
-                title: `我在方块过把瘾「${modeLabel}」最高 ${score} 分，敢来超越吗？`,
+                title: `我在挖个方块已通关 ${cleared} 关，敢来比比吗？`,
             });
         };
 
@@ -551,7 +535,7 @@ class RankScene {
         }).then((profile) => {
             return cloudService.createChallenge({
                 mode: mode,
-                score: score,
+                score: cleared,
                 nickname: (profile && profile.nickname) || '',
                 avatarUrl: (profile && profile.avatarUrl) || '',
             });
@@ -559,9 +543,12 @@ class RankScene {
             this._shareBusy = false;
             if (!res) return;
             if (res && res.success && res.challengeId) {
+                try {
+                    achievementManager.reportChallengeCreate();
+                } catch (e) { /* ignore */ }
                 wx.shareAppMessage({
-                    title: `向你发起挑战！我在『${modeLabel}』最高 ${score} 分，敢来超越吗？`,
-                    query: 'challengeId=' + res.challengeId + '&mode=' + mode + '&score=' + score,
+                    title: `向你发起挑战！我在挖个方块已通关 ${cleared} 关，敢来超越吗？`,
+                    query: 'challengeId=' + res.challengeId + '&mode=' + mode + '&score=' + cleared,
                     success: () => {
                         try {
                             achievementManager.reportShare();
@@ -618,6 +605,7 @@ class RankScene {
         this._rankData = [];
         this._myRank = null;
         this._myScore = null;
+        this._myCleared = null;
 
         cloudService.getRankList({ mode: this._mode, period: this._period, page: 1, pageSize: 20 })
             .then((res) => {
@@ -627,6 +615,9 @@ class RankScene {
             this._total = res.total || 0;
             this._myRank = res.myRank || null;
             this._myScore = res.myScore || null;
+            this._myCleared = typeof res.myClearedCount === 'number'
+                ? res.myClearedCount
+                : decodeClearedCount(this._myScore || 0);
             this._offline = !!res.offline;
             if (typeof this._myRank === 'number' && this._myRank > 0) {
                 try {
@@ -814,20 +805,7 @@ class RankScene {
                 }
             }
         }
-        // 模式切换（经典/限时/马拉松）
-        if (this._modeAreas) {
-            for (const area of this._modeAreas) {
-                if (x >= area.x && x <= area.x + area.w &&
-                    y >= area.y && y <= area.y + area.h) {
-                    if (area.mode !== this._mode) {
-                        this._mode = area.mode;
-                        this._scrollY = 0;
-                        this._loadRankData();
-                    }
-                    return;
-                }
-            }
-        }
+        // （闯关榜无模式切换）
 
         // 周期切换（仅全服榜）
         if (this._tab === 'global' && this._periodAreas) {

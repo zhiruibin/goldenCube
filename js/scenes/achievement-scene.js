@@ -9,13 +9,13 @@ const { achievementManager } = require('../../utils/achievement-manager');
 const { drawCoinHudCentered } = require('../../utils/coin-hud');
 const IconRenderer = require('../render/icon-renderer');
 
-const CATEGORY_ORDER = ['beginner', 'expert', 'collection', 'social'];
+const CATEGORY_ORDER = ['progress', 'social'];
 
 class AchievementScene {
     constructor() {
         this._params = null;
         this._buttons = [];
-        this._category = 'beginner';
+        this._category = 'progress';
         this._scrollY = 0;
         this._tabAreas = [];
         this._list = [];
@@ -28,7 +28,7 @@ class AchievementScene {
 
     onEnter(params) {
         this._params = params || {};
-        this._category = 'beginner';
+        this._category = 'progress';
         this._scrollY = 0;
         achievementManager.init();
         this._buildList();
@@ -167,15 +167,30 @@ class AchievementScene {
             ctx.fillStyle = 'rgba(255,255,255,0.4)';
             ctx.fillText(a.desc, listX + 56, y + 30);
 
-            // 奖励
-            ctx.font = '11px sans-serif';
-            ctx.fillStyle = '#ffd700';
-            ctx.textAlign = 'right';
-            const rewardText = `+${a.reward}`;
+            // 奖励：金方块优先，其次金币；双零仅点亮徽章
+            const gold = Number(a.rewardGold) || 0;
+            const coins = Number(a.rewardCoins) || Number(a.reward) || 0;
             const textRight = listX + listW - 20;
             const gap = 4;
-            ctx.fillText(rewardText, textRight, y + itemH - 26);
-            IconRenderer.draw(ctx, 'coin', textRight - ctx.measureText(rewardText).width - gap - 7, y + itemH - 20, 14, '#ffd700');
+            ctx.font = '11px sans-serif';
+            ctx.textAlign = 'right';
+            if (gold > 0 || coins > 0) {
+                const rewardText = gold > 0 ? `+${gold}` : `+${coins}`;
+                const iconName = gold > 0 ? 'diamond' : 'coin';
+                ctx.fillStyle = '#ffd700';
+                ctx.fillText(rewardText, textRight, y + itemH - 26);
+                IconRenderer.draw(
+                    ctx,
+                    iconName,
+                    textRight - ctx.measureText(rewardText).width - gap - 7,
+                    y + itemH - 20,
+                    14,
+                    '#ffd700'
+                );
+            } else {
+                ctx.fillStyle = 'rgba(255,255,255,0.35)';
+                ctx.fillText('徽章', textRight, y + itemH - 26);
+            }
 
             if (isUnlocked) {
                 ctx.fillStyle = '#00f000';

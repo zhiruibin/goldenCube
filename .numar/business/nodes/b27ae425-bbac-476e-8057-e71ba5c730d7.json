@@ -1,0 +1,23 @@
+{
+	"id": "b27ae425-bbac-476e-8057-e71ba5c730d7",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "launch.cold-start-target-home",
+	"title": "冷启动进入首页入口 Hub",
+	"statement": "冷启动进入首页 Hub（home），首页作为入口；分享卡分流仍可 replace('home') 进入首页",
+	"status": "active",
+	"verificationStatus": "verified",
+	"createdAt": 1787809299314,
+	"updatedAt": 1787809299314,
+	"createdByTaskId": "request_a2195155-87f9-4ebf-a6ab-ad3a57c0989e",
+	"latestEventId": "57e579e7-906d-4e40-a7f3-e8e101e830b4",
+	"tags": [],
+	"aliases": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "game.js"
+		}
+	]
+}

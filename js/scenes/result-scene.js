@@ -650,6 +650,10 @@ class ResultScene {
                     } : null;
                     this._challengeState = 'done';
                     this._removePendingChallenge(challengeId);
+                    try {
+                        const { achievementManager } = require('../../utils/achievement-manager');
+                        achievementManager.reportChallengeRespond(res.result, { challengeId });
+                    } catch (e) { /* ignore */ }
                     this._maybePromptCounterShare();
                     return;
                 }
@@ -869,6 +873,10 @@ class ResultScene {
                 .then((res) => {
                     if (!res) return;
                     if (res && res.success && res.challengeId) {
+                        try {
+                            const { achievementManager } = require('../../utils/achievement-manager');
+                            achievementManager.reportChallengeCreate();
+                        } catch (e) { /* ignore */ }
                         wx.shareAppMessage({
                             title: oppName ? `回击 ${oppName}！我在『${this._modeName(mode)}』拿了 ${score} 分，敢再来一局吗？` : `向你发起挑战！我在『${this._modeName(mode)}』拿了 ${score} 分，敢来超越吗？`,
                             imageUrl: imageUrl,

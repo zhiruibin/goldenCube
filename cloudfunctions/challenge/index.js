@@ -23,7 +23,7 @@ const db = cloud.database()
 const _ = db.command
 
 const COLLECTION = 'challenges'
-const ALLOWED_MODES = ['classic', 'timed', 'marathon', 'special']
+const ALLOWED_MODES = ['classic', 'timed', 'marathon', 'special', 'stage']
 const EXPIRY_MS = 7 * 24 * 60 * 60 * 1000
 const MAX_PENDING = 20
 const MAX_LIST_SIZE = 50

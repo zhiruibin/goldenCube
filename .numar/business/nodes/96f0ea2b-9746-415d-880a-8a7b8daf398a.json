@@ -1,0 +1,35 @@
+{
+	"id": "96f0ea2b-9746-415d-880a-8a7b8daf398a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage-select.chapter-unlock-logic",
+	"title": "章节解锁规则：上一章全通解锁下一章",
+	"statement": "golden-block-manager 新增 getChapters()、getStagesByChapter(id)、isChapterUnlocked(id)；第一章恒解锁，后续章节要求上一章全部通关。",
+	"status": "active",
+	"verificationStatus": "verified",
+	"createdAt": 1787813486391,
+	"updatedAt": 1787813486391,
+	"createdByTaskId": "request_09732711-119d-4513-a438-bb6d4bbc849d",
+	"latestEventId": "ddf865d8-46a4-40bf-8c02-72da827482c6",
+	"tags": [],
+	"aliases": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/golden-block-manager.js"
+		},
+		{
+			"type": "symbol",
+			"symbol": "getChapters"
+		},
+		{
+			"type": "symbol",
+			"symbol": "getStagesByChapter"
+		},
+		{
+			"type": "symbol",
+			"symbol": "isChapterUnlocked"
+		}
+	]
+}

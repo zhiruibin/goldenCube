@@ -1,12 +1,12 @@
 /**
- * HomeScene - 首页场景
- * 职责：显示游戏标题、模式选择、排行榜/商店/设置入口；每日登录小额金币
+/*** HomeScene - 首页场景
+ * 职责：入口 Hub（闯关/排行/成就/商店/设置）+ 好友挑战 + 每日登录金币
  */
-
 const { Button } = require('../widgets/button');
 const { Panel } = require('../widgets/panel');
-const { coinManager } = require('../../utils/coin-manager');
+const { coinManager, DAILY_WELFARE_REWARD } = require('../../utils/coin-manager');
 const { getPendingChallengeCount } = require('./challenge-scene');
+const { adManager, isRewardedVideoConfigured } = require('../../utils/ad-manager');
 const {
     AMBIENT_PIECE_COLORS,
     SUBTITLE,
@@ -76,14 +76,14 @@ class HomeScene {
         this._renderFallingBlocks(ctx);
 
         const titleY = H * 0.15 + Math.sin(this._animTime * 2) * 5;
-        drawBrandTitle(ctx, '方块过把瘾', W / 2, titleY, 'bold 48px sans-serif');
+        drawBrandTitle(ctx, '挖个方块', W / 2, titleY, 'bold 48px sans-serif');
 
-        // 副标题：中文短句，贴合「过把瘾」
+        // 副标题：中文短句，贴合「闯关 + 好友挑战」
         ctx.fillStyle = SUBTITLE;
         ctx.font = '16px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('再来一把', W / 2, titleY + 40);
+        ctx.fillText('残局闯关 · 工坊造关 · 好友挑战', W / 2, titleY + 40);
 
         // 按钮
         for (const btn of this._buttons) {
@@ -101,39 +101,39 @@ class HomeScene {
         const H = GameGlobal.game.height;
         const centerX = W / 2;
         const btnW = Math.min(280, W * 0.74);
-        const btnH = 52;
         const gap = 16;
+        const primaryH = 56;
         const smallW = (btnW - gap) / 2;
         const smallH = 44;
 
         this._buttons = [];
 
-        // 模式选择 2x2 网格（经典 / 限时 / 马拉松 / 方块实验室）
-        const startY = H * 0.30;
-        const modeItems = [
-            { text: '经典模式', icon: 'brick', color: '#3aa8d8', mode: 'classic' },
-            { text: '限时赛', icon: 'clock', color: '#e09a30', mode: 'timed' },
-            { text: '马拉松', icon: 'runner', color: '#8b6bb8', mode: 'marathon' },
-            { text: '方块实验室', icon: 'crystal', color: '#e07a88', mode: 'special' },
-        ];
-        for (let i = 0; i < modeItems.length; i++) {
-            const item = modeItems[i];
-            const row = Math.floor(i / 2);
-            const col = i % 2;
-            this._buttons.push(new Button({
-                x: centerX - btnW / 2 + col * (smallW + gap),
-                y: startY + row * (btnH + gap),
-                w: smallW,
-                h: btnH,
-                text: item.text,
-                icon: item.icon,
-                color: item.color,
-                onClick: () => this._startGame(item.mode),
-            }));
-        }
+        // 闯关 + 工坊（双氛围）
+        const primaryY = H * 0.28;
+        const halfW = (btnW - gap) / 2;
+        this._buttons.push(new Button({
+            x: centerX - btnW / 2,
+            y: primaryY,
+            w: halfW,
+            h: primaryH,
+            text: '闯关',
+            icon: 'brick',
+            color: '#e09a30',
+            onClick: () => GameGlobal.game.sceneManager.switchTo('stageSelect'),
+        }));
+        this._buttons.push(new Button({
+            x: centerX - btnW / 2 + halfW + gap,
+            y: primaryY,
+            w: halfW,
+            h: primaryH,
+            text: '工坊',
+            icon: 'gear',
+            color: '#c9a227',
+            onClick: () => GameGlobal.game.sceneManager.switchTo('workshop'),
+        }));
 
-        // 底部功能按钮行（2x2 网格：排行/成就/商店/设置）
-        const bottomY = startY + (btnH + gap) * 2 + 20;
+        // 功能入口 2x2 网格（排行/成就/商店/设置）
+        const footerY = primaryY + primaryH + gap;
         const footerBtns = [
             { text: '排行', target: 'rank', icon: 'trophy' },
             { text: '成就', target: 'achievement', icon: 'medal' },
@@ -146,7 +146,7 @@ class HomeScene {
             const col = i % 2;
             this._buttons.push(new Button({
                 x: centerX - btnW / 2 + col * (smallW + gap),
-                y: bottomY + row * (smallH + gap),
+                y: footerY + row * (smallH + gap),
                 w: smallW,
                 h: smallH,
                 text: item.text,
@@ -171,7 +171,7 @@ class HomeScene {
         }
 
         // 好友挑战入口（整宽按钮；有待应战时显示数量并默认进「待我应战」）
-        const challengeY = bottomY + (smallH + gap) * 2 + 10;
+        const challengeY = footerY + (smallH + gap) * 2 + 10;
         const pendingCount = getPendingChallengeCount();
         const challengeLabel = pendingCount > 0
             ? ('好友挑战 (' + pendingCount + ')')
@@ -180,7 +180,7 @@ class HomeScene {
             x: centerX - btnW / 2,
             y: challengeY,
             w: btnW,
-            h: btnH,
+            h: primaryH,
             text: challengeLabel,
             icon: 'handshake',
             color: pendingCount > 0 ? '#e67e22' : '#555',
@@ -188,11 +188,54 @@ class HomeScene {
                 tab: pendingCount > 0 ? 'incoming' : 'sent',
             }),
         }));
+
+        // 每日福利广告 D（+30，日 1 次）—— 未配置激励视频时整项隐藏
+        if (isRewardedVideoConfigured() === true) {
+            const welfareY = challengeY + primaryH + gap;
+            const welfareClaimed = coinManager.isDailyWelfareClaimed();
+            const welfareText = welfareClaimed
+                ? '今日福利已领'
+                : ('每日福利 +' + DAILY_WELFARE_REWARD);
+            this._buttons.push(new Button({
+                x: centerX - btnW / 2,
+                y: welfareY,
+                w: btnW,
+                h: smallH,
+                text: welfareText,
+                icon: 'gift',
+                color: welfareClaimed ? '#444' : '#3a7ab0',
+                onClick: () => this._claimDailyWelfare(),
+            }));
+        }
     }
 
-    _startGame(mode) {
-        GameGlobal.game.sceneManager.switchTo('game', { mode: mode });
+    /** 每日福利：看激励视频 +30 金币（日 1） */
+    _claimDailyWelfare() {
+        if (coinManager.isDailyWelfareClaimed()) {
+            try { wx.showToast({ title: '今日已领过福利', icon: 'none' }); } catch (e) { /* ignore */ }
+            return;
+        }
+        if (isRewardedVideoConfigured() !== true) {
+            try { wx.showToast({ title: '广告暂不可用', icon: 'none' }); } catch (e) { /* ignore */ }
+            return;
+        }
+        adManager.showRewardedVideo()
+            .then(() => {
+                const res = coinManager.tryClaimDailyWelfare();
+                if (res && res.claimed) {
+                    try {
+                        wx.showToast({ title: '福利 +' + res.amount + ' 金币', icon: 'none' });
+                    } catch (e) { /* ignore */ }
+                    this._initUI();
+                } else {
+                    try { wx.showToast({ title: '今日已领过福利', icon: 'none' }); } catch (e) { /* ignore */ }
+                }
+            })
+            .catch(() => {
+                try { wx.showToast({ title: '需完整观看广告', icon: 'none' }); } catch (e) { /* ignore */ }
+            });
     }
+
 
     /** 每日首次进入首页领取登录奖励（不占消行日上限） */
     _claimDailyLogin() {

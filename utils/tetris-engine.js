@@ -592,27 +592,46 @@ class TetrisEngine {
             }
         }
         const clearResult = this._checkLines();
-        if (this._mode === 'stage' && this._garbageRemaining === 0) {
-            // 闯关过关：停止并触发 STAGE_CLEAR
-            this._clearTimers();
-            this._state = GameState.OVER;
-            this._emit(this._onStateChange, this._state);
-            this._emit(this._onGameOver, this._score, this._level, this._lines, 'stageClear');
-            this._currentPiece = null;
-            return;
-        }
+        const lockedSnap = {
+            type: p.type,
+            row: p.row,
+            col: p.col,
+            matrix: SRSRotation.getState(p.type, p.rotation),
+            hardDrop: this._lastAction === 'hardDrop',
+        };
+
+        // 先发消行 / 落地反馈（与「方块过把瘾」一致），再处理闯关过关，避免终局跳过特效
         if (clearResult.cleared > 0) {
             this._combo++;
             this._calculateScore(clearResult);
-            this._emit(this._onLineClear, clearResult.visibleRows, clearResult.cleared, clearResult.isTetris, clearResult.clearedColors, this._tSpinType, this._combo);
+            this._emit(
+                this._onLineClear,
+                clearResult.visibleRows,
+                clearResult.cleared,
+                clearResult.isTetris,
+                clearResult.clearedColors,
+                this._tSpinType,
+                this._combo
+            );
             if (this._combo > 0) {
                 this._emit(this._onCombo, this._combo);
             }
         } else {
             this._combo = -1;
         }
-        // 落地反馈（无论是否消行都触发，供落地音效/波纹使用）
-        this._emit(this._onPieceLock, { type: p.type, hardDrop: this._lastAction === 'hardDrop' });
+        this._emit(this._onPieceLock, lockedSnap);
+
+        if (this._mode === 'stage' && this._garbageRemaining === 0) {
+            // 闯关过关：特效已发出，再停表切 OVER
+            this._clearTimers();
+            this._state = GameState.OVER;
+            this._currentPiece = null;
+            this._inLockDelay = false;
+            this._lockMoves = 0;
+            this._emit(this._onStateChange, this._state);
+            this._emit(this._onGameOver, this._score, this._level, this._lines, 'stageClear');
+            return;
+        }
 
         this._currentPiece = null;
         this._inLockDelay = false;
@@ -678,6 +697,10 @@ class TetrisEngine {
     // ========================================================================
 
     _checkLines() {
+        if (this._mode === 'stage') {
+            return this._checkLinesStageCascade();
+        }
+
         const fullRows = [];
         for (let r = HIDDEN_ROWS; r < TOTAL_ROWS; r++) {
             if (this._board[r].every(cell => cell !== EMPTY)) {
@@ -688,32 +711,73 @@ class TetrisEngine {
             return { cleared: 0, lines: [], visibleRows: [], clearedColors: [], isTetris: false, isDifficult: false };
         }
 
-        // 记录被消除行的颜色快照（供粒子特效取色）
         const clearedColors = fullRows.map(r => this._board[r].slice());
-
         const isTetris = fullRows.length === 4;
         const visibleRows = fullRows.map(r => r - HIDDEN_ROWS);
 
-        if (this._mode === 'stage') {
-            // 闯关模式（方案 B）：仅清除满行格子；上方玩家块按列塌缩，垃圾块保持原位
-            this._clearFullRowsStage(fullRows);
-        } else {
-            // 经典模式：从下往上移除满行，顶部补空行
-            for (let i = fullRows.length - 1; i >= 0; i--) {
-                this._board.splice(fullRows[i], 1);
-            }
-            for (let i = 0; i < fullRows.length; i++) {
-                this._board.unshift(new Array(BOARD_COLS).fill(EMPTY));
-            }
+        // 经典模式：从下往上移除满行，顶部补空行
+        for (let i = fullRows.length - 1; i >= 0; i--) {
+            this._board.splice(fullRows[i], 1);
+        }
+        for (let i = 0; i < fullRows.length; i++) {
+            this._board.unshift(new Array(BOARD_COLS).fill(EMPTY));
         }
 
         const isDifficult = isTetris || this._tSpinType !== null;
         return { cleared: fullRows.length, lines: fullRows, visibleRows, clearedColors, isTetris, isDifficult };
     }
 
-    /** 闯关模式消行（方案 B）：清除满行；玩家块按列重力塌缩，垃圾块作为屏障保持原位 */
+    /**
+     * 闯关消行：清空满行后，非垃圾块按列塌陷（垃圾为屏障不移动）；
+     * 塌陷可能再次凑满，需连锁直至稳定，避免「满行却不消 / 死锁」。
+     */
+    _checkLinesStageCascade() {
+        let totalCleared = 0;
+        const visibleRows = [];
+        const clearedColors = [];
+        let anyTetris = false;
+        let lastWaveRows = [];
+
+        for (let guard = 0; guard < BOARD_ROWS; guard++) {
+            const fullRows = [];
+            for (let r = HIDDEN_ROWS; r < TOTAL_ROWS; r++) {
+                if (this._board[r].every(cell => cell !== EMPTY)) {
+                    fullRows.push(r);
+                }
+            }
+            if (fullRows.length === 0) break;
+
+            for (let i = 0; i < fullRows.length; i++) {
+                clearedColors.push(this._board[fullRows[i]].slice());
+                visibleRows.push(fullRows[i] - HIDDEN_ROWS);
+            }
+            if (fullRows.length === 4) anyTetris = true;
+            totalCleared += fullRows.length;
+            lastWaveRows = fullRows;
+            this._clearFullRowsStage(fullRows);
+        }
+
+        if (totalCleared === 0) {
+            return { cleared: 0, lines: [], visibleRows: [], clearedColors: [], isTetris: false, isDifficult: false };
+        }
+
+        const isDifficult = anyTetris || this._tSpinType !== null;
+        return {
+            cleared: totalCleared,
+            lines: lastWaveRows,
+            visibleRows,
+            clearedColors,
+            isTetris: anyTetris,
+            isDifficult,
+        };
+    }
+
+    /**
+     * 闯关消行（方案 B）：
+     * 1) 清空满行（含垃圾）
+     * 2) 非垃圾块按列重力塌陷；垃圾格保持原位，作为不可穿越屏障
+     */
     _clearFullRowsStage(fullRows) {
-        // 1) 清除满行所有格子（含玩家块与垃圾块），并扣减垃圾计数
         for (const r of fullRows) {
             for (let c = 0; c < BOARD_COLS; c++) {
                 if (this._garbageMask && this._garbageMask[r][c]) {
@@ -723,7 +787,6 @@ class TetrisEngine {
                 this._board[r][c] = EMPTY;
             }
         }
-        // 2) 玩家块按列塌缩（自底向上），垃圾格为不可穿越屏障，保持原位
         if (!this._garbageMask) return;
         for (let c = 0; c < BOARD_COLS; c++) {
             let target = TOTAL_ROWS - 1;
@@ -745,7 +808,9 @@ class TetrisEngine {
 
     _calculateScore(result) {
         const { cleared, isTetris, isDifficult } = result;
-        let base = LINE_SCORES[cleared - 1] * this._level;
+        // 连锁可能一次清 >4 行；计分表按 1~4 封顶，消行计数仍用真实 cleared
+        const scoreTier = Math.min(4, Math.max(1, cleared));
+        let base = LINE_SCORES[scoreTier - 1] * this._level;
 
         // T-Spin 加分
         if (this._tSpinType === 'full') {
@@ -977,6 +1042,44 @@ class TetrisEngine {
             this._dropInterval = this._stageConfig.dropIntervalMs;
         }
         return { garbageCount: this._garbageRemaining, minLines: this._countGarbageRows() };
+    }
+
+    /**
+     * 开场掉落动画：取出已注入的垃圾格坐标，清空棋盘显示（供逐格放回）。
+     * @returns {Array<{row:number,col:number}>} 可见行坐标（已按底→顶、左→右排序）
+     */
+    prepareStageIntro() {
+        const cells = [];
+        if (!this._garbageMask) return cells;
+        for (let r = 0; r < TOTAL_ROWS; r++) {
+            for (let c = 0; c < BOARD_COLS; c++) {
+                if (!this._garbageMask[r][c]) continue;
+                cells.push({ row: r - HIDDEN_ROWS, col: c });
+                this._board[r][c] = EMPTY;
+                this._garbageMask[r][c] = false;
+            }
+        }
+        this._garbageRemaining = 0;
+        // 底行先落地，上层再砸下来，更像堆叠
+        cells.sort((a, b) => (b.row - a.row) || (a.col - b.col));
+        return cells;
+    }
+
+    /**
+     * 开场动画：放回一格垃圾
+     * @param {number} visibleRow
+     * @param {number} col
+     */
+    placeIntroGarbageCell(visibleRow, col) {
+        const r = visibleRow + HIDDEN_ROWS;
+        if (r < 0 || r >= TOTAL_ROWS || col < 0 || col >= BOARD_COLS) return;
+        if (this._board[r][col] === GARBAGE) return;
+        this._board[r][col] = GARBAGE;
+        if (!this._garbageMask) this._garbageMask = this._createEmptyMask();
+        if (!this._garbageMask[r][col]) {
+            this._garbageMask[r][col] = true;
+            this._garbageRemaining++;
+        }
     }
 
     /** 剩余垃圾格数（归零即过关） */

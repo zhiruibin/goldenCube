@@ -1,13 +1,11 @@
-// 排行榜云函数
+// 排行榜云函数（挖个方块 · 闯关复合键）
 // 职责：
-//   1. submitScore - 提交分数（仅当高于历史最高分时写入），返回是否新纪录与当前排名
-//   2. getRankList - 分页查询排行榜（全服/好友 × 周/月/总榜）
-//   3. getMyRank  - 查询当前用户在某模式的最高分与排名（结算页展示用）
+//   1. submitScore - 上报复合键（clearedCount DESC → lines/pieces/time ASC），编码为 score 降序
+//   2. getRankList - 分页查询（全服/好友 × 周/月/总榜）
+//   3. getMyRank  - 查询当前用户排名
+//   4. getReplay  - 回放（兼容旧数据；闯关主榜通常无回放）
 //
-// 部署说明见同目录 README.md：
-//   - 上传云函数后在云开发控制台创建集合 rankings
-//   - 集合权限建议选择「所有用户可读，仅创建者可读写」（排行榜需要全服可读）
-//   - 首次部署需在云开发控制台确认环境与数据库已开通
+// 部署：上传后确认集合 rankings；建议对 mode + score 建组合索引
 
 const cloud = require('wx-server-sdk');
 
@@ -16,19 +14,34 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 const _ = db.command;
 
-/** 排行榜集合名（与 utils/cloud-config.js 保持一致） */
 const COLLECTION = 'rankings';
-
-/** 允许的游戏模式 */
-const ALLOWED_MODES = ['classic', 'timed', 'marathon'];
-
-/** 允许的时间周期 */
+const ALLOWED_MODES = ['stage'];
 const ALLOWED_PERIODS = ['week', 'month', 'total'];
-
-/** 单页最大条数 */
 const MAX_PAGE_SIZE = 50;
 
-/** 云函数主入口 */
+const CLEARED_MUL = 1e10;
+const LINES_MUL = 1e5;
+const PIECES_MUL = 10;
+const CAP_L = 90000;
+const CAP_P = 90000;
+const CAP_T = 99999;
+
+function encodeRankScore(sums) {
+    const s = sums || {};
+    const c = Math.max(0, Math.min(999, Math.floor(Number(s.clearedCount) || 0)));
+    const L = Math.max(0, Math.min(CAP_L, Math.floor(Number(s.linesSum) || 0)));
+    const P = Math.max(0, Math.min(CAP_P, Math.floor(Number(s.piecesSum) || 0)));
+    const T = Math.max(0, Math.min(CAP_T, Math.floor((Number(s.timeSum) || 0) / 1000)));
+    return c * CLEARED_MUL
+        + (CAP_L - L) * LINES_MUL
+        + (CAP_P - P) * PIECES_MUL
+        + (CAP_T - T);
+}
+
+function decodeClearedCount(score) {
+    return Math.floor(Math.max(0, Number(score) || 0) / CLEARED_MUL);
+}
+
 exports.main = async (event, context) => {
     const { action, data } = event || {};
     const { OPENID } = cloud.getWXContext();
@@ -48,21 +61,26 @@ exports.main = async (event, context) => {
 };
 
 /**
- * 提交分数
- * 仅当本次分数高于该用户在该模式的历史最高分时写入，避免频繁无效写入。
+ * 提交闯关复合键
  * @param {string} openid
- * @param {object} data { score, mode, detail, nickname, avatarUrl }
+ * @param {object} data
  */
 async function submitScore(openid, data) {
-    const score = Math.floor(Number(data.score) || 0);
-    const mode = data.mode || 'classic';
-
-    // 1. 参数校验
+    const mode = data.mode || 'stage';
     if (ALLOWED_MODES.indexOf(mode) < 0) {
         return { success: false, errMsg: 'invalid mode' };
     }
-    if (!(score >= 0)) {
-        return { success: false, errMsg: 'invalid score' };
+
+    const sums = {
+        clearedCount: Math.max(0, Math.floor(Number(data.clearedCount) || 0)),
+        linesSum: Math.max(0, Math.floor(Number(data.linesSum) || 0)),
+        piecesSum: Math.max(0, Math.floor(Number(data.piecesSum) || 0)),
+        timeSum: Math.max(0, Math.floor(Number(data.timeSum) || 0)),
+    };
+    let score = encodeRankScore(sums);
+    if (!(sums.clearedCount > 0) && data.score != null) {
+        score = Math.max(0, Math.floor(Number(data.score) || 0));
+        sums.clearedCount = decodeClearedCount(score);
     }
 
     const coll = db.collection(COLLECTION);
@@ -72,7 +90,6 @@ async function submitScore(openid, data) {
         avatarUrl: typeof data.avatarUrl === 'string' ? data.avatarUrl.slice(0, 512) : '',
     };
 
-    // 2. 查询该用户在该模式下的历史记录
     let prev = null;
     try {
         const res = await coll.where({ openid, mode }).limit(1).get();
@@ -83,9 +100,7 @@ async function submitScore(openid, data) {
 
     const isNewRecord = !prev || score > (prev.score || 0);
 
-    // 3. 刷新纪录时写完整记录；未破纪录但带了资料时，仍更新昵称头像（避免一直显示「玩家xxxx」）
     if (isNewRecord) {
-        // 计算回放字段：仅当 replay 结构有效且序列化后不超过 60KB 时保留，防止超大回放撑爆云函数入参
         let replayField = null;
         const replay = data.replay;
         if (replay && typeof replay === 'object' && replay.seed != null && Array.isArray(replay.inputs)) {
@@ -102,6 +117,10 @@ async function submitScore(openid, data) {
             openid,
             mode,
             score,
+            clearedCount: sums.clearedCount,
+            linesSum: sums.linesSum,
+            piecesSum: sums.piecesSum,
+            timeSum: sums.timeSum,
             detail: data.detail || null,
             nickname: profile.nickname || (prev && prev.nickname) || '',
             avatarUrl: profile.avatarUrl || (prev && prev.avatarUrl) || '',
@@ -124,11 +143,10 @@ async function submitScore(openid, data) {
             if (profile.avatarUrl) patch.avatarUrl = profile.avatarUrl;
             await coll.doc(prev._id).update({ data: patch });
         } catch (e) {
-            // 资料更新失败不影响分数回报
+            // ignore
         }
     }
 
-    // 4. 计算当前排名（分数相同按先达者优先，此处取并列同排）
     let rank = null;
     try {
         const myScore = isNewRecord ? score : (prev.score || 0);
@@ -138,16 +156,18 @@ async function submitScore(openid, data) {
         rank = null;
     }
 
-    return { success: true, isNewRecord, rank, score, mode };
+    return {
+        success: true,
+        isNewRecord,
+        rank,
+        score: isNewRecord ? score : (prev && prev.score) || score,
+        clearedCount: isNewRecord ? sums.clearedCount : (prev && prev.clearedCount) || sums.clearedCount,
+        mode,
+    };
 }
 
-/**
- * 查询排行榜
- * @param {string} openid
- * @param {object} data { mode, type, period, page, pageSize, friendOpenIds }
- */
 async function getRankList(openid, data) {
-    const mode = data.mode || 'classic';
+    const mode = data.mode || 'stage';
     const type = data.type === 'friend' ? 'friend' : 'all';
     const period = ALLOWED_PERIODS.indexOf(data.period) >= 0 ? data.period : 'total';
     const page = Math.max(1, Math.floor(Number(data.page) || 1));
@@ -160,12 +180,10 @@ async function getRankList(openid, data) {
     const coll = db.collection(COLLECTION);
     const where = { mode };
 
-    // 1. 时间范围（周榜从本周一 00:00 起，月榜从本月 1 日 00:00 起）
     if (period !== 'total') {
         where.updatedAt = _.gte(periodStart(period));
     }
 
-    // 2. 用户范围（好友榜需要客户端传入好友 openid 列表）
     if (type === 'friend') {
         const friendOpenIds = Array.isArray(data.friendOpenIds) ? data.friendOpenIds.slice(0, 50) : [];
         if (friendOpenIds.length === 0) {
@@ -176,7 +194,6 @@ async function getRankList(openid, data) {
 
     const query = coll.where(where);
 
-    // 3. 总数
     let total = 0;
     try {
         const c = await query.count();
@@ -185,7 +202,6 @@ async function getRankList(openid, data) {
         total = 0;
     }
 
-    // 4. 按分数降序、先达者优先分页查询
     let list = [];
     try {
         const res = await query
@@ -200,6 +216,12 @@ async function getRankList(openid, data) {
             nickname: item.nickname || defaultName(item.openid),
             avatarUrl: item.avatarUrl || '',
             score: item.score || 0,
+            clearedCount: typeof item.clearedCount === 'number'
+                ? item.clearedCount
+                : decodeClearedCount(item.score || 0),
+            linesSum: item.linesSum || 0,
+            piecesSum: item.piecesSum || 0,
+            timeSum: item.timeSum || 0,
             updatedAt: item.updatedAt || 0,
             hasReplay: !!(item.replay && item.replay.seed != null),
         }));
@@ -207,9 +229,9 @@ async function getRankList(openid, data) {
         list = [];
     }
 
-    // 5. 我的最高分与排名（好友榜：仅在 friendOpenIds 范围内计名次）
     let myRank = null;
     let myScore = null;
+    let myCleared = null;
     try {
         const myWhere = { openid, mode };
         if (period !== 'total') {
@@ -218,6 +240,9 @@ async function getRankList(openid, data) {
         const my = await coll.where(myWhere).orderBy('score', 'desc').limit(1).get();
         if (my.data && my.data[0]) {
             myScore = my.data[0].score || 0;
+            myCleared = typeof my.data[0].clearedCount === 'number'
+                ? my.data[0].clearedCount
+                : decodeClearedCount(myScore);
             const betterWhere = { mode, score: _.gt(myScore) };
             if (period !== 'total') {
                 betterWhere.updatedAt = _.gte(periodStart(period));
@@ -232,19 +257,23 @@ async function getRankList(openid, data) {
             myRank = better.total + 1;
         }
     } catch (e) {
-        // 忽略，保持 null
+        // ignore
     }
 
-    return { success: true, list, total, page, pageSize, myRank, myScore };
+    return {
+        success: true,
+        list,
+        total,
+        page,
+        pageSize,
+        myRank,
+        myScore,
+        myClearedCount: myCleared,
+    };
 }
 
-/**
- * 查询我的最高分与排名
- * @param {string} openid
- * @param {object} data { mode }
- */
 async function getMyRank(openid, data) {
-    const mode = data.mode || 'classic';
+    const mode = data.mode || 'stage';
     if (ALLOWED_MODES.indexOf(mode) < 0) {
         return { success: false, errMsg: 'invalid mode' };
     }
@@ -257,17 +286,20 @@ async function getMyRank(openid, data) {
         }
         const myScore = my.data[0].score || 0;
         const better = await coll.where({ mode, score: _.gt(myScore) }).count();
-        return { success: true, myRank: better.total + 1, myScore, hasRecord: true };
+        return {
+            success: true,
+            myRank: better.total + 1,
+            myScore,
+            clearedCount: typeof my.data[0].clearedCount === 'number'
+                ? my.data[0].clearedCount
+                : decodeClearedCount(myScore),
+            hasRecord: true,
+        };
     } catch (e) {
         return { success: false, errMsg: (e && e.errMsg) || String(e) };
     }
 }
 
-/**
- * 查询单条回放数据（全服排行榜「回放」）
- * @param {string} openid
- * @param {object} data { replayId }
- */
 async function getReplay(openid, data) {
     const replayId = data && typeof data.replayId === 'string' ? data.replayId.trim() : '';
     if (!replayId) {
@@ -281,23 +313,21 @@ async function getReplay(openid, data) {
             return { success: true, replay: rec.replay, mode: rec.mode || '' };
         }
     } catch (e) {
-        // 记录不存在或读取失败，走统一失败返回
+        // ignore
     }
 
     return { success: false, errMsg: 'replay not found' };
 }
 
-/** 周/月榜起始时间戳 */
 function periodStart(period) {
     const now = new Date();
     if (period === 'week') {
-        const day = now.getDay() || 7; // 周日=0 → 7
+        const day = now.getDay() || 7;
         return new Date(now.getFullYear(), now.getMonth(), now.getDate() - day + 1).getTime();
     }
     return new Date(now.getFullYear(), now.getMonth(), 1).getTime();
 }
 
-/** 默认昵称：玩家 + openid 后四位 */
 function defaultName(openid) {
     const tail = String(openid || '').slice(-4);
     return tail ? '玩家' + tail : '玩家';

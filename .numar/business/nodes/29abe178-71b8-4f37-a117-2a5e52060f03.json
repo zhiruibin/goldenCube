@@ -1,0 +1,23 @@
+{
+	"id": "29abe178-71b8-4f37-a117-2a5e52060f03",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage-select.chapters-data",
+	"title": "选关章节数据：三章 30 关",
+	"statement": "data/stages-v1.json 新增顶层 chapters（小试牛刀/新手上路/渐入佳境，各带简介），stages 扩展为 30 关，第 11-30 关复用第一套配置且 id 全局唯一。",
+	"status": "active",
+	"verificationStatus": "verified",
+	"createdAt": 1787813486391,
+	"updatedAt": 1787813486391,
+	"createdByTaskId": "request_09732711-119d-4513-a438-bb6d4bbc849d",
+	"latestEventId": "794cd9c7-1a25-475d-a2d0-15c8296b6987",
+	"tags": [],
+	"aliases": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "data/stages-v1.json"
+		}
+	]
+}

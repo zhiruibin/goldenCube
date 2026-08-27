@@ -318,6 +318,14 @@ class ChallengeResultScene {
       }).then(function (res) {
         if (!res) return;
         const challengeId = (res && res.challengeId) ? res.challengeId : '';
+        if (challengeId) {
+          try {
+            const { achievementManager } = require('../../utils/achievement-manager');
+            if (achievementManager && typeof achievementManager.reportChallengeCreate === 'function') {
+              achievementManager.reportChallengeCreate();
+            }
+          } catch (e) {}
+        }
         const query = 'challengeId=' + encodeURIComponent(challengeId) + '&mode=' + encodeURIComponent(mode) + '&score=' + score;
         self._generateShareImage(function (imageUrl) {
           doShare(imageUrl, query);

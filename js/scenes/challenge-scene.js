@@ -679,6 +679,9 @@ class ChallengeScene {
         this._error = '';
         this._scrollY = 0;
         this._pruneIncomingAgainstCompleted();
+        try {
+          achievementManager.syncCompletedChallenges(this._completedList);
+        } catch (e) { /* ignore */ }
       } else {
         this._offline = !!(res && res.offline);
         const errMsg = this._offline ? '' : ((res && res.errMsg) ? String(res.errMsg) : '');
@@ -799,6 +802,10 @@ class ChallengeScene {
       this._busy = false;
       if (!res) return;
       if (res && res.success) {
+        try {
+          const { achievementManager } = require('../../utils/achievement-manager');
+          achievementManager.reportChallengeCreate();
+        } catch (e) {}
         try {
           // 回击话术：与首次发起区分
           wx.shareAppMessage({

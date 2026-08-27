@@ -1,24 +1,26 @@
 /**
- * StageSelectScene - 关卡选择场景（挖个方块首页）
- * 职责：展示 10 关进度、金色方块余额、每关最少消行记录；解锁 / 进入关卡。
- * 取代 tetris-mini 的四模式首页。
+/*** StageSelectScene - 关卡选择场景（闯关二级页，从首页进入）
+ * 职责：章节制闯关选择（横向分页翻章），每章展示 10 关进度与金色方块余额；锁定章节可滑动查看但不可进入。
+ * 由首页 Hub 进入的二级页：底部提供「← 返回」按钮（sceneManager.back() 回首页），样式同商店场景。
  * 样式参考 tetris-mini home-scene：满屏夜场背景 + 下落方块装饰 + 标题水平居中。
  */
-
 const {
     fillNightBackground,
-    drawBrandTitle,
     ACCENT,
     SUBTITLE,
     MUTED,
+    TITLE,
+    TITLE_GLOW,
     AMBIENT_PIECE_COLORS,
 } = require('../theme/arcade-night');
 const goldenBlock = require('../../utils/golden-block-manager');
-
+const { coinManager } = require('../../utils/coin-manager');
+const { adManager, isRewardedVideoConfigured } = require('../../utils/ad-manager');
+const { Button } = require('../widgets/button');
 const COLS = 2;
-const CARD_GAP = 14;
+const H_PAD = 16;
+const CARD_GAP = 12;
 const CARD_H = 84;
-const HEADER_H = 120;
 
 // 背景装饰：缓慢下落的半透明方块（移植 tetris-mini 首页样式）
 const BG_TETROMINO_SHAPES = [
@@ -42,51 +44,182 @@ class StageSelectScene {
         // 背景装饰：缓慢下落的半透明方块
         this._fallingBlocks = [];
         this._animTime = 0;
+        // 底部返回按钮（样式同商店）
+        this._backButton = null;
+        this._chapters = [];
+        this._chapter = 0;
+        this._stages = [];
+        this._offsetX = 0;
+        this._dragBase = 0;
+        this._touchId = null;
+        this._touchStartX = 0;
+        this._touchStartY = 0;
+        this._isDragging = false;
+        this._suppressTap = false;
+        this._animFrom = 0;
+        this._animTarget = 0;
+        this._animT = 1;
+        // 入场选择弹窗
+        this._entryDialog = null;
     }
 
-    onEnter() {
+    onEnter(params) {
+        this._params = params || {};
         this._toast = '';
         this._toastT = 0;
         this._animTime = 0;
+        this._entryDialog = null;
         this._initFallingBlocks();
-        this._buildCards();
+        this._initBackButton();
+        this._chapters = goldenBlock.getChapters();
+        this._chapter = 0;
+        this._offsetX = 0;
+        this._animT = 1;
+        this._buildChapterCards();
+        const login = coinManager.tryClaimDailyLogin();
+        if (login.claimed) {
+            this._showToast('每日登录 +' + login.amount + ' 金币');
+        } else if (this._params.toast) {
+            this._showToast(this._params.toast);
+        }
     }
 
     onExit() {}
 
     /**
-     * iOS 刘海/状态栏避让：返回头部内容的安全起始 Y。
-     * 取 statusBarHeight 与 safeArea.top 的较大者（iPhone X+ 约 44），
-     * 再叠加额外留白，保证大标题/金方块数量不被刘海遮挡。
+     * 布局度量：安全区 + 微信胶囊避让 + 可用内容区。
+     * 全屏 canvas（screenWidth）时须用 safeArea / 胶囊矩形约束绘制，避免标题被裁切。
      */
-    _getTopInset() {
+    _getLayoutMetrics() {
         const sys = (GameGlobal && GameGlobal.game && GameGlobal.game.systemInfo) || {};
-        const statusBarHeight = Number(sys.statusBarHeight) || 0;
-        const safeTop = (sys.safeArea && Number(sys.safeArea.top)) || 0;
-        return Math.max(statusBarHeight, safeTop) + 16;
-    }
-
-    _buildCards() {
-        const stages = goldenBlock.getStages();
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
-        const cardW = (W - 24 - (COLS - 1) * CARD_GAP) / COLS;
-        const topY = this._getTopInset() + HEADER_H;
-        this._cards = [];
-        this._hitRects = [];
-        stages.forEach((stage, i) => {
-            const col = i % COLS;
-            const row = Math.floor(i / COLS);
-            const x = 12 + col * (cardW + CARD_GAP);
-            const y = topY + row * (CARD_H + CARD_GAP);
-            this._cards.push({
-                stage,
-                x,
-                y,
-                w: cardW,
-                h: CARD_H,
+        const safe = sys.safeArea || {};
+
+        const safeLeft = Number(safe.left) || 0;
+        const safeRight = (safe.right && safe.right > 0) ? safe.right : W;
+        const statusBarHeight = Number(sys.statusBarHeight) || 0;
+        const safeTop = Number(safe.top) || 0;
+
+        // 微信胶囊：货币条与胶囊垂直居中对齐，标题排在胶囊下方
+        let capsuleTop = statusBarHeight || safeTop || 20;
+        let capsuleBottom = capsuleTop + 32;
+        let capsuleInset = 90;
+        try {
+            const rect = wx.getMenuButtonBoundingClientRect();
+            if (rect && rect.height > 0) {
+                capsuleTop = rect.top;
+                capsuleBottom = rect.bottom;
+                if (rect.left > 0 && rect.left < W) {
+                    capsuleInset = Math.max(capsuleInset, W - rect.left + 8);
+                }
+            }
+        } catch (e) { /* 非微信环境忽略 */ }
+
+        const balanceY = capsuleTop + (capsuleBottom - capsuleTop) / 2;
+        let headerTop = Math.max(statusBarHeight, safeTop, capsuleBottom) + 10;
+
+        const bottomInset = (safe.bottom && H > safe.bottom) ? (H - safe.bottom) : 0;
+        const contentLeft = safeLeft + H_PAD;
+        const contentRight = Math.min(safeRight, W) - H_PAD;
+        const contentW = Math.max(0, contentRight - contentLeft);
+        const contentCenterX = contentLeft + contentW / 2;
+
+        const titleRowH = 34;
+        const subtitleGap = 8;
+        const subtitleH = 18;
+        const gridTop = headerTop + titleRowH + subtitleGap + subtitleH + 14;
+
+        const stageCount = (this._stages && this._stages.length) ? this._stages.length : 10;
+        const rows = Math.ceil(stageCount / COLS);
+        const backBtnH = 48;
+        const backBtnY = H - bottomInset - backBtnH - 32;
+        const footerY = backBtnY - 44;
+        const gridBottom = backBtnY - 48;
+        const availGridH = Math.max(0, gridBottom - gridTop);
+
+        let cardGap = CARD_GAP;
+        let cardH = CARD_H;
+        const neededH = rows * cardH + (rows - 1) * cardGap;
+        if (neededH > availGridH && rows > 0) {
+            cardGap = Math.max(8, Math.floor(cardGap * availGridH / neededH));
+            cardH = Math.max(72, Math.floor((availGridH - (rows - 1) * cardGap) / rows));
+        }
+
+        const cardW = (contentW - (COLS - 1) * cardGap) / COLS;
+        // 标题在胶囊下方整行可用，只需避开右侧安全边距
+        const titleMaxW = Math.max(80, contentW);
+
+        return {
+            W,
+            H,
+            headerTop,
+            titleY: headerTop + titleRowH / 2,
+            subtitleY: headerTop + titleRowH + subtitleGap + subtitleH / 2,
+            footerY,
+            contentLeft,
+            contentRight,
+            balanceX: contentLeft,
+            balanceY,
+            titleMaxW,
+            contentW,
+            contentCenterX,
+            capsuleInset,
+            gridTop,
+            cardW,
+            cardH,
+            cardGap,
+            backBtnY,
+        };
+    }
+
+    _buildChapterCards() {
+        const chapters = goldenBlock.getChapters();
+        this._chapters = chapters;
+        this._stages = goldenBlock.getStagesByChapter(chapters[this._chapter].id);
+        const m = this._getLayoutMetrics();
+        this._chapterCards = [];
+        this._chapterHitRects = [];
+        for (let ci = 0; ci < chapters.length; ci++) {
+            const chap = chapters[ci];
+            const stageList = goldenBlock.getStagesByChapter(chap.id);
+            const cards = [];
+            const hitRects = [];
+            stageList.forEach((stage, i) => {
+                const col = i % COLS;
+                const row = Math.floor(i / COLS);
+                const x = m.contentLeft + col * (m.cardW + m.cardGap);
+                const y = m.gridTop + row * (m.cardH + m.cardGap);
+                cards.push({
+                    stage,
+                    x,
+                    y,
+                    w: m.cardW,
+                    h: m.cardH,
+                });
+                hitRects.push({ x, y, w: m.cardW, h: m.cardH });
             });
-            this._hitRects.push({ x, y, w: cardW, h: CARD_H });
+            this._chapterCards.push(cards);
+            this._chapterHitRects.push(hitRects);
+        }
+    }
+
+    _initBackButton() {
+        const W = GameGlobal.game.width;
+        const H = GameGlobal.game.height;
+        const sys = (GameGlobal && GameGlobal.game && GameGlobal.game.systemInfo) || {};
+        const safe = sys.safeArea || {};
+        const bottomInset = (safe.bottom && H > safe.bottom) ? (H - safe.bottom) : 0;
+        const btnW = Math.min(260, W * 0.7);
+        const btnH = 48;
+        this._backButton = new Button({
+            x: W / 2 - btnW / 2,
+            y: H - bottomInset - 80,
+            w: btnW,
+            h: btnH,
+            text: '← 返回',
+            color: '#555',
+            onClick: () => GameGlobal.game.sceneManager.back(),
         });
     }
 
@@ -96,10 +229,33 @@ class StageSelectScene {
      * @param {number} y 逻辑坐标 Y
      */
     handleTap(x, y) {
-        for (let i = 0; i < this._cards.length; i++) {
-            const r = this._hitRects[i];
-            if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) {
-                this._handleCardTap(this._cards[i]);
+        // 滑动翻页后抑制本次 tap，防止误触卡片
+        if (this._suppressTap) {
+            this._suppressTap = false;
+            return;
+        }
+        if (this._entryDialog) {
+            this._handleEntryDialogTap(x, y);
+            return;
+        }
+        // 底部返回按钮命中检测
+        if (this._backButton && this._backButton.hitTest(x, y)) {
+            this._backButton.trigger();
+            return;
+        }
+        const W = GameGlobal.game.width;
+        const ch = this._chapter;
+        const cards = this._chapterHitRects[ch] || [];
+        const pageOffset = ch * W + this._offsetX;
+        const localX = x - pageOffset;
+        for (let i = 0; i < cards.length; i++) {
+            const r = cards[i];
+            if (localX >= r.x && localX <= r.x + r.w && y >= r.y && y <= r.y + r.h) {
+                if (!goldenBlock.isChapterUnlocked(this._chapters[ch].id)) {
+                    this._showToast('通关上一章全部关卡后解锁');
+                    return;
+                }
+                this._handleCardTap(this._chapterCards[ch][i]);
                 return;
             }
         }
@@ -116,11 +272,80 @@ class StageSelectScene {
                 }
                 return;
             }
+            this._buildChapterCards();
         }
+        const fee = coinManager.getEntryFee(stage.id);
+        if (fee <= 0) {
+            this._startStage(stage.id, 0);
+            return;
+        }
+        this._entryDialog = {
+            stage,
+            fee,
+            freeLeft: coinManager.getFreeEntryRemaining(),
+            canAd: isRewardedVideoConfigured() === true,
+        };
+    }
+
+    _startStage(stageId, entryPaid) {
+        this._entryDialog = null;
         GameGlobal.game.sceneManager.switchTo('game', {
             mode: 'stage',
-            stageId: stage.id,
+            stageId,
+            entryPaid: entryPaid || 0,
         });
+    }
+
+    _handleEntryDialogTap(x, y) {
+        const d = this._entryDialog;
+        if (!d) return;
+        // 关闭：右上角 × / 取消按钮 / 点遮罩空白
+        if (d.closeRect && this._hit(x, y, d.closeRect)) {
+            this._entryDialog = null;
+            return;
+        }
+        if (d.cancelRect && this._hit(x, y, d.cancelRect)) {
+            this._entryDialog = null;
+            return;
+        }
+        if (d.panelRect && !this._hit(x, y, d.panelRect)) {
+            this._entryDialog = null;
+            return;
+        }
+        if (d.payRect && this._hit(x, y, d.payRect)) {
+            const paid = coinManager.spendEntryFee(d.stage.id);
+            if (!paid.ok) {
+                this._showToast('金币不足（需 ' + d.fee + '）');
+                return;
+            }
+            this._startStage(d.stage.id, paid.paid);
+            return;
+        }
+        if (d.adRect && this._hit(x, y, d.adRect)) {
+            if (d.freeLeft <= 0) {
+                this._showToast('今日免费入场已用完');
+                return;
+            }
+            if (!d.canAd) {
+                this._showToast('广告暂不可用');
+                return;
+            }
+            adManager.showRewardedVideo()
+                .then(() => {
+                    if (!coinManager.consumeFreeEntry()) {
+                        this._showToast('今日免费入场已用完');
+                        return;
+                    }
+                    this._startStage(d.stage.id, 0);
+                })
+                .catch(() => {
+                    this._showToast('需完整观看广告');
+                });
+        }
+    }
+
+    _hit(x, y, r) {
+        return !!(r && x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h);
     }
 
     _showToast(msg) {
@@ -128,10 +353,59 @@ class StageSelectScene {
         this._toastT = 1.6;
     }
 
+    handleTouchStart(identifier, x, y) {
+        this._touchId = identifier;
+        this._touchStartX = x;
+        this._touchStartY = y;
+        this._isDragging = false;
+        this._dragBase = this._offsetX;
+    }
+
+    handleTouchMove(identifier, x, y) {
+        if (identifier !== this._touchId) return;
+        const dx = x - this._touchStartX;
+        const dy = y - this._touchStartY;
+        if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+        if (Math.abs(dy) >= Math.abs(dx)) return;
+        this._isDragging = true;
+        const W = GameGlobal.game.width;
+        const chapters = this._chapters || [];
+        let off = this._dragBase + dx;
+        const minOff = -(chapters.length - 1) * W;
+        if (off > 0) {
+            off *= 0.35;
+        } else if (off < minOff) {
+            off = minOff + (off - minOff) * 0.35;
+        }
+        this._offsetX = off;
+    }
+
+    handleTouchEnd(identifier) {
+        if (identifier !== this._touchId && identifier !== -1) return;
+        this._touchId = null;
+        if (this._isDragging) {
+            this._suppressTap = true;
+            const W = GameGlobal.game.width;
+            const chapters = this._chapters || [];
+            const idx = Math.max(0, Math.min(chapters.length - 1, Math.round(-this._offsetX / W)));
+            this._chapter = idx;
+            this._animFrom = this._offsetX;
+            this._animTarget = -idx * W;
+            this._animT = 0;
+        }
+        this._isDragging = false;
+    }
+
     update(dt) {
         this._animTime += dt;
         if (this._toastT > 0) this._toastT -= dt;
         this._updateFallingBlocks(dt);
+        if (this._animT < 1) {
+            this._animT = Math.min(1, this._animT + dt * 8);
+            const e = 1 - Math.pow(1 - this._animT, 3);
+            this._offsetX = this._animFrom + (this._animTarget - this._animFrom) * e;
+            if (this._animT >= 1) this._offsetX = this._animTarget;
+        }
     }
 
     // ==================== 背景装饰：缓慢下落的半透明方块 ====================
@@ -219,11 +493,96 @@ class StageSelectScene {
         }
     }
 
-    _drawCard(ctx, card) {
-        const { stage, x, y, w, h } = card;
+    _drawBrandTitle(ctx, text, x, y, font) {
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.font = font || 'bold 28px sans-serif';
+        ctx.fillStyle = TITLE_GLOW;
+        ctx.fillText(text, x + 1, y + 2);
+        ctx.fillStyle = TITLE;
+        ctx.fillText(text, x, y);
+    }
+
+    _cnNum(n) {
+        const map = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
+        return map[n] || String(n);
+    }
+
+    _drawPageDots(ctx, m) {
+        const chapters = this._chapters;
+        if (!chapters || chapters.length === 0) return;
+        const r = 4;
+        const gap = 12;
+        const totalW = chapters.length * (r * 2) + (chapters.length - 1) * gap;
+        const startX = m.contentCenterX - totalW / 2;
+        const y = m.backBtnY - 30;
+        for (let i = 0; i < chapters.length; i++) {
+            const x = startX + i * (r * 2 + gap);
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fillStyle = (i === this._chapter) ? ACCENT : 'rgba(255,255,255,0.25)';
+            ctx.fill();
+        }
+    }
+
+    _truncateText(ctx, text, maxWidth) {
+        if (ctx.measureText(text).width <= maxWidth) return text;
+        let s = text;
+        while (s.length > 1 && ctx.measureText(s + '…').width > maxWidth) {
+            s = s.slice(0, -1);
+        }
+        return s + '…';
+    }
+
+    _drawCard(ctx, card, pageX, chapterUnlocked) {
+        const { stage, y, w, h } = card;
+        const x = card.x + pageX;
         const unlocked = goldenBlock.isUnlocked(stage.id);
         const best = goldenBlock.getStageBest(stage.id);
         const cleared = !!best;
+        const nameY = y + Math.max(42, h - 36);
+        const nameMaxW = w - 24;
+
+        if (!chapterUnlocked) {
+            // 章节未解锁：整体灰态，仅提示不可进入
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+            ctx.beginPath();
+            if (ctx.roundRect) {
+                ctx.roundRect(x, y, w, h, 10);
+            } else {
+                ctx.rect(x, y, w, h);
+            }
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            if (ctx.roundRect) {
+                ctx.roundRect(x, y, w, h, 10);
+            } else {
+                ctx.rect(x, y, w, h);
+            }
+            ctx.stroke();
+
+            // 关卡号
+            ctx.fillStyle = MUTED;
+            ctx.font = 'bold 30px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.fillText(String(stage.id), x + 12, y + 10);
+
+            // 名称（过长截断）
+            ctx.fillStyle = MUTED;
+            ctx.font = 'bold 14px sans-serif';
+            ctx.fillText(this._truncateText(ctx, stage.name, nameMaxW), x + 12, nameY);
+
+            // 状态行：固定提示章节未解锁
+            ctx.font = '12px sans-serif';
+            ctx.fillStyle = MUTED;
+            ctx.textAlign = 'right';
+            ctx.fillText('🔒 章节未解锁', x + w - 12, y + 12);
+            ctx.textAlign = 'left';
+            return;
+        }
 
         ctx.fillStyle = unlocked ? 'rgba(255, 200, 87, 0.14)' : 'rgba(255, 255, 255, 0.05)';
         ctx.beginPath();
@@ -250,10 +609,10 @@ class StageSelectScene {
         ctx.textBaseline = 'top';
         ctx.fillText(String(stage.id), x + 12, y + 10);
 
-        // 名称
+        // 名称（过长截断）
         ctx.fillStyle = unlocked ? '#ffffff' : MUTED;
         ctx.font = 'bold 14px sans-serif';
-        ctx.fillText(stage.name, x + 12, y + 46);
+        ctx.fillText(this._truncateText(ctx, stage.name, nameMaxW), x + 12, nameY);
 
         // 状态行：理论 / 最佳 / 锁定
         ctx.font = '12px sans-serif';
@@ -265,7 +624,11 @@ class StageSelectScene {
         } else if (cleared) {
             status = '最佳 ' + best.lines + ' 行';
         } else {
-            status = '理论 ' + (stage.minLines || 0) + ' 行';
+            const fee = coinManager.getEntryFee(stage.id);
+            const T = stage.coinThreshold || ((stage.minLines || 1) * 2);
+            status = fee > 0
+                ? ('入场 ' + fee + '币 · T' + T)
+                : ('免费 · 理论 ' + (stage.minLines || 0));
         }
         ctx.fillText(status, x + w - 12, y + 12);
         ctx.textAlign = 'left';
@@ -274,40 +637,81 @@ class StageSelectScene {
     render(ctx) {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
+        const m = this._getLayoutMetrics();
 
         // 满屏夜场街机背景（参考 tetris-mini 首页：fillNightBackground 全屏）
         fillNightBackground(ctx, W, H);
         // 背景装饰：缓慢下落的半透明方块
         this._renderFallingBlocks(ctx);
 
-        const topInset = this._getTopInset();
+        // 逐章渲染分页内容（仅绘制屏幕内可见的页，含 8px 余量）
+        const chapters = this._chapters;
+        for (let ci = 0; ci < chapters.length; ci++) {
+            const chap = chapters[ci];
+            const pageX = ci * W + this._offsetX;
+            if (pageX + W <= -8 || pageX >= W + 8) continue;
 
-        // 大标题：水平居中（drawBrandTitle 以 x 为水平中心，参考 tetris-mini W/2 写法）
-        drawBrandTitle(ctx, '挖个方块', W / 2, topInset, 'bold 26px sans-serif');
+            const unlocked = goldenBlock.isChapterUnlocked(chap.id);
+            const cards = this._chapterCards[ci] || [];
 
-        // 金色方块余额（右上角，避开刘海）
+            // 章节标题：左对齐，整行可用（货币条已移到胶囊行）
+            const titleRaw = '第' + this._cnNum(ci + 1) + '章 · ' + chap.name;
+            ctx.font = 'bold 28px sans-serif';
+            const titleText = this._truncateText(ctx, titleRaw, m.titleMaxW);
+            this._drawBrandTitle(
+                ctx,
+                titleText,
+                pageX + m.contentLeft,
+                m.titleY,
+                'bold 28px sans-serif'
+            );
+
+            // 章节简介：未解锁章节展示解锁提示
+            ctx.fillStyle = unlocked ? SUBTITLE : MUTED;
+            ctx.font = '13px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            const introRaw = unlocked ? chap.intro : '🔒 通关上一章全部关卡解锁';
+            ctx.fillText(
+                this._truncateText(ctx, introRaw, m.titleMaxW),
+                pageX + m.contentLeft,
+                m.subtitleY
+            );
+
+            // 该章卡片网格
+            for (let i = 0; i < cards.length; i++) {
+                this._drawCard(ctx, cards[i], pageX, unlocked);
+            }
+        }
+
+        // ===== 固定层（不随分页滑动）=====
+
+        // 金方块 / 金币：左上角，与微信胶囊垂直居中对齐
         const balance = goldenBlock.getBalance();
+        const coins = coinManager.getCoins();
         ctx.fillStyle = ACCENT;
-        ctx.font = 'bold 18px sans-serif';
-        ctx.textAlign = 'right';
-        ctx.fillText('◆ ' + balance, W - 16, topInset + 10);
+        ctx.font = 'bold 15px sans-serif';
         ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('◆ ' + balance + '  ·  币 ' + coins, m.balanceX, m.balanceY);
 
-        // 小标题：水平居中
-        ctx.fillStyle = SUBTITLE;
-        ctx.font = '14px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('清掉垃圾过关 · 最少消行', W / 2, topInset + 42);
-        ctx.textAlign = 'left';
+        // 章节圆点指示器
+        this._drawPageDots(ctx, m);
 
-        this._cards.forEach((card) => this._drawCard(ctx, card));
+        if (this._backButton) this._backButton.render(ctx);
 
-        // 底部提示
+        // 底部提示（避开 Home Indicator）
         ctx.fillStyle = MUTED;
         ctx.font = '12px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('首通 +1 金色方块 · 破纪录再 +1', W / 2, H - 14);
+        ctx.textBaseline = 'middle';
+        ctx.fillText('首通 +1 金色方块 · 破纪录再 +1 · 左滑翻章', m.contentCenterX, m.footerY);
         ctx.textAlign = 'left';
+
+        // 入场弹窗
+        if (this._entryDialog) {
+            this._drawEntryDialog(ctx, W, H);
+        }
 
         // Toast
         if (this._toastT > 0 && this._toast) {
@@ -319,8 +723,100 @@ class StageSelectScene {
             else ctx.rect(W / 2 - tw / 2, H - 70, tw, 34);
             ctx.fill();
             ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
             ctx.fillText(this._toast, W / 2, H - 53);
+            ctx.textAlign = 'left';
         }
+    }
+
+    _drawEntryDialog(ctx, W, H) {
+        const d = this._entryDialog;
+        const stage = d.stage;
+        ctx.fillStyle = 'rgba(0,0,0,0.62)';
+        ctx.fillRect(0, 0, W, H);
+
+        const bw = Math.min(300, W * 0.82);
+        const showAd = d.canAd === true;
+        const bh = showAd ? 268 : 218;
+        const bx = W / 2 - bw / 2;
+        const by = H / 2 - bh / 2;
+        d.panelRect = { x: bx, y: by, w: bw, h: bh };
+
+        ctx.fillStyle = '#1c2440';
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(bx, by, bw, bh, 14);
+        else ctx.rect(bx, by, bw, bh);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,200,87,0.5)';
+        ctx.stroke();
+
+        // 右上角关闭 ×
+        const closeSize = 36;
+        d.closeRect = {
+            x: bx + bw - closeSize - 4,
+            y: by + 4,
+            w: closeSize,
+            h: closeSize,
+        };
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        ctx.font = 'bold 22px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('×', d.closeRect.x + closeSize / 2, d.closeRect.y + closeSize / 2);
+
+        ctx.fillStyle = ACCENT;
+        ctx.font = 'bold 18px sans-serif';
+        ctx.fillText('进入第 ' + stage.id + ' 关', W / 2, by + 40);
+        ctx.fillStyle = SUBTITLE;
+        ctx.font = '13px sans-serif';
+        ctx.fillText(stage.name + ' · 入场 ' + d.fee + ' 币', W / 2, by + 66);
+
+        const btnW = bw - 40;
+        const btnH = 40;
+        const payY = by + 96;
+        d.payRect = { x: bx + 20, y: payY, w: btnW, h: btnH };
+        d.adRect = null;
+        d.cancelRect = null;
+
+        ctx.fillStyle = '#f0a000';
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(d.payRect.x, d.payRect.y, btnW, btnH, 10);
+        else ctx.rect(d.payRect.x, d.payRect.y, btnW, btnH);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 15px sans-serif';
+        ctx.fillText('花 ' + d.fee + ' 币入场', W / 2, payY + btnH / 2);
+
+        let cancelY = by + 150;
+        if (showAd) {
+            const adY = by + 146;
+            cancelY = by + 200;
+            d.adRect = { x: bx + 20, y: adY, w: btnW, h: btnH };
+            ctx.fillStyle = d.freeLeft > 0 ? '#3a7ab0' : '#444';
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(d.adRect.x, d.adRect.y, btnW, btnH, 10);
+            else ctx.rect(d.adRect.x, d.adRect.y, btnW, btnH);
+            ctx.fill();
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 14px sans-serif';
+            ctx.fillText(
+                '看广告免费（剩 ' + d.freeLeft + ' 次）',
+                W / 2,
+                adY + btnH / 2
+            );
+        }
+
+        d.cancelRect = { x: bx + 20, y: cancelY, w: btnW, h: btnH };
+        ctx.fillStyle = 'rgba(255,255,255,0.12)';
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(d.cancelRect.x, d.cancelRect.y, btnW, btnH, 10);
+        else ctx.rect(d.cancelRect.x, d.cancelRect.y, btnW, btnH);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.75)';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillText('取消', W / 2, cancelY + btnH / 2);
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'alphabetic';
     }
 }
 

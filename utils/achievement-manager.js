@@ -1,44 +1,34 @@
 /**
- * AchievementManager - 成就系统管理器
- * 职责：维护玩家统计进度、检测成就解锁、发放金币奖励、本地持久化
+ * AchievementManager - 进度系 + 社交成就
+ * 条件：通关数 / 章节全通 / 全通 / 解锁数 / 分享 / 邀请 / 挑战发起 / 应战 / 近十局全胜
+ * 奖励：金方块走 goldenBlock.grantAchievementGold；金币走 coinManager.rewardAdBonus
  */
 
 const { getAllAchievements, getAchievementById } = require('../data/achievements');
+const goldenBlock = require('./golden-block-manager');
 
-/** 统计项存储键 */
 const STAT_KEYS = {
-    totalGames: 'gc_stat_total_games',
-    totalScore: 'gc_stat_total_score',
-    bestScore: 'gc_stat_best_score',
-    totalClears: 'gc_stat_total_clears',
-    clear1: 'gc_stat_clear_1',
-    clear2: 'gc_stat_clear_2',
-    clear3: 'gc_stat_clear_3',
-    clear4: 'gc_stat_clear_4',
-    tetrisCount: 'gc_stat_tetris_count',
-    tspinCount: 'gc_stat_tspin_count',
-    tspinDoubleCount: 'gc_stat_tspin_double_count',
-    maxCombo: 'gc_stat_max_combo',
-    maxB2B: 'gc_stat_max_b2b',
-    maxLevel: 'gc_stat_max_level',
-    maxSurvive: 'gc_stat_max_survive',
-    totalCoins: 'gc_stat_total_coins',
     shareCount: 'gc_stat_share_count',
-    rankEnters: 'gc_stat_rank_enters',
-    bestRank: 'gc_stat_best_rank',
     inviteCount: 'gc_stat_invite_count',
-    useAllPieces: 'gc_stat_use_all_pieces',
+    challengeCreateCount: 'gc_stat_challenge_create',
+    challengeRespondCount: 'gc_stat_challenge_respond',
+    // 保留旧键以免残留代码报错
+    totalGames: 'gc_stat_total_games',
+    totalClears: 'gc_stat_total_clears',
+    totalCoins: 'gc_stat_total_coins',
 };
 
 const UNLOCKED_KEY = 'gc_unlockedAchievements';
 const LAST_NEW_KEY = 'gc_lastNewAchievements';
+/** 最近挑战/应战结果（最多保留 20，判定取末尾 10） */
+const CHALLENGE_RESULTS_KEY = 'gc_challenge_match_results';
+const CHALLENGE_RESULTS_MAX = 20;
 
 class AchievementManager {
     constructor() {
         this._unlocked = [];
     }
 
-    /** 加载已解锁成就列表 */
     init() {
         try {
             this._unlocked = wx.getStorageSync(UNLOCKED_KEY) || [];
@@ -67,87 +57,144 @@ class AchievementManager {
     addStat(key, delta) {
         const v = this.getStat(key) + (delta || 0);
         try {
-            wx.setStorageSync(STAT_KEYS[key], v);
-        } catch (e) {
-            // 忽略存储异常
-        }
+            if (STAT_KEYS[key]) wx.setStorageSync(STAT_KEYS[key], v);
+        } catch (e) { /* ignore */ }
         return v;
     }
 
     setStat(key, value) {
         try {
-            wx.setStorageSync(STAT_KEYS[key], value);
-        } catch (e) {
-            // 忽略存储异常
-        }
+            if (STAT_KEYS[key]) wx.setStorageSync(STAT_KEYS[key], value);
+        } catch (e) { /* ignore */ }
         return value;
     }
 
-    /** 上报一局游戏结果 */
-    reportGameResult(result) {
-        const stats = result.stats || {};
-        this.addStat('totalGames', 1);
-        this.addStat('totalScore', result.score || 0);
-        if ((result.score || 0) > this.getStat('bestScore')) {
-            this.setStat('bestScore', result.score || 0);
-        }
-        this.addStat('totalClears', result.lines || 0);
-        this.addStat('tetrisCount', stats.tetrisCount || 0);
-        if ((stats.maxCombo || 0) > this.getStat('maxCombo')) {
-            this.setStat('maxCombo', stats.maxCombo || 0);
-        }
-        if ((stats.b2bCount || 0) > this.getStat('maxB2B')) {
-            this.setStat('maxB2B', stats.b2bCount || 0);
-        }
-        if ((result.level || 1) > this.getStat('maxLevel')) {
-            this.setStat('maxLevel', result.level || 1);
-        }
-        if ((result.duration || 0) > this.getStat('maxSurvive')) {
-            this.setStat('maxSurvive', Math.floor(result.duration || 0));
-        }
+    /** 闯关通关后调用：刷新进度成就 */
+    reportStageProgress() {
         return this.checkAll();
     }
 
-    /** 上报单次消行（按行数计数） */
-    reportLineClear(count) {
-        const key = 'clear' + Math.max(1, Math.min(4, count));
-        this.addStat(key, 1);
+    /** 兼容旧局末上报（经典模式遗留）；闯关请用 reportStageProgress */
+    reportGameResult() {
         return this.checkAll();
     }
 
-    /** 上报 T-Spin 消行 */
-    reportTSpin(lines) {
-        this.addStat('tspinCount', 1);
-        if (lines >= 2) this.addStat('tspinDoubleCount', 1);
-        return this.checkAll();
-    }
-
-    /** 上报单局使用全部 7 种方块 */
-    reportUseAllPieces() {
-        this.setStat('useAllPieces', 1);
-        return this.checkAll();
-    }
+    reportLineClear() { return []; }
+    reportTSpin() { return []; }
+    reportUseAllPieces() { return []; }
 
     reportShare() {
         this.addStat('shareCount', 1);
         return this.checkAll();
     }
 
-    reportRankEnter(rank) {
-        this.addStat('rankEnters', 1);
-        const best = this.getStat('bestRank');
-        if (rank && rank > 0 && (best === 0 || rank < best)) {
-            this.setStat('bestRank', rank);
-        }
-        return this.checkAll();
-    }
+    reportRankEnter() { return []; }
 
     reportInvite() {
         this.addStat('inviteCount', 1);
         return this.checkAll();
     }
 
-    /** 遍历所有成就，解锁满足条件的项，返回本次新解锁列表 */
+    /** 成功创建一条好友挑战（发起） */
+    reportChallengeCreate() {
+        this.addStat('challengeCreateCount', 1);
+        return this.checkAll();
+    }
+
+    /**
+     * 成功应战写回
+     * @param {string} result challenger_win | responder_win | tie
+     * @param {object} [meta]
+     */
+    reportChallengeRespond(result, meta) {
+        this.addStat('challengeRespondCount', 1);
+        const challengeId = meta && meta.challengeId ? String(meta.challengeId) : '';
+        this._pushMatchResult({
+            id: challengeId || ('respond_' + Date.now()),
+            role: 'responder',
+            won: result === 'responder_win',
+            ts: Date.now(),
+        });
+        return this.checkAll();
+    }
+
+    /**
+     * 用云端「已完成」列表同步近局胜负（补齐作为发起方的结果）
+     * @param {Array} completedList getMyChallenges().completed
+     */
+    syncCompletedChallenges(completedList) {
+        if (!Array.isArray(completedList) || completedList.length === 0) return [];
+        let hist = this._getMatchResults();
+        const byId = {};
+        hist.forEach((r) => { if (r && r.id) byId[r.id] = r; });
+
+        const sorted = completedList.slice().sort((a, b) => {
+            const ta = Number(a && (a.completedAt || a.updatedAt || a.createdAt)) || 0;
+            const tb = Number(b && (b.completedAt || b.updatedAt || b.createdAt)) || 0;
+            return ta - tb;
+        });
+
+        for (const item of sorted) {
+            if (!item || !item.challengeId) continue;
+            const id = String(item.challengeId);
+            const role = item.myRole === 'responder' ? 'responder' : 'challenger';
+            const result = item.result;
+            let won = false;
+            if (role === 'challenger') won = result === 'challenger_win';
+            else won = result === 'responder_win';
+            const ts = Number(item.completedAt || item.updatedAt || item.createdAt) || Date.now();
+            byId[id] = { id, role, won: !!won, ts };
+        }
+
+        hist = Object.keys(byId).map((k) => byId[k])
+            .sort((a, b) => (a.ts || 0) - (b.ts || 0));
+        if (hist.length > CHALLENGE_RESULTS_MAX) {
+            hist = hist.slice(hist.length - CHALLENGE_RESULTS_MAX);
+        }
+        this._saveMatchResults(hist);
+        return this.checkAll();
+    }
+
+    _getMatchResults() {
+        try {
+            const raw = wx.getStorageSync(CHALLENGE_RESULTS_KEY) || [];
+            return Array.isArray(raw) ? raw : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    _saveMatchResults(list) {
+        try {
+            wx.setStorageSync(CHALLENGE_RESULTS_KEY, list);
+        } catch (e) { /* ignore */ }
+    }
+
+    _pushMatchResult(entry) {
+        if (!entry || !entry.id) return;
+        let hist = this._getMatchResults().filter((r) => r && r.id !== entry.id);
+        hist.push({
+            id: String(entry.id),
+            role: entry.role || '',
+            won: !!entry.won,
+            ts: entry.ts || Date.now(),
+        });
+        if (hist.length > CHALLENGE_RESULTS_MAX) {
+            hist = hist.slice(hist.length - CHALLENGE_RESULTS_MAX);
+        }
+        this._saveMatchResults(hist);
+    }
+
+    _last10Matches() {
+        const hist = this._getMatchResults();
+        return hist.slice(Math.max(0, hist.length - 10));
+    }
+
+    _isLast10AllWin() {
+        const last = this._last10Matches();
+        return last.length >= 10 && last.every((r) => r && r.won);
+    }
+
     checkAll() {
         this.init();
         const all = getAllAchievements();
@@ -161,61 +208,48 @@ class AchievementManager {
         if (newly.length > 0) {
             try {
                 wx.setStorageSync(LAST_NEW_KEY, newly.map((a) => a.id));
-            } catch (e) {
-                // 忽略存储异常
-            }
+            } catch (e) { /* ignore */ }
         }
         return newly;
     }
 
-    /** 判断单个成就是否满足条件 */
+    _countUnlockedStages() {
+        return goldenBlock.getStages().filter((s) => goldenBlock.isUnlocked(s.id)).length;
+    }
+
+    _isChapterCleared(chapterId) {
+        const stages = goldenBlock.getStagesByChapter(chapterId);
+        return stages.length > 0 && stages.every((s) => goldenBlock.isCleared(s.id));
+    }
+
     _evaluate(a) {
         const c = a.condition;
         if (!c) return false;
         switch (c.type) {
-            case 'single_clear':
-                return this.getStat('totalClears') >= (c.count || 1);
-            case 'multi_clear': {
-                const key = 'clear' + Math.max(1, Math.min(4, c.lines || 1));
-                return this.getStat(key) >= (c.count || 1);
-            }
-            case 'single_score':
-                return this.getStat('bestScore') >= (c.score || 0);
-            case 'total_games':
-                return this.getStat('totalGames') >= (c.count || 0);
-            case 'total_clears':
-                return this.getStat('totalClears') >= (c.count || 0);
-            case 'survive_time':
-                return this.getStat('maxSurvive') >= (c.seconds || 0);
-            case 'tspin_clear':
-                if (c.lines >= 2) return this.getStat('tspinDoubleCount') >= (c.count || 1);
-                return this.getStat('tspinCount') >= (c.count || 1);
-            case 'back_to_back':
-                return this.getStat('maxB2B') >= (c.count || 0);
-            case 'combo':
-                return this.getStat('maxCombo') >= (c.count || 0);
-            case 'max_level':
-                return this.getStat('maxLevel') >= (c.level || 0);
-            case 'use_all_pieces':
-                return this.getStat('useAllPieces') >= 1;
-            case 'total_coins':
-                return this.getStat('totalCoins') >= (c.count || 0);
+            case 'stage_clear_count':
+                return goldenBlock.getClearedCount() >= (c.count || 0);
+            case 'chapter_clear':
+                return this._isChapterCleared(c.chapterId);
+            case 'all_stages_clear':
+                return goldenBlock.getClearedCount() >= goldenBlock.getTotalStageCount()
+                    && goldenBlock.getTotalStageCount() > 0;
+            case 'unlock_count':
+                return this._countUnlockedStages() >= (c.count || 0);
             case 'share':
-                return this.getStat('shareCount') >= (c.count || 0);
-            case 'enter_rank':
-                return this.getStat('rankEnters') >= (c.count || 0);
-            case 'rank_top': {
-                const best = this.getStat('bestRank');
-                return best > 0 && best <= (c.rank || 0);
-            }
+                return this.getStat('shareCount') >= (c.count || 1);
             case 'invite_friend':
-                return this.getStat('inviteCount') >= (c.count || 0);
+                return this.getStat('inviteCount') >= (c.count || 1);
+            case 'challenge_create':
+                return this.getStat('challengeCreateCount') >= (c.count || 1);
+            case 'challenge_respond':
+                return this.getStat('challengeRespondCount') >= (c.count || 1);
+            case 'challenge_last10_all_win':
+                return this._isLast10AllWin();
             default:
                 return false;
         }
     }
 
-    /** 解锁成就并发放金币奖励 */
     unlock(id) {
         if (this.isUnlocked(id)) return false;
         const a = getAchievementById(id);
@@ -223,76 +257,72 @@ class AchievementManager {
         this._unlocked.push(id);
         try {
             wx.setStorageSync(UNLOCKED_KEY, this._unlocked);
-        } catch (e) {
-            // 忽略存储异常
+        } catch (e) { /* ignore */ }
+
+        const gold = Number(a.rewardGold) || 0;
+        if (gold > 0) {
+            goldenBlock.grantAchievementGold(gold);
         }
-        if (a.reward) {
-            const coins = wx.getStorageSync('gc_coins') || 0;
-            wx.setStorageSync('gc_coins', coins + a.reward);
-            this.addStat('totalCoins', a.reward);
+        const coins = Number(a.rewardCoins) || Number(a.reward) || 0;
+        if (coins > 0) {
+            try {
+                const { coinManager } = require('./coin-manager');
+                coinManager.rewardAdBonus(coins);
+            } catch (e) { /* ignore */ }
         }
         return true;
     }
 
-    /** 获取某成就的进度（用于展示） */
     getProgress(a) {
         const c = a.condition;
         if (!c) return { current: 0, target: 0 };
         switch (c.type) {
-            case 'single_clear':
-                return { current: Math.min(this.getStat('totalClears'), 1), target: 1 };
-            case 'multi_clear': {
-                const key = 'clear' + Math.max(1, Math.min(4, c.lines || 1));
-                return { current: this.getStat(key), target: c.count || 1 };
-            }
-            case 'single_score':
-                return { current: this.getStat('bestScore'), target: c.score || 0 };
-            case 'total_games':
-                return { current: this.getStat('totalGames'), target: c.count || 0 };
-            case 'total_clears':
-                return { current: this.getStat('totalClears'), target: c.count || 0 };
-            case 'survive_time':
-                return { current: this.getStat('maxSurvive'), target: c.seconds || 0 };
-            case 'tspin_clear':
-                if (c.lines >= 2) return { current: this.getStat('tspinDoubleCount'), target: c.count || 1 };
-                return { current: this.getStat('tspinCount'), target: c.count || 1 };
-            case 'back_to_back':
-                return { current: this.getStat('maxB2B'), target: c.count || 0 };
-            case 'combo':
-                return { current: this.getStat('maxCombo'), target: c.count || 0 };
-            case 'max_level':
-                return { current: this.getStat('maxLevel'), target: c.level || 0 };
-            case 'use_all_pieces':
-                return { current: Math.min(this.getStat('useAllPieces'), 1), target: 1 };
-            case 'total_coins':
-                return { current: this.getStat('totalCoins'), target: c.count || 0 };
+            case 'stage_clear_count':
+                return { current: goldenBlock.getClearedCount(), target: c.count || 0 };
+            case 'chapter_clear':
+                return {
+                    current: this._isChapterCleared(c.chapterId) ? 1 : 0,
+                    target: 1,
+                };
+            case 'all_stages_clear':
+                return {
+                    current: goldenBlock.getClearedCount(),
+                    target: goldenBlock.getTotalStageCount(),
+                };
+            case 'unlock_count':
+                return { current: this._countUnlockedStages(), target: c.count || 0 };
             case 'share':
-                return { current: this.getStat('shareCount'), target: c.count || 0 };
-            case 'enter_rank':
-                return { current: this.getStat('rankEnters'), target: c.count || 0 };
-            case 'rank_top':
-                return { current: this.getStat('bestRank') || '-', target: c.rank || 0 };
+                return { current: this.getStat('shareCount'), target: c.count || 1 };
             case 'invite_friend':
-                return { current: this.getStat('inviteCount'), target: c.count || 0 };
+                return { current: this.getStat('inviteCount'), target: c.count || 1 };
+            case 'challenge_create':
+                return { current: this.getStat('challengeCreateCount'), target: c.count || 1 };
+            case 'challenge_respond':
+                return { current: this.getStat('challengeRespondCount'), target: c.count || 1 };
+            case 'challenge_last10_all_win': {
+                const last = this._last10Matches();
+                const wins = last.filter((r) => r && r.won).length;
+                return { current: wins, target: c.count || 10 };
+            }
             default:
                 return { current: 0, target: 0 };
         }
     }
 
-    /** 读取并清空上次新解锁成就记录（结算页展示用） */
     consumeLastNew() {
-        let ids = [];
         try {
-            ids = wx.getStorageSync(LAST_NEW_KEY) || [];
+            const ids = wx.getStorageSync(LAST_NEW_KEY) || [];
             wx.removeStorageSync(LAST_NEW_KEY);
+            return ids;
         } catch (e) {
-            ids = [];
+            return [];
         }
-        return ids;
     }
 }
 
-/** 全局单例 */
 const achievementManager = new AchievementManager();
+achievementManager.init();
 
-module.exports = { AchievementManager, achievementManager };
+module.exports = {
+    achievementManager,
+};

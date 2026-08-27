@@ -39,14 +39,18 @@ function onStart() {
     const dpr = info.pixelRatio;
 
     // 设置 Canvas 物理尺寸（适配高清屏）
-    canvas.width = info.windowWidth * dpr;
-    canvas.height = info.windowHeight * dpr;
+    // 窗口尺寸 windowWidth/windowHeight 在显示状态栏时会排除顶部区域，改用整块屏幕尺寸（screen* 优先，回退 window*）
+    const fullW = info.screenWidth || info.windowWidth;
+    const fullH = info.screenHeight || info.windowHeight;
+    canvas.width = fullW * dpr;
+    canvas.height = fullH * dpr;
     ctx.scale(dpr, dpr);
     // 记录逻辑尺寸
     GameGlobal.game.canvas = canvas;
     GameGlobal.game.ctx = ctx;
-    GameGlobal.game.width = info.windowWidth;
-    GameGlobal.game.height = info.windowHeight;
+    GameGlobal.game.width = fullW;
+    GameGlobal.game.height = fullH;
+    GameGlobal.game.systemInfo = info;
     GameGlobal.game.systemInfo = info;
 
     // 全屏沉浸：隐藏「回到首页」圆形胶囊按钮（基础库 2.16+），并把「···」菜单胶囊设为白色融入深色背景
@@ -65,9 +69,9 @@ function onStart() {
         if (typeof wx.onWindowResize === 'function') {
             wx.onWindowResize(function (res) {
                 const size = res && res.size;
-                if (!size || !size.windowWidth || !size.windowHeight) return;
-                const w = size.windowWidth;
-                const h = size.windowHeight;
+                const w = size && (size.screenWidth || size.windowWidth);
+                const h = size && (size.screenHeight || size.windowHeight);
+                if (!w || !h) return;
                 const sys = GameGlobal.game.systemInfo || {};
                 const newDpr = Number(sys.pixelRatio) || GameGlobal.game.dpr || 1;
                 canvas.width = Math.round(w * newDpr);
@@ -121,6 +125,9 @@ function onStart() {
     const ReplayScene = require('./js/scenes/replay-scene');
     const StageSelectScene = require('./js/scenes/stage-select-scene');
     const StageResultScene = require('./js/scenes/stage-result-scene');
+    const WorkshopScene = require('./js/scenes/workshop-scene');
+    const WorkshopEditorScene = require('./js/scenes/workshop-editor-scene');
+    const WorkshopResultScene = require('./js/scenes/workshop-result-scene');
     GameGlobal.game.sceneManager.register('home', HomeScene);
     GameGlobal.game.sceneManager.register('game', GameScene);
     GameGlobal.game.sceneManager.register('result', ResultScene);
@@ -133,7 +140,10 @@ function onStart() {
     GameGlobal.game.sceneManager.register('replay', ReplayScene);
     GameGlobal.game.sceneManager.register('stageSelect', StageSelectScene);
     GameGlobal.game.sceneManager.register('stageResult', StageResultScene);
-    // 冷启动：直接进入关卡选择（挖个方块无四模式首页）；若带挑战分享卡再按身份分流
+    GameGlobal.game.sceneManager.register('workshop', WorkshopScene);
+    GameGlobal.game.sceneManager.register('workshopEditor', WorkshopEditorScene);
+    GameGlobal.game.sceneManager.register('workshopResult', WorkshopResultScene);
+    // 冷启动：进入首页 Hub（闯关/排行/成就/商店/设置入口）；若带挑战分享卡再按身份分流
     let launchQuery = null;
     try {
         const _launch = wx.getLaunchOptionsSync ? wx.getLaunchOptionsSync() : null;
@@ -143,7 +153,7 @@ function onStart() {
     } catch (e) {
         console.warn('[Game] 读取启动参数失败', e);
     }
-    GameGlobal.game.sceneManager.switchTo('stageSelect');
+    GameGlobal.game.sceneManager.switchTo('home');
     if (launchQuery) {
         _handleShareChallengeEntry(launchQuery, { fromLaunch: true });
     }
@@ -154,7 +164,7 @@ function onStart() {
     GameGlobal.game._lastTime = Date.now();
     _loop();
 
-    console.log('[Game] 方块过把瘾启动完成', {
+    console.log('[Game] 挖个方块启动完成', {
         width: info.windowWidth,
         height: info.windowHeight,
         dpr: dpr,
@@ -403,6 +413,24 @@ function _promptAcceptChallenge(query, challenge, reg) {
     }
 }
 
+/*** 将窗口空间触摸坐标换算为画布逻辑坐标
+ * 画布按整屏（screenWidth/screenHeight）布局，而 clientX/clientY 按窗口空间给出；
+ * 状态栏可见时 window* 会小于 screen*，需补齐偏移。全屏时偏移为 0，行为不变。
+ */
+function _toCanvasXY(clientX, clientY) {
+    const sys = (GameGlobal.game && GameGlobal.game.systemInfo) || {};
+    const screenW = Number(sys.screenWidth);
+    const windowW = Number(sys.windowWidth);
+    const screenH = Number(sys.screenHeight);
+    const windowH = Number(sys.windowHeight);
+    const offX = Math.max(0, screenW - windowW);
+    const offY = Math.max(0, screenH - windowH);
+    return {
+        x: Number(clientX) + offX,
+        y: Number(clientY) + offY,
+    };
+}
+
 // 监听小游戏生命周期
 wx.onTouchStart(function (e) {
     // 首次用户交互时初始化音频并启动 BGM（满足自动播放策略）
@@ -427,7 +455,8 @@ wx.onTouchStart(function (e) {
         if (touches) {
             for (let i = 0; i < touches.length; i++) {
                 const t = touches[i];
-                sm.current.handleTouchStart(t.identifier, t.clientX, t.clientY);
+                const p = _toCanvasXY(t.clientX, t.clientY);
+                sm.current.handleTouchStart(t.identifier, p.x, p.y);
             }
         }
     }
@@ -445,7 +474,8 @@ wx.onTouchMove(function (e) {
         if (touches) {
             for (let i = 0; i < touches.length; i++) {
                 const t = touches[i];
-                sm.current.handleTouchMove(t.identifier, t.clientX, t.clientY);
+                const p = _toCanvasXY(t.clientX, t.clientY);
+                sm.current.handleTouchMove(t.identifier, p.x, p.y);
             }
         }
     }
@@ -470,8 +500,9 @@ wx.onTouchEnd(function (e) {
         // 如果没有 handleTouchStart 被调用过（非 DPad 区域），走 tap 逻辑
         if (changedTouches && changedTouches.length > 0 && sm.current.handleTap) {
             const t = changedTouches[0];
-            const x = t.clientX;
-            const y = t.clientY;
+            const p = _toCanvasXY(t.clientX, t.clientY);
+            const x = p.x;
+            const y = p.y;
             // 资料授权弹窗：暂不授权走 canvas；去授权由原生 UserInfoButton 承接
             try {
                 const {

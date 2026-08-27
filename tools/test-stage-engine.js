@@ -5,7 +5,7 @@
  * 覆盖：
  *  A. 关卡数据一致性：每关 garbageCount / minLines 与布局统计一致（t6 断言）
  *  B. 经典模式不回归：消行后上方整体下沉 1 格
- *  C. 闯关消行（方案 B）：垃圾格清除、上方垃圾不下沉、玩家块按重力塌缩（垃圾为屏障）
+ *  C. 闯关消行（方案 B）：满行清空；非垃圾塌陷；垃圾屏障不移动；塌陷后连锁
  *  D. 过关判定：垃圾清零触发 onGameOver reason='stageClear'
  *  E. revive：闯关模式复活不误删垃圾格
  *  F. stage 模式速度固定（不按消行升级）
@@ -76,18 +76,16 @@ test('classic 消行后上方整体下沉 1 格', () => {
 });
 
 // ---------------------------------------------------------------------------
-console.log('C. 闯关消行（方案 B）');
-test('stage 消行：满行垃圾格被清除，上方垃圾不下沉', () => {
+console.log('C. 闯关消行（方案 B：非垃圾塌陷）');
+test('stage 消行：满行垃圾格被清除，上方垃圾保持原位', () => {
     const { eng } = makeStageEngine({});
     const r21 = 21;
     const r20 = 20;
-    // 底部 r21：垃圾 col5；r20 col0：垃圾（不在满行，必须保持原位）
     eng._board[r21][5] = GARBAGE;
     eng._garbageMask[r21][5] = true;
     eng._garbageRemaining = 2;
     eng._board[r20][0] = GARBAGE;
     eng._garbageMask[r20][0] = true;
-    // 填满 r21（col5 已是垃圾）
     for (let c = 0; c < BOARD_COLS; c++) {
         if (c === 5) continue;
         eng._board[r21][c] = 1;
@@ -96,24 +94,21 @@ test('stage 消行：满行垃圾格被清除，上方垃圾不下沉', () => {
     assert.strictEqual(result.cleared, 1);
     assert.strictEqual(eng._board[r21][5], 0, '满行垃圾格被清除');
     assert.strictEqual(eng._garbageRemaining, 1, '剩余垃圾 = r20 col0');
-    assert.strictEqual(eng._board[r20][0], GARBAGE, '上方垃圾不下沉（r20 保持垃圾）');
+    assert.strictEqual(eng._board[r20][0], GARBAGE, '上方垃圾保持原位');
 });
 
-test('stage 消行：玩家块塌缩到垃圾屏障上方，垃圾保持原位', () => {
+test('stage 消行：玩家块塌陷到垃圾屏障上方', () => {
     const { eng } = makeStageEngine({});
     const r21 = 21;
     const r20 = 20;
     const r19 = 19;
     const r18 = 18;
-    // 底部 r21：垃圾 col5（将被清除）；r20 col0：垃圾屏障（保持原位）
     eng._board[r21][5] = GARBAGE;
     eng._garbageMask[r21][5] = true;
     eng._garbageRemaining = 2;
     eng._board[r20][0] = GARBAGE;
     eng._garbageMask[r20][0] = true;
-    // 玩家块在 r18 col0（垃圾屏障上方 2 格）
     eng._board[r18][0] = 1;
-    // 填满 r21 其余
     for (let c = 0; c < BOARD_COLS; c++) {
         if (c === 5) continue;
         eng._board[r21][c] = 1;
@@ -121,29 +116,45 @@ test('stage 消行：玩家块塌缩到垃圾屏障上方，垃圾保持原位',
     const result = eng._checkLines();
     assert.strictEqual(result.cleared, 1);
     assert.strictEqual(eng._board[r21][5], 0, '满行垃圾被清除');
-    assert.strictEqual(eng._garbageRemaining, 1, '剩余垃圾 = r20 col0');
+    assert.strictEqual(eng._garbageRemaining, 1);
     assert.strictEqual(eng._board[r20][0], GARBAGE, '垃圾屏障保持原位');
-    assert.strictEqual(eng._board[r19][0], 1, '玩家块塌缩到垃圾屏障上方 r19');
+    assert.strictEqual(eng._board[r19][0], 1, '玩家块塌陷到屏障上方 r19');
     assert.strictEqual(eng._board[r18][0], 0);
 });
 
-test('stage 消行：玩家块无垃圾屏障时塌缩到底部', () => {
+test('stage 消行：无垃圾屏障时玩家块塌陷到底部', () => {
     const { eng } = makeStageEngine({});
     const r21 = 21;
     const r19 = 19;
-    // 底部 r21：垃圾 col5（将被清除）
     eng._board[r21][5] = GARBAGE;
     eng._garbageMask[r21][5] = true;
     eng._garbageRemaining = 1;
-    // 玩家块在 r19 col0（该列无垃圾屏障）
     eng._board[r19][0] = 1;
     for (let c = 0; c < BOARD_COLS; c++) {
         if (c === 5) continue;
         eng._board[r21][c] = 1;
     }
     eng._checkLines();
-    assert.strictEqual(eng._board[r21][0], 1, '玩家块塌缩到底部 r21');
+    assert.strictEqual(eng._board[r21][0], 1, '玩家块塌陷到底部 r21');
     assert.strictEqual(eng._board[r19][0], 0);
+});
+
+test('stage 消行：塌陷后新满行立即连锁清除', () => {
+    const { eng } = makeStageEngine({});
+    const r21 = 21;
+    const r20 = 20;
+    const r19 = 19;
+    for (let c = 1; c < BOARD_COLS; c++) {
+        eng._board[r21][c] = 1;
+    }
+    for (let c = 0; c < BOARD_COLS; c++) {
+        eng._board[r20][c] = 2;
+    }
+    eng._board[r19][0] = 3;
+    const result = eng._checkLines();
+    assert.strictEqual(result.cleared, 2, '应连锁清除 2 行');
+    assert.ok(eng._board[r21].every((cell) => cell === 0), '连锁后 r21 应清空');
+    assert.ok(eng._board[r20].every((cell) => cell === 0), '连锁后 r20 应清空');
 });
 
 // ---------------------------------------------------------------------------

@@ -1,0 +1,14 @@
+{
+	"id": "354ec265-974d-4c16-a577-aca38c339dd8",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "b27ae425-bbac-476e-8057-e71ba5c730d7",
+	"toNodeId": "9d563c68-fe03-423a-bb21-c058dd8b3a15",
+	"type": "transitionsTo",
+	"verificationStatus": "verified",
+	"evidenceIds": [
+		"game.js: 冷启动 replace('home') 进入首页"
+	],
+	"createdByTaskId": "request_a2195155-87f9-4ebf-a6ab-ad3a57c0989e",
+	"createdAt": 1787809299314,
+	"updatedAt": 1787809299314
+}

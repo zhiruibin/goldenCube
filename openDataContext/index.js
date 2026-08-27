@@ -32,7 +32,7 @@ const FOOTER_H = 30;
 const PADDING_X = 12;
 const MEDAL_COLORS = ['#ffd700', '#c0c0c0', '#cd7f32'];
 
-let mode = 'classic';
+let mode = 'stage';
 /** 好友榜在主屏的逻辑位置与尺寸（由主域传入，屏幕逻辑坐标） */
 let x0 = 0;
 let y0 = 0;
@@ -338,11 +338,13 @@ function draw() {
         const nameMax = scoreRight - nameX - 16;
         _fillClippedText(item.nickname, nameX, y + ITEM_H / 2 - 1, nameMax);
 
-        // 分数
+        // 通关数（好友 KV 存复合编码分）
+        const CLEARED_MUL = 1e10;
+        const cleared = Math.floor(Math.max(0, Number(item.score) || 0) / CLEARED_MUL);
         ctx.textAlign = 'right';
         ctx.fillStyle = '#FFC857';
         ctx.font = 'bold 16px sans-serif';
-        ctx.fillText(String(item.score), scoreRight, y + ITEM_H / 2 - 1);
+        ctx.fillText(cleared + ' 关', scoreRight, y + ITEM_H / 2 - 1);
     }
 
     // 底部粘性：「距上一名还差」
@@ -374,12 +376,14 @@ function _drawGapFooter() {
         if (myIdx === 0) {
             tip = '当前第一 · 继续保持';
         } else if (myIdx > 0) {
-            const gap = rankList[myIdx - 1].score - rankList[myIdx].score;
-            tip = gap > 0
-                ? ('距上一名还差 ' + gap + ' 分')
-                : '与上一名同分 · 再冲一把';
+            const MUL = 1e10;
+            const ahead = Math.floor(rankList[myIdx - 1].score / MUL);
+            const mine = Math.floor(rankList[myIdx].score / MUL);
+            tip = ahead > mine
+                ? ('距上一名还差 ' + (ahead - mine) + ' 关')
+                : '同关数 · 比消行效率';
         } else {
-            tip = '还没上榜 · 去打一局吧';
+            tip = '还没上榜 · 去通关吧';
         }
     }
 
@@ -462,7 +466,7 @@ wx.onMessage((msg) => {
     switch (msg.action) {
         case 'init':
         case 'render': {
-            const nextMode = msg.mode || 'classic';
+            const nextMode = msg.mode || 'stage';
             const modeChanged = nextMode !== mode;
 
             // 列表在主屏的逻辑位置与尺寸（屏幕逻辑坐标）
@@ -491,7 +495,7 @@ wx.onMessage((msg) => {
 
 
         case 'submitScore':
-            submitScore(msg.mode || 'classic', msg.score || 0);
+            submitScore(msg.mode || 'stage', msg.score || 0);
             break;
 
         case 'touchStart':
@@ -525,7 +529,7 @@ wx.onMessage((msg) => {
             break;
 
         case 'reset':
-            mode = msg.mode || 'classic';
+            mode = msg.mode || 'stage';
             scrollY = 0;
             loadRank();
             break;

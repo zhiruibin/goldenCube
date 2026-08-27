@@ -1,0 +1,13 @@
+{
+	"id": "57e579e7-906d-4e40-a7f3-e8e101e830b4",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "b27ae425-bbac-476e-8057-e71ba5c730d7",
+	"operation": "create",
+	"before": "冷启动进入关卡选择页（stageSelect）",
+	"after": "冷启动进入首页 Hub（home），首页作为入口；分享卡分流仍可 replace('home') 进入首页",
+	"taskId": "request_a2195155-87f9-4ebf-a6ab-ad3a57c0989e",
+	"evidenceIds": [
+		"方案 A 已全部实施完成：3 个文件共 13 处修改成功应用"
+	],
+	"createdAt": 1787809299314
+}
