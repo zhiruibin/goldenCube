@@ -121,7 +121,6 @@ class GameScene {
             origin: this._authorTrial ? 'workshop' : 'plaza',
         };
         this._stageFailRefunded = false;
-        this._stageFailRefund = 0;
         this._stageSettleLocked = false;
         this._pieceCount = 0;
         this._stageStartTime = Date.now();
@@ -224,6 +223,7 @@ class GameScene {
         this._stageIntroGap = 0.08;
         this._stageIntroPhase = 'idle'; // idle | dropping | settle
         this._stageIntroSettleLeft = 0;
+        this._collapseHintLeft = 0;
 
         this._calculateLayout();
         // 每局生成随机种子，供引擎 PRNG 与回放录制使用
@@ -324,7 +324,15 @@ class GameScene {
     }
 
     update(dt) {
-        if (this._paused) return;
+        // 塌陷结算必须继续推进：若仅因暂停冻住 update，会停在「无当前方块」状态
+        if (this._paused) {
+            if (this._engine && this._engine.isStageSettling && this._engine.isStageSettling()) {
+                this._engine.update(dt);
+                if (this._effectRenderer) this._effectRenderer.update(dt);
+                if (this._boardRenderer) this._boardRenderer.update(dt);
+            }
+            return;
+        }
 
         // 关卡垃圾开场掉落（阻塞开局，但继续刷特效）
         if (this._stageIntroActive) {
@@ -339,6 +347,10 @@ class GameScene {
 
         if (this._engine) {
             this._engine.update(dt);
+
+            if (this._collapseHintLeft > 0) {
+                this._collapseHintLeft = Math.max(0, this._collapseHintLeft - dt);
+            }
 
             // 成就统计：累计存活时长（survive_time 成就）
             if (this._engine.getState() === 'playing') {
@@ -504,7 +516,13 @@ class GameScene {
 
         // 渲染棋盘
         if (this._boardRenderer) {
-            this._boardRenderer.render(ctx, this._engine.getVisibleBoard());
+            const board = (this._engine.getVisibleBoardForRender && this._engine.getVisibleBoardForRender())
+                || this._engine.getVisibleBoard();
+            this._boardRenderer.render(ctx, board);
+            const fallOverlay = this._engine.getStageFallOverlay && this._engine.getStageFallOverlay();
+            if (fallOverlay && fallOverlay.length) {
+                this._boardRenderer.renderOverlayCells(ctx, fallOverlay);
+            }
         }
 
         // 渲染 Ghost Piece
@@ -567,6 +585,7 @@ class GameScene {
         if (this._confettiFx && this._confettiFx.isActive()) {
             this._confettiFx.render(ctx);
         }
+        this._renderCollapseHint(ctx);
 
         // 结束震屏位移
         if (shake) {
@@ -664,11 +683,61 @@ class GameScene {
         }
     }
 
+    _maybeShowCollapseHint() {
+        try {
+            if (wx.getStorageSync('gc_collapse_hint_shown')) return;
+            wx.setStorageSync('gc_collapse_hint_shown', true);
+        } catch (e) {
+            return;
+        }
+        this._collapseHintLeft = 2.8;
+    }
+
+    _renderCollapseHint(ctx) {
+        if (this._collapseHintLeft <= 0) return;
+        const W = GameGlobal.game.width;
+        const alpha = Math.min(1, this._collapseHintLeft / 0.4);
+        ctx.save();
+        ctx.globalAlpha = alpha * 0.92;
+        ctx.fillStyle = 'rgba(15, 15, 35, 0.78)';
+        const padX = 18;
+        const text = '悬空方块会落入垃圾上方';
+        ctx.font = '15px sans-serif';
+        const tw = ctx.measureText(text).width;
+        const boxW = tw + padX * 2;
+        const boxH = 36;
+        const bx = (W - boxW) / 2;
+        const by = this._boardY + this._cellSize * 2;
+        ctx.beginPath();
+        const r = 8;
+        ctx.moveTo(bx + r, by);
+        ctx.arcTo(bx + boxW, by, bx + boxW, by + boxH, r);
+        ctx.arcTo(bx + boxW, by + boxH, bx, by + boxH, r);
+        ctx.arcTo(bx, by + boxH, bx, by, r);
+        ctx.arcTo(bx, by, bx + boxW, by, r);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#FFE082';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, W / 2, by + boxH / 2);
+        ctx.restore();
+    }
+
     _bindEngineEvents() {
         this._engine.onGameOver((score, level, lines, reason) => {
             if (this._mode === 'stage') this._stageOverReason = reason;
         });
         this._engine.onStateChange((state) => {
+            if (state === 'settling' && this._mode === 'stage') {
+                this._maybeShowCollapseHint();
+                // 结算期间停止方向键 DAS，避免连发在无方块时空转
+                for (const btn of this._dirButtons) {
+                    if (btn && btn._activeTouchId >= 0 && typeof btn.release === 'function') {
+                        btn.release(btn._activeTouchId);
+                    }
+                }
+            }
             if (state === 'over') {
                 const score = this._engine.getScore();
                 const level = this._engine.getLevel();
@@ -1365,6 +1434,7 @@ class GameScene {
     }
     _togglePause() {
         if (this._stageIntroActive) return;
+        if (this._engine && this._engine.isStageSettling && this._engine.isStageSettling()) return;
         if (this._paused) {
             this._engine.resume();
             this._paused = false;
@@ -1391,6 +1461,7 @@ class GameScene {
      */
     handleTouchStart(touchId, x, y) {
         if (this._stageIntroActive) return;
+        if (this._engine && this._engine.isStageSettling && this._engine.isStageSettling()) return;
         // 摇奖按钮只在 touchEnd→handleTap 响应，按下不切场景，避免同一笔触摸穿透到结算页
         if (this._stageLuckyDraw && this._stageLuckyDraw.isActive()) return;
         if (this._luckyDrawActive) return;
@@ -1457,6 +1528,7 @@ class GameScene {
      * 点击回调（复活弹窗按钮 / 暂停状态下点击恢复）
      */
     handleTap(x, y) {
+        if (this._engine && this._engine.isStageSettling && this._engine.isStageSettling()) return;
         if (this._stageLuckyDraw && this._stageLuckyDraw.isActive()) {
             this._stageLuckyDraw.handleTap(x, y);
             return;
@@ -2010,12 +2082,10 @@ class GameScene {
         }, 700);
     }
 
-    /** 工坊失败：退还开打费 50%；作者试玩按来源返回 */
+    /** 工坊失败：不退开打费；作者试玩按来源返回 */
     _goToWorkshopFail() {
         if (this._audio) this._audio.stopBGM();
-        let refund = 0;
         if (!this._stageFailRefunded && !this._authorTrial) {
-            refund = coinManager.refundEntryFee(this._entryPaid || 0);
             this._stageFailRefunded = true;
             this._entryPaid = 0;
         }
@@ -2025,9 +2095,7 @@ class GameScene {
             });
             return;
         }
-        this._leaveWorkshopOrigin({
-            toast: refund > 0 ? ('失败退还 ' + refund + ' 金币') : '',
-        });
+        this._leaveWorkshopOrigin({});
     }
 
     /** 破个人纪录（非首通）是否应在本局结束后、进结算页前摇奖 */
@@ -2239,17 +2307,14 @@ class GameScene {
         }, 700);
     }
 
-    /** 闯关失败：退还 50% 入场费 → 失败结算页（广告免费重开在结算页） */
+    /** 闯关失败：不退入场费 → 失败结算页（广告免费重开在结算页） */
     _goToStageFail() {
         if (this._stageSettleLocked) return;
         this._stageSettleLocked = true;
         if (this._audio) {
             this._audio.stopBGM();
         }
-        let refund = this._stageFailRefund || 0;
         if (!this._stageFailRefunded) {
-            refund = coinManager.refundEntryFee(this._entryPaid || 0);
-            this._stageFailRefund = refund;
             this._stageFailRefunded = true;
             this._entryPaid = 0;
         }
@@ -2286,7 +2351,6 @@ class GameScene {
                     pieces: this._pieceCount || 0,
                     timeMs,
                     minLines,
-                    refund,
                     reason: this._stageOverReason || 'topOut',
                 },
             }, ['home', 'stageSelect']);
@@ -2387,7 +2451,9 @@ class GameScene {
             this._leaveWorkshopOrigin();
         } else if (this._mode === 'stage') {
             // 栈仅保留首页，关选「返回」回到首页，而不是回到已放弃的对局
-            sm.leaveTo('stageSelect', null, ['home']);
+            sm.leaveTo('stageSelect', {
+                stageId: this._params.stageId,
+            }, ['home']);
         } else {
             sm.leaveTo('home');
         }

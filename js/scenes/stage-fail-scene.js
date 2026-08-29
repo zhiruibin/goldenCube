@@ -1,6 +1,6 @@
 /**
  * StageFailScene - 闯关失败结算
- * 展示本局成绩、入场费退还；支持广告免费重开 / 付费重玩 / 回看 / 返回关选。
+ * 展示本局成绩；支持广告免费重开 / 付费重玩 / 回看 / 返回关选。
  */
 
 const {
@@ -139,7 +139,9 @@ class StageFailScene {
         buttons.push({
             text: '返回关卡选择',
             color: '#333',
-            onClick: () => GameGlobal.game.sceneManager.replace('stageSelect'),
+            onClick: () => GameGlobal.game.sceneManager.leaveTo('stageSelect', {
+                stageId: this._params.stageId,
+            }, ['home']),
         });
 
         const totalH = buttons.length * bh + (buttons.length - 1) * gap;
@@ -246,14 +248,6 @@ class StageFailScene {
                 cx, y
             );
             y += 32;
-
-            const refund = this._result.refund || 0;
-            if (refund > 0) {
-                ctx.fillStyle = ACCENT;
-                ctx.font = 'bold 18px sans-serif';
-                ctx.fillText('入场费退还 ' + refund + ' 金币（50%）', cx, y);
-                y += 28;
-            }
 
             const statsBottom = y + 4;
             const heroTop = statsBottom + 8;

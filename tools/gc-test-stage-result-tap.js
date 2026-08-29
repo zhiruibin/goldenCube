@@ -13,6 +13,9 @@ global.GameGlobal = {
         sceneManager: {
             switchTo(name, params) { replaced = { name, params }; },
             replace(name, params) { replaced = { name, params }; },
+            leaveTo(name, params, stackNames) {
+                replaced = { name, params, stackNames };
+            },
         },
     },
 };
@@ -49,10 +52,12 @@ replaced = null;
 scene.handleTap(0, 0);
 assert(replaced === null, '点击空白不应触发切换');
 
-// 点「返回关卡选择」→ replace stageSelect
+// 点「返回关卡选择」→ leaveTo stageSelect（栈仅 home，并带上 stageId）
 replaced = null;
 const back = scene._buttons[2];
 scene.handleTap(back.x + back.w / 2, back.y + back.h / 2);
 assert(replaced !== null && replaced.name === 'stageSelect', '返回按钮应切到 stageSelect');
+assert(replaced.params && replaced.params.stageId === 1, '应带上本关 stageId');
+assert(Array.isArray(replaced.stackNames) && replaced.stackNames.join() === 'home', '返回栈应仅保留 home');
 
 console.log('PASS: stage-result handleTap 下一关=2 / 空白忽略 / 返回=stageSelect');

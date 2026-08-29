@@ -32,8 +32,18 @@ const GameState = {
     READY: 'ready',
     PLAYING: 'playing',
     PAUSED: 'paused',
+    SETTLING: 'settling',
     OVER: 'over',
 };
+
+/** 闯关塌陷动画时序（毫秒） */
+const STAGE_SETTLE_FLASH_MS = 150;
+const STAGE_SETTLE_FALL_MS_MIN = 150;
+const STAGE_SETTLE_FALL_MS_PER_ROW = 28;
+const STAGE_SETTLE_FALL_MS_MAX = 300;
+const STAGE_SETTLE_CHAIN_GAP_MS = 80;
+/** 塌陷结算超时保护（毫秒），防止动画状态卡死导致无方块可操作 */
+const STAGE_SETTLE_TIMEOUT_MS = 4000;
 
 /** 等级对应的下落间隔（毫秒），索引 = 等级 - 1 */
 const LEVEL_SPEEDS = [
@@ -198,6 +208,8 @@ class TetrisEngine {
         this._garbageMask = null;
         this._garbageRemaining = 0;
         this._stageConfig = null;
+        this._stageSettle = null;
+        this._stageSettleAnim = null;
 
         // 回调
         this._onStateChange = null;
@@ -235,6 +247,8 @@ class TetrisEngine {
         this._garbageMask = this._createEmptyMask();
         this._garbageRemaining = 0;
         this._stageConfig = null;
+        this._stageSettle = null;
+        this._stageSettleAnim = null;
         this._state = GameState.READY;
         this._emit(this._onStateChange, this._state);
     }
@@ -262,9 +276,15 @@ class TetrisEngine {
     resume() {
         if (this._state !== GameState.PAUSED) return;
         this._state = GameState.PLAYING;
-        this._startDropTimer();
-        if (this._inLockDelay && this._currentPiece) {
-            this._startLockTimer();
+        // 容错：暂停期间若丢失当前方块（例如异常中断锁定），恢复时补发
+        if (!this._currentPiece) {
+            this._spawnPiece();
+        }
+        if (this._state === GameState.PLAYING) {
+            this._startDropTimer();
+            if (this._inLockDelay && this._currentPiece) {
+                this._startLockTimer();
+            }
         }
         this._emit(this._onStateChange, this._state);
     }
@@ -398,6 +418,10 @@ class TetrisEngine {
             this._spawnPiece();
         }
         this._canHold = false;
+        // 锁定延迟期间 dropDeadline 已被清零；换块后必须重启下落，否则新块会悬停不动
+        if (this._state === GameState.PLAYING && this._currentPiece) {
+            this._restartDropTimer();
+        }
         this._emit(this._onHoldChange, this.getHoldPiece());
         return true;
     }
@@ -412,6 +436,44 @@ class TetrisEngine {
 
     getVisibleBoard() {
         return this._board.slice(HIDDEN_ROWS);
+    }
+
+    /** 渲染用棋盘：塌陷动画期间隐藏正在下落的格，避免重影 */
+    getVisibleBoardForRender() {
+        const board = this.getVisibleBoard();
+        const anim = this._stageSettleAnim;
+        if (!anim || anim.phase !== 'fall' || !anim.moves || anim.moves.length === 0) {
+            return board;
+        }
+        const copy = board.map(row => row.slice());
+        for (const m of anim.moves) {
+            const vr = m.fromRow - HIDDEN_ROWS;
+            if (vr >= 0 && vr < BOARD_ROWS && copy[vr]) {
+                copy[vr][m.col] = EMPTY;
+            }
+        }
+        return copy;
+    }
+
+    /** 闯关塌陷动画：返回可见坐标下的浮动格（row 可为小数） */
+    getStageFallOverlay() {
+        const anim = this._stageSettleAnim;
+        if (!anim || anim.phase !== 'fall' || !anim.moves || anim.moves.length === 0) {
+            return null;
+        }
+        const t = anim.duration > 0
+            ? Math.min(1, anim.elapsed / anim.duration)
+            : 1;
+        const eased = 1 - (1 - t) * (1 - t);
+        return anim.moves.map(m => ({
+            col: m.col,
+            row: (m.fromRow - HIDDEN_ROWS) + (m.toRow - m.fromRow) * eased,
+            value: m.value,
+        }));
+    }
+
+    isStageSettling() {
+        return this._state === GameState.SETTLING;
     }
 
     getCurrentPiece() {
@@ -465,8 +527,21 @@ class TetrisEngine {
 
     /** 逐帧驱动入口（虚拟时钟驱动）：引擎时间由外部每帧调用 update(dt) 累加，自动下落与锁定延迟通过截止点检查触发 */
     update(dt) {
+        if (this._state === GameState.SETTLING) {
+            this._engineTime += dt * 1000;
+            this._updateStageSettle(dt);
+            return;
+        }
         if (this._state !== GameState.PLAYING) return;
         this._engineTime += dt * 1000;
+        // 容错：对局中无当前方块且不在结算，补发一块（避免 Hold/锁死边界导致永久停表）
+        if (!this._currentPiece) {
+            this._spawnPiece();
+            if (this._state === GameState.PLAYING && this._currentPiece) {
+                this._restartDropTimer();
+            }
+            return;
+        }
         if (this._dropDeadline > 0 && this._engineTime >= this._dropDeadline) {
             this._dropDeadline = 0;
             this._autoDrop();
@@ -476,6 +551,14 @@ class TetrisEngine {
             if (this._state === GameState.PLAYING && this._currentPiece && this._inLockDelay) {
                 this._lockPiece();
             }
+        }
+        // 锁定延迟中但截止点丢失：补启锁定计时，避免方块贴地永不锁定
+        if (this._inLockDelay && this._lockDeadline <= 0 && this._currentPiece) {
+            this._startLockTimer();
+        }
+        // 有方块、非锁定、也无下落截止：补启下落（Hold 旧路径等）
+        if (!this._inLockDelay && this._dropDeadline <= 0 && this._currentPiece) {
+            this._restartDropTimer();
         }
     }
     // ========================================================================
@@ -591,7 +674,6 @@ class TetrisEngine {
                 }
             }
         }
-        const clearResult = this._checkLines();
         const lockedSnap = {
             type: p.type,
             row: p.row,
@@ -599,6 +681,25 @@ class TetrisEngine {
             matrix: SRSRotation.getState(p.type, p.rotation),
             hardDrop: this._lastAction === 'hardDrop',
         };
+
+        this._currentPiece = null;
+        this._inLockDelay = false;
+        this._lockMoves = 0;
+
+        // 闯关：有满行则进入 SETTLING，分波播放消行 + 塌陷动画
+        if (this._mode === 'stage' && this._findFullRows().length > 0) {
+            this._clearTimers();
+            this._stageInitSettle(lockedSnap);
+            this._emit(this._onPieceLock, lockedSnap);
+            this._state = GameState.SETTLING;
+            this._emit(this._onStateChange, this._state);
+            this._stageStartNextWave();
+            return;
+        }
+
+        const clearResult = this._mode === 'stage'
+            ? { cleared: 0, lines: [], visibleRows: [], clearedColors: [], isTetris: false, isDifficult: false }
+            : this._checkLines();
 
         // 先发消行 / 落地反馈（与「方块过把瘾」一致），再处理闯关过关，避免终局跳过特效
         if (clearResult.cleared > 0) {
@@ -632,10 +733,6 @@ class TetrisEngine {
             this._emit(this._onGameOver, this._score, this._level, this._lines, 'stageClear');
             return;
         }
-
-        this._currentPiece = null;
-        this._inLockDelay = false;
-        this._lockMoves = 0;
 
         if (this._state === GameState.PLAYING) {
             this._spawnPiece();
@@ -739,12 +836,7 @@ class TetrisEngine {
         let lastWaveRows = [];
 
         for (let guard = 0; guard < BOARD_ROWS; guard++) {
-            const fullRows = [];
-            for (let r = HIDDEN_ROWS; r < TOTAL_ROWS; r++) {
-                if (this._board[r].every(cell => cell !== EMPTY)) {
-                    fullRows.push(r);
-                }
-            }
+            const fullRows = this._findFullRows();
             if (fullRows.length === 0) break;
 
             for (let i = 0; i < fullRows.length; i++) {
@@ -754,7 +846,8 @@ class TetrisEngine {
             if (fullRows.length === 4) anyTetris = true;
             totalCleared += fullRows.length;
             lastWaveRows = fullRows;
-            this._clearFullRowsStage(fullRows);
+            this._clearFullRowsOnly(fullRows);
+            this._applyStageCollapse(this._planStageCollapse());
         }
 
         if (totalCleared === 0) {
@@ -772,12 +865,22 @@ class TetrisEngine {
         };
     }
 
+    _findFullRows() {
+        const fullRows = [];
+        for (let r = HIDDEN_ROWS; r < TOTAL_ROWS; r++) {
+            if (this._board[r].every(cell => cell !== EMPTY)) {
+                fullRows.push(r);
+            }
+        }
+        return fullRows;
+    }
+
     /**
      * 闯关消行（方案 B）：
      * 1) 清空满行（含垃圾）
      * 2) 非垃圾块按列重力塌陷；垃圾格保持原位，作为不可穿越屏障
      */
-    _clearFullRowsStage(fullRows) {
+    _clearFullRowsOnly(fullRows) {
         for (const r of fullRows) {
             for (let c = 0; c < BOARD_COLS; c++) {
                 if (this._garbageMask && this._garbageMask[r][c]) {
@@ -787,7 +890,12 @@ class TetrisEngine {
                 this._board[r][c] = EMPTY;
             }
         }
-        if (!this._garbageMask) return;
+    }
+
+    /** 计算当前棋盘非垃圾块的列向塌陷（不修改棋盘） */
+    _planStageCollapse() {
+        const moves = [];
+        if (!this._garbageMask) return moves;
         for (let c = 0; c < BOARD_COLS; c++) {
             let target = TOTAL_ROWS - 1;
             for (let r = TOTAL_ROWS - 1; r >= 0; r--) {
@@ -797,13 +905,210 @@ class TetrisEngine {
                 }
                 if (this._board[r][c] !== EMPTY) {
                     if (target !== r) {
-                        this._board[target][c] = this._board[r][c];
-                        this._board[r][c] = EMPTY;
+                        moves.push({
+                            col: c,
+                            fromRow: r,
+                            toRow: target,
+                            value: this._board[r][c],
+                        });
                     }
                     target--;
                 }
             }
         }
+        return moves;
+    }
+
+    _applyStageCollapse(moves) {
+        if (!moves || moves.length === 0) return;
+        for (const m of moves) {
+            this._board[m.fromRow][m.col] = EMPTY;
+        }
+        for (const m of moves) {
+            this._board[m.toRow][m.col] = m.value;
+        }
+    }
+
+    _calcStageFallDuration(moves) {
+        if (!moves || moves.length === 0) return 0;
+        let maxDrop = 0;
+        for (const m of moves) {
+            maxDrop = Math.max(maxDrop, m.fromRow - m.toRow);
+        }
+        return Math.min(
+            STAGE_SETTLE_FALL_MS_MAX,
+            Math.max(STAGE_SETTLE_FALL_MS_MIN, STAGE_SETTLE_FALL_MS_MIN + maxDrop * STAGE_SETTLE_FALL_MS_PER_ROW)
+        );
+    }
+
+    _stageInitSettle(lockedSnap) {
+        this._stageSettle = {
+            lockedSnap,
+            totalCleared: 0,
+            visibleRowsAll: [],
+            clearedColorsAll: [],
+            anyTetris: false,
+            comboIncremented: false,
+            wave: 0,
+            startedAt: this._engineTime,
+        };
+        this._stageSettleAnim = null;
+    }
+
+    _stageStartNextWave() {
+        if (!this._stageSettle) {
+            this._stageFinishSettle();
+            return;
+        }
+        this._stageSettle.wave += 1;
+        if (this._stageSettle.wave > BOARD_ROWS + 2) {
+            this._stageFinishSettle();
+            return;
+        }
+
+        const fullRows = this._findFullRows();
+        if (fullRows.length === 0) {
+            this._stageFinishSettle();
+            return;
+        }
+
+        const visibleRows = fullRows.map(r => r - HIDDEN_ROWS);
+        const clearedColors = fullRows.map(r => this._board[r].slice());
+        const isTetris = fullRows.length === 4;
+
+        this._stageSettle.totalCleared += fullRows.length;
+        this._stageSettle.visibleRowsAll.push(...visibleRows);
+        this._stageSettle.clearedColorsAll.push(...clearedColors);
+        if (isTetris) this._stageSettle.anyTetris = true;
+
+        this._clearFullRowsOnly(fullRows);
+        const moves = this._planStageCollapse();
+
+        if (!this._stageSettle.comboIncremented) {
+            this._combo++;
+            this._stageSettle.comboIncremented = true;
+            if (this._combo > 0) {
+                this._emit(this._onCombo, this._combo);
+            }
+        }
+
+        this._emit(
+            this._onLineClear,
+            visibleRows,
+            fullRows.length,
+            isTetris,
+            clearedColors,
+            this._tSpinType,
+            this._combo
+        );
+
+        const duration = this._calcStageFallDuration(moves);
+        this._stageSettleAnim = {
+            moves,
+            elapsed: 0,
+            duration,
+            phase: moves.length > 0 ? 'flashWait' : 'chainGap',
+            phaseLeft: moves.length > 0 ? STAGE_SETTLE_FLASH_MS : STAGE_SETTLE_CHAIN_GAP_MS,
+        };
+        this._emit(this._onBoardChange, this.getVisibleBoardForRender(), null);
+    }
+
+    _updateStageSettle(dt) {
+        const settle = this._stageSettle;
+        if (settle && (this._engineTime - (settle.startedAt || 0) > STAGE_SETTLE_TIMEOUT_MS)) {
+            this._stageFinishSettle();
+            return;
+        }
+
+        const anim = this._stageSettleAnim;
+        if (!anim) {
+            this._stageFinishSettle();
+            return;
+        }
+
+        const ms = dt * 1000;
+        if (!(ms > 0)) return;
+
+        if (anim.phase === 'flashWait') {
+            anim.phaseLeft -= ms;
+            if (anim.phaseLeft <= 0) {
+                anim.phase = 'fall';
+                anim.elapsed = 0;
+            }
+            return;
+        }
+
+        if (anim.phase === 'fall') {
+            anim.elapsed += ms;
+            const duration = Math.max(0, Number(anim.duration) || 0);
+            if (anim.elapsed >= duration) {
+                this._applyStageCollapse(anim.moves);
+                this._emit(this._onBoardChange, this.getVisibleBoard(), null);
+                this._stageSettleAnim = {
+                    moves: [],
+                    elapsed: 0,
+                    duration: 0,
+                    phase: 'chainGap',
+                    phaseLeft: STAGE_SETTLE_CHAIN_GAP_MS,
+                };
+            } else {
+                this._emit(this._onBoardChange, this.getVisibleBoardForRender(), null);
+            }
+            return;
+        }
+
+        if (anim.phase === 'chainGap') {
+            anim.phaseLeft -= ms;
+            if (anim.phaseLeft <= 0) {
+                this._stageSettleAnim = null;
+                this._stageStartNextWave();
+            }
+            return;
+        }
+
+        // 未知相位：直接结束，避免永久卡在 SETTLING
+        this._stageFinishSettle();
+    }
+
+    _stageFinishSettle() {
+        const settle = this._stageSettle;
+        this._stageSettle = null;
+        this._stageSettleAnim = null;
+
+        if (settle && settle.totalCleared > 0) {
+            const result = {
+                cleared: settle.totalCleared,
+                lines: [],
+                visibleRows: settle.visibleRowsAll,
+                clearedColors: settle.clearedColorsAll,
+                isTetris: settle.anyTetris,
+                isDifficult: settle.anyTetris || this._tSpinType !== null,
+            };
+            this._calculateScore(result);
+        } else {
+            this._combo = -1;
+        }
+
+        if (this._mode === 'stage' && this._garbageRemaining === 0) {
+            this._clearTimers();
+            this._state = GameState.OVER;
+            this._emit(this._onStateChange, this._state);
+            this._emit(this._onGameOver, this._score, this._level, this._lines, 'stageClear');
+            return;
+        }
+
+        this._state = GameState.PLAYING;
+        this._emit(this._onStateChange, this._state);
+        this._spawnPiece();
+        if (this._state === GameState.PLAYING) {
+            this._restartDropTimer();
+        }
+    }
+
+    /** @deprecated 内部仍供单测同步路径；运行时改用 _clearFullRowsOnly + _plan/_apply */
+    _clearFullRowsStage(fullRows) {
+        this._clearFullRowsOnly(fullRows);
+        this._applyStageCollapse(this._planStageCollapse());
     }
 
     _calculateScore(result) {

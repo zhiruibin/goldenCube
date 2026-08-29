@@ -302,7 +302,8 @@ lines' = clamp(实际消行, minLines, T)    // 低于理论最少按最优计�
 
 ## 6. 广告线（激励视频 · 通行证）
 
-> 复用 `utils/ad-manager.js` 现有 `showRewardedVideo()`（返回 `Promise<boolean>`，以 `isEnded` 判定完整观看）与既有频率控制；未完整观看不发放任何奖励。
+> 复用 `utils/ad-manager.js` 现有 `showRewardedVideo()`（返回 `Promise<boolean>`，以 `isEnded` 判定完整观看）与既有频率控制；未完整观看不发放任何奖励。  
+> **Banner / 插屏**（被动曝光、不发奖励）：策略见 [`gc-ad-banner-interstitial.md`](./gc-ad-banner-interstitial.md)；待 `AD_UNIT_IDS` 接入后再实现。
 
 | 点位 | 名称 | 触发场景 | 奖励 / 效果 | 日限 |
 | --- | --- | --- | --- | --- |

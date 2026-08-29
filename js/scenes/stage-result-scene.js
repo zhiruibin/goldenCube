@@ -167,7 +167,9 @@ class StageResultScene {
         buttons.push({
             text: '返回关卡选择',
             color: '#333',
-            onClick: () => GameGlobal.game.sceneManager.replace('stageSelect'),
+            onClick: () => GameGlobal.game.sceneManager.leaveTo('stageSelect', {
+                stageId: this._params.stageId,
+            }, ['home']),
         });
         const totalH = buttons.length * bh + (buttons.length - 1) * gap;
         this._buttonsTopY = H - bottomInset - totalH - 24;

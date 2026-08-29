@@ -3,7 +3,7 @@
  * 职责：
  *  - publishStage   提交发布（机审通过即上架）
  *  - delistStage    作者下架
- *  - listPlaza      广场列表（新关 / 热门 / 好通关）
+ *  - listPlaza      广场列表（官方 / 新关 / 热门 / 好通关）
  *  - getStage       单关详情（含布局，供开打）
  *  - reportPlay     开打计数
  *  - reportClear    通关计数（更新热度；作者分成日限服务端记账可选）
@@ -139,6 +139,11 @@ function sanitizeStage(doc, includeRows) {
     authorAvatar: doc.authorAvatar || '',
     title: doc.title || '未命名',
     status: doc.status || '',
+    source: doc.source || 'ugc',
+    featured: !!doc.featured,
+    featuredRank: Number(doc.featuredRank) || 0,
+    tags: Array.isArray(doc.tags) ? doc.tags.slice(0, 8) : [],
+    seriesId: doc.seriesId || '',
     layoutHash: doc.layoutHash || '',
     minLines: doc.minLines || 0,
     garbageCount: doc.garbageCount || 0,
@@ -295,7 +300,10 @@ async function listPlaza(openid, data) {
     return d;
   });
 
-  if (sort === 'heat') {
+  if (sort === 'official') {
+    list = list.filter((d) => d.source === 'official' && d.featured !== false);
+    list.sort((a, b) => (Number(a.featuredRank) || 0) - (Number(b.featuredRank) || 0));
+  } else if (sort === 'heat') {
     list.sort((a, b) => (b.heatScore || 0) - (a.heatScore || 0));
   } else if (sort === 'clearRate') {
     list.sort((a, b) => {

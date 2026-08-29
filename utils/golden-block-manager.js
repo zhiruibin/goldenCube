@@ -17,6 +17,7 @@ const KEYS = {
     allClearClaimed: 'gc_allClearClaimed',
     achievementGold: 'gc_achievementGoldTotal',
     firstRankClaimed: 'gc_firstRankGoldClaimed',
+    lastChapterIndex: 'gc_lastChapterIndex',
 };
 
 /** 全通关卡数：以 stages 长度为准（30 或 100） */
@@ -242,6 +243,7 @@ function rewardClear(id, lines, pieces, timeMs) {
     let chapterReward = 0;
     const stage = getStage(id);
     if (stage) {
+        setLastChapterIndex(getChapterIndexByStageId(id));
         const cid = Number(stage.chapterId) || Math.floor((Number(id) - 1) / 10) + 1;
         const chapterStages = getStagesByChapter(cid);
         const allCleared = chapterStages.length > 0 && chapterStages.every((s) => isCleared(s.id));
@@ -320,6 +322,79 @@ function grantFirstRankGold() {
     }
 }
 
+/** 章节索引（0-based）→ 关卡 id 所属章 */
+function getChapterIndexByStageId(stageId) {
+    const stage = getStage(stageId);
+    if (!stage) return 0;
+    const chapters = getChapters();
+    const chapterId = Number(stage.chapterId) || Math.floor((Number(stage.id) - 1) / 10) + 1;
+    const idx = chapters.findIndex((c) => Number(c.id) === chapterId);
+    return idx >= 0 ? idx : 0;
+}
+
+function getLastChapterIndex() {
+    try {
+        const v = wx.getStorageSync(KEYS.lastChapterIndex);
+        if (v === '' || v == null) return null;
+        const n = Number(v);
+        return Number.isFinite(n) ? n : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function setLastChapterIndex(index) {
+    const chapters = getChapters();
+    if (!chapters.length) return 0;
+    const maxIdx = chapters.length - 1;
+    const idx = Math.max(0, Math.min(maxIdx, Math.floor(Number(index) || 0)));
+    try {
+        wx.setStorageSync(KEYS.lastChapterIndex, idx);
+    } catch (e) { /* ignore */ }
+    return idx;
+}
+
+/** 按进度推断当前章节：首个未通关关卡所在章；全通则最后一章 */
+function getProgressChapterIndex() {
+    const chapters = getChapters();
+    if (!chapters.length) return 0;
+    const stages = getStages();
+    for (let i = 0; i < stages.length; i++) {
+        if (!isCleared(stages[i].id)) {
+            return getChapterIndexByStageId(stages[i].id);
+        }
+    }
+    return chapters.length - 1;
+}
+
+/**
+ * 进入闯关页时的初始章节：优先 params，其次上次浏览/游玩，再次进度推断
+ * @param {{ chapterIndex?: number, chapterId?: number, stageId?: number }} [options]
+ */
+function resolveInitialChapterIndex(options) {
+    const chapters = getChapters();
+    if (!chapters.length) return 0;
+    const maxIdx = chapters.length - 1;
+    const opts = options || {};
+
+    if (typeof opts.chapterIndex === 'number' && Number.isFinite(opts.chapterIndex)) {
+        return Math.max(0, Math.min(maxIdx, Math.floor(opts.chapterIndex)));
+    }
+    if (typeof opts.chapterId === 'number' && Number.isFinite(opts.chapterId)) {
+        const byId = chapters.findIndex((c) => Number(c.id) === Number(opts.chapterId));
+        if (byId >= 0) return byId;
+    }
+    if (typeof opts.stageId === 'number' && Number.isFinite(opts.stageId)) {
+        return getChapterIndexByStageId(opts.stageId);
+    }
+
+    const saved = getLastChapterIndex();
+    if (saved !== null) {
+        return Math.max(0, Math.min(maxIdx, saved));
+    }
+    return getProgressChapterIndex();
+}
+
 /** 排行复合键用：已通关各关最佳消行/块/时之和 */
 function getRankSums() {
     let linesSum = 0;
@@ -360,4 +435,9 @@ module.exports = {
     getAchievementGoldUsed,
     grantFirstRankGold,
     getRankSums,
+    getChapterIndexByStageId,
+    getLastChapterIndex,
+    setLastChapterIndex,
+    getProgressChapterIndex,
+    resolveInitialChapterIndex,
 };

@@ -333,8 +333,9 @@ function _handleShareChallengeEntry(query, opts) {
             return;
         }
 
-        // invitee：登记待应战
+        // invitee：登记待应战，并认领 targetOpenid（对方授权后才能同步头像昵称）
         const reg = _registerIncomingChallenge(query, challenge);
+        _claimChallengeInvite(challengeId, challenge);
         if (inGame) {
             try {
                 wx.showToast({ title: '已收到好友挑战', icon: 'none' });
@@ -373,6 +374,48 @@ function _refreshHomePendingBadge() {
             sm.current._initUI();
         } catch (e) { /* ignore */ }
     }
+}
+
+/** 被挑战方打开分享卡：绑定 targetOpenid，便于授权后 syncMyProfile 回写 */
+function _claimChallengeInvite(challengeId, challengeHint) {
+    if (!challengeId) return;
+    let cloudService = null;
+    try {
+        ({ cloudService } = require('./utils/cloud-service'));
+    } catch (e) {
+        return;
+    }
+    if (!cloudService || !cloudService.isAvailable() || typeof cloudService.claimChallengeInvite !== 'function') {
+        return;
+    }
+    let profile = null;
+    try {
+        profile = require('./utils/user-profile').getCachedProfile();
+    } catch (e) {
+        profile = null;
+    }
+    cloudService.claimChallengeInvite(challengeId, profile || {}).then((res) => {
+        if (res && res.success && res.challenge) {
+            try {
+                const ChallengeScene = require('./js/scenes/challenge-scene');
+                const pendingKey = ChallengeScene.PENDING_CHALLENGES_KEY;
+                const stored = wx.getStorageSync(pendingKey);
+                const pending = Array.isArray(stored) ? stored : [];
+                const challengeUi = require('./utils/challenge-ui');
+                for (let i = 0; i < pending.length; i++) {
+                    if (pending[i] && pending[i].challengeId === challengeId) {
+                        challengeUi.mergePendingFromCloud(pending[i], res.challenge);
+                        wx.setStorageSync(pendingKey, pending);
+                        break;
+                    }
+                }
+            } catch (e) { /* ignore */ }
+            // 已有微信资料则立刻回写一次（覆盖认领时的默认名）
+            if (profile && profile.nickname && cloudService.syncMyChallengeProfile) {
+                cloudService.syncMyChallengeProfile(profile).catch(() => {});
+            }
+        }
+    }).catch(() => {});
 }
 
 function _promptAcceptChallenge(query, challenge, reg) {

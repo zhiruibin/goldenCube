@@ -680,7 +680,7 @@ class WorkshopScene {
         ctx.fillStyle = 'rgba(0,0,0,0.55)';
         ctx.fillRect(0, 0, W, H);
         const bw = Math.min(300, W * 0.82);
-        const bh = d.canAd ? 220 : 180;
+        const bh = d.canAd ? 272 : 232;
         const px = (W - bw) / 2;
         const py = (H - bh) / 2;
         ctx.fillStyle = '#2a2a32';
@@ -689,10 +689,11 @@ class WorkshopScene {
         ctx.fillStyle = '#fff';
         ctx.font = 'bold 17px sans-serif';
         ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         ctx.fillText(d.stage.title, W / 2, py + 36);
         ctx.fillStyle = SUBTITLE;
         ctx.font = '13px sans-serif';
-        ctx.fillText('开打消耗 ' + d.fee + ' 金币（失败退 50%）', W / 2, py + 68);
+        ctx.fillText('开打消耗 ' + d.fee + ' 金币', W / 2, py + 68);
 
         const btnW = bw - 40;
         let by = py + 100;
@@ -714,10 +715,14 @@ class WorkshopScene {
             ctx.fillText('看广告免费（余' + d.freeLeft + '）', W / 2, by + 20);
             this._playRects.ad = { x: px + 20, y: by, w: btnW, h: 40 };
         }
-        this._playRects.cancel = { x: px + 20, y: py + bh - 44, w: btnW, h: 32 };
-        ctx.fillStyle = MUTED;
-        ctx.font = '13px sans-serif';
-        ctx.fillText('取消', W / 2, py + bh - 28);
+        by += 52;
+        ctx.fillStyle = '#555';
+        this._round(ctx, px + 20, by, btnW, 40, 8);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 15px sans-serif';
+        ctx.fillText('取消', W / 2, by + 20);
+        this._playRects.cancel = { x: px + 20, y: by, w: btnW, h: 40 };
     }
 
     _round(ctx, x, y, w, h, r) {

@@ -15,6 +15,7 @@ const { coinManager } = require('../../utils/coin-manager');
 const { adManager, isRewardedVideoConfigured } = require('../../utils/ad-manager');
 
 const PLAZA_SORT = [
+    { id: 'official', label: '官方' },
     { id: 'new', label: '新关' },
     { id: 'heat', label: '热门' },
     { id: 'clearRate', label: '好通关' },
@@ -22,7 +23,7 @@ const PLAZA_SORT = [
 
 class PlazaScene {
     constructor() {
-        this._plazaSort = 'new';
+        this._plazaSort = 'official';
         this._buttons = [];
         this._listRects = [];
         this._toast = '';
@@ -34,7 +35,7 @@ class PlazaScene {
 
     onEnter(params) {
         const p = params || {};
-        if (p.plazaSort) this._plazaSort = p.plazaSort;
+        this._plazaSort = p.plazaSort || 'official';
         if (p.toast) this._showToast(p.toast);
         this._confirm = null;
         this._playDialog = null;
@@ -86,7 +87,7 @@ class PlazaScene {
         const metaY = titleY + 34;
         const tabY = metaY + 28;
 
-        const sw = (W - side * 2 - gap * 2) / 3;
+        const sw = (W - side * 2 - gap * 3) / 4;
         PLAZA_SORT.forEach((t, i) => {
             this._buttons.push(new Button({
                 x: side + i * (sw + gap),
@@ -273,8 +274,10 @@ class PlazaScene {
         ctx.fillText(stage.title || '未命名', x + 12, y + 22);
 
         const unlocked = workshop.isPlazaUnlocked(stage.stageId);
+        const isOfficial = stage.source === 'official';
         let sub = '垃圾 ' + (stage.garbageCount || 0)
             + ' · 行 ' + (stage.minLines || 0);
+        if (isOfficial) sub += ' · 官方';
         sub += unlocked ? ' · 已解锁' : ' · 需1金解锁';
         sub += ' · 通关' + ((stage.stats && stage.stats.clearCount) || 0);
         ctx.fillStyle = MUTED;
@@ -343,7 +346,7 @@ class PlazaScene {
         ctx.fillStyle = 'rgba(0,0,0,0.55)';
         ctx.fillRect(0, 0, W, H);
         const bw = Math.min(300, W * 0.82);
-        const bh = d.canAd ? 220 : 180;
+        const bh = d.canAd ? 272 : 232;
         const px = (W - bw) / 2;
         const py = (H - bh) / 2;
         ctx.fillStyle = '#2a2a32';
@@ -352,10 +355,11 @@ class PlazaScene {
         ctx.fillStyle = '#fff';
         ctx.font = 'bold 17px sans-serif';
         ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         ctx.fillText(d.stage.title, W / 2, py + 36);
         ctx.fillStyle = SUBTITLE;
         ctx.font = '13px sans-serif';
-        ctx.fillText('开打消耗 ' + d.fee + ' 金币（失败退 50%）', W / 2, py + 68);
+        ctx.fillText('开打消耗 ' + d.fee + ' 金币', W / 2, py + 68);
 
         const btnW = bw - 40;
         let by = py + 100;
@@ -377,10 +381,14 @@ class PlazaScene {
             ctx.fillText('看广告免费（余' + d.freeLeft + '）', W / 2, by + 20);
             this._playRects.ad = { x: px + 20, y: by, w: btnW, h: 40 };
         }
-        this._playRects.cancel = { x: px + 20, y: py + bh - 44, w: btnW, h: 32 };
-        ctx.fillStyle = MUTED;
-        ctx.font = '13px sans-serif';
-        ctx.fillText('取消', W / 2, py + bh - 28);
+        by += 52;
+        ctx.fillStyle = '#555';
+        this._round(ctx, px + 20, by, btnW, 40, 8);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 15px sans-serif';
+        ctx.fillText('取消', W / 2, by + 20);
+        this._playRects.cancel = { x: px + 20, y: by, w: btnW, h: 40 };
     }
 
     _round(ctx, x, y, w, h, r) {

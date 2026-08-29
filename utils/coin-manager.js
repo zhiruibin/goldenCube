@@ -2,7 +2,7 @@
  * CoinManager - 金币经济（挖个方块）
  *  - 通关效率结算 rewardStageClear（日限 DAILY_LIMIT=300）
  *  - 广告翻倍 rewardAdDouble（独立 AD_DOUBLE_LIMIT=300）
- *  - 入场费 spendEntryFee / 失败退还 refundEntryFee
+ *  - 入场费 spendEntryFee（失败不退）
  *  - 每日登录 +20；每日福利广告走 rewardDailyWelfare(+30)
  * 废弃：消行即时发币 rewardLineClear（保留空壳兼容旧调用，恒返回 0）
  */
@@ -293,12 +293,9 @@ class CoinManager {
         return { ok: true, fee, paid: fee };
     }
 
-    /** 失败退还 50%（向下取整），仅对实付金额 */
-    refundEntryFee(paidAmount) {
-        const paid = Math.max(0, Math.floor(Number(paidAmount) || 0));
-        const refund = Math.floor(paid * 0.5);
-        if (refund > 0) this._addBalance(refund);
-        return refund;
+    /** 失败不退入场费（保留接口，避免旧调用报错） */
+    refundEntryFee(/* paidAmount */) {
+        return 0;
     }
 
     // ---------- 广告免费入场 / 重试次数 ----------

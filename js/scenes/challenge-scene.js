@@ -678,24 +678,21 @@ class ChallengeScene {
     this._enrichBusy = true;
     const list = this._incomingList || [];
     let chain = Promise.resolve();
+    // 始终用云端刷新发起方资料（对方后来授权时本地快照会过期）
     for (let i = 0; i < list.length; i++) {
       const item = list[i];
-      if (item && item.challengeId && (
-        !item.challengerName || !item.challengerAvatar
-        || (isPuzzleChallenge(item) && !item.layoutSnapshot)
-      )) {
-        chain = chain.then(() => {
-          return cloudService.getChallengeById(item.challengeId).then((res) => {
-            const challenge = res && res.challenge;
-            if (challenge) {
-              challengeUi.mergePendingFromCloud(item, challenge);
-              try {
-                wx.setStorageSync(PENDING_CHALLENGES_KEY, this._incomingList);
-              } catch (e) { /* ignore */ }
-            }
-          }).catch(() => { /* 静默忽略 */ });
-        });
-      }
+      if (!item || !item.challengeId) continue;
+      chain = chain.then(() => {
+        return cloudService.getChallengeById(item.challengeId).then((res) => {
+          const challenge = res && res.challenge;
+          if (challenge) {
+            challengeUi.mergePendingFromCloud(item, challenge);
+            try {
+              wx.setStorageSync(PENDING_CHALLENGES_KEY, this._incomingList);
+            } catch (e) { /* ignore */ }
+          }
+        }).catch(() => { /* 静默忽略 */ });
+      });
     }
     chain.then(() => {
       this._enrichBusy = false;

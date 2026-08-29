@@ -7,6 +7,7 @@
 
 const goldenBlock = require('./golden-block-manager');
 const { coinManager } = require('./coin-manager');
+const OFFICIAL_PLAZA = require('../data/plaza-official-v1.js');
 
 const KEYS = {
     stages: 'gc_workshop_stages',
@@ -216,7 +217,9 @@ function getStage(id) {
     const local = listStages().find((s) => s.stageId === id);
     if (local) return local;
     const cache = _loadJson(KEYS.plazaCache, {}) || {};
-    return cache[id] || null;
+    if (cache[id]) return cache[id];
+    const official = getOfficialPlazaStages().find((s) => s.stageId === id);
+    return official || null;
 }
 
 function cachePlazaStages(stages) {
@@ -492,7 +495,7 @@ function delistStage(stageId) {
     }).catch(() => applyLocal());
 }
 
-/** 本地已发布列表（作者本机） */
+/** 本地已发布列表（作者本机）+ 官方精选种子 */
 function listPlazaLocal(sort) {
     const published = listStages().filter((s) => s.status === STATUS.published);
     const cache = _loadJson(KEYS.plazaCache, {}) || {};
@@ -501,8 +504,15 @@ function listPlazaLocal(sort) {
     Object.keys(cache).forEach((id) => {
         if (cache[id] && cache[id].status === STATUS.published) map[id] = cache[id];
     });
-    const arr = Object.keys(map).map((k) => map[k]);
-    if (sort === 'heat') {
+    // 官方精选：始终合并进广场（本地兜底；云端有同 ID 时以缓存/云为准）
+    getOfficialPlazaStages().forEach((s) => {
+        if (!map[s.stageId]) map[s.stageId] = s;
+    });
+    let arr = Object.keys(map).map((k) => map[k]);
+    if (sort === 'official') {
+        arr = arr.filter((s) => s.source === 'official' && s.featured !== false);
+        arr.sort((a, b) => (a.featuredRank || 0) - (b.featuredRank || 0));
+    } else if (sort === 'heat') {
         arr.sort((a, b) => (b.heatScore || 0) - (a.heatScore || 0));
     } else if (sort === 'clearRate') {
         arr.sort((a, b) => {
@@ -516,27 +526,61 @@ function listPlazaLocal(sort) {
     return arr;
 }
 
+/** 官方精选关卡（P0 起） */
+function getOfficialPlazaStages() {
+    const list = (OFFICIAL_PLAZA && OFFICIAL_PLAZA.stages) || [];
+    return list.map((s) => Object.assign({}, s, {
+        rows: cloneRows(s.rows),
+        status: STATUS.published,
+        source: 'official',
+        featured: true,
+        authorName: s.authorName || '官方',
+    }));
+}
+
 /**
- * 广场列表：云优先，失败降级本地缓存
+ * 广场列表：云优先，失败降级本地缓存；官方精选始终可本地返回
  * @returns {Promise<Array>}
  */
 function listPlaza(sort) {
+    const mode = sort || 'new';
+    // 官方精选以本地包为准（不依赖云种子是否已导入）
+    if (mode === 'official') {
+        return Promise.resolve(listPlazaLocal('official'));
+    }
     let cloudService;
     try {
         cloudService = require('./cloud-service').cloudService;
     } catch (e) {
-        return Promise.resolve(listPlazaLocal(sort));
+        return Promise.resolve(listPlazaLocal(mode));
     }
     if (!cloudService.isAvailable()) {
-        return Promise.resolve(listPlazaLocal(sort));
+        return Promise.resolve(listPlazaLocal(mode));
     }
-    return cloudService.listPlaza({ sort: sort || 'new', pageSize: 50 }).then((res) => {
+    return cloudService.listPlaza({ sort: mode, pageSize: 50 }).then((res) => {
         if (res && res.success && Array.isArray(res.list)) {
             cachePlazaStages(res.list);
-            return res.list;
+            // 合并官方关，避免云列表冲掉精选可见性（非 official tab）
+            const official = getOfficialPlazaStages();
+            const map = {};
+            official.forEach((s) => { map[s.stageId] = s; });
+            res.list.forEach((s) => { map[s.stageId] = s; });
+            let arr = Object.keys(map).map((k) => map[k]);
+            if (mode === 'heat') {
+                arr.sort((a, b) => (b.heatScore || 0) - (a.heatScore || 0));
+            } else if (mode === 'clearRate') {
+                arr.sort((a, b) => {
+                    const ra = ((a.stats && a.stats.clearCount) || 0) / Math.max(1, (a.stats && a.stats.playCount) || 0);
+                    const rb = ((b.stats && b.stats.clearCount) || 0) / Math.max(1, (b.stats && b.stats.playCount) || 0);
+                    return rb - ra;
+                });
+            } else {
+                arr.sort((a, b) => (b.publishedAt || 0) - (a.publishedAt || 0));
+            }
+            return arr;
         }
-        return listPlazaLocal(sort);
-    }).catch(() => listPlazaLocal(sort));
+        return listPlazaLocal(mode);
+    }).catch(() => listPlazaLocal(mode));
 }
 
 function _unlockedMap() {
@@ -766,6 +810,8 @@ module.exports = {
     withdrawReview,
     delistStage,
     listPlaza,
+    listPlazaLocal,
+    getOfficialPlazaStages,
     isPlazaUnlocked,
     unlockPlazaStage,
     getFreePlayRemaining,
@@ -779,5 +825,4 @@ module.exports = {
     getSubmitRemaining,
     cachePlazaStage,
     cachePlazaStages,
-    listPlazaLocal,
 };

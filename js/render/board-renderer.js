@@ -335,6 +335,28 @@ class BoardRenderer {
     }
 
     /**
+     * 绘制浮动格（闯关塌陷动画等）
+     * @param {CanvasRenderingContext2D} ctx
+     * @param {{ col: number, row: number, value: number }[]} cells - row 为可见行，可为小数
+     */
+    renderOverlayCells(ctx, cells) {
+        if (!cells || cells.length === 0) return;
+        const cs = this.cellSize;
+        const x = this.x;
+        const y = this.y;
+        for (const cell of cells) {
+            if (!cell || !cell.value) continue;
+            this._drawCell(
+                ctx,
+                x + cell.col * cs,
+                y + cell.row * cs,
+                cs,
+                cell.value
+            );
+        }
+    }
+
+    /**
      * 绘制动态背景特效
      */
     _renderBackgroundEffect(ctx) {

@@ -455,6 +455,40 @@ class CloudService {
         }
     }
 
+    /**
+     * 被挑战方打开分享卡时认领挑战（绑定 targetOpenid，供授权后资料回写）
+     * @param {string} challengeId
+     * @param {{nickname?: string, avatarUrl?: string}} [profile]
+     */
+    async claimChallengeInvite(challengeId, profile) {
+        if (!challengeId || !this.isAvailable()) {
+            return { success: false };
+        }
+        try {
+            const res = await wx.cloud.callFunction({
+                name: 'challenge',
+                data: {
+                    action: 'claimChallengeInvite',
+                    data: {
+                        challengeId: String(challengeId),
+                        nickname: (profile && profile.nickname) || '',
+                        avatarUrl: (profile && profile.avatarUrl) || '',
+                    },
+                },
+            });
+            const r = (res && res.result) || {};
+            return {
+                success: !!r.success,
+                claimed: !!r.claimed,
+                challenge: r.challenge || null,
+                errMsg: r.errMsg || '',
+            };
+        } catch (e) {
+            console.warn('[Cloud] 认领挑战失败', e);
+            return { success: false, errMsg: (e && e.errMsg) || String(e) };
+        }
+    }
+
     /*** 挑战详情（分享卡片进入时读取）
      * @param {string} challengeId
      * @returns {Promise<{success:boolean, challenge:object|null, offline:boolean, errMsg?:string}>}

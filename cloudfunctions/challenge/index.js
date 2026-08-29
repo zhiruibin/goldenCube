@@ -6,6 +6,7 @@
  * - getChallengeById 挑战详情：按 challengeId 返回单条挑战记录
  * - cancelChallenge  撤回挑战：仅发起者可撤回 pending 状态挑战
  * - syncMyProfile    资料回写：授权后刷新本人相关挑战上的昵称头像
+ * - claimChallengeInvite  被挑战方打开分享卡时绑定 targetOpenid
  ** 调用约定：
  * - 入参 { action, data }，action 为方法名，data 为业务参数
  * - 通过 cloud.getWXContext() 获取 OPENID 鉴权，未授权返回 { success:false, errMsg:'unauthorized' }
@@ -66,6 +67,8 @@ exports.main = async (event) => {
         return await cancelChallenge(OPENID, data)
       case 'syncMyProfile':
         return await syncMyProfile(OPENID, data)
+      case 'claimChallengeInvite':
+        return await claimChallengeInvite(OPENID, data)
       default:
         return { success: false, errMsg: `unknown action: ${action}` }
     }
@@ -257,6 +260,15 @@ async function respondChallenge(openid, data) {
       status: 'completed',
       result,
       respondedAt: now,
+    }
+    // 应战时补绑意向目标，便于后续资料回写（分享卡认领失败时的兜底）
+    if (!record.targetOpenid) {
+      updateData.targetOpenid = openid
+      updateData.targetName = nickname || defaultName(openid)
+      updateData.targetAvatar = avatarUrl
+    } else if (record.targetOpenid === openid) {
+      if (nickname) updateData.targetName = nickname
+      if (avatarUrl) updateData.targetAvatar = avatarUrl
     }
     if (isPuzzle) {
       updateData.responderLines = responderLines
@@ -480,6 +492,71 @@ function sanitize(rec, id, extra) {
     out.layoutSnapshot = r.layoutSnapshot
   }
   return out
+}
+
+/**
+ * 被挑战方打开分享卡时认领：写入 targetOpenid + 当前资料快照。
+ * 之后对方授权走 syncMyProfile 才能更新「待对方应战」里的好友头像昵称。
+ */
+async function claimChallengeInvite(openid, data) {
+  try {
+    const challengeId = data && data.challengeId
+    if (!challengeId) {
+      return { success: false, errMsg: 'challengeId required' }
+    }
+    const nickname = String((data && data.nickname) || '').slice(0, 32)
+    const avatarUrl = String((data && data.avatarUrl) || '').slice(0, 512)
+
+    let record
+    try {
+      const res = await db.collection(COLLECTION).doc(challengeId).get()
+      record = res.data
+    } catch (err) {
+      return { success: false, errMsg: 'challenge not found' }
+    }
+    if (!record) {
+      return { success: false, errMsg: 'challenge not found' }
+    }
+    if (record.status !== 'pending') {
+      return { success: false, errMsg: 'challenge not pending', already: true }
+    }
+    if (record.challengerOpenid === openid) {
+      return { success: false, errMsg: 'cannot claim own challenge' }
+    }
+    if (record.expiresAt && record.expiresAt < Date.now()) {
+      return { success: false, errMsg: 'challenge expired' }
+    }
+    // 已被其他人认领则不覆盖（一条分享链对应一个意向应战方）
+    if (record.targetOpenid && record.targetOpenid !== openid) {
+      return { success: false, errMsg: 'already claimed', already: true }
+    }
+
+    const displayName = nickname || record.targetName || defaultName(openid)
+    const displayAvatar = avatarUrl || record.targetAvatar || ''
+    await db.collection(COLLECTION).doc(challengeId).update({
+      data: {
+        targetOpenid: openid,
+        targetName: displayName,
+        targetAvatar: displayAvatar,
+      },
+    })
+    return {
+      success: true,
+      claimed: true,
+      challenge: sanitize(
+        Object.assign({}, record, {
+          targetOpenid: openid,
+          targetName: displayName,
+          targetAvatar: displayAvatar,
+        }),
+        challengeId,
+        { myRole: 'invitee' }
+      ),
+    }
+  } catch (err) {
+    console.error('[challenge] claimChallengeInvite error:', err)
+    return { success: false, errMsg: err.message || 'claim failed' }
+  }
 }
 
 /**

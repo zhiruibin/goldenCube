@@ -21,6 +21,10 @@ const COLS = 2;
 const H_PAD = 16;
 const CARD_GAP = 12;
 const CARD_H = 84;
+/** 章节横向翻页：慢拖超过屏宽该比例即翻章（原 round 等价 ~50%，偏大） */
+const CHAPTER_DRAG_RATIO = 0.18;
+/** 快速轻扫速度阈值（px/s），达到即翻章，不依赖位移 */
+const CHAPTER_FLING_VELOCITY = 420;
 
 // 背景装饰：缓慢下落的半透明方块（移植 tetris-mini 首页样式）
 const BG_TETROMINO_SHAPES = [
@@ -55,6 +59,10 @@ class StageSelectScene {
         this._touchId = null;
         this._touchStartX = 0;
         this._touchStartY = 0;
+        this._touchLastX = 0;
+        this._touchLastT = 0;
+        this._touchVelocityX = 0;
+        this._dragChapter = 0;
         this._isDragging = false;
         this._suppressTap = false;
         this._animFrom = 0;
@@ -76,8 +84,14 @@ class StageSelectScene {
         if (typeof goldenBlock.syncUnlockedFromProgress === 'function') {
             goldenBlock.syncUnlockedFromProgress();
         }
-        this._chapter = 0;
-        this._offsetX = 0;
+        const W = GameGlobal.game.width;
+        const chapterIdx = goldenBlock.resolveInitialChapterIndex({
+            chapterIndex: this._params.chapterIndex,
+            chapterId: this._params.chapterId,
+            stageId: this._params.stageId,
+        });
+        this._chapter = chapterIdx;
+        this._offsetX = -chapterIdx * W;
         this._animT = 1;
         this._buildChapterCards();
         const login = coinManager.tryClaimDailyLogin();
@@ -88,7 +102,15 @@ class StageSelectScene {
         }
     }
 
-    onExit() {}
+    onExit() {
+        this._saveChapterIndex();
+    }
+
+    _saveChapterIndex(idx) {
+        if (typeof goldenBlock.setLastChapterIndex !== 'function') return;
+        const i = typeof idx === 'number' ? idx : this._chapter;
+        goldenBlock.setLastChapterIndex(i);
+    }
 
     /**
      * 布局度量：安全区 + 微信胶囊避让 + 可用内容区。
@@ -411,6 +433,9 @@ class StageSelectScene {
 
     _startStage(stageId, entryPaid) {
         this._entryDialog = null;
+        if (typeof goldenBlock.setLastChapterIndex === 'function') {
+            goldenBlock.setLastChapterIndex(goldenBlock.getChapterIndexByStageId(stageId));
+        }
         GameGlobal.game.sceneManager.switchTo('game', {
             mode: 'stage',
             stageId,
@@ -479,6 +504,10 @@ class StageSelectScene {
         this._touchId = identifier;
         this._touchStartX = x;
         this._touchStartY = y;
+        this._touchLastX = x;
+        this._touchLastT = Date.now();
+        this._touchVelocityX = 0;
+        this._dragChapter = this._chapter;
         this._isDragging = false;
         this._dragBase = this._offsetX;
     }
@@ -490,6 +519,12 @@ class StageSelectScene {
         if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
         if (Math.abs(dy) >= Math.abs(dx)) return;
         this._isDragging = true;
+        const now = Date.now();
+        const dt = Math.max(8, now - this._touchLastT);
+        const instantV = ((x - this._touchLastX) / dt) * 1000;
+        this._touchVelocityX = this._touchVelocityX * 0.55 + instantV * 0.45;
+        this._touchLastX = x;
+        this._touchLastT = now;
         const W = GameGlobal.game.width;
         const chapters = this._chapters || [];
         let off = this._dragBase + dx;
@@ -502,15 +537,32 @@ class StageSelectScene {
         this._offsetX = off;
     }
 
+    /** 根据拖拽位移 + 松手速度决定目标章（支持快速轻扫翻页） */
+    _resolveSwipeChapter() {
+        const W = GameGlobal.game.width;
+        const chapters = this._chapters || [];
+        const maxIdx = Math.max(0, chapters.length - 1);
+        const displacement = this._offsetX - this._dragBase;
+        let idx = this._dragChapter;
+
+        if (this._touchVelocityX < -CHAPTER_FLING_VELOCITY || displacement < -W * CHAPTER_DRAG_RATIO) {
+            idx = this._dragChapter + 1;
+        } else if (this._touchVelocityX > CHAPTER_FLING_VELOCITY || displacement > W * CHAPTER_DRAG_RATIO) {
+            idx = this._dragChapter - 1;
+        }
+
+        return Math.max(0, Math.min(maxIdx, idx));
+    }
+
     handleTouchEnd(identifier) {
         if (identifier !== this._touchId && identifier !== -1) return;
         this._touchId = null;
         if (this._isDragging) {
             this._suppressTap = true;
             const W = GameGlobal.game.width;
-            const chapters = this._chapters || [];
-            const idx = Math.max(0, Math.min(chapters.length - 1, Math.round(-this._offsetX / W)));
+            const idx = this._resolveSwipeChapter();
             this._chapter = idx;
+            this._saveChapterIndex(idx);
             this._animFrom = this._offsetX;
             this._animTarget = -idx * W;
             this._animT = 0;
