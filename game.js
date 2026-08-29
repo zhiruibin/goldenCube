@@ -125,7 +125,9 @@ function onStart() {
     const ReplayScene = require('./js/scenes/replay-scene');
     const StageSelectScene = require('./js/scenes/stage-select-scene');
     const StageResultScene = require('./js/scenes/stage-result-scene');
+    const StageFailScene = require('./js/scenes/stage-fail-scene');
     const WorkshopScene = require('./js/scenes/workshop-scene');
+    const PlazaScene = require('./js/scenes/plaza-scene');
     const WorkshopEditorScene = require('./js/scenes/workshop-editor-scene');
     const WorkshopResultScene = require('./js/scenes/workshop-result-scene');
     GameGlobal.game.sceneManager.register('home', HomeScene);
@@ -140,9 +142,17 @@ function onStart() {
     GameGlobal.game.sceneManager.register('replay', ReplayScene);
     GameGlobal.game.sceneManager.register('stageSelect', StageSelectScene);
     GameGlobal.game.sceneManager.register('stageResult', StageResultScene);
+    GameGlobal.game.sceneManager.register('stageFail', StageFailScene);
     GameGlobal.game.sceneManager.register('workshop', WorkshopScene);
+    GameGlobal.game.sceneManager.register('plaza', PlazaScene);
     GameGlobal.game.sceneManager.register('workshopEditor', WorkshopEditorScene);
     GameGlobal.game.sceneManager.register('workshopResult', WorkshopResultScene);
+
+    // 预加载结算页方块插画
+    try {
+        const { preloadResultBlockImages } = require('./js/render/result-block-image');
+        preloadResultBlockImages();
+    } catch (e) { /* ignore */ }
     // 冷启动：进入首页 Hub（闯关/排行/成就/商店/设置入口）；若带挑战分享卡再按身份分流
     let launchQuery = null;
     try {
@@ -209,13 +219,8 @@ function _registerIncomingChallenge(query, challengeHint) {
             if (pending[i].challengeId === challengeId) {
                 // 用云端详情补全本地记录（昵称头像等）
                 if (challengeHint) {
-                    const item = pending[i];
-                    if (challengeHint.mode) item.mode = challengeHint.mode;
-                    if (typeof challengeHint.challengerScore === 'number') {
-                        item.challengerScore = challengeHint.challengerScore;
-                    }
-                    if (challengeHint.challengerName) item.challengerName = challengeHint.challengerName;
-                    if (challengeHint.challengerAvatar) item.challengerAvatar = challengeHint.challengerAvatar;
+                    const challengeUi = require('./utils/challenge-ui');
+                    challengeUi.mergePendingFromCloud(pending[i], challengeHint);
                     wx.setStorageSync(pendingKey, pending);
                 }
                 return { registered: true, isNew: false, challengeId: challengeId };
@@ -227,8 +232,18 @@ function _registerIncomingChallenge(query, challengeHint) {
             : null;
         pending.push({
             challengeId: challengeId,
-            mode: (challengeHint && challengeHint.mode) || query.mode || 'classic',
+            mode: (challengeHint && challengeHint.mode) || query.mode || 'stage',
             challengerScore: scoreFromHint != null ? scoreFromHint : (isNaN(scoreFromQuery) ? null : scoreFromQuery),
+            challengerLines: (challengeHint && typeof challengeHint.challengerLines === 'number')
+                ? challengeHint.challengerLines
+                : ((((challengeHint && challengeHint.mode) || query.mode) === 'workshop'
+                    || ((challengeHint && challengeHint.mode) || query.mode) === 'stage')
+                    && !isNaN(scoreFromQuery)
+                    ? scoreFromQuery
+                    : null),
+            workshopStageId: (challengeHint && challengeHint.workshopStageId) || '',
+            workshopTitle: (challengeHint && challengeHint.workshopTitle) || '',
+            layoutSnapshot: (challengeHint && challengeHint.layoutSnapshot) || null,
             challengerName: (challengeHint && challengeHint.challengerName) || '',
             challengerAvatar: (challengeHint && challengeHint.challengerAvatar) || '',
             createdAt: Date.now(),
@@ -364,15 +379,34 @@ function _promptAcceptChallenge(query, challenge, reg) {
     const challengeId = (reg && reg.challengeId) || (query && query.challengeId);
     if (!challengeId) return;
 
-    const mode = (challenge && challenge.mode) || (query && query.mode) || 'classic';
+    const ChallengeScene = require('./js/scenes/challenge-scene');
+    const challengeUi = require('./utils/challenge-ui');
+    const mode = (challenge && challenge.mode) || (query && query.mode) || 'stage';
     let modeName = mode;
     try {
         const { MODE_NAMES } = require('./utils/cloud-config');
-        modeName = (MODE_NAMES && MODE_NAMES[mode]) || mode || '经典模式';
+        modeName = (challenge && challenge.workshopTitle)
+            || (MODE_NAMES && MODE_NAMES[mode])
+            || mode
+            || '挑战';
     } catch (e) { /* ignore */ }
 
+    const hint = challenge || { mode: mode };
+    const isPuzzle = challengeUi.isPuzzleChallenge(hint)
+        || mode === 'workshop'
+        || mode === 'stage';
+
     let score = '--';
-    if (challenge && typeof challenge.challengerScore === 'number') {
+    let scoreUnit = '分';
+    if (isPuzzle) {
+        scoreUnit = '行';
+        if (challenge && typeof challenge.challengerLines === 'number') {
+            score = challenge.challengerLines;
+        } else if (query && query.score != null) {
+            const n = parseInt(query.score, 10);
+            if (!isNaN(n)) score = n;
+        }
+    } else if (challenge && typeof challenge.challengerScore === 'number') {
         score = challenge.challengerScore;
     } else if (query && query.score != null) {
         const n = parseInt(query.score, 10);
@@ -381,7 +415,9 @@ function _promptAcceptChallenge(query, challenge, reg) {
 
     const challengerName = (challenge && challenge.challengerName) || '';
     const title = challengerName ? (challengerName + ' 向你发起挑战') : '好友挑战';
-    const content = '「' + modeName + '」目标 ' + score + ' 分，是否立即应战？';
+    const content = isPuzzle
+        ? '「' + modeName + '」对方 ' + score + ' ' + scoreUnit + '，是否立即应战？'
+        : '「' + modeName + '」目标 ' + score + ' ' + scoreUnit + '，是否立即应战？';
 
     try {
         wx.showModal({
@@ -393,6 +429,24 @@ function _promptAcceptChallenge(query, challenge, reg) {
                 if (res && res.confirm) {
                     const sm = GameGlobal.game && GameGlobal.game.sceneManager;
                     if (!sm) return;
+                    const rec = {
+                        challengeId: challengeId,
+                        mode: mode,
+                        layoutSnapshot: challenge && challenge.layoutSnapshot,
+                        workshopStageId: challenge && challenge.workshopStageId,
+                        workshopTitle: challenge && challenge.workshopTitle,
+                        challengerLines: challenge && challenge.challengerLines,
+                        challengerScore: challenge && challenge.challengerScore,
+                        createdAt: (challenge && challenge.createdAt) || Date.now(),
+                    };
+                    if (isPuzzle && ChallengeScene.startPuzzleRespondGame) {
+                        if (ChallengeScene.startPuzzleRespondGame(rec, challenge)) {
+                            return;
+                        }
+                        // 无布局时进挑战页应战
+                        GameGlobal.game.sceneManager.switchTo('challenge', { tab: 'incoming' });
+                        return;
+                    }
                     GameGlobal.game.sceneManager.switchTo('game', {
                         mode: mode,
                         challengeId: challengeId,
@@ -431,6 +485,15 @@ function _toCanvasXY(clientX, clientY) {
     };
 }
 
+/** touchStart 时的场景名；touchEnd 若场景已变则丢弃 tap，防止切场景穿透 */
+const _touchStartScenes = Object.create(null);
+
+function _clearTouchStartScene(touchId) {
+    if (touchId != null) {
+        delete _touchStartScenes[touchId];
+    }
+}
+
 // 监听小游戏生命周期
 wx.onTouchStart(function (e) {
     // 首次用户交互时初始化音频并启动 BGM（满足自动播放策略）
@@ -439,8 +502,18 @@ wx.onTouchStart(function (e) {
         if (!audio.isInitialized()) {
             audio.init();
         }
-        if (wx.getStorageSync('gc_setting_bgm') !== false && !audio.isBgmPlaying()) {
-            audio.playBGM();
+        try {
+            const sfx = wx.getStorageSync('gc_setting_sfx') !== false;
+            const bgm = wx.getStorageSync('gc_setting_bgm') !== false;
+            if (typeof audio.applyUserSettings === 'function') {
+                audio.applyUserSettings({ sfx, bgm });
+            } else if (bgm && !audio.isBgmPlaying()) {
+                audio.playBGM();
+            }
+        } catch (err) {
+            if (wx.getStorageSync('gc_setting_bgm') !== false && !audio.isBgmPlaying()) {
+                audio.playBGM();
+            }
         }
     }
 
@@ -455,6 +528,9 @@ wx.onTouchStart(function (e) {
         if (touches) {
             for (let i = 0; i < touches.length; i++) {
                 const t = touches[i];
+                if (sm.currentName) {
+                    _touchStartScenes[t.identifier] = sm.currentName;
+                }
                 const p = _toCanvasXY(t.clientX, t.clientY);
                 sm.current.handleTouchStart(t.identifier, p.x, p.y);
             }
@@ -503,6 +579,23 @@ wx.onTouchEnd(function (e) {
             const p = _toCanvasXY(t.clientX, t.clientY);
             const x = p.x;
             const y = p.y;
+            const touchStartScene = _touchStartScenes[t.identifier];
+            _clearTouchStartScene(t.identifier);
+            // 按下与抬起之间若已切场景，不把同一笔 tap 交给新场景（防摇奖/弹窗穿透）
+            if (touchStartScene && sm.currentName !== touchStartScene) {
+                return;
+            }
+            // 隐私弹窗：指引链接须可点并 openPrivacyContract（审核要求）
+            try {
+                const {
+                    isPrivacyDialogVisible,
+                    handlePrivacyDialogTap,
+                } = require('./utils/privacy');
+                if (isPrivacyDialogVisible()) {
+                    handlePrivacyDialogTap(x, y);
+                    return;
+                }
+            } catch (e) { /* ignore */ }
             // 资料授权弹窗：暂不授权走 canvas；去授权由原生 UserInfoButton 承接
             try {
                 const {
@@ -525,6 +618,13 @@ wx.onTouchEnd(function (e) {
 wx.onTouchCancel(function (e) {
     if (GameGlobal.game.inputManager) {
         GameGlobal.game.inputManager.handleTouchCancel(e);
+    }
+
+    const changedTouches = e.changedTouches;
+    if (changedTouches) {
+        for (let i = 0; i < changedTouches.length; i++) {
+            _clearTouchStartScene(changedTouches[i].identifier);
+        }
     }
 
     // 释放所有取消的触点

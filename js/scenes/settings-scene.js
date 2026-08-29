@@ -535,15 +535,16 @@ class SettingsScene {
                     if (area.type === 'toggle') {
                         this._settings[area.key] = !this._settings[area.key];
                         this._saveSettings();
-                        // BGM 开关实时生效
-                        if (area.key === 'bgm') {
+                        // 音效 / BGM 开关实时生效（共用全局 AudioManager）
+                        if (area.key === 'bgm' || area.key === 'sfx') {
                             const audio = GameGlobal.game.audioManager;
                             if (audio) {
-                                if (this._settings.bgm) {
-                                    if (!audio.isInitialized()) audio.init();
-                                    audio.playBGM();
-                                } else {
-                                    audio.stopBGM();
+                                if (!audio.isInitialized()) audio.init();
+                                if (typeof audio.applyUserSettings === 'function') {
+                                    audio.applyUserSettings(this._settings);
+                                } else if (area.key === 'bgm') {
+                                    if (this._settings.bgm) audio.playBGM();
+                                    else audio.stopBGM();
                                 }
                             }
                         }

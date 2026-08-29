@@ -15,6 +15,7 @@ try {
   cloudService = null;
 }
 const { ensureProfileForAction } = require('../../utils/user-profile');
+const challengeUi = require('../../utils/challenge-ui');
 
 const { windowWidth: W, windowHeight: H } = wx.getSystemInfoSync();
 
@@ -408,7 +409,7 @@ class ChallengeResultScene {
     const ctx = canvas.getContext('2d');
     fillNightBackground(ctx, 300, 400);
 
-    drawBrandTitle(ctx, '方块过把瘾', 150, 56, 'bold 28px sans-serif');
+    drawBrandTitle(ctx, challengeUi.BRAND_NAME, 150, 56, 'bold 28px sans-serif');
 
     ctx.fillStyle = SUBTITLE;
     ctx.font = '18px sans-serif';

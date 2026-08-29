@@ -31,6 +31,7 @@ const MODE_LABELS = {
     timed: '限时赛',
     marathon: '马拉松',
     challenge: '挑战',
+    stage: '闯关',
 };
 
 class ReplayScene {
@@ -91,6 +92,18 @@ class ReplayScene {
             } catch (e) { /* 忽略 */ }
             if (this._params && this._params.fromRank) {
                 GameGlobal.game.sceneManager.switchTo('rank', {});
+            } else if (this._params && this._params.fromStageResult) {
+                GameGlobal.game.sceneManager.switchTo('stageResult', {
+                    stageId: this._params.stageId,
+                    result: this._params.result,
+                    replayKey: this._params.replayKey,
+                });
+            } else if (this._params && this._params.fromStageFail) {
+                GameGlobal.game.sceneManager.switchTo('stageFail', {
+                    stageId: this._params.stageId,
+                    result: this._params.result,
+                    replayKey: this._params.replayKey,
+                });
             } else {
                 GameGlobal.game.sceneManager.switchTo('result', this._params);
             }
@@ -115,6 +128,24 @@ class ReplayScene {
         this._engine = new TetrisEngine(data.seed);
         this._engine.setMode(data.mode || 'classic');
         this._engine.init();
+        const meta = data.meta || {};
+        if (data.mode === 'stage') {
+            if (meta.workshopRows) {
+                this._engine.initStage(meta.workshopRows, {
+                    dropIntervalMs: meta.dropIntervalMs || 1000,
+                });
+            } else if (meta.stageId) {
+                try {
+                    const goldenBlock = require('../../utils/golden-block-manager');
+                    const st = goldenBlock.getStage(meta.stageId);
+                    if (st && st.rows) {
+                        this._engine.initStage(st.rows, {
+                            dropIntervalMs: st.dropIntervalMs || 1000,
+                        });
+                    }
+                } catch (e) { /* ignore */ }
+            }
+        }
         this._engine.start();
         this._engine.onStateChange((state) => {
             if (state === 'over') {
@@ -170,21 +201,27 @@ class ReplayScene {
     }
 
     update(dt) {
-        if (this._paused || this._done || !this._engine) return;
-        if (this._engine.getState() === 'over') {
+        if (this._paused || !this._engine) return;
+
+        const engineOver = this._engine.getState() === 'over';
+        if (engineOver) {
             this._done = true;
-            return;
         }
 
-        // 推进虚拟时钟：回放累计时长与引擎时钟同步按 倍速 前进
-        this._playTime += dt * this._speed;
-        this._engine.update(dt * this._speed);
+        // 回放结束后仍继续 tick 特效，让末次消行粒子自然播完（不再按倍速）
+        const replayFinished = this._done || engineOver;
+        if (!replayFinished) {
+            this._playTime += dt * this._speed;
+            this._engine.update(dt * this._speed);
+            this._feedInputs();
+        }
 
-        // 按时间顺序喂入回放输入
-        this._feedInputs();
-        if (this._effectRenderer) { this._effectRenderer.update(dt * this._speed); }
+        const effectDt = replayFinished ? dt : dt * this._speed;
+        if (this._effectRenderer) { this._effectRenderer.update(effectDt); }
         if (this._bgEffects) { this._bgEffects.update(dt); }
-        if (this._boardRenderer && typeof this._boardRenderer.update === 'function') { this._boardRenderer.update(dt); }
+        if (this._boardRenderer && typeof this._boardRenderer.update === 'function') {
+            this._boardRenderer.update(dt);
+        }
     }
 
     render(ctx) {
@@ -247,8 +284,9 @@ class ReplayScene {
         // 控制按钮：返回 / 倍速 / 暂停
         this._renderControlButtons(ctx);
 
-        // 回放结束遮罩提示
-        if (this._done) {
+        // 回放结束遮罩：等末次消行特效播完再出现，避免粒子中途定格
+        const effectsDone = !this._effectRenderer || !this._effectRenderer.hasActiveEffects();
+        if (this._done && effectsDone) {
             ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
             ctx.fillRect(this._boardX, this._boardY, this._cellSize * 10, this._cellSize * 20);
             ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
@@ -273,6 +311,18 @@ class ReplayScene {
         }
     }
 
+    _getTopInset() {
+        const sys = (GameGlobal && GameGlobal.game && GameGlobal.game.systemInfo) || {};
+        const statusBarHeight = Number(sys.statusBarHeight) || 0;
+        const safeTop = (sys.safeArea && Number(sys.safeArea.top)) || 0;
+        let capsuleBottom = 0;
+        try {
+            const rect = wx.getMenuButtonBoundingClientRect();
+            if (rect && rect.bottom) capsuleBottom = rect.bottom;
+        } catch (e) { /* ignore */ }
+        return Math.max(statusBarHeight, safeTop, capsuleBottom) + 8;
+    }
+
     // ==================== 布局计算 ====================
 
     _calculateLayout() {
@@ -283,8 +333,9 @@ class ReplayScene {
         const sys = GameGlobal.game.systemInfo || {};
         const safeArea = sys.safeArea || {};
         const bottomSafe = (safeArea.bottom && H > safeArea.bottom) ? (H - safeArea.bottom) : 0;
-        // 顶部：标题 + 分数/等级
-        const topArea = 64;
+        // 顶部：刘海/胶囊下方 + 标题 + 信息行
+        this._topInset = this._getTopInset();
+        const topArea = this._topInset + 52;
         // 底部：进度条 + 控制按钮
         const progressTop = H - bottomSafe - 80;
         const controlCenterY = H - bottomSafe - 38;
@@ -372,22 +423,33 @@ class ReplayScene {
 
     _renderTopInfo(ctx) {
         const W = GameGlobal.game.width;
+        const top = this._topInset || this._getTopInset();
 
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
 
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 18px sans-serif';
-        ctx.fillText('战局回放', W / 2, 10);
+        ctx.fillText('战局回放', W / 2, top);
 
         let info = `分数: ${this._engine.getScore()}   等级: ${this._engine.getLevel()}   消行: ${this._engine.getLines()}`;
         const mode = this._data && this._data.mode;
-        if (mode && mode !== 'classic') {
+        const meta = (this._data && this._data.meta) || {};
+        if (mode === 'stage') {
+            const pieces = meta.pieces != null ? meta.pieces : '-';
+            const timeMs = meta.timeMs || 0;
+            const sec = Math.floor(timeMs / 1000);
+            const m = Math.floor(sec / 60);
+            const ss = sec % 60;
+            const timeStr = m + ':' + (ss < 10 ? '0' : '') + ss;
+            info = `消行: ${this._engine.getLines()}   用块: ${pieces}   用时: ${timeStr}`;
+            if (meta.stageId) info += `   第 ${meta.stageId} 关`;
+        } else if (mode && mode !== 'classic') {
             info += `   ${MODE_LABELS[mode] || mode}`;
         }
         ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
         ctx.font = '13px sans-serif';
-        ctx.fillText(info, W / 2, 34);
+        ctx.fillText(info, W / 2, top + 24);
     }
 
     _renderProgress(ctx) {

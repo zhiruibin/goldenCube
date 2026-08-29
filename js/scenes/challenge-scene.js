@@ -4,6 +4,8 @@ const { MODE_NAMES } = require('../../utils/cloud-config');
 const IconRenderer = require('../render/icon-renderer');
 const { resolveAvatarUrl, ensureProfileForAction, getCachedProfile } = require('../../utils/user-profile');
 const { achievementManager } = require('../../utils/achievement-manager');
+const challengeUi = require('../../utils/challenge-ui');
+const challengeShareCard = require('../../utils/challenge-share-card');
 
 const PENDING_CHALLENGES_KEY = 'gc_pending_challenges';
 /** 与云函数挑战过期一致：本地待应战超过 7 天视为失效 */
@@ -18,6 +20,68 @@ function _shortName(name) {
   if (!name) return '';
   const str = String(name).trim();
   return str.length > 6 ? str.slice(0, 6) + '…' : str;
+}
+
+/** 列表展示：发起方/应战方成绩 */
+function _scoreLabel(item, side) {
+  if (!item) return '--';
+  if (!isPuzzleChallenge(item)) {
+    if (side === 'responder') {
+      return item.responderScore != null ? String(item.responderScore) : '--';
+    }
+    return item.challengerScore != null ? String(item.challengerScore) : '--';
+  }
+  let lines = side === 'responder' ? item.responderLines : item.challengerLines;
+  if (typeof lines !== 'number' && side !== 'responder' && item.challengerScore != null && item.challengerScore < 10000) {
+    lines = item.challengerScore;
+  }
+  return typeof lines === 'number' ? (lines + '行') : '--';
+}
+
+function isPuzzleChallenge(rec) {
+  return challengeUi.isPuzzleChallenge(rec);
+}
+
+/**
+ * 残局应战开局（工坊 / 官方关共用）
+ * @param {object} rec 本地待应战或云端 challenge
+ * @param {object} [challenge] 云端详情（可覆盖 layout）
+ */
+function startPuzzleRespondGame(rec, challenge) {
+  if (!rec || !rec.challengeId) return false;
+  const src = challenge || rec;
+  const rows = (src && src.layoutSnapshot) || rec.layoutSnapshot;
+  if (!rows) return false;
+  const targetLines = (src && src.challengerLines != null)
+    ? src.challengerLines
+    : rec.challengerLines;
+  const title = (src && src.workshopTitle) || rec.workshopTitle
+    || (rec.mode === 'stage' ? '闯关挑战' : '工坊挑战');
+  const stageKey = (src && src.workshopStageId) || rec.workshopStageId || '';
+  let dropMs = 1000;
+  if (rec.mode === 'stage' && stageKey) {
+    try {
+      const goldenBlock = require('../../utils/golden-block-manager');
+      const st = goldenBlock.getStage(Number(stageKey) || stageKey);
+      if (st && st.dropIntervalMs) dropMs = st.dropIntervalMs;
+    } catch (e) { /* ignore */ }
+  }
+  GameGlobal.game.sceneManager.switchTo('game', {
+    mode: 'stage',
+    workshop: true,
+    workshopStageId: stageKey,
+    workshopRows: rows,
+    workshopTitle: title,
+    authorTrial: false,
+    workshopReturnTo: 'list',
+    workshopListParams: { origin: 'challenge' },
+    entryPaid: 0,
+    challengeId: rec.challengeId,
+    challengeMode: rec.mode || 'workshop',
+    targetScore: targetLines,
+    dropIntervalMs: dropMs,
+  });
+  return true;
 }
 
 /**
@@ -219,7 +283,7 @@ class ChallengeScene {
 
   _renderSheet(ctx) {
     this._modeAreas = [];
-    const sheetH = 220;
+    const sheetH = 200;
     const sheetY = H - sheetH;
     this._sheetY = sheetY;
     ctx.fillStyle = 'rgba(0,0,0,0.55)';
@@ -231,37 +295,36 @@ class ChallengeScene {
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('选择挑战模式', W / 2, sheetY + 22);
+    ctx.fillText('发起新挑战', W / 2, sheetY + 22);
     ctx.font = '14px sans-serif';
     ctx.fillText('关闭', W - 28, sheetY + 22);
     this._sheetCloseArea = { x: W - 56, y: sheetY, w: 56, h: 44 };
+
     const gridW = Math.min(300, W * 0.8);
     const gap = 12;
-    const cardW = (gridW - gap) / 2;
-    const cardH = 60;
+    const cardW = gridW;
+    const cardH = 52;
     const x0 = (W - gridW) / 2;
-    const y0 = sheetY + 44 + 12;
+    const y0 = sheetY + 52;
     const modes = [
-      { mode: 'classic', label: '经典模式', color: '#00c6ff', icon: 'brick' },
-      { mode: 'timed', label: '限时赛', color: '#f0a000', icon: 'clock' },
-      { mode: 'marathon', label: '马拉松', color: '#a000f0', icon: 'runner' },
-      { mode: 'special', label: '方块实验室', color: '#FF6B81', icon: 'crystal' }
+      { mode: 'stageSelect', label: '闯关选关发起', hint: '在已通关关卡上点「挑战」', color: '#e09a30' },
+      { mode: 'workshop', label: '去工坊发起', hint: '选择已自通的工坊关', color: '#2ecc71' },
     ];
     for (let i = 0; i < modes.length; i++) {
-      const col = i % 2;
-      const row = Math.floor(i / 2);
-      const x = x0 + col * (cardW + gap);
-      const y = y0 + row * (cardH + gap);
       const m = modes[i];
+      const x = x0;
+      const y = y0 + i * (cardH + gap);
       ctx.fillStyle = m.color;
       this._roundRect(ctx, x, y, cardW, cardH, 10);
       ctx.fill();
       ctx.fillStyle = '#ffffff';
-      ctx.font = '15px sans-serif';
+      ctx.font = 'bold 15px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      IconRenderer.draw(ctx, m.icon, x + cardW / 2, y + 22, 18, '#ffffff');
-      ctx.fillText(m.label, x + cardW / 2, y + 44);
+      ctx.fillText(m.label, x + cardW / 2, y + 18);
+      ctx.font = '12px sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.fillText(m.hint, x + cardW / 2, y + 36);
       this._modeAreas.push({ mode: m.mode, x, y, w: cardW, h: cardH });
     }
   }
@@ -337,8 +400,8 @@ class ChallengeScene {
     if (this._sentList.length === 0) {
       this._renderEmptyState(ctx, top, bottom, {
         title: '还没有发出的挑战',
-        hint: '先打一局，结算后可向好友发起挑战',
-        cta: '去打一局',
+        hint: '在已通关关卡或工坊关上发起挑战',
+        cta: '去选关',
         ctaAction: 'play',
       });
       return;
@@ -444,7 +507,10 @@ class ChallengeScene {
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText(MODE_NAMES[item.mode] || item.mode, LIST_X + 58, rowY + 21);
+    ctx.fillText(
+      (item.workshopTitle || MODE_NAMES[item.mode] || item.mode),
+      LIST_X + 58, rowY + 21
+    );
 
     ctx.font = '12px sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,0.45)';
@@ -453,7 +519,7 @@ class ChallengeScene {
     ctx.font = 'bold 16px sans-serif';
     ctx.fillStyle = '#00f0f0';
     ctx.textAlign = 'right';
-    ctx.fillText(item.challengerScore != null ? String(item.challengerScore) : '--', btnX - 14, rowY + 23);
+    ctx.fillText(_scoreLabel(item, 'challenger'), btnX - 14, rowY + 23);
 
     if (btnY >= top && btnY + btnH <= bottom) {
       this._drawActionButton(ctx, btnX, btnY, btnW, btnH, '撤回', '#ff6b6b');
@@ -473,7 +539,10 @@ class ChallengeScene {
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText(MODE_NAMES[item.mode] || item.mode, LIST_X + 58, rowY + 21);
+    ctx.fillText(
+      (item.workshopTitle || MODE_NAMES[item.mode] || item.mode),
+      LIST_X + 58, rowY + 21
+    );
 
     ctx.font = '12px sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,0.45)';
@@ -482,7 +551,7 @@ class ChallengeScene {
     ctx.font = 'bold 16px sans-serif';
     ctx.fillStyle = '#00f0f0';
     ctx.textAlign = 'right';
-    ctx.fillText(item.challengerScore != null ? String(item.challengerScore) : '--', btnX - 14, rowY + 23);
+    ctx.fillText(_scoreLabel(item, 'challenger'), btnX - 14, rowY + 23);
 
     if (btnY >= top && btnY + btnH <= bottom) {
       this._drawActionButton(ctx, btnX, btnY, btnW, btnH, '应战', '#00c6ff');
@@ -503,13 +572,20 @@ class ChallengeScene {
     const oppAvatar = isChallenger ? item.responderAvatar : item.challengerAvatar;
     const myScore = isChallenger ? item.challengerScore : item.responderScore;
     const oppScore = isChallenger ? item.responderScore : item.challengerScore;
+    const puzzle = isPuzzleChallenge(item);
+    const myLabel = puzzle
+      ? _scoreLabel(item, isChallenger ? 'challenger' : 'responder')
+      : (myScore != null ? String(myScore) : '--');
+    const oppLabel = puzzle
+      ? _scoreLabel(item, isChallenger ? 'responder' : 'challenger')
+      : (oppScore != null ? String(oppScore) : '--');
 
     // 双方头像
     this._drawAvatar(ctx, myAvatar, LIST_X + 14, rowY + (ITEM_H - 28) / 2, 28, myName || '我');
     this._drawAvatar(ctx, oppAvatar, LIST_X + 48, rowY + (ITEM_H - 28) / 2, 28, oppName || '对方');
 
-    const line1 = (myName || '我') + ' ' + (myScore != null ? myScore : '--') +
-      ' : ' + (oppName || '对方') + ' ' + (oppScore != null ? oppScore : '--');
+    const line1 = (myName || '我') + ' ' + myLabel +
+      ' : ' + (oppName || '对方') + ' ' + oppLabel;
 
     ctx.font = '12px sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,0.75)';
@@ -604,21 +680,15 @@ class ChallengeScene {
     let chain = Promise.resolve();
     for (let i = 0; i < list.length; i++) {
       const item = list[i];
-      if (item && item.challengeId && (!item.challengerName || !item.challengerAvatar)) {
+      if (item && item.challengeId && (
+        !item.challengerName || !item.challengerAvatar
+        || (isPuzzleChallenge(item) && !item.layoutSnapshot)
+      )) {
         chain = chain.then(() => {
           return cloudService.getChallengeById(item.challengeId).then((res) => {
             const challenge = res && res.challenge;
-            if (challenge && challenge.challengerName) {
-              item.challengerName = challenge.challengerName;
-              if (challenge.challengerAvatar) {
-                item.challengerAvatar = challenge.challengerAvatar;
-              }
-              if (!item.mode && challenge.mode) {
-                item.mode = challenge.mode;
-              }
-              if (typeof challenge.challengerScore === 'number' && item.challengerScore == null) {
-                item.challengerScore = challenge.challengerScore;
-              }
+            if (challenge) {
+              challengeUi.mergePendingFromCloud(item, challenge);
               try {
                 wx.setStorageSync(PENDING_CHALLENGES_KEY, this._incomingList);
               } catch (e) { /* ignore */ }
@@ -756,6 +826,14 @@ class ChallengeScene {
       this._showToast('挑战已过期');
       return;
     }
+
+    // 残局挑战（工坊 / 官方关）：拉布局后进 game
+    if (isPuzzleChallenge(rec)) {
+      this._startPuzzleRespond(rec);
+      return;
+    }
+
+    // 旧版自由模式挑战（兼容历史数据）
     let target = null;
     if (typeof rec.challengerScore === 'number' && !isNaN(rec.challengerScore)) {
       target = rec.challengerScore;
@@ -770,10 +848,29 @@ class ChallengeScene {
     });
   }
 
+  _startPuzzleRespond(rec) {
+    if (rec.layoutSnapshot && startPuzzleRespondGame(rec)) {
+      return;
+    }
+    if (!cloudService.isAvailable()) {
+      this._showToast('云开发未配置');
+      return;
+    }
+    this._showToast('加载挑战…');
+    cloudService.getChallengeById(rec.challengeId).then((res) => {
+      if (!res || !res.success || !res.challenge) {
+        this._showToast('挑战不存在或已过期');
+        return;
+      }
+      if (!startPuzzleRespondGame(rec, res.challenge)) {
+        this._showToast('挑战布局不可用');
+      }
+    }).catch(() => this._showToast('加载失败'));
+  }
+
   _counter(index) {
     const rec = this._completedList[index];
     if (!rec) return;
-    const myScore = rec.myRole === 'challenger' ? rec.challengerScore : rec.responderScore;
     const isChallenger = rec.myRole === 'challenger';
     const oppName = isChallenger ? (rec.responderName || '') : (rec.challengerName || '');
     const oppAvatar = isChallenger ? (rec.responderAvatar || '') : (rec.challengerAvatar || '');
@@ -784,40 +881,52 @@ class ChallengeScene {
     }
     if (this._busy) return;
     this._busy = true;
-    const modeName = MODE_NAMES[rec.mode] || rec.mode || '经典模式';
     ensureProfileForAction({
       title: '发起回击挑战',
       content: '授权微信头像昵称后，好友能看到你的资料。也可暂不授权，使用默认昵称继续发起。',
     }).then((profile) => {
-      return cloudService.createChallenge({
-        mode: rec.mode,
-        score: myScore,
-        nickname: (profile && profile.nickname) || '',
-        avatarUrl: (profile && profile.avatarUrl) || '',
-        targetName: oppName || '',
-        targetAvatar: oppAvatar || '',
-        targetOpenid: oppOpenid || '',
+      const buildPayload = (recSrc) => challengeUi.buildCreateChallengePayload({
+        profile,
+        opponent: { name: oppName, avatar: oppAvatar, openid: oppOpenid },
+        completedRecord: recSrc,
       });
-    }).then((res) => {
+      let createPayload = buildPayload(rec);
+      if (challengeUi.isPuzzleChallenge(createPayload) && !createPayload.layoutSnapshot) {
+        return cloudService.getChallengeById(rec._id || rec.challengeId).then((detail) => {
+          if (!detail || !detail.success || !detail.challenge) {
+            return { success: false, errMsg: '布局不可用' };
+          }
+          const merged = Object.assign({}, rec, detail.challenge);
+          createPayload = buildPayload(merged);
+          return cloudService.createChallenge(createPayload).then((res) => ({ res, createPayload }));
+        });
+      }
+      return cloudService.createChallenge(createPayload).then((res) => ({ res, createPayload }));
+    }).then((out) => {
       this._busy = false;
+      if (!out) return;
+      const res = out.res;
+      const createPayload = out.createPayload;
       if (!res) return;
       if (res && res.success) {
         try {
-          const { achievementManager } = require('../../utils/achievement-manager');
           achievementManager.reportChallengeCreate();
         } catch (e) {}
         try {
-          // 回击话术：与首次发起区分
-          wx.shareAppMessage({
-            title: '我反超了！' + modeName + ' ' + myScore + ' 分，再来？',
-            query: 'challengeId=' + res.challengeId + '&mode=' + rec.mode + '&score=' + myScore,
+          challengeShareCard.shareWithCard({
+            title: challengeUi.buildShareTitle({
+              isCounter: true,
+              opponentName: oppName,
+              payload: createPayload,
+            }),
+            query: challengeUi.buildShareQuery(res.challengeId, createPayload),
+            cardOpts: challengeShareCard.cardOptsFromPayload(createPayload, { isCounter: true }),
             success() {
               try {
-                const { achievementManager } = require('../../utils/achievement-manager');
                 achievementManager.reportShare();
                 achievementManager.reportInvite();
               } catch (e) {}
-            }
+            },
           });
         } catch (e) {}
         this._showToast('回击已发起');
@@ -855,7 +964,11 @@ class ChallengeScene {
       for (const area of this._modeAreas) {
         if (x >= area.x && x <= area.x + area.w && y >= area.y && y <= area.y + area.h) {
           this._sheetOpen = false;
-          GameGlobal.game.sceneManager.switchTo('game', { mode: area.mode, challengeLaunch: true });
+          if (area.mode === 'workshop') {
+            GameGlobal.game.sceneManager.switchTo('workshop');
+          } else {
+            GameGlobal.game.sceneManager.switchTo('stageSelect');
+          }
           return;
         }
       }
@@ -1017,3 +1130,5 @@ module.exports.getPendingChallenges = getPendingChallenges;
 module.exports.getPendingChallengeCount = getPendingChallengeCount;
 module.exports.prunePendingChallenges = prunePendingChallenges;
 module.exports.removePendingChallenge = removePendingChallenge;
+module.exports.isPuzzleChallenge = isPuzzleChallenge;
+module.exports.startPuzzleRespondGame = startPuzzleRespondGame;

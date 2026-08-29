@@ -1,5 +1,6 @@
 /**
- * WorkshopScene - 工坊：我的关卡 | 关卡广场
+ * WorkshopScene - 工坊：造关 / 管关（状态 Tab 为一级）
+ * 关卡广场已拆到独立 plaza 场景。
  */
 const { Button } = require('../widgets/button');
 const {
@@ -11,31 +12,19 @@ const {
 const workshop = require('../../utils/workshop-manager');
 const goldenBlock = require('../../utils/golden-block-manager');
 const { coinManager } = require('../../utils/coin-manager');
+const { achievementManager } = require('../../utils/achievement-manager');
 const { adManager, isRewardedVideoConfigured } = require('../../utils/ad-manager');
 
-const MAIN_TABS = [
-    { id: 'mine', label: '我的关卡' },
-    { id: 'plaza', label: '关卡广场' },
-];
-
-const MINE_SUB = [
+const STATUS_TABS = [
     { id: 'draft', label: '待自通', status: workshop.STATUS.draft },
     { id: 'cleared', label: '已通关', status: workshop.STATUS.cleared },
     { id: 'reviewing', label: '审核中', status: workshop.STATUS.reviewing },
     { id: 'published', label: '已发布', status: workshop.STATUS.published },
 ];
 
-const PLAZA_SORT = [
-    { id: 'new', label: '新关' },
-    { id: 'heat', label: '热门' },
-    { id: 'clearRate', label: '好通关' },
-];
-
 class WorkshopScene {
     constructor() {
-        this._mainTab = 'mine';
         this._mineSub = 'draft';
-        this._plazaSort = 'new';
         this._buttons = [];
         this._listRects = [];
         this._toast = '';
@@ -47,11 +36,13 @@ class WorkshopScene {
 
     onEnter(params) {
         const p = params || {};
-        if (p.mainTab) this._mainTab = p.mainTab;
+        // 兼容旧 mainTab/mineSub 回流参数
         if (p.mineSub) this._mineSub = p.mineSub;
+        else if (p.mainTab === 'plaza') this._mineSub = 'published';
         if (p.toast) this._showToast(p.toast);
         this._confirm = null;
         this._playDialog = null;
+        this._actionSheet = null;
         this._scrollY = 0;
         this._rebuild();
     }
@@ -96,66 +87,27 @@ class WorkshopScene {
         const gap = 10;
         this._buttons = [];
 
-        // 标题区占位：标题 + 副信息，再空一截才到主 Tab
         const titleY = top + 6;
         const metaY = titleY + 34;
         const tabY = metaY + 28;
 
-        const tabW = (W - side * 2 - gap) / 2;
-        MAIN_TABS.forEach((t, i) => {
+        const sw = (W - side * 2 - gap * 3) / 4;
+        STATUS_TABS.forEach((t, i) => {
             this._buttons.push(new Button({
-                x: side + i * (tabW + gap),
+                x: side + i * (sw + gap),
                 y: tabY,
-                w: tabW,
+                w: sw,
                 h: 42,
                 text: t.label,
-                color: this._mainTab === t.id ? '#e09a30' : '#444',
+                color: this._mineSub === t.id ? '#e09a30' : '#444',
                 onClick: () => {
-                    this._mainTab = t.id;
+                    this._mineSub = t.id;
                     this._scrollY = 0;
                     this._rebuild();
                 },
             }));
         });
 
-        const subY = tabY + 42 + 14;
-        if (this._mainTab === 'mine') {
-            const sw = (W - side * 2 - gap * 3) / 4;
-            MINE_SUB.forEach((t, i) => {
-                this._buttons.push(new Button({
-                    x: side + i * (sw + gap),
-                    y: subY,
-                    w: sw,
-                    h: 36,
-                    text: t.label,
-                    color: this._mineSub === t.id ? '#3a7ab0' : '#333',
-                    onClick: () => {
-                        this._mineSub = t.id;
-                        this._scrollY = 0;
-                        this._rebuild();
-                    },
-                }));
-            });
-        } else {
-            const sw = (W - side * 2 - gap * 2) / 3;
-            PLAZA_SORT.forEach((t, i) => {
-                this._buttons.push(new Button({
-                    x: side + i * (sw + gap),
-                    y: subY,
-                    w: sw,
-                    h: 36,
-                    text: t.label,
-                    color: this._plazaSort === t.id ? '#3a7ab0' : '#333',
-                    onClick: () => {
-                        this._plazaSort = t.id;
-                        this._scrollY = 0;
-                        this._rebuild();
-                    },
-                }));
-            });
-        }
-
-        // 底栏：返回 | 创建关卡 | 扩槽（三等分偏窄，带间隙）
         const bottomH = 48;
         const bottomY = H - bottomH - 18;
         const backW = 64;
@@ -196,7 +148,7 @@ class WorkshopScene {
 
         this._titleY = titleY;
         this._metaY = metaY;
-        this._listTop = subY + 36 + 16;
+        this._listTop = tabY + 42 + 16;
         this._listBottom = bottomY - 12;
         this._buildListRects();
     }
@@ -204,10 +156,8 @@ class WorkshopScene {
     _buildListRects() {
         this._listRects = [];
         const W = GameGlobal.game.width;
-        const items = this._mainTab === 'mine'
-            ? workshop.listByStatus(MINE_SUB.find((t) => t.id === this._mineSub).status)
-            : workshop.listPlaza(this._plazaSort);
-
+        const tab = STATUS_TABS.find((t) => t.id === this._mineSub) || STATUS_TABS[0];
+        const items = workshop.listByStatus(tab.status);
         const rowH = 72;
         items.forEach((stage, i) => {
             this._listRects.push({
@@ -243,7 +193,6 @@ class WorkshopScene {
         });
     }
 
-    /** 输入关卡名（微信 showModal editable） */
     _promptStageTitle(defaultTitle, onDone) {
         const fallback = () => {
             if (typeof onDone === 'function') onDone(defaultTitle || '未命名关卡');
@@ -339,28 +288,42 @@ class WorkshopScene {
             return;
         }
         if (action === 'trial') {
-            this._startWorkshopGame(stage, { authorTrial: true, entryPaid: 0 });
+            this._startWorkshopGame(stage, {
+                authorTrial: true,
+                entryPaid: 0,
+                returnTo: 'list',
+                listParams: {
+                    origin: 'workshop',
+                    mineSub: this._mineSub,
+                },
+            });
             return;
         }
         if (action === 'submit') {
-            const r = workshop.submitForReview(stage.stageId);
-            if (!r.ok) {
-                const map = {
-                    'daily-limit': '今日提交已满',
-                    'not-cleared': '请先自通',
-                    'need-clear': '布局已改，请重通',
-                    invalid: r.detail || '布局不合规',
-                };
-                this._showToast(map[r.reason] || '提交失败');
-            } else {
-                this._showToast('已发布到广场');
-                this._mineSub = 'published';
-            }
-            this._rebuild();
+            this._showToast('提交中…');
+            Promise.resolve(workshop.submitForReview(stage.stageId)).then((r) => {
+                if (!r || !r.ok) {
+                    const map = {
+                        'daily-limit': '今日提交已满',
+                        'not-cleared': '请先自通',
+                        'need-clear': '布局已改，请重通',
+                        invalid: (r && r.detail) || '布局不合规',
+                        cloud: (r && r.detail) || '云发布失败',
+                    };
+                    this._showToast((r && map[r.reason]) || '提交失败');
+                } else {
+                    this._showToast(r.offline ? '已本地发布（离线）' : '已发布到广场');
+                    this._mineSub = 'published';
+                    if (achievementManager && typeof achievementManager.reportWorkshopPublished === 'function') {
+                        achievementManager.reportWorkshopPublished();
+                    }
+                }
+                this._rebuild();
+            });
             return;
         }
         if (action === 'challenge') {
-            this._showToast('工坊好友挑战云端下期接入');
+            this._startWorkshopChallenge(stage);
             return;
         }
         if (action === 'delete') {
@@ -381,17 +344,96 @@ class WorkshopScene {
             return;
         }
         if (action === 'delist') {
-            workshop.delistStage(stage.stageId);
-            this._showToast('已下架');
-            this._rebuild();
+            Promise.resolve(workshop.delistStage(stage.stageId)).then((r) => {
+                if (!r || !r.ok) {
+                    this._showToast('下架失败');
+                } else {
+                    this._showToast('已下架');
+                    this._mineSub = 'cleared';
+                }
+                this._rebuild();
+            });
             return;
         }
         if (action === 'play') {
-            this._tryPlayPlaza(stage);
+            this._tryPlayOwnPublished(stage);
         }
     }
 
-    _tryPlayPlaza(stage) {
+    _startWorkshopChallenge(stage) {
+        const { cloudService } = require('../../utils/cloud-service');
+        if (!cloudService.isAvailable()) {
+            this._showToast('云开发未配置，无法发起挑战');
+            return;
+        }
+        const best = stage.authorBest;
+        if (!best || !(best.lines >= 1)) {
+            this._showToast('请先自通再挑战');
+            return;
+        }
+        const fee = workshop.spendChallengeFee();
+        if (!fee.ok) {
+            this._showToast('金币不足（需 ' + workshop.CHALLENGE_FEE + '）');
+            return;
+        }
+        this._showToast('创建挑战中…');
+        let profile = {};
+        try {
+            profile = require('../../utils/user-profile').getCachedProfile() || {};
+        } catch (e) { /* ignore */ }
+        cloudService.createChallenge({
+            mode: 'workshop',
+            workshopStageId: stage.stageId,
+            workshopTitle: stage.title,
+            layoutSnapshot: workshop.cloneRows(stage.rows),
+            challengerLines: best.lines,
+            challengerPieces: best.pieces || 0,
+            challengerTimeMs: best.timeMs || 0,
+            nickname: profile.nickname || '',
+            avatarUrl: profile.avatarUrl || '',
+        }).then((res) => {
+            if (!res || !res.success) {
+                // 退回挑战费
+                try {
+                    const bal = require('../../utils/coin-manager').coinManager.getCoins();
+                    wx.setStorageSync('gc_coins', bal + (fee.paid || 0));
+                } catch (e) { /* ignore */ }
+                this._showToast((res && res.errMsg) || '发起失败');
+                return;
+            }
+            workshop.bumpChallengeSend(stage.stageId);
+            const lines = best.lines;
+            const shareTitle = (stage.title || '工坊关卡') + ' · ' + lines + ' 行，来挑战！';
+            try {
+                const challengeShareCard = require('../../utils/challenge-share-card');
+                const sharePayload = {
+                    mode: 'workshop',
+                    workshopStageId: stage.stageId,
+                    workshopTitle: stage.title,
+                    layoutSnapshot: workshop.cloneRows(stage.rows),
+                    challengerLines: lines,
+                    challengerPieces: best.pieces || 0,
+                    challengerTimeMs: best.timeMs || 0,
+                };
+                challengeShareCard.shareWithCard({
+                    title: shareTitle,
+                    query: 'challengeId=' + encodeURIComponent(res.challengeId)
+                        + '&mode=workshop&score=' + lines,
+                    cardOpts: challengeShareCard.cardOptsFromPayload(sharePayload),
+                });
+            } catch (e) { /* ignore */ }
+            this._showToast('挑战已创建，请分享给好友');
+        }).catch(() => {
+            try {
+                const bal = require('../../utils/coin-manager').coinManager.getCoins();
+                wx.setStorageSync('gc_coins', bal + (fee.paid || 0));
+            } catch (e2) { /* ignore */ }
+            this._showToast('发起失败');
+        });
+    }
+
+    /** 已发布关：作者也可当玩家开打（回流工坊「已发布」） */
+    _tryPlayOwnPublished(stage) {
         if (!workshop.isPlazaUnlocked(stage.stageId)) {
             this._confirm = {
                 title: '解锁关卡',
@@ -435,6 +477,11 @@ class WorkshopScene {
             workshopRows: workshop.cloneRows(stage.rows),
             workshopTitle: stage.title,
             authorTrial: !!o.authorTrial,
+            workshopReturnTo: o.returnTo || 'list',
+            workshopListParams: o.listParams || {
+                origin: 'workshop',
+                mineSub: this._mineSub,
+            },
             entryPaid: o.entryPaid || 0,
             dropIntervalMs: stage.dropIntervalMs || 1000,
         });
@@ -464,7 +511,6 @@ class WorkshopScene {
 
         for (const btn of this._buttons) btn.render(ctx);
 
-        // 列表裁剪
         ctx.save();
         ctx.beginPath();
         ctx.rect(0, this._listTop, W, this._listBottom - this._listTop);
@@ -474,11 +520,7 @@ class WorkshopScene {
             ctx.fillStyle = MUTED;
             ctx.font = '14px sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText(
-                this._mainTab === 'mine' ? '暂无关卡，点底部创建' : '广场暂无发布关卡',
-                W / 2,
-                (this._listTop + this._listBottom) / 2
-            );
+            ctx.fillText('暂无关卡，点底部创建', W / 2, (this._listTop + this._listBottom) / 2);
         }
 
         this._listRects.forEach((item) => {
@@ -517,11 +559,7 @@ class WorkshopScene {
 
         let sub = '垃圾 ' + (stage.garbageCount || 0)
             + ' · 行 ' + (stage.minLines || 0);
-        if (this._mainTab === 'plaza') {
-            const unlocked = workshop.isPlazaUnlocked(stage.stageId);
-            sub += unlocked ? ' · 已解锁' : ' · 需1金解锁';
-            sub += ' · 通关' + ((stage.stats && stage.stats.clearCount) || 0);
-        } else if (stage.status === workshop.STATUS.rejected) {
+        if (stage.status === workshop.STATUS.rejected) {
             sub = '已驳回 · ' + sub;
         } else if (stage.status === workshop.STATUS.delisted) {
             sub = '已下架 · ' + sub;
@@ -530,7 +568,6 @@ class WorkshopScene {
         ctx.font = '12px sans-serif';
         ctx.fillText(sub, x + 12, y + 48);
 
-        // 缩略盘：右侧小格
         this._drawMiniBoard(ctx, stage.rows, x + w - 56, y + 10, 4);
     }
 
@@ -769,7 +806,13 @@ class WorkshopScene {
                     return;
                 }
                 this._playDialog = null;
-                this._startWorkshopGame(d.stage, { entryPaid: paid.paid });
+                this._startWorkshopGame(d.stage, {
+                    entryPaid: paid.paid,
+                    listParams: {
+                        origin: 'workshop',
+                        mineSub: this._mineSub,
+                    },
+                });
                 return;
             }
             if (this._hit(x, y, r.ad)) {
@@ -784,7 +827,13 @@ class WorkshopScene {
                             return;
                         }
                         this._playDialog = null;
-                        this._startWorkshopGame(d.stage, { entryPaid: 0 });
+                        this._startWorkshopGame(d.stage, {
+                            entryPaid: 0,
+                            listParams: {
+                                origin: 'workshop',
+                                mineSub: this._mineSub,
+                            },
+                        });
                     })
                     .catch(() => this._showToast('需完整观看广告'));
                 return;
@@ -808,8 +857,7 @@ class WorkshopScene {
             for (let i = 0; i < this._listRects.length; i++) {
                 const item = this._listRects[i];
                 if (this._hit(x, y, item)) {
-                    if (this._mainTab === 'mine') this._onMineItem(item.stage);
-                    else this._tryPlayPlaza(item.stage);
+                    this._onMineItem(item.stage);
                     return;
                 }
             }

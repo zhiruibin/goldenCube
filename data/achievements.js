@@ -1,6 +1,6 @@
 /**
  * 成就定义（挖个方块 · 进度 + 社交）
- * 进度 18 + 社交 5 = 23；发金合计上限 +12（通章/全通/社交点亮发 0 金，社交发币）
+ * 进度 18 + 社交 7 = 25；发金合计上限 +15（通章/全通/社交点亮发 0 金，社交发币）
  */
 
 const achievements = {
@@ -42,7 +42,7 @@ const achievements = {
             icon: 'medal',
             category: 'progress',
             condition: { type: 'stage_clear_count', count: 50 },
-            rewardGold: 2,
+            rewardGold: 3,
             rewardCoins: 0,
         },
         {
@@ -52,7 +52,7 @@ const achievements = {
             icon: 'fire',
             category: 'progress',
             condition: { type: 'stage_clear_count', count: 75 },
-            rewardGold: 2,
+            rewardGold: 3,
             rewardCoins: 0,
         },
         {
@@ -182,7 +182,7 @@ const achievements = {
             icon: 'crystal',
             category: 'progress',
             condition: { type: 'unlock_count', count: 60 },
-            rewardGold: 2,
+            rewardGold: 3,
             rewardCoins: 0,
         },
     ],
@@ -226,6 +226,26 @@ const achievements = {
             condition: { type: 'challenge_respond', count: 1 },
             rewardGold: 0,
             rewardCoins: 20,
+        },
+        {
+            id: 'social_challenge_perfect_ten',
+            name: '十全十美',
+            desc: '累计发起十次挑战，并完成十次应战',
+            icon: 'star',
+            category: 'social',
+            condition: { type: 'challenge_create_and_respond', count: 10 },
+            rewardGold: 0,
+            rewardCoins: 50,
+        },
+        {
+            id: 'social_workshop_publish_1',
+            name: '自我突破',
+            desc: '创建属于自己的关卡通关并发布',
+            icon: 'rocket',
+            category: 'social',
+            condition: { type: 'workshop_publish', count: 1 },
+            rewardGold: 0,
+            rewardCoins: 40,
         },
         {
             id: 'social_challenge_last10_win',

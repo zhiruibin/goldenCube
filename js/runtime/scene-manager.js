@@ -172,7 +172,19 @@ class SceneManager {
         if (this.current && this.current.render) {
             this.current.render(ctx);
         }
-        // 全局授权弹窗叠在当前场景之上（「去授权」为 UserInfoButton）
+        // 全局授权弹窗叠在当前场景之上（隐私优先于资料授权）
+        try {
+            const {
+                isPrivacyDialogVisible,
+                renderPrivacyDialog,
+            } = require('../../utils/privacy');
+            if (isPrivacyDialogVisible()) {
+                const W = (typeof GameGlobal !== 'undefined' && GameGlobal.game && GameGlobal.game.width) || 375;
+                const H = (typeof GameGlobal !== 'undefined' && GameGlobal.game && GameGlobal.game.height) || 667;
+                renderPrivacyDialog(ctx, W, H);
+                return;
+            }
+        } catch (e) { /* ignore */ }
         try {
             const {
                 isProfileAuthDialogVisible,

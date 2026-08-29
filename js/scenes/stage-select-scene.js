@@ -46,6 +46,7 @@ class StageSelectScene {
         this._animTime = 0;
         // 底部返回按钮（样式同商店）
         this._backButton = null;
+        this._challengeBusy = false;
         this._chapters = [];
         this._chapter = 0;
         this._stages = [];
@@ -72,6 +73,9 @@ class StageSelectScene {
         this._initFallingBlocks();
         this._initBackButton();
         this._chapters = goldenBlock.getChapters();
+        if (typeof goldenBlock.syncUnlockedFromProgress === 'function') {
+            goldenBlock.syncUnlockedFromProgress();
+        }
         this._chapter = 0;
         this._offsetX = 0;
         this._animT = 1;
@@ -190,14 +194,25 @@ class StageSelectScene {
                 const row = Math.floor(i / COLS);
                 const x = m.contentLeft + col * (m.cardW + m.cardGap);
                 const y = m.gridTop + row * (m.cardH + m.cardGap);
+                const cleared = !!goldenBlock.getStageBest(stage.id);
+                const btnW = 88;
+                const btnH = 24;
+                const challengeBtn = cleared ? {
+                    x: x + m.cardW - btnW - 10,
+                    y: y + m.cardH - btnH - 10,
+                    w: btnW,
+                    h: btnH,
+                    stageId: stage.id,
+                } : null;
                 cards.push({
                     stage,
                     x,
                     y,
                     w: m.cardW,
                     h: m.cardH,
+                    challengeBtn,
                 });
-                hitRects.push({ x, y, w: m.cardW, h: m.cardH });
+                hitRects.push({ x, y, w: m.cardW, h: m.cardH, challengeBtn });
             });
             this._chapterCards.push(cards);
             this._chapterHitRects.push(hitRects);
@@ -248,6 +263,20 @@ class StageSelectScene {
         const cards = this._chapterHitRects[ch] || [];
         const pageOffset = ch * W + this._offsetX;
         const localX = x - pageOffset;
+        // 已通关关卡上的「挑战」按钮优先命中
+        for (let i = 0; i < cards.length; i++) {
+            const r = cards[i];
+            const cb = r.challengeBtn;
+            if (!cb) continue;
+            if (localX >= cb.x && localX <= cb.x + cb.w && y >= cb.y && y <= cb.y + cb.h) {
+                if (!goldenBlock.isChapterUnlocked(this._chapters[ch].id)) {
+                    this._showToast('通关上一章全部关卡后解锁');
+                    return;
+                }
+                this._startStageChallenge(this._chapterCards[ch][i].stage);
+                return;
+            }
+        }
         for (let i = 0; i < cards.length; i++) {
             const r = cards[i];
             if (localX >= r.x && localX <= r.x + r.w && y >= r.y && y <= r.y + r.h) {
@@ -259,6 +288,99 @@ class StageSelectScene {
                 return;
             }
         }
+    }
+
+    /** 已通关官方关：创建残局挑战并分享 */
+    _startStageChallenge(stage) {
+        if (!stage || this._challengeBusy) return;
+        const best = goldenBlock.getStageBest(stage.id);
+        if (!best || !(best.lines >= 1)) {
+            this._showToast('请先通关再挑战');
+            return;
+        }
+        if (!stage.rows) {
+            this._showToast('关卡布局不可用');
+            return;
+        }
+
+        let cloudService = null;
+        try {
+            ({ cloudService } = require('../../utils/cloud-service'));
+        } catch (e) {
+            cloudService = null;
+        }
+        if (!cloudService || !cloudService.isAvailable()) {
+            this._showToast('云开发未配置，无法发起挑战');
+            return;
+        }
+
+        this._challengeBusy = true;
+        this._showToast('创建挑战中…');
+
+        const workshop = require('../../utils/workshop-manager');
+        const layoutSnapshot = workshop.cloneRows(stage.rows);
+        const title = ('第' + stage.id + '关·' + (stage.name || '')).slice(0, 20);
+
+        const { ensureProfileForAction } = require('../../utils/user-profile');
+        ensureProfileForAction({
+            title: '发起好友挑战',
+            content: '授权微信头像昵称后，好友能看到你的资料。也可暂不授权，使用默认昵称继续发起。',
+        }).then((profile) => {
+            return cloudService.createChallenge({
+                mode: 'stage',
+                stageId: String(stage.id),
+                workshopStageId: String(stage.id),
+                workshopTitle: title,
+                stageTitle: title,
+                layoutSnapshot,
+                challengerLines: best.lines,
+                challengerPieces: best.pieces || 0,
+                challengerTimeMs: best.timeMs || 0,
+                nickname: (profile && profile.nickname) || '',
+                avatarUrl: (profile && profile.avatarUrl) || '',
+            });
+        }).then((res) => {
+            this._challengeBusy = false;
+            if (!res || !res.success || !res.challengeId) {
+                this._showToast((res && res.errMsg) || '发起失败');
+                return;
+            }
+            try {
+                const { achievementManager } = require('../../utils/achievement-manager');
+                if (achievementManager && typeof achievementManager.reportChallengeCreate === 'function') {
+                    achievementManager.reportChallengeCreate();
+                }
+            } catch (e) { /* ignore */ }
+            try {
+                const challengeShareCard = require('../../utils/challenge-share-card');
+                const sharePayload = {
+                    mode: 'stage',
+                    workshopStageId: String(stage.id),
+                    workshopTitle: title,
+                    layoutSnapshot,
+                    challengerLines: best.lines,
+                    challengerPieces: best.pieces || 0,
+                    challengerTimeMs: best.timeMs || 0,
+                };
+                challengeShareCard.shareWithCard({
+                    title: title + ' · ' + best.lines + ' 行，敢来挑战吗？',
+                    query: 'challengeId=' + encodeURIComponent(res.challengeId)
+                        + '&mode=stage&score=' + best.lines,
+                    cardOpts: challengeShareCard.cardOptsFromPayload(sharePayload),
+                    success: () => {
+                        try {
+                            const { achievementManager } = require('../../utils/achievement-manager');
+                            achievementManager.reportShare();
+                            achievementManager.reportInvite();
+                        } catch (e) { /* ignore */ }
+                    },
+                });
+            } catch (e) { /* ignore */ }
+            this._showToast('挑战已创建，请分享给好友');
+        }).catch(() => {
+            this._challengeBusy = false;
+            this._showToast('发起失败');
+        });
     }
 
     _handleCardTap(card) {
@@ -541,7 +663,7 @@ class StageSelectScene {
         const best = goldenBlock.getStageBest(stage.id);
         const cleared = !!best;
         const nameY = y + Math.max(42, h - 36);
-        const nameMaxW = w - 24;
+        const nameMaxW = w - 24 - (cleared ? 94 : 0);
 
         if (!chapterUnlocked) {
             // 章节未解锁：整体灰态，仅提示不可进入
@@ -632,6 +754,24 @@ class StageSelectScene {
         }
         ctx.fillText(status, x + w - 12, y + 12);
         ctx.textAlign = 'left';
+
+        // 已通关：右下角「约好友来战」（邀请好友打同一关，非自己再战）
+        if (cleared && card.challengeBtn) {
+            const cb = card.challengeBtn;
+            const bx = cb.x + pageX;
+            const by = cb.y;
+            ctx.fillStyle = 'rgba(224, 154, 48, 0.9)';
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(bx, by, cb.w, cb.h, 6);
+            else ctx.rect(bx, by, cb.w, cb.h);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 11px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('约好友来战', bx + cb.w / 2, by + cb.h / 2);
+            ctx.textAlign = 'left';
+        }
     }
 
     render(ctx) {

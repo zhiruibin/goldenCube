@@ -1,0 +1,9 @@
+{
+  "name": "workshop",
+  "version": "1.0.0",
+  "description": "工坊 / 关卡广场云函数",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

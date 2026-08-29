@@ -2,8 +2,8 @@
  * utils/golden-block-manager.js
  * 金色方块：进度货币
  *  - 首通 +1；破纪录 +1/关且每关封顶 2 次（不含首通）
- *  - 章节全通 +5；全通全部关卡里程碑 +10
- *  - 成就发金累计校验（3 章表 +8 / 10 章表 +12）
+ *  - 章节全通 +1/章；全通全部关卡里程碑 +10
+ *  - 成就发金累计校验（3 章表 +8 / 10 章表 +15）
  */
 
 const STAGES_DATA = require('../data/stages-v1.js');
@@ -24,9 +24,9 @@ function getTotalStageCount() {
     return (STAGES_DATA.stages || []).length;
 }
 
-/** 成就发金生涯上限：≥100 关用 12，否则 8 */
+/** 成就发金生涯上限：≥100 关用 15，否则 8 */
 function getAchievementGoldCap() {
-    return getTotalStageCount() >= 100 ? 12 : 8;
+    return getTotalStageCount() >= 100 ? 15 : 8;
 }
 
 function getStages() {
@@ -125,15 +125,48 @@ function unlockStage(id) {
     return { ok: true, stage, balance: getBalance() };
 }
 
+/** 已通关的关自动视为已解锁（升级 unlockCost 后兼容老存档，不重复扣金） */
+function syncUnlockedFromProgress() {
+    const list = getUnlocked();
+    let changed = false;
+    getStages().forEach((s) => {
+        if (!s || s.unlockCost === 0) return;
+        if (isCleared(s.id) && list.indexOf(s.id) < 0) {
+            list.push(s.id);
+            changed = true;
+        }
+    });
+    if (changed) _saveUnlocked(list);
+    return changed;
+}
+
+/** 合法个人最佳：至少消过 1 行（拒绝 lines:0 等幽灵纪录，避免永久堵死首通/破纪录） */
+function _isValidBest(rec) {
+    return !!(rec
+        && typeof rec === 'object'
+        && typeof rec.lines === 'number'
+        && isFinite(rec.lines)
+        && rec.lines >= 1);
+}
+
 function getStageBest(id) {
     try {
-        return wx.getStorageSync(KEYS.bestPrefix + Number(id)) || null;
+        const raw = wx.getStorageSync(KEYS.bestPrefix + Number(id));
+        if (!_isValidBest(raw)) {
+            // 清掉非法/空纪录，避免「以为首通却提示未刷新」
+            if (raw) {
+                try { wx.removeStorageSync(KEYS.bestPrefix + Number(id)); } catch (e2) { /* ignore */ }
+            }
+            return null;
+        }
+        return raw;
     } catch (e) {
         return null;
     }
 }
 
 function isBetter(a, b) {
+    if (!_isValidBest(b)) return true;
     if (a.lines !== b.lines) return a.lines < b.lines;
     if ((a.pieces || 0) !== (b.pieces || 0)) return (a.pieces || 0) < (b.pieces || 0);
     return (a.timeMs || 0) < (b.timeMs || 0);
@@ -148,6 +181,7 @@ function getClearedCount() {
 }
 
 function _saveStageBest(id, rec) {
+    if (!_isValidBest(rec)) return;
     try {
         wx.setStorageSync(KEYS.bestPrefix + Number(id), rec);
     } catch (e) { /* ignore */ }
@@ -182,7 +216,7 @@ function _saveChaptersCleared(list) {
 }
 
 /**
- * 通关结算：首通 +1；破纪录（非首通）+1 且每关最多 2 次；章全通 +5；全通里程碑 +10
+ * 通关结算：首通 +1；破纪录（非首通）+1 且每关最多 2 次；章全通 +1；全通里程碑 +10
  * @returns {{ first, isNewBest, reward, chapterReward, milestoneReward, best, clearedCount }}
  */
 function rewardClear(id, lines, pieces, timeMs) {
@@ -216,8 +250,8 @@ function rewardClear(id, lines, pieces, timeMs) {
             if (cleared.indexOf(cid) < 0) {
                 cleared.push(cid);
                 _saveChaptersCleared(cleared);
-                chapterReward = 5;
-                addBalance(5);
+                chapterReward = 1;
+                addBalance(1);
             }
         }
     }
@@ -314,6 +348,7 @@ module.exports = {
     spendBalance,
     isUnlocked,
     unlockStage,
+    syncUnlockedFromProgress,
     getStageBest,
     isCleared,
     isBetter,

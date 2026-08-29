@@ -31,6 +31,7 @@ class AchievementScene {
         this._category = 'progress';
         this._scrollY = 0;
         achievementManager.init();
+        achievementManager.checkAll();
         this._buildList();
         this._initUI();
     }

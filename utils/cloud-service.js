@@ -27,6 +27,7 @@
 const {
     CLOUD_ENV,
     GAME_MODES,
+    CHALLENGE_MODES,
 } = require('./cloud-config');
 const { encodeRankScore } = require('./rank-score');
 
@@ -53,10 +54,30 @@ class CloudService {
         this._initTried = true;
 
         try {
-            if (typeof wx.cloud === 'undefined') {
+            if (typeof wx === 'undefined' || typeof wx.cloud === 'undefined') {
                 console.warn('[Cloud] wx.cloud 不可用，进入本地降级模式');
                 return false;
             }
+
+            // 41002 appid missing：多数是开发者工具未带上 AppID（游客/未登录/项目详情 AppID 为空）
+            let runtimeAppId = '';
+            try {
+                const acc = wx.getAccountInfoSync && wx.getAccountInfoSync();
+                runtimeAppId = (acc
+                    && acc.miniProgram
+                    && acc.miniProgram.appId) || '';
+            } catch (e) { /* ignore */ }
+
+            if (!runtimeAppId) {
+                console.warn(
+                    '[Cloud] 运行时 AppID 为空（err 41002 常见原因）。'
+                    + '请在微信开发者工具「详情 → 基本信息」确认 AppID 为 wxaf95434d9f7c7962，'
+                    + '并用该小游戏管理员账号登录；不要用游客模式。进入本地降级。'
+                );
+                this._available = false;
+                return false;
+            }
+
             if (CLOUD_ENV) {
                 wx.cloud.init({ env: CLOUD_ENV, traceUser: true });
             } else {
@@ -64,7 +85,11 @@ class CloudService {
             }
             this._cloud = wx.cloud;
             this._available = true;
-            console.log('[Cloud] 云开发初始化成功', CLOUD_ENV ? 'env=' + CLOUD_ENV : '默认环境');
+            console.log(
+                '[Cloud] 云开发初始化成功',
+                'appId=' + runtimeAppId,
+                CLOUD_ENV ? 'env=' + CLOUD_ENV : '默认环境'
+            );
         } catch (e) {
             console.warn('[Cloud] 云开发初始化失败，进入本地降级模式', e);
             this._available = false;
@@ -272,11 +297,13 @@ class CloudService {
 
     /**
      * 发起挑战
-     * @param {object} payload { mode, score, nickname, avatarUrl, targetName, targetAvatar, targetOpenid }
-     * @returns {Promise<{success:boolean, challengeId:string, challenge:object|null, offline:boolean, errMsg?:string}>}
+     * @param {object} payload { mode, score, nickname, avatarUrl, target*, workshop* }
      */
     async createChallenge(payload) {
-        const mode = GAME_MODES.indexOf(payload && payload.mode) >= 0 ? payload.mode : 'stage';
+        const rawMode = (payload && payload.mode) || 'stage';
+        const mode = (CHALLENGE_MODES || []).indexOf(rawMode) >= 0
+            ? rawMode
+            : (GAME_MODES.indexOf(rawMode) >= 0 ? rawMode : 'stage');
         const score = Math.max(0, Math.floor(Number(payload && payload.score) || 0));
 
         if (!this.isAvailable()) {
@@ -284,20 +311,27 @@ class CloudService {
         }
 
         try {
+            const data = {
+                mode,
+                score,
+                nickname: (payload && payload.nickname) || '',
+                avatarUrl: (payload && payload.avatarUrl) || '',
+                targetName: (payload && payload.targetName) || '',
+                targetAvatar: (payload && payload.targetAvatar) || '',
+                targetOpenid: (payload && payload.targetOpenid) || '',
+            };
+            // 工坊 / 官方关残局挑战共用布局与成绩字段
+            if (mode === 'workshop' || (mode === 'stage' && payload && payload.layoutSnapshot)) {
+                data.workshopStageId = (payload && (payload.workshopStageId || payload.stageId)) || '';
+                data.workshopTitle = (payload && (payload.workshopTitle || payload.stageTitle)) || '';
+                data.layoutSnapshot = (payload && payload.layoutSnapshot) || null;
+                data.challengerLines = Math.max(0, Math.floor(Number(payload && payload.challengerLines) || 0));
+                data.challengerPieces = Math.max(0, Math.floor(Number(payload && payload.challengerPieces) || 0));
+                data.challengerTimeMs = Math.max(0, Math.floor(Number(payload && payload.challengerTimeMs) || 0));
+            }
             const res = await wx.cloud.callFunction({
                 name: 'challenge',
-                data: {
-                    action: 'createChallenge',
-                    data: {
-                        mode,
-                        score,
-                        nickname: (payload && payload.nickname) || '',
-                        avatarUrl: (payload && payload.avatarUrl) || '',
-                        targetName: (payload && payload.targetName) || '',
-                        targetAvatar: (payload && payload.targetAvatar) || '',
-                        targetOpenid: (payload && payload.targetOpenid) || '',
-                    },
-                },
+                data: { action: 'createChallenge', data },
             });
             const r = (res && res.result) || {};
             return {
@@ -314,8 +348,7 @@ class CloudService {
     }
 
     /*** 应战并写回结果
-     * @param {object} payload { challengeId, score, nickname, avatarUrl }
-     * @returns {Promise<{success:boolean, challengeId:string, result:object|null, challenge:object|null, offline:boolean, errMsg?:string}>}
+     * @param {object} payload { challengeId, score, nickname, avatarUrl, lines, pieces, timeMs }
      */
     async respondChallenge(payload) {
         const challengeId = payload && payload.challengeId;
@@ -338,6 +371,9 @@ class CloudService {
                         score,
                         nickname: (payload && payload.nickname) || '',
                         avatarUrl: (payload && payload.avatarUrl) || '',
+                        lines: payload && payload.lines,
+                        pieces: payload && payload.pieces,
+                        timeMs: payload && payload.timeMs,
                     },
                 },
             });
@@ -346,12 +382,15 @@ class CloudService {
                 success: !!r.success,
                 challengeId: r.challengeId || challengeId,
                 result: r.result || null,
+                mode: r.mode || '',
                 challengerScore: typeof r.challengerScore === 'number'
                     ? r.challengerScore
                     : (r.challenge && typeof r.challenge.challengerScore === 'number' ? r.challenge.challengerScore : null),
                 responderScore: typeof r.responderScore === 'number'
                     ? r.responderScore
                     : (r.challenge && typeof r.challenge.responderScore === 'number' ? r.challenge.responderScore : null),
+                challengerLines: typeof r.challengerLines === 'number' ? r.challengerLines : null,
+                responderLines: typeof r.responderLines === 'number' ? r.responderLines : null,
                 challenge: r.challenge || null,
                 offline: false,
                 errMsg: r.errMsg || '',
@@ -566,6 +605,108 @@ class CloudService {
             wx.setStorageSync(key, payload);
         } catch (e) {
             // 忽略存储异常
+        }
+    }
+
+    // ---------- 工坊 / 广场 ----------
+
+    _callWorkshop(action, data) {
+        return wx.cloud.callFunction({
+            name: 'workshop',
+            data: { action, data: data || {} },
+        }).then((res) => (res && res.result) || { success: false, errMsg: 'empty result' });
+    }
+
+    /** 发布关卡到广场 */
+    async publishWorkshopStage(payload) {
+        if (!this.isAvailable()) {
+            return { success: false, offline: true, errMsg: 'cloud unavailable' };
+        }
+        try {
+            const r = await this._callWorkshop('publishStage', payload);
+            return Object.assign({ offline: false }, r);
+        } catch (e) {
+            console.warn('[Cloud] publishWorkshopStage', e);
+            return { success: false, offline: false, errMsg: (e && e.errMsg) || String(e) };
+        }
+    }
+
+    async delistWorkshopStage(stageId) {
+        if (!this.isAvailable()) {
+            return { success: false, offline: true, errMsg: 'cloud unavailable' };
+        }
+        try {
+            const r = await this._callWorkshop('delistStage', { stageId });
+            return Object.assign({ offline: false }, r);
+        } catch (e) {
+            return { success: false, offline: false, errMsg: (e && e.errMsg) || String(e) };
+        }
+    }
+
+    async listPlaza(opts) {
+        if (!this.isAvailable()) {
+            return { success: false, list: [], total: 0, offline: true };
+        }
+        try {
+            const r = await this._callWorkshop('listPlaza', {
+                sort: (opts && opts.sort) || 'new',
+                page: (opts && opts.page) || 1,
+                pageSize: (opts && opts.pageSize) || 30,
+            });
+            return {
+                success: !!r.success,
+                list: r.list || [],
+                total: r.total || 0,
+                offline: false,
+                errMsg: r.errMsg || '',
+            };
+        } catch (e) {
+            console.warn('[Cloud] listPlaza', e);
+            return { success: false, list: [], total: 0, offline: false, errMsg: (e && e.errMsg) || String(e) };
+        }
+    }
+
+    async getWorkshopStage(stageId) {
+        if (!this.isAvailable()) {
+            return { success: false, stage: null, offline: true };
+        }
+        try {
+            const r = await this._callWorkshop('getStage', { stageId });
+            return {
+                success: !!r.success,
+                stage: r.stage || null,
+                offline: false,
+                errMsg: r.errMsg || '',
+            };
+        } catch (e) {
+            return { success: false, stage: null, offline: false, errMsg: (e && e.errMsg) || String(e) };
+        }
+    }
+
+    async reportWorkshopPlay(stageId) {
+        if (!this.isAvailable() || !stageId) return { success: false };
+        try {
+            return await this._callWorkshop('reportPlay', { stageId });
+        } catch (e) {
+            return { success: false };
+        }
+    }
+
+    async reportWorkshopClear(stageId) {
+        if (!this.isAvailable() || !stageId) return { success: false };
+        try {
+            return await this._callWorkshop('reportClear', { stageId });
+        } catch (e) {
+            return { success: false };
+        }
+    }
+
+    async bumpWorkshopChallenge(stageId) {
+        if (!this.isAvailable() || !stageId) return { success: false };
+        try {
+            return await this._callWorkshop('bumpChallenge', { stageId });
+        } catch (e) {
+            return { success: false };
         }
     }
 }

@@ -34,6 +34,8 @@ class AudioManager {
     this._packId = 'default'
     /** @type {Object} 当前音效包参数 */
     this._pack = soundPackProfiles.default || {}
+    /** @type {boolean} BGM 正在异步 resume 后启动 */
+    this._bgmStarting = false
   }
 
   // ==================== 初始化 ====================
@@ -115,15 +117,62 @@ class AudioManager {
 
 
   /*** 确保 AudioContext 处于运行状态（处理 suspended 状态）
+   * @returns {Promise<void>|void}
    */
   _ensureRunning() {
     if (!this.ctx) return
     try {
       if (this.ctx.state === 'suspended' && this.ctx.resume) {
-        this.ctx.resume().catch(() => {})
+        return this.ctx.resume().catch(() => {})
       }
     } catch (e) {
       // 忽略
+    }
+  }
+
+  /**
+   * 确保 BGM 真正在响（处理「已标记播放但 context 仍 suspended」的假开播）
+   */
+  ensureBgmPlaying() {
+    if (this.muted || this.bgmVolume <= 0.001) return
+    if (!this.isInitialized()) this.init()
+    const startOrKick = () => {
+      if (!this._bgmPlaying) {
+        this.playBGM()
+      } else if (!this._bgmTimer) {
+        this._scheduleNextBgmNote()
+      } else {
+        // 已有循环：再 kick 一次 resume，避免首页静音
+        this._ensureRunning()
+      }
+    }
+    const p = this._ensureRunning()
+    if (p && typeof p.then === 'function') {
+      p.then(startOrKick)
+    } else {
+      startOrKick()
+    }
+  }
+
+  /**
+   * 按设置同步音效/BGM（互不影响：关音效不清 BGM，关 BGM 不影响落地声）
+   * @param {{ sfx?: boolean, bgm?: boolean }} settings
+   */
+  applyUserSettings(settings) {
+    const s = settings || {}
+    const sfxOn = s.sfx !== false
+    const bgmOn = s.bgm !== false
+    // 旧逻辑曾用 setMute 关音效，会连 BGM 一起掐掉；这里强制解除总静音
+    this.muted = false
+    this.setSfxVolume(sfxOn ? 0.8 : 0)
+    this.setBgmVolume(bgmOn ? 0.5 : 0)
+    if (!this.isInitialized()) {
+      this.init()
+    }
+    if (bgmOn) {
+      this.ensureBgmPlaying()
+    } else {
+      this.stopBGM()
     }
   }
 
@@ -166,8 +215,8 @@ class AudioManager {
     if (muted) {
       this._stopAllActive()
       this.stopBGM()
-    } else if (this._bgmPlaying && !this._bgmTimer) {
-      this.playBGM()
+    } else if (this.bgmVolume > 0.001) {
+      this.ensureBgmPlaying()
     }
   }
 
@@ -473,17 +522,30 @@ class AudioManager {
    * 旋律 + 低音双轨，增加层次感
    */
   playBGM() {
-    if (!this.ctx || this.muted || this._bgmPlaying) return
-    this._bgmPlaying = true
-    this._bgmIndex = 0
-    // 芯片音乐风格循环（C 大调）：[旋律频率, 低音频率]
-    this._bgmSequence = [
-      [523, 131], [659, 131], [784, 131], [659, 131],
-      [523, 131], [659, 131], [880, 131], [659, 131],
-      [784, 147], [880, 147], [1047, 147], [880, 147],
-      [784, 147], [659, 147], [587, 147], [523, 147],
-    ]
-    this._scheduleNextBgmNote()
+    if (!this.ctx || this.muted || this._bgmPlaying || this._bgmStarting) return
+    // BGM 也走用户设置：bgmVolume=0 时不启动循环
+    if (this.bgmVolume <= 0.001) return
+    this._bgmStarting = true
+    const begin = () => {
+      this._bgmStarting = false
+      if (this._bgmPlaying || this.muted || this.bgmVolume <= 0.001) return
+      this._bgmPlaying = true
+      this._bgmIndex = 0
+      // 芯片音乐风格循环（C 大调）：[旋律频率, 低音频率]
+      this._bgmSequence = [
+        [523, 131], [659, 131], [784, 131], [659, 131],
+        [523, 131], [659, 131], [880, 131], [659, 131],
+        [784, 147], [880, 147], [1047, 147], [880, 147],
+        [784, 147], [659, 147], [587, 147], [523, 147],
+      ]
+      this._scheduleNextBgmNote()
+    }
+    const p = this._ensureRunning()
+    if (p && typeof p.then === 'function') {
+      p.then(begin, () => { this._bgmStarting = false })
+    } else {
+      begin()
+    }
   }
 
   /*** 调度下一个 BGM 音符（旋律 + 低音叠加）
@@ -515,6 +577,7 @@ class AudioManager {
   _playBgmTone(freq, duration, volume, type) {
     if (!this.ctx || this.muted || volume <= 0) return
     try {
+      this._ensureRunning()
       const now = this.ctx.currentTime
       const osc = this.ctx.createOscillator()
       const gain = this.ctx.createGain()
@@ -535,6 +598,7 @@ class AudioManager {
    */
   stopBGM() {
     this._bgmPlaying = false
+    this._bgmStarting = false
     if (this._bgmTimer) {
       clearTimeout(this._bgmTimer)
       this._bgmTimer = null
@@ -550,9 +614,7 @@ class AudioManager {
   /*** 恢复背景音乐
    */
   resumeBGM() {
-    if (!this._bgmPlaying) {
-      this.playBGM()
-    }
+    this.ensureBgmPlaying()
   }
 
 

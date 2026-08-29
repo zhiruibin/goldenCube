@@ -16,6 +16,8 @@ const {
     fillNightBackground,
     drawBrandTitle,
 } = require('../theme/arcade-night');
+const challengeUi = require('../../utils/challenge-ui');
+const challengeShareCard = require('../../utils/challenge-share-card');
 
 // 插屏广告频率：前 N 局新手保护不展示；之后每 M 局最多 1 次（保护「再来一局」）
 const INTERSTITIAL_FREE_GAMES = 5;
@@ -97,6 +99,11 @@ class ResultScene {
         this._replayKey = this._params.replayKey || '';
         this._challengeId = this._params.challengeId || '';
         this._challengeTarget = typeof this._params.targetScore === 'number' ? this._params.targetScore : null;
+        if (this._challengeTarget == null && this._params.targetScore != null && this._params.targetScore !== '') {
+            const parsed = parseInt(this._params.targetScore, 10);
+            this._challengeTarget = isNaN(parsed) ? null : parsed;
+        }
+        this._targetScore = this._challengeTarget;
         this._challengeState = 'idle';
         this._challengeResult = null;
         this._challengeFailMsg = '';
@@ -109,7 +116,7 @@ class ResultScene {
         this._syncState = 'idle';
         this._syncRank = null;
 
-        // 经济系统：读取本局消行金币收益与今日进度
+        // 经济系统：读取本局消行金币收益与今日进度（含对局页已发的摇奖金币）
         this._coinEarned = this._params.coinEarned || 0;
         try {
             const { coinManager, DAILY_LIMIT } = require('../../utils/coin-manager');
@@ -159,7 +166,11 @@ class ResultScene {
 
         // 先建好按钮再拉资料：授权按钮需盖在首枚主按钮上；成绩同步与应战共用一次询问
         if (this._challengeId) {
-            this._respondChallenge();
+            if (this._params.challengePreSynced && this._params.challengeSyncResult) {
+                this._applyChallengeSyncResult(this._params.challengeSyncResult);
+            } else {
+                this._respondChallenge();
+            }
         }
         this._submitScore();
 
@@ -212,20 +223,25 @@ class ResultScene {
         this._renderFallingBlocks(ctx);
 
         // 标题
-        drawBrandTitle(ctx, '游戏结束', W / 2, H * 0.10, 'bold 32px sans-serif');
+        const isChallenge = !!this._challengeId;
+        const isPuzzle = this._isChallengePuzzle();
+        drawBrandTitle(
+            ctx,
+            isChallenge ? '挑战结算' : '游戏结束',
+            W / 2,
+            H * 0.10,
+            'bold 32px sans-serif'
+        );
 
-        // 模式标签
-        const modeNames = {
-            classic: '经典模式',
-            timed: '限时赛',
-            marathon: '马拉松',
-            special: '方块实验室',
-        };
+        // 模式 / 关卡标签
         ctx.font = '16px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = SUBTITLE;
-        ctx.fillText(modeNames[this._params.mode] || '经典模式', W / 2, H * 0.10 + 35);
+        const subLabel = isChallenge && isPuzzle
+            ? challengeUi.modeLabel(this._params)
+            : (this._modeName(this._params.mode || 'classic'));
+        ctx.fillText(subLabel, W / 2, H * 0.10 + 35);
 
         // 成绩面板
         const hasAdOffer = this._hasAdCoinOffer();
@@ -244,34 +260,64 @@ class ResultScene {
         this._roundRect(ctx, panelX, panelY, panelW, panelH, 12);
         ctx.stroke();
 
-        // 分数（大字）：暖金强调，聊天截图更易读
+        // 主成绩
         const score = this._params.score || 0;
+        const lines = this._params.lines || 0;
         ctx.fillStyle = ACCENT;
         ctx.font = 'bold 48px sans-serif';
-        ctx.fillText(String(score), W / 2, panelY + 60);
+        ctx.fillText(String(isPuzzle && isChallenge ? lines : score), W / 2, panelY + 60);
 
         ctx.fillStyle = MUTED;
         ctx.font = '14px sans-serif';
-        ctx.fillText('得分', W / 2, panelY + 22);
+        ctx.fillText(isPuzzle && isChallenge ? '消行' : '得分', W / 2, panelY + 22);
 
-        // 等级和消行
+        // 等级和消行 / 块数·用时
         const infoY = panelY + 105;
         ctx.font = '16px sans-serif';
         ctx.textAlign = 'center';
 
-        ctx.fillStyle = '#f0a000';
-        ctx.fillText(`等级 ${this._params.level || 1}`, W / 2 - 60, infoY);
+        if (isPuzzle && isChallenge) {
+            ctx.fillStyle = '#00f000';
+            ctx.fillText(`块数 ${this._params.pieces || 0}`, W / 2 - 70, infoY);
+            ctx.fillStyle = '#5ec8d4';
+            const sec = Math.max(0, Math.floor((this._params.timeMs || 0) / 1000));
+            ctx.fillText(`用时 ${sec}s`, W / 2 + 70, infoY);
+            if (this._targetScore != null) {
+                ctx.fillStyle = 'rgba(255,255,255,0.35)';
+                ctx.font = '14px sans-serif';
+                ctx.fillText(`目标 ${this._targetScore} 行（越少越好）`, W / 2, panelY + panelH - 28);
+            }
+        } else {
+            ctx.fillStyle = '#f0a000';
+            ctx.fillText(`等级 ${this._params.level || 1}`, W / 2 - 60, infoY);
+            ctx.fillStyle = '#00f000';
+            ctx.fillText(`消行 ${lines}`, W / 2 + 60, infoY);
+        }
 
-        ctx.fillStyle = '#00f000';
-        ctx.fillText(`消行 ${this._params.lines || 0}`, W / 2 + 60, infoY);
+        // 最高分（挑战残局不比排行榜，避免与「目标行」重叠）
+        if (!(isChallenge && isPuzzle)) {
+            const bestScore = this._getBestScore(this._params.mode) || 0;
+            const isNewRecord = !isChallenge && this._isNewRecord(this._params.score || 0, this._params.mode);
+            if (isNewRecord) {
+                ctx.fillStyle = '#ff6b6b';
+                const recText = '新纪录！';
+                const tw = ctx.measureText(recText).width;
+                const recStartX = W / 2 - (tw + 26) / 2;
+                IconRenderer.draw(ctx, 'fireworks', recStartX + 11, infoY + 32, 20, '#ff6b6b');
+                ctx.fillText(recText, recStartX + 26 + tw / 2, infoY + 32);
+            } else {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.font = '14px sans-serif';
+                ctx.fillText(`最高分: ${bestScore}`, W / 2, infoY + 32);
+            }
+        }
 
-        // 最高分（按模式）
-        // 金币收益（本局消行金币 + 今日进度；经济系统 2025-08）
+        // 金币收益
         const coinEarned = this._coinEarned || 0;
         const todayEarned = this._todayCoinEarned || 0;
         if (coinEarned > 0 || todayEarned > 0) {
             const coinLineY = panelY + panelH - 24;
-            const coinText = coinEarned > 0
+            let coinText = coinEarned > 0
                 ? `本局金币 +${coinEarned}  ·  今日 ${todayEarned}/${this._dailyLimit}`
                 : `今日金币 ${todayEarned}/${this._dailyLimit}`;
             ctx.font = '14px sans-serif';
@@ -281,31 +327,20 @@ class ResultScene {
             ctx.fillText(coinText, W / 2, coinLineY);
         }
 
-        // 最高分（按模式）
-        const bestScore = this._getBestScore(this._params.mode) || 0;
-        const isNewRecord = this._isNewRecord(this._params.score || 0, this._params.mode);
-        if (isNewRecord) {
-            ctx.fillStyle = '#ff6b6b';
-            const recText = '新纪录！';
-            const tw = ctx.measureText(recText).width;
-            const recStartX = W / 2 - (tw + 26) / 2;
-            IconRenderer.draw(ctx, 'fireworks', recStartX + 11, infoY + 32, 20, '#ff6b6b');
-            ctx.fillText(recText, recStartX + 26 + tw / 2, infoY + 32);
-        } else {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-            ctx.font = '14px sans-serif';
-            ctx.fillText(`最高分: ${bestScore}`, W / 2, infoY + 32);
+        // 详细统计（经典局；挑战残局不展示 T-Spin 等）
+        const stats = this._params.stats || {};
+        if (!(isChallenge && isPuzzle)) {
+            this._renderStats(ctx, panelX, panelY + panelH + 14, panelW, stats);
         }
 
-        // 详细统计（文档 P0 #14）
-        const stats = this._params.stats || {};
-        this._renderStats(ctx, panelX, panelY + panelH + 14, panelW, stats);
-
-        // 排行榜同步状态（面板下方）
+        // 排行榜 / 挑战结果（残局挑战无统计区，状态行下移避免贴面板）
+        const statusY = (isChallenge && isPuzzle)
+            ? panelY + panelH + 44
+            : panelY + panelH + 86;
         if (this._challengeId) {
-            this._renderChallengeStatus(ctx, panelY + panelH + 86);
+            this._renderChallengeStatus(ctx, statusY);
         } else {
-            this._renderSyncStatus(ctx, panelY + panelH + 86);
+            this._renderSyncStatus(ctx, statusY);
         }
 
         // 按钮
@@ -365,7 +400,7 @@ class ResultScene {
             text: '再来一局',
             icon: 'refresh',
             color: isChallenge ? '#555' : '#3aa8d8',
-            onClick: () => GameGlobal.game.sceneManager.replace('game', { mode: this._params.mode }),
+            onClick: () => this._replayGame(),
         };
 
         const shareBtn = {
@@ -494,7 +529,20 @@ class ResultScene {
     }
 
     /** 上报本局分数到排行榜（云函数全服榜 + 开放数据域好友榜） */
+    /** 好友挑战 · 残局（官方关/工坊，比消行） */
+    _isChallengePuzzle() {
+        if (!this._challengeId) return false;
+        return challengeUi.isPuzzleChallenge(this._params)
+            || this._params.challengeMode === 'stage'
+            || this._params.challengeMode === 'workshop'
+            || (!!this._params.workshop && !!this._params.layoutSnapshot);
+    }
+
     _submitScore() {
+        if (this._challengeId && this._isChallengePuzzle()) {
+            this._syncState = 'done';
+            return;
+        }
         const score = this._params.score || 0;
         if (score <= 0) {
             this._syncState = 'done';
@@ -622,6 +670,9 @@ class ResultScene {
                 score: this._params.score || 0,
                 nickname: (profile && profile.nickname) || '',
                 avatarUrl: (profile && profile.avatarUrl) || '',
+                lines: this._params.lines,
+                pieces: this._params.pieces,
+                timeMs: this._params.timeMs,
             });
         }).then((res) => {
                 if (!res) {
@@ -638,15 +689,11 @@ class ResultScene {
                     return;
                 }
                 if (res && res.success) {
-                    this._challengeResult = {
-                        result: res.result,
-                        challengerScore: res.challengerScore,
-                        responderScore: res.responderScore,
-                    };
+                    this._challengeResult = challengeUi.mergeSyncIntoResult(res);
                     this._challengeOpponent = (res.challenge && res.challenge.challengerName) ? {
                         name: res.challenge.challengerName,
                         avatar: res.challenge.challengerAvatar || '',
-                        openid: res.challenge.opponentOpenid || '',
+                        openid: res.challenge.opponentOpenid || res.challenge.challengerOpenid || '',
                     } : null;
                     this._challengeState = 'done';
                     this._removePendingChallenge(challengeId);
@@ -686,6 +733,58 @@ class ResultScene {
                 this._challengeState = 'failed';
                 this._challengeFailMsg = '网络异常';
             });
+    }
+
+    /** 对局页已同步的挑战结果（含先摇奖再进页） */
+    _applyChallengeSyncResult(res) {
+        const challengeId = this._challengeId;
+        if (!res) {
+            this._challengeState = 'failed';
+            this._challengeFailMsg = '同步失败';
+            return;
+        }
+        if (res.offline) {
+            this._challengeState = 'offline';
+            this._challengeFailMsg = '挑战联网暂不可用';
+            return;
+        }
+        if (res.success) {
+            this._challengeResult = challengeUi.mergeSyncIntoResult(res);
+            this._challengeOpponent = (res.challenge && res.challenge.challengerName) ? {
+                name: res.challenge.challengerName,
+                avatar: res.challenge.challengerAvatar || '',
+                openid: res.challenge.opponentOpenid || res.challenge.challengerOpenid || '',
+            } : null;
+            this._challengeState = 'done';
+            this._removePendingChallenge(challengeId);
+            try {
+                const { achievementManager } = require('../../utils/achievement-manager');
+                achievementManager.reportChallengeRespond(res.result, { challengeId });
+            } catch (e) { /* ignore */ }
+            this._maybePromptCounterShare();
+            return;
+        }
+        const errMsg = (res.errMsg) ? String(res.errMsg) : '';
+        const terminal = errMsg.indexOf('already responded') >= 0
+            || errMsg.indexOf('expired') >= 0
+            || errMsg.indexOf('cannot respond to own') >= 0
+            || errMsg.indexOf('not found') >= 0;
+        if (terminal) {
+            this._removePendingChallenge(challengeId);
+            this._challengeState = 'stale';
+            if (errMsg.indexOf('expired') >= 0) {
+                this._challengeFailMsg = '挑战已过期';
+            } else if (errMsg.indexOf('cannot respond to own') >= 0) {
+                this._challengeFailMsg = '不能应战自己发起的挑战';
+            } else if (errMsg.indexOf('not found') >= 0) {
+                this._challengeFailMsg = '挑战不存在或已失效';
+            } else {
+                this._challengeFailMsg = '该挑战已被应战';
+            }
+            return;
+        }
+        this._challengeState = 'failed';
+        this._challengeFailMsg = errMsg || '同步失败';
     }
 
     /** 从本地待应战列表移除（仅成功写回或确认终态时调用） */
@@ -752,19 +851,14 @@ class ResultScene {
                 color = '#f0a000';
                 break;
             case 'done': {
-                const result = this._challengeResult || {};
-                const responderScore = result.responderScore || 0;
-                const challengerScore = result.challengerScore || 0;
-                if (result.result === 'responder_win') {
-                    text = `挑战成功！你 ${responderScore} 分，超越对方 ${challengerScore} 分`;
+                text = challengeUi.formatResponderResultText(this._challengeResult);
+                if (this._challengeResult && this._challengeResult.result === 'responder_win') {
                     icon = 'trophy';
                     color = '#00f0f0';
-                } else if (result.result === 'challenger_win') {
-                    text = `挑战失败！对方 ${challengerScore} 分，你仅 ${responderScore} 分`;
+                } else if (this._challengeResult && this._challengeResult.result === 'challenger_win') {
                     icon = 'warning';
                     color = '#ff6b6b';
                 } else {
-                    text = `平局！双方 ${challengerScore} 分`;
                     color = '#f0a000';
                 }
                 break;
@@ -830,67 +924,81 @@ class ResultScene {
             });
     }
 
-    /** 分享成绩卡片（文档 6.1）——云可用且分数>0 时升级为挑战分享（携带 challengeId），失败/离线降级为纯文案分享 */
-    _share(opponent) {
-        const mode = this._params.mode || 'classic';
-        const score = this._params.score || 0;
-        const imageUrl = this._generateShareImage();
-        const oppName = (opponent && opponent.name) ? String(opponent.name).slice(0, 12) : '';
+    /** 再来一局：挑战残局回选关/工坊；普通局重开同模式 */
+    _replayGame() {
+        const sm = GameGlobal.game.sceneManager;
+        if (this._challengeId && this._isChallengePuzzle()) {
+            const isWorkshop = this._params.challengeMode === 'workshop'
+                || this._params.mode === 'workshop';
+            if (isWorkshop) {
+                sm.leaveTo('workshop', { mineSub: 'published' }, ['home']);
+            } else {
+                sm.leaveTo('stageSelect', {}, ['home']);
+            }
+            return;
+        }
+        if (this._challengeId) {
+            sm.replace('game', { mode: this._params.mode || 'classic' });
+            return;
+        }
+        sm.replace('game', { mode: this._params.mode || 'classic' });
+    }
 
-        // 降级分享：原纯文案，不带 query
-        const fallbackShare = () => {
-            wx.shareAppMessage({
-                title: oppName ? `回击 ${oppName}！我在方块过把瘾「${this._modeName(mode)}」得了 ${score} 分！` : `我在方块过把瘾「${this._modeName(mode)}」得了 ${score} 分！`,
-                imageUrl: imageUrl,
+    /** 分享 / 回击：残局带 layoutSnapshot，经典带 score */
+    _share(opponent) {
+        const oppName = (opponent && opponent.name) ? String(opponent.name).slice(0, 12) : '';
+        const isCounter = !!this._challengeId;
+
+        const doShare = (payload, query) => {
+            challengeShareCard.shareWithCard({
+                title: challengeUi.buildShareTitle({
+                    isCounter,
+                    opponentName: oppName,
+                    payload,
+                }),
+                query: query || '',
+                cardOpts: challengeShareCard.cardOptsFromPayload(payload, { isCounter }),
                 success: () => {
                     try {
                         const { achievementManager } = require('../../utils/achievement-manager');
                         achievementManager.reportShare();
-                    } catch (e) {
-                        // 分享成就上报失败不影响降级分享
-                    }
+                        if (query) achievementManager.reportInvite();
+                    } catch (e) { /* ignore */ }
                 },
             });
         };
 
-        // 云开发可用且分数>0 时，先创建挑战，再携带 challengeId 分享，便于好友应战
-        if (cloudService.isAvailable && cloudService.isAvailable() && score > 0) {
+        const fallbackShare = () => {
+            const payload = challengeUi.buildCreateChallengePayload({ gameParams: this._params });
+            doShare(payload, '');
+        };
+
+        const lines = this._params.lines != null ? this._params.lines : (this._params.score || 0);
+        const canCreate = challengeUi.isPuzzleChallenge(this._params)
+            ? (lines >= 1 && !!this._params.layoutSnapshot)
+            : (lines > 0);
+
+        if (cloudService.isAvailable && cloudService.isAvailable() && canCreate) {
             const { ensureProfileForAction } = require('../../utils/user-profile');
             ensureProfileForAction({
-                title: '发起好友挑战',
+                title: isCounter ? '发起回击挑战' : '发起好友挑战',
                 content: '授权微信头像昵称后，好友能看到你的资料。也可暂不授权，使用默认昵称继续发起。',
             }).then((profile) => {
-                return cloudService.createChallenge({
-                    mode: mode,
-                    score: score,
-                    nickname: (profile && profile.nickname) || '',
-                    avatarUrl: (profile && profile.avatarUrl) || '',
-                    targetName: oppName || '',
-                    targetAvatar: (opponent && opponent.avatar) ? String(opponent.avatar).slice(0, 512) : '',
-                    targetOpenid: (opponent && opponent.openid) ? String(opponent.openid).slice(0, 64) : '',
+                const payload = challengeUi.buildCreateChallengePayload({
+                    profile,
+                    opponent: opponent || {},
+                    gameParams: this._params,
                 });
+                return cloudService.createChallenge(payload).then((res) => ({ res, payload }));
             })
-                .then((res) => {
+                .then(({ res, payload }) => {
                     if (!res) return;
                     if (res && res.success && res.challengeId) {
                         try {
                             const { achievementManager } = require('../../utils/achievement-manager');
                             achievementManager.reportChallengeCreate();
                         } catch (e) { /* ignore */ }
-                        wx.shareAppMessage({
-                            title: oppName ? `回击 ${oppName}！我在『${this._modeName(mode)}』拿了 ${score} 分，敢再来一局吗？` : `向你发起挑战！我在『${this._modeName(mode)}』拿了 ${score} 分，敢来超越吗？`,
-                            imageUrl: imageUrl,
-                            query: 'challengeId=' + res.challengeId + '&mode=' + mode + '&score=' + score,
-                            success: () => {
-                                try {
-                                    const { achievementManager } = require('../../utils/achievement-manager');
-                                    achievementManager.reportShare();
-                                    achievementManager.reportInvite();
-                                } catch (e) {
-                                    // 分享成就上报失败不影响挑战分享
-                                }
-                            },
-                        });
+                        doShare(payload, challengeUi.buildShareQuery(res.challengeId, payload));
                     } else {
                         fallbackShare();
                     }
@@ -903,70 +1011,10 @@ class ResultScene {
         }
     }
 
-    /** 生成分享卡片图片（通过离屏 Canvas 绘制，导出临时文件） */
-    _generateShareImage() {
-        try {
-            const canvas = wx.createCanvas();
-            const ctx = canvas.getContext('2d');
-            const w = 300;
-            const h = 400;
-            const dpr = 2;
-            canvas.width = w * dpr;
-            canvas.height = h * dpr;
-            ctx.scale(dpr, dpr);
-
-            // 干净分享卡：夜场底 + 品牌 + 大分数（少叠霓虹）
-            fillNightBackground(ctx, w, h);
-
-            drawBrandTitle(ctx, '方块过把瘾', w / 2, 56, 'bold 28px sans-serif');
-
-            ctx.font = '16px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillStyle = SUBTITLE;
-            ctx.fillText(this._modeName(this._params.mode), w / 2, 98);
-
-            ctx.fillStyle = MUTED;
-            ctx.font = '14px sans-serif';
-            ctx.fillText('得分', w / 2, 148);
-
-            ctx.fillStyle = ACCENT;
-            ctx.font = 'bold 64px sans-serif';
-            ctx.fillText(String(this._params.score || 0), w / 2, 198);
-
-            ctx.font = '15px sans-serif';
-            ctx.fillStyle = SUBTITLE;
-            ctx.fillText('敢来一局吗？', w / 2, 250);
-
-            // 底部一排氛围方块（降饱和，不抢分数）
-            for (let i = 0; i < 7; i++) {
-                ctx.fillStyle = AMBIENT_PIECE_COLORS[i];
-                const x = 30 + i * 38;
-                ctx.globalAlpha = 0.85;
-                ctx.fillRect(x, 318, 28, 28);
-            }
-            ctx.globalAlpha = 1;
-
-            let tempPath = '';
-            wx.canvasToTempFilePath({
-                canvas: canvas,
-                x: 0, y: 0,
-                width: w, height: h,
-                destWidth: w * dpr, destHeight: h * dpr,
-                success: (res) => {
-                    tempPath = res.tempFilePath;
-                },
-            });
-            return tempPath;
-        } catch (e) {
-            return '';
-        }
-    }
-
     /** 模式名称 */
     _modeName(mode) {
-        const names = { classic: '经典模式', timed: '限时赛', marathon: '马拉松', special: '方块实验室' };
-        return names[mode] || '经典模式';
+        const { MODE_NAMES } = require('../../utils/cloud-config');
+        return (MODE_NAMES && MODE_NAMES[mode]) || mode || '经典模式';
     }
 
 

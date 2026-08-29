@@ -468,6 +468,11 @@ class EffectRenderer {
         });
     }
 
+    /** 是否仍有未播完的特效（供回放等场景在结束后继续 tick） */
+    hasActiveEffects() {
+        return this._effects.length > 0;
+    }
+
     /**
      * 每帧更新
      * @param {number} dt - 帧间隔（秒）

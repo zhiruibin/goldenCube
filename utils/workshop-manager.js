@@ -16,6 +16,7 @@ const KEYS = {
     submitDaily: 'gc_workshop_submitDaily',
     freePlayDaily: 'gc_workshop_freePlayDaily',
     authorShareDaily: 'gc_workshop_authorShareDaily',
+    plazaCache: 'gc_workshop_plazaCache', // { [stageId]: stageDoc }
 };
 
 const FREE_SLOTS = 3;
@@ -212,7 +213,23 @@ function _saveAll(list) {
 }
 
 function getStage(id) {
-    return listStages().find((s) => s.stageId === id) || null;
+    const local = listStages().find((s) => s.stageId === id);
+    if (local) return local;
+    const cache = _loadJson(KEYS.plazaCache, {}) || {};
+    return cache[id] || null;
+}
+
+function cachePlazaStages(stages) {
+    const cache = _loadJson(KEYS.plazaCache, {}) || {};
+    (stages || []).forEach((s) => {
+        if (s && s.stageId) cache[s.stageId] = s;
+    });
+    _saveJson(KEYS.plazaCache, cache);
+}
+
+function cachePlazaStage(stage) {
+    if (!stage || !stage.stageId) return;
+    cachePlazaStages([stage]);
 }
 
 function countOccupiedSlots() {
@@ -338,44 +355,94 @@ function markAuthorCleared(stageId, best) {
     return { ok: true, stage: cur };
 }
 
-/** 机审：硬约束 + 须已自通；MVP 通过即 published */
+/**
+ * 提交发布：优先上云；成功后本地标 published。
+ * 云不可用时降级本地上架（仅本机可见）。
+ * @returns {Promise<{ok, stage?, reason?, detail?, offline?}>}
+ */
 function submitForReview(stageId) {
     const used = _dailyCount(KEYS.submitDaily);
     if (used >= SUBMIT_DAILY_MAX) {
-        return { ok: false, reason: 'daily-limit' };
+        return Promise.resolve({ ok: false, reason: 'daily-limit' });
     }
     const list = listStages();
     const idx = list.findIndex((s) => s.stageId === stageId);
-    if (idx < 0) return { ok: false, reason: 'missing' };
+    if (idx < 0) return Promise.resolve({ ok: false, reason: 'missing' });
     const cur = list[idx];
     if (cur.status !== STATUS.cleared && cur.status !== STATUS.rejected && cur.status !== STATUS.delisted) {
-        return { ok: false, reason: 'not-cleared' };
+        return Promise.resolve({ ok: false, reason: 'not-cleared' });
     }
     if (!cur.authorBest || cur.authorBest.layoutHash !== layoutHash(cur.rows)) {
-        return { ok: false, reason: 'need-clear' };
+        return Promise.resolve({ ok: false, reason: 'need-clear' });
     }
     const v = validateLayout(cur.rows);
-    if (!v.ok) return { ok: false, reason: 'invalid', detail: v.reason };
+    if (!v.ok) return Promise.resolve({ ok: false, reason: 'invalid', detail: v.reason });
 
-    if (!_bumpDaily(KEYS.submitDaily, SUBMIT_DAILY_MAX)) {
-        return { ok: false, reason: 'daily-limit' };
+    const applyLocalPublish = () => {
+        if (!_bumpDaily(KEYS.submitDaily, SUBMIT_DAILY_MAX)) {
+            return { ok: false, reason: 'daily-limit' };
+        }
+        cur.status = STATUS.published;
+        cur.publishedAt = Date.now();
+        cur.updatedAt = Date.now();
+        cur.rejectReason = '';
+        cur.review = {
+            submittedAt: Date.now(),
+            reviewedAt: Date.now(),
+            rejectReason: '',
+            snapshotId: cur.layoutHash,
+            auto: true,
+        };
+        list[idx] = cur;
+        _saveAll(list);
+        cachePlazaStage(cur);
+        return { ok: true, stage: cur };
+    };
+
+    let cloudService;
+    try {
+        cloudService = require('./cloud-service').cloudService;
+    } catch (e) {
+        return Promise.resolve(applyLocalPublish());
+    }
+    if (!cloudService.isAvailable()) {
+        const r = applyLocalPublish();
+        r.offline = true;
+        return Promise.resolve(r);
     }
 
-    // MVP：机审通过即上架（跳过 reviewing 停留）
-    cur.status = STATUS.published;
-    cur.publishedAt = Date.now();
-    cur.updatedAt = Date.now();
-    cur.rejectReason = '';
-    cur.review = {
-        submittedAt: Date.now(),
-        reviewedAt: Date.now(),
-        rejectReason: '',
-        snapshotId: cur.layoutHash,
-        auto: true,
-    };
-    list[idx] = cur;
-    _saveAll(list);
-    return { ok: true, stage: cur };
+    let profile = {};
+    try {
+        profile = require('./user-profile').getCachedProfile() || {};
+    } catch (e) { /* ignore */ }
+
+    return cloudService.publishWorkshopStage({
+        stageId: cur.stageId,
+        title: cur.title,
+        rows: cloneRows(cur.rows),
+        authorBest: cur.authorBest,
+        dropIntervalMs: cur.dropIntervalMs,
+        nickname: profile.nickname || '',
+        avatarUrl: profile.avatarUrl || '',
+    }).then((res) => {
+        if (!res || !res.success) {
+            const msg = (res && res.errMsg) || '';
+            if (msg.indexOf('daily-limit') >= 0) return { ok: false, reason: 'daily-limit' };
+            if (msg.indexOf('need author') >= 0) return { ok: false, reason: 'need-clear' };
+            if (msg.indexOf('invalid') >= 0) return { ok: false, reason: 'invalid', detail: msg };
+            return { ok: false, reason: 'cloud', detail: msg || '发布失败' };
+        }
+        const r = applyLocalPublish();
+        if (res.stage) {
+            cachePlazaStage(res.stage);
+            if (r.stage && res.stage.stats) r.stage.stats = res.stage.stats;
+        }
+        return r;
+    }).catch((e) => ({
+        ok: false,
+        reason: 'cloud',
+        detail: (e && e.message) || '发布失败',
+    }));
 }
 
 function withdrawReview(stageId) {
@@ -394,19 +461,47 @@ function withdrawReview(stageId) {
 function delistStage(stageId) {
     const list = listStages();
     const idx = list.findIndex((s) => s.stageId === stageId);
-    if (idx < 0) return { ok: false, reason: 'missing' };
+    if (idx < 0) return Promise.resolve({ ok: false, reason: 'missing' });
     const cur = list[idx];
-    if (cur.status !== STATUS.published) return { ok: false, reason: 'not-published' };
-    cur.status = STATUS.delisted;
-    cur.updatedAt = Date.now();
-    list[idx] = cur;
-    _saveAll(list);
-    return { ok: true, stage: cur };
+    if (cur.status !== STATUS.published) return Promise.resolve({ ok: false, reason: 'not-published' });
+
+    const applyLocal = () => {
+        cur.status = STATUS.delisted;
+        cur.updatedAt = Date.now();
+        list[idx] = cur;
+        _saveAll(list);
+        return { ok: true, stage: cur };
+    };
+
+    let cloudService;
+    try {
+        cloudService = require('./cloud-service').cloudService;
+    } catch (e) {
+        return Promise.resolve(applyLocal());
+    }
+    if (!cloudService.isAvailable()) {
+        return Promise.resolve(applyLocal());
+    }
+    return cloudService.delistWorkshopStage(stageId).then((res) => {
+        const r = applyLocal();
+        if (res && !res.success && !res.offline) {
+            // 本地仍下架，避免卡死；提示由 UI 决定
+            r.cloudWarn = res.errMsg || '';
+        }
+        return r;
+    }).catch(() => applyLocal());
 }
 
-function listPlaza(sort) {
+/** 本地已发布列表（作者本机） */
+function listPlazaLocal(sort) {
     const published = listStages().filter((s) => s.status === STATUS.published);
-    const arr = published.slice();
+    const cache = _loadJson(KEYS.plazaCache, {}) || {};
+    const map = {};
+    published.forEach((s) => { map[s.stageId] = s; });
+    Object.keys(cache).forEach((id) => {
+        if (cache[id] && cache[id].status === STATUS.published) map[id] = cache[id];
+    });
+    const arr = Object.keys(map).map((k) => map[k]);
     if (sort === 'heat') {
         arr.sort((a, b) => (b.heatScore || 0) - (a.heatScore || 0));
     } else if (sort === 'clearRate') {
@@ -421,6 +516,29 @@ function listPlaza(sort) {
     return arr;
 }
 
+/**
+ * 广场列表：云优先，失败降级本地缓存
+ * @returns {Promise<Array>}
+ */
+function listPlaza(sort) {
+    let cloudService;
+    try {
+        cloudService = require('./cloud-service').cloudService;
+    } catch (e) {
+        return Promise.resolve(listPlazaLocal(sort));
+    }
+    if (!cloudService.isAvailable()) {
+        return Promise.resolve(listPlazaLocal(sort));
+    }
+    return cloudService.listPlaza({ sort: sort || 'new', pageSize: 50 }).then((res) => {
+        if (res && res.success && Array.isArray(res.list)) {
+            cachePlazaStages(res.list);
+            return res.list;
+        }
+        return listPlazaLocal(sort);
+    }).catch(() => listPlazaLocal(sort));
+}
+
 function _unlockedMap() {
     return _loadJson(KEYS.unlockedPlaza, {}) || {};
 }
@@ -433,8 +551,9 @@ function unlockPlazaStage(stageId) {
     if (isPlazaUnlocked(stageId)) {
         return { ok: true, already: true, balance: goldenBlock.getBalance() };
     }
-    const stage = getStage(stageId);
+    let stage = getStage(stageId);
     if (!stage || stage.status !== STATUS.published) {
+        // 尝试从缓存取；仍无则拒绝（UI 应先 listPlaza）
         return { ok: false, reason: 'missing' };
     }
     if (goldenBlock.getBalance() < PLAZA_UNLOCK_GOLD) {
@@ -487,12 +606,24 @@ function spendChallengeFee() {
 function recordPlayStart(stageId) {
     const list = listStages();
     const idx = list.findIndex((s) => s.stageId === stageId);
-    if (idx < 0) return;
-    list[idx].stats = list[idx].stats || {};
-    list[idx].stats.playCount = (list[idx].stats.playCount || 0) + 1;
-    list[idx].heatScore = _calcHeat(list[idx]);
-    list[idx].updatedAt = Date.now();
-    _saveAll(list);
+    if (idx >= 0) {
+        list[idx].stats = list[idx].stats || {};
+        list[idx].stats.playCount = (list[idx].stats.playCount || 0) + 1;
+        list[idx].heatScore = _calcHeat(list[idx]);
+        list[idx].updatedAt = Date.now();
+        _saveAll(list);
+    }
+    const cache = _loadJson(KEYS.plazaCache, {}) || {};
+    if (cache[stageId]) {
+        cache[stageId].stats = cache[stageId].stats || {};
+        cache[stageId].stats.playCount = (cache[stageId].stats.playCount || 0) + 1;
+        cache[stageId].heatScore = _calcHeat(cache[stageId]);
+        _saveJson(KEYS.plazaCache, cache);
+    }
+    try {
+        const { cloudService } = require('./cloud-service');
+        cloudService.reportWorkshopPlay(stageId).catch(() => {});
+    } catch (e) { /* ignore */ }
 }
 
 function _calcHeat(s) {
@@ -526,6 +657,14 @@ function rewardPlazaClear(stageId, lines, pieces, timeMs) {
         list[idx].heatScore = _calcHeat(list[idx]);
         list[idx].updatedAt = Date.now();
         _saveAll(list);
+    } else {
+        const cache = _loadJson(KEYS.plazaCache, {}) || {};
+        if (cache[stageId]) {
+            cache[stageId].stats = cache[stageId].stats || {};
+            cache[stageId].stats.clearCount = (cache[stageId].stats.clearCount || 0) + 1;
+            cache[stageId].heatScore = _calcHeat(cache[stageId]);
+            _saveJson(KEYS.plazaCache, cache);
+        }
     }
 
     const clearedMap = _loadJson(KEYS.clearedPlaza, {}) || {};
@@ -553,9 +692,11 @@ function rewardPlazaClear(stageId, lines, pieces, timeMs) {
 
     const gained = coinManager.rewardWorkshopClear(want);
 
-    // 作者分成（自玩不计；本地 MVP 作者即本机，跳过自刷）
-    // 本机既是作者又是玩家时不分成
-    // （云端上线后按 openid 区分）
+    // 云上报通关统计；作者分成需云端钱包（二期），此处不把分成误发给游玩者
+    try {
+        const { cloudService } = require('./cloud-service');
+        cloudService.reportWorkshopClear(stageId).catch(() => {});
+    } catch (e) { /* ignore */ }
 
     return {
         coinWant: want,
@@ -578,11 +719,16 @@ function finishAuthorTrialClear(stageId, best) {
 function bumpChallengeSend(stageId) {
     const list = listStages();
     const idx = list.findIndex((s) => s.stageId === stageId);
-    if (idx < 0) return;
-    list[idx].stats = list[idx].stats || {};
-    list[idx].stats.challengeSendCount = (list[idx].stats.challengeSendCount || 0) + 1;
-    list[idx].heatScore = _calcHeat(list[idx]);
-    _saveAll(list);
+    if (idx >= 0) {
+        list[idx].stats = list[idx].stats || {};
+        list[idx].stats.challengeSendCount = (list[idx].stats.challengeSendCount || 0) + 1;
+        list[idx].heatScore = _calcHeat(list[idx]);
+        _saveAll(list);
+    }
+    try {
+        const { cloudService } = require('./cloud-service');
+        cloudService.bumpWorkshopChallenge(stageId).catch(() => {});
+    } catch (e) { /* ignore */ }
 }
 
 function getSubmitRemaining() {
@@ -631,4 +777,7 @@ module.exports = {
     finishAuthorTrialClear,
     bumpChallengeSend,
     getSubmitRemaining,
+    cachePlazaStage,
+    cachePlazaStages,
+    listPlazaLocal,
 };

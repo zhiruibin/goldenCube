@@ -704,6 +704,15 @@ class ShopScene {
                 if (equipped !== item.id) {
                     this._equipped[this._tab] = item.id;
                     wx.setStorageSync(equippedKey, item.id);
+                    if (this._tab === 'sound') {
+                        try {
+                            const audio = GameGlobal.game && GameGlobal.game.audioManager;
+                            if (audio && typeof audio.applySoundPack === 'function') {
+                                audio.applySoundPack(item.id);
+                                if (typeof audio.playHardDrop === 'function') audio.playHardDrop();
+                            }
+                        } catch (e) { /* ignore */ }
+                    }
                     wx.showToast({ title: '已装备：' + item.name, icon: 'none' });
                 } else {
                     wx.showToast({ title: '正在使用中', icon: 'none' });

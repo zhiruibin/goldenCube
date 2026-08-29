@@ -28,6 +28,20 @@ const FREE_RETRY_KEY = 'gc_dailyFreeRetry';
 
 const FREE_ENTRY_DAILY = 10;
 const FREE_RETRY_DAILY = 3;
+/** 官方关入场费（index = 章节 id）：1～3 关免费，从第 1 章起递增 */
+const ENTRY_FEE_BY_CHAPTER = [
+    0,   // placeholder index 0
+    12,  // 第 1 章（关 4～10）
+    18,  // 第 2 章
+    24,  // 第 3 章
+    28,  // 第 4 章
+    32,  // 第 5 章
+    36,  // 第 6 章
+    40,  // 第 7 章
+    44,  // 第 8 章
+    45,  // 第 9 章
+    45,  // 第 10 章
+];
 /** 工坊广场通关独立日池（不产金方块） */
 const WORKSHOP_CLEAR_DAILY = 120;
 const WORKSHOP_DAILY_KEY = 'gc_workshopDailyCoins';
@@ -250,14 +264,16 @@ class CoinManager {
         return Math.floor((id - 1) / 10) + 1;
     }
 
-    /** 入场费：前 3 关 0；第 1 章 5；第 2 章 10；第 3 章及以后 15 */
+    /**
+     * 入场费：前 3 关 0；第 1～10 章递增（见 FEES_BY_CHAPTER）
+     * 设计：通关结算 20～100，票价随章节升高，使金币消耗有实感而非形式上的扣费
+     */
     getEntryFee(stageId) {
         const id = Number(stageId) || 0;
         if (id <= 3) return 0;
         const chapter = this.getChapterIdByStageId(id);
-        if (chapter <= 1) return 5;
-        if (chapter === 2) return 10;
-        return 15;
+        const idx = Math.max(1, Math.min(chapter, ENTRY_FEE_BY_CHAPTER.length - 1));
+        return ENTRY_FEE_BY_CHAPTER[idx];
     }
 
     /**
@@ -398,5 +414,6 @@ module.exports = {
     LINE_CLEAR_REWARDS,
     FREE_ENTRY_DAILY,
     FREE_RETRY_DAILY,
+    ENTRY_FEE_BY_CHAPTER,
     WORKSHOP_CLEAR_DAILY,
 };

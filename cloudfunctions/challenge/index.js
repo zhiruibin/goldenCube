@@ -23,10 +23,26 @@ const db = cloud.database()
 const _ = db.command
 
 const COLLECTION = 'challenges'
-const ALLOWED_MODES = ['classic', 'timed', 'marathon', 'special', 'stage']
+const ALLOWED_MODES = ['classic', 'timed', 'marathon', 'special', 'stage', 'workshop']
 const EXPIRY_MS = 7 * 24 * 60 * 60 * 1000
 const MAX_PENDING = 20
 const MAX_LIST_SIZE = 50
+
+/** 工坊挑战：消行越少越好，编码为越大越优的 score 以兼容旧比较逻辑 */
+function encodeWorkshopScore(lines, pieces, timeMs) {
+  const L = Math.min(999, Math.max(0, Math.floor(Number(lines) || 0)))
+  const P = Math.min(999, Math.max(0, Math.floor(Number(pieces) || 0)))
+  const T = Math.min(99999, Math.max(0, Math.floor((Number(timeMs) || 0) / 100)))
+  return (1000 - L) * 100000000 + (1000 - P) * 100000 + (100000 - T)
+}
+
+function workshopIsBetter(a, b) {
+  // a 是否优于 b（更少消行 → 更少块 → 更短时间）
+  if (!b) return true
+  if (a.lines !== b.lines) return a.lines < b.lines
+  if ((a.pieces || 0) !== (b.pieces || 0)) return (a.pieces || 0) < (b.pieces || 0)
+  return (a.timeMs || 0) < (b.timeMs || 0)
+}
 
 exports.main = async (event) => {
   const { OPENID } = cloud.getWXContext()
@@ -61,7 +77,8 @@ exports.main = async (event) => {
 
 /*** 发起挑战
  * @param {string} openid 挑战发起者 openid
- * @param {Object} data { mode, score, nickname, avatarUrl, targetName, targetAvatar, targetOpenid }
+ * @param {Object} data { mode, score, nickname, avatarUrl, targetName, targetAvatar, targetOpenid,
+ *   workshopStageId, workshopTitle, layoutSnapshot, challengerLines, challengerPieces, challengerTimeMs }
  */
 async function createChallenge(openid, data) {
   try {
@@ -70,17 +87,42 @@ async function createChallenge(openid, data) {
       return { success: false, errMsg: 'invalid mode' }
     }
 
-    const score = Math.floor(Number(data.score))
-    if (!(score > 0) || score > 99999999) {
-      return { success: false, errMsg: 'invalid score' }
-    }
-
     const nickname = String(data.nickname || '').slice(0, 32)
     const avatarUrl = String(data.avatarUrl || '').slice(0, 512)
-    // 意向被挑战方（已知时写入；对方授权后可由 syncMyProfile 刷新）
     const targetName = String(data.targetName || '').slice(0, 32)
     const targetAvatar = String(data.targetAvatar || '').slice(0, 512)
     const targetOpenid = typeof data.targetOpenid === 'string' ? data.targetOpenid.slice(0, 64) : ''
+
+    let score = Math.floor(Number(data.score))
+    let workshopStageId = ''
+    let workshopTitle = ''
+    let layoutSnapshot = null
+    let challengerLines = null
+    let challengerPieces = null
+    let challengerTimeMs = null
+
+    // 工坊 / 官方关残局挑战：同一盘面比行数·块数·用时
+    const isPuzzle = mode === 'workshop'
+      || (mode === 'stage' && data.layoutSnapshot && typeof data.layoutSnapshot === 'object')
+    if (isPuzzle) {
+      workshopStageId = String(data.workshopStageId || data.stageId || '').slice(0, 64)
+      workshopTitle = String(data.workshopTitle || data.stageTitle || (mode === 'stage' ? '闯关挑战' : '工坊关卡')).slice(0, 20)
+      layoutSnapshot = data.layoutSnapshot || null
+      if (!layoutSnapshot || typeof layoutSnapshot !== 'object') {
+        return { success: false, errMsg: 'layoutSnapshot required' }
+      }
+      challengerLines = Math.max(0, Math.floor(Number(data.challengerLines) || 0))
+      challengerPieces = Math.max(0, Math.floor(Number(data.challengerPieces) || 0))
+      challengerTimeMs = Math.max(0, Math.floor(Number(data.challengerTimeMs) || 0))
+      if (!(challengerLines >= 1)) {
+        return { success: false, errMsg: 'invalid challenger lines' }
+      }
+      score = encodeWorkshopScore(challengerLines, challengerPieces, challengerTimeMs)
+    } else {
+      if (!(score > 0) || score > 99999999) {
+        return { success: false, errMsg: 'invalid score' }
+      }
+    }
 
     const countRes = await db.collection(COLLECTION)
       .where({ status: 'pending', challengerOpenid: openid })
@@ -107,7 +149,16 @@ async function createChallenge(openid, data) {
       result: null,
       createdAt: now,
       respondedAt: null,
-      expiresAt: now + EXPIRY_MS
+      expiresAt: now + EXPIRY_MS,
+      workshopStageId,
+      workshopTitle,
+      layoutSnapshot,
+      challengerLines,
+      challengerPieces,
+      challengerTimeMs,
+      responderLines: null,
+      responderPieces: null,
+      responderTimeMs: null,
     }
 
     const res = await db.collection(COLLECTION).add({ data: record })
@@ -124,18 +175,13 @@ async function createChallenge(openid, data) {
 
 /*** 应战
  * @param {string} openid 应战者 openid
- * @param {Object} data { challengeId, score, nickname, avatarUrl }
+ * @param {Object} data { challengeId, score, nickname, avatarUrl, lines, pieces, timeMs }
  */
 async function respondChallenge(openid, data) {
   try {
     const challengeId = data && data.challengeId
     if (!challengeId) {
       return { success: false, errMsg: 'challengeId required' }
-    }
-
-    const score = Math.floor(Number(data.score))
-    if (!(score >= 0) || score > 99999999) {
-      return { success: false, errMsg: 'invalid score' }
     }
 
     const nickname = String(data.nickname || '').slice(0, 32)
@@ -160,43 +206,73 @@ async function respondChallenge(openid, data) {
       return { success: false, errMsg: 'challenge expired' }
     }
 
+    let score = Math.floor(Number(data.score))
+    let responderLines = null
+    let responderPieces = null
+    let responderTimeMs = null
     let result
-    if (score > record.challengerScore) {
-      result = 'responder_win'
-    } else if (score < record.challengerScore) {
-      result = 'challenger_win'
+
+    const isPuzzle = record.mode === 'workshop'
+      || (record.mode === 'stage' && record.layoutSnapshot)
+    if (isPuzzle) {
+      responderLines = Math.max(0, Math.floor(Number(data.lines != null ? data.lines : data.challengerLines) || 0))
+      responderPieces = Math.max(0, Math.floor(Number(data.pieces != null ? data.pieces : 0) || 0))
+      responderTimeMs = Math.max(0, Math.floor(Number(data.timeMs != null ? data.timeMs : 0) || 0))
+      if (!(responderLines >= 1)) {
+        return { success: false, errMsg: 'invalid lines' }
+      }
+      score = encodeWorkshopScore(responderLines, responderPieces, responderTimeMs)
+      const a = { lines: responderLines, pieces: responderPieces, timeMs: responderTimeMs }
+      const b = {
+        lines: Number(record.challengerLines) || 0,
+        pieces: Number(record.challengerPieces) || 0,
+        timeMs: Number(record.challengerTimeMs) || 0,
+      }
+      if (workshopIsBetter(a, b)) {
+        result = 'responder_win'
+      } else if (workshopIsBetter(b, a)) {
+        result = 'challenger_win'
+      } else {
+        result = 'tie'
+      }
     } else {
-      result = 'tie'
+      if (!(score >= 0) || score > 99999999) {
+        return { success: false, errMsg: 'invalid score' }
+      }
+      if (score > record.challengerScore) {
+        result = 'responder_win'
+      } else if (score < record.challengerScore) {
+        result = 'challenger_win'
+      } else {
+        result = 'tie'
+      }
     }
 
     const now = Date.now()
-    const updateRes = await db.collection(COLLECTION)
-      .where({ _id: challengeId, status: 'pending' })
-      .update({
-        data: {
-          responderOpenid: openid,
-          responderName: nickname || defaultName(openid),
-          responderAvatar: avatarUrl,
-          responderScore: score,
-          status: 'completed',
-          result,
-          respondedAt: now
-        }
-      })
-
-    if (!updateRes.stats || updateRes.stats.updated === 0) {
-      return { success: false, errMsg: 'challenge already responded' }
-    }
-
-    const merged = Object.assign({}, record, {
+    const updateData = {
       responderOpenid: openid,
       responderName: nickname || defaultName(openid),
       responderAvatar: avatarUrl,
       responderScore: score,
       status: 'completed',
       result,
-      respondedAt: now
-    })
+      respondedAt: now,
+    }
+    if (isPuzzle) {
+      updateData.responderLines = responderLines
+      updateData.responderPieces = responderPieces
+      updateData.responderTimeMs = responderTimeMs
+    }
+
+    const updateRes = await db.collection(COLLECTION)
+      .where({ _id: challengeId, status: 'pending' })
+      .update({ data: updateData })
+
+    if (!updateRes.stats || updateRes.stats.updated === 0) {
+      return { success: false, errMsg: 'challenge already responded' }
+    }
+
+    const merged = Object.assign({}, record, updateData)
 
     return {
       success: true,
@@ -205,8 +281,9 @@ async function respondChallenge(openid, data) {
       mode: record.mode,
       challengerScore: record.challengerScore,
       responderScore: score,
+      challengerLines: record.challengerLines,
+      responderLines,
       challenge: sanitize(merged, challengeId, {
-        // 应战方回击时需要对方 openid 写入 targetOpenid
         opponentOpenid: record.challengerOpenid || '',
       })
     }
@@ -372,7 +449,7 @@ async function getChallengeById(openid, data) {
  */
 function sanitize(rec, id, extra) {
   const r = rec || {}
-  return {
+  const out = {
     challengeId: id,
     mode: r.mode || '',
     challengerName: r.challengerName || defaultName(r.challengerOpenid),
@@ -388,8 +465,21 @@ function sanitize(rec, id, extra) {
     createdAt: r.createdAt || null,
     respondedAt: r.respondedAt || null,
     expiresAt: r.expiresAt || null,
+    workshopStageId: r.workshopStageId || '',
+    workshopTitle: r.workshopTitle || '',
+    challengerLines: typeof r.challengerLines === 'number' ? r.challengerLines : null,
+    challengerPieces: typeof r.challengerPieces === 'number' ? r.challengerPieces : null,
+    challengerTimeMs: typeof r.challengerTimeMs === 'number' ? r.challengerTimeMs : null,
+    responderLines: typeof r.responderLines === 'number' ? r.responderLines : null,
+    responderPieces: typeof r.responderPieces === 'number' ? r.responderPieces : null,
+    responderTimeMs: typeof r.responderTimeMs === 'number' ? r.responderTimeMs : null,
     ...(extra || {})
   }
+  // 应战开局需要布局；列表也可带上（体积可控：残局 rows 很小）
+  if (r.layoutSnapshot) {
+    out.layoutSnapshot = r.layoutSnapshot
+  }
+  return out
 }
 
 /**

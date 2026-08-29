@@ -1,6 +1,6 @@
 /**
  * WorkshopEditorScene - 点涂垃圾布局编辑器
- * 顶栏文字化（‹ 返回 / 保存），试玩与松手前自动存草稿
+ * 顶栏文字化（‹ 返回 / 保存），试玩前自动保存并提示
  */
 const { Button } = require('../widgets/button');
 const {
@@ -23,6 +23,7 @@ class WorkshopEditorScene {
         this._painting = false;
         this._dirty = false;
         this._chromeHits = [];
+        this._trialBusy = false;
     }
 
     onEnter(params) {
@@ -37,6 +38,7 @@ class WorkshopEditorScene {
         this._undoStack = [];
         this._tool = 'paint';
         this._dirty = false;
+        this._trialBusy = false;
         this._buildUI();
         if (params && params.toast) this._showToast(params.toast);
     }
@@ -45,6 +47,7 @@ class WorkshopEditorScene {
         // 不在此处强行保存：返回时由 _back 询问用户
         this._buttons = [];
         this._chromeHits = [];
+        this._trialBusy = false;
     }
 
     update() {
@@ -285,6 +288,7 @@ class WorkshopEditorScene {
     }
 
     _trial() {
+        if (this._trialBusy) return;
         // 试玩前必须落盘，否则对局读到旧布局
         const saved = this._persist(false);
         if (!saved.ok) {
@@ -293,20 +297,36 @@ class WorkshopEditorScene {
         }
         const v = workshop.validateLayout(this._rows);
         if (!v.ok) {
-            this._showToast(v.reason);
+            this._showToast('已保存，' + v.reason);
             return;
         }
         const stage = workshop.getStage(this._stageId);
-        GameGlobal.game.sceneManager.switchTo('game', {
+        if (!stage) {
+            this._showToast('关卡不存在');
+            return;
+        }
+        const gameParams = {
             mode: 'stage',
             workshop: true,
             workshopStageId: stage.stageId,
             workshopRows: workshop.cloneRows(stage.rows),
             workshopTitle: stage.title,
             authorTrial: true,
+            workshopReturnTo: 'editor',
             entryPaid: 0,
             dropIntervalMs: stage.dropIntervalMs || 1000,
-        });
+        };
+        this._trialBusy = true;
+        // 用系统 Toast + 短延迟，避免一切换场景就看不到「已保存」
+        try {
+            wx.showToast({ title: '已保存，开始试玩', icon: 'none', duration: 1200 });
+        } catch (e) {
+            this._showToast('已保存，开始试玩');
+        }
+        setTimeout(() => {
+            this._trialBusy = false;
+            GameGlobal.game.sceneManager.switchTo('game', gameParams);
+        }, 480);
     }
 
     _cellAt(x, y) {

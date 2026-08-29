@@ -489,10 +489,10 @@ class RankScene {
             this._buttons.push(new Button({
                 x: W / 2 - btnW / 2, y: H - 140,
                 w: btnW, h: btnH,
-                text: '发起挑战',
+                text: '分享战绩',
                 icon: 'share',
                 color: '#e09a30',
-                onClick: () => this._shareMyBestChallenge(),
+                onClick: () => this._shareMyRecord(),
             }));
         }
         this._buttons.push(new Button({
@@ -504,65 +504,35 @@ class RankScene {
         }));
     }
 
-    /** 用本模式本地最高分创建挑战并分享（好友榜无法读对方分，主路径用自己成绩） */
-    _shareMyBestChallenge() {
+    /** 分享闯关战绩（不创建挑战；真正挑战在已通关关卡上发起） */
+    _shareMyRecord() {
         if (this._shareBusy) return;
-        const mode = 'stage';
         const sums = goldenBlock.getRankSums();
         const cleared = sums.clearedCount || 0;
         if (cleared <= 0) {
-            wx.showToast({ title: '先通关一关再发起挑战', icon: 'none' });
-            return;
-        }
-
-        const modeLabel = '闯关榜';
-        const fallbackShare = () => {
-            wx.shareAppMessage({
-                title: `我在挖个方块已通关 ${cleared} 关，敢来比比吗？`,
-            });
-        };
-
-        if (!(cloudService.isAvailable && cloudService.isAvailable())) {
-            fallbackShare();
+            wx.showToast({ title: '先通关一关再分享战绩', icon: 'none' });
             return;
         }
 
         this._shareBusy = true;
-        const { ensureProfileForAction } = require('../../utils/user-profile');
-        ensureProfileForAction({
-            title: '发起好友挑战',
-            content: '授权微信头像昵称后，好友能看到你的资料。也可暂不授权，使用默认昵称继续发起。',
-        }).then((profile) => {
-            return cloudService.createChallenge({
-                mode: mode,
-                score: cleared,
-                nickname: (profile && profile.nickname) || '',
-                avatarUrl: (profile && profile.avatarUrl) || '',
+        try {
+            wx.shareAppMessage({
+                title: `我在挖个方块已通关 ${cleared} 关，一起来玩吧！`,
+                success: () => {
+                    try {
+                        achievementManager.reportShare();
+                        achievementManager.reportInvite();
+                    } catch (e) { /* ignore */ }
+                },
+                complete: () => {
+                    this._shareBusy = false;
+                },
             });
-        }).then((res) => {
+        } catch (e) {
             this._shareBusy = false;
-            if (!res) return;
-            if (res && res.success && res.challengeId) {
-                try {
-                    achievementManager.reportChallengeCreate();
-                } catch (e) { /* ignore */ }
-                wx.shareAppMessage({
-                    title: `向你发起挑战！我在挖个方块已通关 ${cleared} 关，敢来超越吗？`,
-                    query: 'challengeId=' + res.challengeId + '&mode=' + mode + '&score=' + cleared,
-                    success: () => {
-                        try {
-                            achievementManager.reportShare();
-                            achievementManager.reportInvite();
-                        } catch (e) { /* ignore */ }
-                    },
-                });
-            } else {
-                fallbackShare();
-            }
-        }).catch(() => {
-            this._shareBusy = false;
-            fallbackShare();
-        });
+        }
+        // 部分基础库无 complete，短延迟解锁
+        setTimeout(() => { this._shareBusy = false; }, 800);
     }
 
     /** 以对方分数为目标开局，打完再发挑战卡 */

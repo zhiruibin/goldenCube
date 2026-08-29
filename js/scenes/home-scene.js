@@ -1,6 +1,6 @@
 /**
-/*** HomeScene - 首页场景
- * 职责：入口 Hub（闯关/排行/成就/商店/设置）+ 好友挑战 + 每日登录金币
+ * HomeScene - 首页场景
+ * 职责：入口 Hub（闯关/关卡广场/工坊/排行/成就/商店/设置）+ 好友挑战 + 每日登录金币
  */
 const { Button } = require('../widgets/button');
 const { Panel } = require('../widgets/panel');
@@ -47,6 +47,8 @@ class HomeScene {
         this._initUI();
         this._claimDailyLogin();
         this._maybeRemindPending();
+        // 若音频已在用户手势中初始化过，回首页立即恢复 BGM
+        this._ensureHomeBgm();
     }
 
     onExit() {
@@ -59,6 +61,21 @@ class HomeScene {
         // 从后台/分享返回时刷新待应战角标
         this._initUI();
         this._maybeRemindPending();
+        this._ensureHomeBgm();
+    }
+
+    /** 首页 BGM：仅在 AudioContext 已初始化时尝试（需先有用户触摸） */
+    _ensureHomeBgm() {
+        try {
+            if (wx.getStorageSync('gc_setting_bgm') === false) return;
+            const audio = GameGlobal.game && GameGlobal.game.audioManager;
+            if (!audio || !audio.isInitialized()) return;
+            if (typeof audio.ensureBgmPlaying === 'function') {
+                audio.ensureBgmPlaying();
+            } else if (!audio.isBgmPlaying()) {
+                audio.playBGM();
+            }
+        } catch (e) { /* ignore */ }
     }
     update(dt) {
         this._animTime += dt;
@@ -78,12 +95,12 @@ class HomeScene {
         const titleY = H * 0.15 + Math.sin(this._animTime * 2) * 5;
         drawBrandTitle(ctx, '挖个方块', W / 2, titleY, 'bold 48px sans-serif');
 
-        // 副标题：中文短句，贴合「闯关 + 好友挑战」
+        // 副标题：玩（闯关/广场）+ 造（工坊）
         ctx.fillStyle = SUBTITLE;
         ctx.font = '16px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('残局闯关 · 工坊造关 · 好友挑战', W / 2, titleY + 40);
+        ctx.fillText('官方闯关 · 广场开打 · 工坊造关', W / 2, titleY + 40);
 
         // 按钮
         for (const btn of this._buttons) {
@@ -108,7 +125,7 @@ class HomeScene {
 
         this._buttons = [];
 
-        // 闯关 + 工坊（双氛围）
+        // 主双入口：闯关 | 关卡广场（玩）；工坊整宽下沉（造）
         const primaryY = H * 0.28;
         const halfW = (btnW - gap) / 2;
         this._buttons.push(new Button({
@@ -126,14 +143,26 @@ class HomeScene {
             y: primaryY,
             w: halfW,
             h: primaryH,
-            text: '工坊',
-            icon: 'gear',
+            text: '关卡广场',
+            icon: 'puzzle',
             color: '#c9a227',
+            onClick: () => GameGlobal.game.sceneManager.switchTo('plaza'),
+        }));
+
+        const workshopY = primaryY + primaryH + gap;
+        this._buttons.push(new Button({
+            x: centerX - btnW / 2,
+            y: workshopY,
+            w: btnW,
+            h: smallH,
+            text: '工坊 · 造关',
+            icon: 'construction',
+            color: '#8b5a2b',
             onClick: () => GameGlobal.game.sceneManager.switchTo('workshop'),
         }));
 
         // 功能入口 2x2 网格（排行/成就/商店/设置）
-        const footerY = primaryY + primaryH + gap;
+        const footerY = workshopY + smallH + gap;
         const footerBtns = [
             { text: '排行', target: 'rank', icon: 'trophy' },
             { text: '成就', target: 'achievement', icon: 'medal' },

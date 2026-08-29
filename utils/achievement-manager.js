@@ -1,6 +1,6 @@
 /**
  * AchievementManager - 进度系 + 社交成就
- * 条件：通关数 / 章节全通 / 全通 / 解锁数 / 分享 / 邀请 / 挑战发起 / 应战 / 近十局全胜
+ * 条件：通关数 / 章节全通 / 全通 / 解锁数 / 分享 / 邀请 / 挑战发起 / 应战 / 发起+应战双十 / 工坊发布 / 近十局全胜
  * 奖励：金方块走 goldenBlock.grantAchievementGold；金币走 coinManager.rewardAdBonus
  */
 
@@ -101,6 +101,11 @@ class AchievementManager {
         return this.checkAll();
     }
 
+    /** 工坊关卡成功发布到广场（须已自通） */
+    reportWorkshopPublished() {
+        return this.checkAll();
+    }
+
     /**
      * 成功应战写回
      * @param {string} result challenger_win | responder_win | tie
@@ -195,6 +200,15 @@ class AchievementManager {
         return last.length >= 10 && last.every((r) => r && r.won);
     }
 
+    _countWorkshopPublished() {
+        try {
+            const workshop = require('./workshop-manager');
+            return workshop.listStages().filter((s) => s && s.status === workshop.STATUS.published).length;
+        } catch (e) {
+            return 0;
+        }
+    }
+
     checkAll() {
         this.init();
         const all = getAllAchievements();
@@ -243,6 +257,13 @@ class AchievementManager {
                 return this.getStat('challengeCreateCount') >= (c.count || 1);
             case 'challenge_respond':
                 return this.getStat('challengeRespondCount') >= (c.count || 1);
+            case 'challenge_create_and_respond': {
+                const need = c.count || 10;
+                return this.getStat('challengeCreateCount') >= need
+                    && this.getStat('challengeRespondCount') >= need;
+            }
+            case 'workshop_publish':
+                return this._countWorkshopPublished() >= (c.count || 1);
             case 'challenge_last10_all_win':
                 return this._isLast10AllWin();
             default:
@@ -299,6 +320,14 @@ class AchievementManager {
                 return { current: this.getStat('challengeCreateCount'), target: c.count || 1 };
             case 'challenge_respond':
                 return { current: this.getStat('challengeRespondCount'), target: c.count || 1 };
+            case 'challenge_create_and_respond': {
+                const need = c.count || 10;
+                const create = this.getStat('challengeCreateCount');
+                const respond = this.getStat('challengeRespondCount');
+                return { current: Math.min(create, respond), target: need };
+            }
+            case 'workshop_publish':
+                return { current: this._countWorkshopPublished(), target: c.count || 1 };
             case 'challenge_last10_all_win': {
                 const last = this._last10Matches();
                 const wins = last.filter((r) => r && r.won).length;

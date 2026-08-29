@@ -115,7 +115,8 @@ module.exports = {
         "18": "....##....",
         "19": "....##...."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 0
     },
     {
       "id": 2,
@@ -131,7 +132,8 @@ module.exports = {
         "18": ".######...",
         "19": ".##......."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 3,
@@ -148,7 +150,8 @@ module.exports = {
         "17": "..####....",
         "18": ".....##..."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 4,
@@ -165,7 +168,8 @@ module.exports = {
         "16": "......##..",
         "17": "......##.."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 5,
@@ -183,7 +187,8 @@ module.exports = {
         "14": "....##....",
         "16": "....#....."
       },
-      "kind": "ladder"
+      "kind": "ladder",
+      "unlockCost": 1
     },
     {
       "id": 6,
@@ -201,7 +206,8 @@ module.exports = {
         "16": ".##...##..",
         "17": "..####...."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 7,
@@ -220,7 +226,8 @@ module.exports = {
         "16": "...##.....",
         "17": "...##....."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 8,
@@ -239,7 +246,8 @@ module.exports = {
         "15": "..####....",
         "16": ".##...##.."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 9,
@@ -259,7 +267,8 @@ module.exports = {
         "15": ".....##...",
         "16": ".######..."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 10,
@@ -279,7 +288,8 @@ module.exports = {
         "16": "..##..##..",
         "17": "...####..."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 11,
@@ -296,7 +306,8 @@ module.exports = {
         "18": ".#######..",
         "19": ".##...##.."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 12,
@@ -313,7 +324,8 @@ module.exports = {
         "17": ".##...##..",
         "18": ".######..."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 13,
@@ -331,7 +343,8 @@ module.exports = {
         "16": "..#####...",
         "17": ".##......."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 14,
@@ -349,7 +362,8 @@ module.exports = {
         "16": ".#######..",
         "17": ".##......."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 15,
@@ -368,7 +382,8 @@ module.exports = {
         "16": ".##.......",
         "17": ".##......."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 16,
@@ -387,7 +402,8 @@ module.exports = {
         "15": ".##...##..",
         "16": ".##...##.."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 17,
@@ -407,7 +423,8 @@ module.exports = {
         "14": ".##.......",
         "16": ".##......."
       },
-      "kind": "ladder"
+      "kind": "ladder",
+      "unlockCost": 1
     },
     {
       "id": 18,
@@ -427,7 +444,8 @@ module.exports = {
         "15": ".##....##.",
         "16": ".##....##."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 19,
@@ -448,7 +466,8 @@ module.exports = {
         "15": ".##.......",
         "16": ".##......."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 20,
@@ -470,7 +489,8 @@ module.exports = {
         "16": "....##....",
         "17": "....##...."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 21,
@@ -488,7 +508,8 @@ module.exports = {
         "16": "....#.....",
         "17": "....#....."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 22,
@@ -506,7 +527,8 @@ module.exports = {
         "16": "....#.....",
         "17": "....#....."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 23,
@@ -525,7 +547,8 @@ module.exports = {
         "13": "....#.....",
         "15": "....#....."
       },
-      "kind": "ladder"
+      "kind": "ladder",
+      "unlockCost": 1
     },
     {
       "id": 24,
@@ -544,7 +567,8 @@ module.exports = {
         "15": "....#.....",
         "16": "....#....."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 25,
@@ -564,7 +588,8 @@ module.exports = {
         "15": "....#.....",
         "16": "....#....."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 26,
@@ -584,7 +609,8 @@ module.exports = {
         "15": "....#.....",
         "16": "....#....."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 27,
@@ -605,7 +631,8 @@ module.exports = {
         "14": "....#.....",
         "15": "....#....."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 28,
@@ -626,7 +653,8 @@ module.exports = {
         "15": ".##...##..",
         "16": "....#....."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 29,
@@ -648,7 +676,8 @@ module.exports = {
         "14": "....#.....",
         "15": "....#....."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 30,
@@ -670,7 +699,8 @@ module.exports = {
         "13": "....#.....",
         "15": "...#.#...."
       },
-      "kind": "ladder"
+      "kind": "ladder",
+      "unlockCost": 1
     },
     {
       "id": 31,
@@ -689,7 +719,8 @@ module.exports = {
         "17": "....##....",
         "18": "....##...."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 32,
@@ -709,7 +740,8 @@ module.exports = {
         "16": "...#..#...",
         "17": "....##...."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 33,
@@ -730,7 +762,8 @@ module.exports = {
         "16": "....###...",
         "17": "....##...."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 34,
@@ -751,7 +784,8 @@ module.exports = {
         "16": "...#..#...",
         "17": "..##..##.."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 35,
@@ -772,7 +806,8 @@ module.exports = {
         "15": "....##....",
         "16": "....##...."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 36,
@@ -794,7 +829,8 @@ module.exports = {
         "15": "....##....",
         "16": "...###...."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 37,
@@ -816,7 +852,8 @@ module.exports = {
         "15": "....##....",
         "16": "....##...."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 38,
@@ -839,7 +876,8 @@ module.exports = {
         "14": "#.........",
         "15": ".##......."
       },
-      "kind": "ladder"
+      "kind": "ladder",
+      "unlockCost": 1
     },
     {
       "id": 39,
@@ -862,7 +900,8 @@ module.exports = {
         "15": "....##....",
         "16": "....##...."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 40,
@@ -885,7 +924,8 @@ module.exports = {
         "15": "....##....",
         "16": "...#..#..."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 41,
@@ -905,7 +945,8 @@ module.exports = {
         "18": ".##....##.",
         "19": ".########."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 42,
@@ -926,7 +967,8 @@ module.exports = {
         "18": "..##..##..",
         "19": "..######.."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 43,
@@ -948,7 +990,8 @@ module.exports = {
         "18": "........#.",
         "19": "...##....."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 44,
@@ -970,7 +1013,8 @@ module.exports = {
         "17": ".##....##.",
         "18": "..##..##.."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 45,
@@ -993,7 +1037,8 @@ module.exports = {
         "18": ".########.",
         "19": ".##....##."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 46,
@@ -1017,7 +1062,8 @@ module.exports = {
         "14": "..####....",
         "16": ".####....."
       },
-      "kind": "ladder"
+      "kind": "ladder",
+      "unlockCost": 1
     },
     {
       "id": 47,
@@ -1041,7 +1087,8 @@ module.exports = {
         "17": ".#########",
         "18": ".##.....##"
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 48,
@@ -1065,7 +1112,8 @@ module.exports = {
         "18": "#.#.#.#.#.",
         "19": ".########."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 49,
@@ -1090,7 +1138,8 @@ module.exports = {
         "16": "...####...",
         "17": "..##..##.."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 50,
@@ -1115,7 +1164,8 @@ module.exports = {
         "17": "#..####..#",
         "18": "##......##"
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 51,
@@ -1135,7 +1185,8 @@ module.exports = {
         "18": "...#..#...",
         "19": "...#..#..."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 52,
@@ -1156,7 +1207,8 @@ module.exports = {
         "18": "...#..#...",
         "19": "...#..#..."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 53,
@@ -1177,7 +1229,8 @@ module.exports = {
         "18": ".##....##.",
         "19": ".##....##."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 54,
@@ -1199,7 +1252,8 @@ module.exports = {
         "18": "...#..#...",
         "19": "..##..##.."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 55,
@@ -1222,7 +1276,8 @@ module.exports = {
         "18": "......##..",
         "19": ".....###.."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 56,
@@ -1246,7 +1301,8 @@ module.exports = {
         "17": "...##.....",
         "18": "....##...."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 57,
@@ -1270,7 +1326,8 @@ module.exports = {
         "15": ".##...##..",
         "16": "....#....."
       },
-      "kind": "ladder"
+      "kind": "ladder",
+      "unlockCost": 1
     },
     {
       "id": 58,
@@ -1294,7 +1351,8 @@ module.exports = {
         "16": "....#.....",
         "17": "...#.#...."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 59,
@@ -1318,7 +1376,8 @@ module.exports = {
         "17": ".##....##.",
         "18": ".########."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 60,
@@ -1343,7 +1402,8 @@ module.exports = {
         "18": "#.#.#.#.#.",
         "19": "..##.##..."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 61,
@@ -1364,7 +1424,8 @@ module.exports = {
         "13": "...#......",
         "14": "......#..."
       },
-      "kind": "ladder"
+      "kind": "ladder",
+      "unlockCost": 1
     },
     {
       "id": 62,
@@ -1385,7 +1446,8 @@ module.exports = {
         "15": "....#.....",
         "16": "..#......."
       },
-      "kind": "ladder"
+      "kind": "ladder",
+      "unlockCost": 1
     },
     {
       "id": 63,
@@ -1407,7 +1469,8 @@ module.exports = {
         "15": "....#.....",
         "16": "....#....."
       },
-      "kind": "ladder"
+      "kind": "ladder",
+      "unlockCost": 1
     },
     {
       "id": 64,
@@ -1430,7 +1493,8 @@ module.exports = {
         "15": "..#.......",
         "16": "....#....."
       },
-      "kind": "ladder"
+      "kind": "ladder",
+      "unlockCost": 1
     },
     {
       "id": 65,
@@ -1453,7 +1517,8 @@ module.exports = {
         "15": "...#......",
         "16": "....#....."
       },
-      "kind": "ladder"
+      "kind": "ladder",
+      "unlockCost": 1
     },
     {
       "id": 66,
@@ -1476,7 +1541,8 @@ module.exports = {
         "15": ".....#....",
         "16": "...#......"
       },
-      "kind": "ladder"
+      "kind": "ladder",
+      "unlockCost": 1
     },
     {
       "id": 67,
@@ -1500,7 +1566,8 @@ module.exports = {
         "15": "....#.....",
         "16": "....#....."
       },
-      "kind": "ladder"
+      "kind": "ladder",
+      "unlockCost": 1
     },
     {
       "id": 68,
@@ -1525,7 +1592,8 @@ module.exports = {
         "15": ".....#....",
         "16": "..#......."
       },
-      "kind": "ladder"
+      "kind": "ladder",
+      "unlockCost": 1
     },
     {
       "id": 69,
@@ -1550,7 +1618,8 @@ module.exports = {
         "15": "..#.......",
         "16": ".......#.."
       },
-      "kind": "ladder"
+      "kind": "ladder",
+      "unlockCost": 1
     },
     {
       "id": 70,
@@ -1575,7 +1644,8 @@ module.exports = {
         "15": "...#.#....",
         "16": "....#....."
       },
-      "kind": "ladder"
+      "kind": "ladder",
+      "unlockCost": 1
     },
     {
       "id": 71,
@@ -1596,7 +1666,8 @@ module.exports = {
         "16": "....#.....",
         "17": "...###...."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 72,
@@ -1618,7 +1689,8 @@ module.exports = {
         "15": "..#...#...",
         "16": ".#.....#.."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 73,
@@ -1640,7 +1712,8 @@ module.exports = {
         "16": ".##....##.",
         "17": ".##....##."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 74,
@@ -1663,7 +1736,8 @@ module.exports = {
         "14": "#.........",
         "16": "##........"
       },
-      "kind": "ladder"
+      "kind": "ladder",
+      "unlockCost": 1
     },
     {
       "id": 75,
@@ -1686,7 +1760,8 @@ module.exports = {
         "15": ".#.#.#.#..",
         "16": "#.#.#.#.#."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 76,
@@ -1710,7 +1785,8 @@ module.exports = {
         "16": "##.....##.",
         "17": ".#######.."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 77,
@@ -1735,7 +1811,8 @@ module.exports = {
         "16": "..#.#.#...",
         "17": "...###...."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 78,
@@ -1760,7 +1837,8 @@ module.exports = {
         "17": "...####...",
         "18": "..##..##.."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 79,
@@ -1786,7 +1864,8 @@ module.exports = {
         "17": ".#.#.#.#..",
         "18": "..#.#.#..."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 80,
@@ -1813,7 +1892,8 @@ module.exports = {
         "17": ".#.#.#.#..",
         "18": "......#..."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 81,
@@ -1835,7 +1915,8 @@ module.exports = {
         "18": "##......##",
         "19": "##......##"
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 82,
@@ -1857,7 +1938,8 @@ module.exports = {
         "17": "##..#..##.",
         "18": "##.....##."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 83,
@@ -1880,7 +1962,8 @@ module.exports = {
         "17": "######..##",
         "18": "##......##"
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 84,
@@ -1904,7 +1987,8 @@ module.exports = {
         "16": "...##.#...",
         "17": "..##...#.."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 85,
@@ -1928,7 +2012,8 @@ module.exports = {
         "15": "##.##.##.#",
         "17": "##.##.##.#"
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 86,
@@ -1952,7 +2037,8 @@ module.exports = {
         "16": ".##....##.",
         "17": ".########."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 87,
@@ -1977,7 +2063,8 @@ module.exports = {
         "15": ".....#....",
         "16": "........##"
       },
-      "kind": "ladder"
+      "kind": "ladder",
+      "unlockCost": 1
     },
     {
       "id": 88,
@@ -2002,7 +2089,8 @@ module.exports = {
         "17": "##......##",
         "18": "##..##..##"
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 89,
@@ -2028,7 +2116,8 @@ module.exports = {
         "18": "##......##",
         "19": "#........#"
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 90,
@@ -2054,7 +2143,8 @@ module.exports = {
         "16": "##.....##.",
         "17": ".##...##.."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 91,
@@ -2077,7 +2167,8 @@ module.exports = {
         "16": "#.#.#.#.#.",
         "17": ".#.#.#.#.."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 92,
@@ -2101,7 +2192,8 @@ module.exports = {
         "16": ".........#",
         "17": "........##"
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 93,
@@ -2125,7 +2217,8 @@ module.exports = {
         "16": "....##....",
         "17": "...####..."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 94,
@@ -2149,7 +2242,8 @@ module.exports = {
         "16": ".##...##..",
         "17": ".#######.."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 95,
@@ -2174,7 +2268,8 @@ module.exports = {
         "17": "....#.....",
         "18": "...###...."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 96,
@@ -2199,7 +2294,8 @@ module.exports = {
         "17": "....##....",
         "18": "..######.."
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 97,
@@ -2225,7 +2321,8 @@ module.exports = {
         "18": ".##....##.",
         "19": "##......##"
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 98,
@@ -2252,7 +2349,8 @@ module.exports = {
         "18": "##......##",
         "19": "#.##..##.#"
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 99,
@@ -2279,7 +2377,8 @@ module.exports = {
         "18": "##......##",
         "19": "###....###"
       },
-      "kind": "silhouette"
+      "kind": "silhouette",
+      "unlockCost": 1
     },
     {
       "id": 100,
@@ -2306,7 +2405,8 @@ module.exports = {
         "17": ".####.....",
         "18": ".###..#..."
       },
-      "kind": "ladder"
+      "kind": "ladder",
+      "unlockCost": 1
     }
   ]
 };
