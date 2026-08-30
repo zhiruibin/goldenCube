@@ -32,6 +32,8 @@ class WorkshopScene {
         this._confirm = null;
         this._playDialog = null;
         this._scrollY = 0;
+        this._scrollVel = 0;
+        this._moveSamples = [];
     }
 
     onEnter(params) {
@@ -44,20 +46,78 @@ class WorkshopScene {
         this._playDialog = null;
         this._actionSheet = null;
         this._scrollY = 0;
+        this._scrollVel = 0;
+        this._moveSamples = [];
         this._rebuild();
     }
 
     onExit() {
         this._buttons = [];
         this._listRects = [];
+        this._scrollVel = 0;
+        this._moveSamples = [];
     }
 
     onResume() {
         this._rebuild();
     }
 
-    update() {
+    update(dt) {
         if (this._toast && Date.now() > this._toastUntil) this._toast = '';
+        this._applyScrollInertia(dt);
+    }
+
+    _maxScroll() {
+        return Math.max(0, (this._listContentH || 0) - Math.max(1, this._listBottom - this._listTop));
+    }
+
+    _clampScrollY(y) {
+        return Math.max(0, Math.min(this._maxScroll(), y));
+    }
+
+    _launchScrollInertia() {
+        const samples = this._moveSamples || [];
+        this._moveSamples = [];
+        if (this._confirm || this._actionSheet || this._playDialog || samples.length < 2) {
+            this._scrollVel = 0;
+            return;
+        }
+        const newest = samples[samples.length - 1];
+        let oldest = samples[0];
+        for (let i = samples.length - 2; i >= 0; i--) {
+            if (newest.t - samples[i].t > 100) break;
+            oldest = samples[i];
+        }
+        const dtSec = Math.max(0.016, (newest.t - oldest.t) / 1000);
+        let vel = (oldest.y - newest.y) / dtSec;
+        const MAX_VEL = 4200;
+        if (vel > MAX_VEL) vel = MAX_VEL;
+        if (vel < -MAX_VEL) vel = -MAX_VEL;
+        this._scrollVel = Math.abs(vel) >= 180 ? vel : 0;
+    }
+
+    _applyScrollInertia(dt) {
+        if (this._confirm || this._actionSheet || this._playDialog) {
+            this._scrollVel = 0;
+            return;
+        }
+        const vel = this._scrollVel || 0;
+        if (Math.abs(vel) < 28) {
+            this._scrollVel = 0;
+            return;
+        }
+        const sec = Math.max(0, Math.min(0.05, Number(dt) || 0));
+        if (sec <= 0) return;
+        const next = this._clampScrollY((this._scrollY || 0) + vel * sec);
+        if (next <= 0 || next >= this._maxScroll()) {
+            this._scrollY = next;
+            this._scrollVel = 0;
+            this._buildListRects();
+            return;
+        }
+        this._scrollY = next;
+        this._scrollVel = vel * Math.pow(0.90, sec * 60);
+        this._buildListRects();
     }
 
     _showToast(msg) {
@@ -103,6 +163,7 @@ class WorkshopScene {
                 onClick: () => {
                     this._mineSub = t.id;
                     this._scrollY = 0;
+                    this._scrollVel = 0;
                     this._rebuild();
                 },
             }));
@@ -742,7 +803,10 @@ class WorkshopScene {
     onTouchStart(x, y) {
         this._touchStartY = y;
         this._touchMoved = false;
+        this._scrollVel = 0;
         this._lastMoveY = y;
+        const now = Date.now();
+        this._moveSamples = [{ t: now, y: y }];
     }
 
     onTouchMove(x, y) {
@@ -750,9 +814,13 @@ class WorkshopScene {
         const prev = this._lastMoveY != null ? this._lastMoveY : y;
         const dy = prev - y;
         if (Math.abs(dy) > 2) this._touchMoved = true;
-        const maxScroll = Math.max(0, (this._listContentH || 0) - Math.max(1, this._listBottom - this._listTop));
-        this._scrollY = Math.max(0, Math.min(maxScroll, (this._scrollY || 0) + dy));
+        this._scrollY = this._clampScrollY((this._scrollY || 0) + dy);
         this._lastMoveY = y;
+        const now = Date.now();
+        this._moveSamples.push({ t: now, y: y });
+        while (this._moveSamples.length > 1 && now - this._moveSamples[0].t > 120) {
+            this._moveSamples.shift();
+        }
         this._buildListRects();
     }
 
@@ -766,6 +834,7 @@ class WorkshopScene {
 
     handleTouchEnd() {
         this._lastMoveY = null;
+        this._launchScrollInertia();
     }
 
     handleTap(x, y) {

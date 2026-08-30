@@ -38,6 +38,7 @@ class WorkshopResultScene {
             origin: this._authorTrial ? 'workshop' : 'plaza',
             mineSub: 'draft',
         };
+        this._replayKey = this._params.replayKey || '';
         preloadResultBlockImages();
         this._buildButtons();
 
@@ -180,6 +181,24 @@ class WorkshopResultScene {
                 text: backLabel,
                 color: '#555',
                 onClick: () => this._goList(),
+            });
+        }
+        if (this._replayKey) {
+            defs.splice(Math.max(0, defs.length - 1), 0, {
+                text: '回看本局',
+                color: '#7b52ab',
+                onClick: () => {
+                    GameGlobal.game.sceneManager.switchTo('replay', {
+                        replayKey: this._replayKey,
+                        fromWorkshopResult: true,
+                        workshopStageId: this._stageId,
+                        workshopTitle: this._title,
+                        authorTrial: this._authorTrial,
+                        workshopReturnTo: this._returnTo,
+                        workshopListParams: this._listParams,
+                        result: this._result,
+                    });
+                },
             });
         }
 

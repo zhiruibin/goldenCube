@@ -348,7 +348,7 @@ class CloudService {
     }
 
     /*** 应战并写回结果
-     * @param {object} payload { challengeId, score, nickname, avatarUrl, lines, pieces, timeMs }
+     * @param {object} payload { challengeId, score, nickname, avatarUrl, lines, pieces, timeMs, failed }
      */
     async respondChallenge(payload) {
         const challengeId = payload && payload.challengeId;
@@ -374,6 +374,7 @@ class CloudService {
                         lines: payload && payload.lines,
                         pieces: payload && payload.pieces,
                         timeMs: payload && payload.timeMs,
+                        failed: !!(payload && payload.failed),
                     },
                 },
             });

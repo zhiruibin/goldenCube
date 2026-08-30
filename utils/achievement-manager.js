@@ -103,7 +103,44 @@ class AchievementManager {
 
     /** 工坊关卡成功发布到广场（须已自通） */
     reportWorkshopPublished() {
+        return this.reportWorkshopProgress();
+    }
+
+    /** 工坊造关 / 自通 / 发布 / 扩槽后刷新工坊系成就 */
+    reportWorkshopProgress() {
         return this.checkAll();
+    }
+
+    /** 广场解锁 / 通关后刷新广场系成就 */
+    reportPlazaProgress() {
+        return this.checkAll();
+    }
+
+    _countPlazaCleared() {
+        try {
+            const workshop = require('./workshop-manager');
+            return workshop.getPlazaClearedCount();
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    _countPlazaUnlocked() {
+        try {
+            const workshop = require('./workshop-manager');
+            return workshop.getPlazaUnlockedCount();
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    _countPlazaOfficialCleared() {
+        try {
+            const workshop = require('./workshop-manager');
+            return workshop.getPlazaOfficialClearedCount();
+        } catch (e) {
+            return 0;
+        }
     }
 
     /**
@@ -203,7 +240,37 @@ class AchievementManager {
     _countWorkshopPublished() {
         try {
             const workshop = require('./workshop-manager');
+            if (typeof workshop.getWorkshopPublishedCount === 'function') {
+                return workshop.getWorkshopPublishedCount();
+            }
             return workshop.listStages().filter((s) => s && s.status === workshop.STATUS.published).length;
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    _countWorkshopCreated() {
+        try {
+            const workshop = require('./workshop-manager');
+            return workshop.getWorkshopCreatedCount();
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    _countWorkshopAuthorClear() {
+        try {
+            const workshop = require('./workshop-manager');
+            return workshop.getWorkshopAuthorClearCount();
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    _getWorkshopSlotCap() {
+        try {
+            const workshop = require('./workshop-manager');
+            return workshop.getSlotCap();
         } catch (e) {
             return 0;
         }
@@ -236,6 +303,18 @@ class AchievementManager {
         return stages.length > 0 && stages.every((s) => goldenBlock.isCleared(s.id));
     }
 
+    _countChaptersCleared() {
+        const chapters = goldenBlock.getChapters();
+        if (!chapters || !chapters.length) {
+            let n = 0;
+            for (let i = 1; i <= 10; i++) {
+                if (this._isChapterCleared(i)) n++;
+            }
+            return n;
+        }
+        return chapters.filter((ch) => this._isChapterCleared(ch.id)).length;
+    }
+
     _evaluate(a) {
         const c = a.condition;
         if (!c) return false;
@@ -244,6 +323,8 @@ class AchievementManager {
                 return goldenBlock.getClearedCount() >= (c.count || 0);
             case 'chapter_clear':
                 return this._isChapterCleared(c.chapterId);
+            case 'chapter_clear_count':
+                return this._countChaptersCleared() >= (c.count || 1);
             case 'all_stages_clear':
                 return goldenBlock.getClearedCount() >= goldenBlock.getTotalStageCount()
                     && goldenBlock.getTotalStageCount() > 0;
@@ -264,6 +345,18 @@ class AchievementManager {
             }
             case 'workshop_publish':
                 return this._countWorkshopPublished() >= (c.count || 1);
+            case 'workshop_create_count':
+                return this._countWorkshopCreated() >= (c.count || 1);
+            case 'workshop_author_clear_count':
+                return this._countWorkshopAuthorClear() >= (c.count || 1);
+            case 'workshop_slot_cap':
+                return this._getWorkshopSlotCap() >= (c.count || 1);
+            case 'plaza_clear_count':
+                return this._countPlazaCleared() >= (c.count || 1);
+            case 'plaza_unlock_count':
+                return this._countPlazaUnlocked() >= (c.count || 1);
+            case 'plaza_official_clear_count':
+                return this._countPlazaOfficialCleared() >= (c.count || 1);
             case 'challenge_last10_all_win':
                 return this._isLast10AllWin();
             default:
@@ -305,6 +398,8 @@ class AchievementManager {
                     current: this._isChapterCleared(c.chapterId) ? 1 : 0,
                     target: 1,
                 };
+            case 'chapter_clear_count':
+                return { current: this._countChaptersCleared(), target: c.count || 1 };
             case 'all_stages_clear':
                 return {
                     current: goldenBlock.getClearedCount(),
@@ -328,6 +423,18 @@ class AchievementManager {
             }
             case 'workshop_publish':
                 return { current: this._countWorkshopPublished(), target: c.count || 1 };
+            case 'workshop_create_count':
+                return { current: this._countWorkshopCreated(), target: c.count || 1 };
+            case 'workshop_author_clear_count':
+                return { current: this._countWorkshopAuthorClear(), target: c.count || 1 };
+            case 'workshop_slot_cap':
+                return { current: this._getWorkshopSlotCap(), target: c.count || 1 };
+            case 'plaza_clear_count':
+                return { current: this._countPlazaCleared(), target: c.count || 1 };
+            case 'plaza_unlock_count':
+                return { current: this._countPlazaUnlocked(), target: c.count || 1 };
+            case 'plaza_official_clear_count':
+                return { current: this._countPlazaOfficialCleared(), target: c.count || 1 };
             case 'challenge_last10_all_win': {
                 const last = this._last10Matches();
                 const wins = last.filter((r) => r && r.won).length;

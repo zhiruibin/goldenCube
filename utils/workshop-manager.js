@@ -13,7 +13,7 @@ const KEYS = {
     stages: 'gc_workshop_stages',
     slotCap: 'gc_workshop_slotCap',
     unlockedPlaza: 'gc_workshop_plazaUnlocked',
-    clearedPlaza: 'gc_workshop_plazaCleared', // { [stageId]: { date, clearsToday } }
+    clearedPlaza: 'gc_workshop_plazaCleared', // { [stageId]: { firstAt, date, clearsToday } }
     submitDaily: 'gc_workshop_submitDaily',
     freePlayDaily: 'gc_workshop_freePlayDaily',
     authorShareDaily: 'gc_workshop_authorShareDaily',
@@ -201,7 +201,34 @@ function expandSlot() {
     if (!goldenBlock.spendBalance(cost)) return { ok: false, reason: 'no-gold', cost };
     const next = getSlotCap() + 1;
     _saveJson(KEYS.slotCap, next);
+    try {
+        _notifyWorkshopAchievement();
+    } catch (e) { /* ignore */ }
     return { ok: true, slotCap: next, cost };
+}
+
+function _notifyWorkshopAchievement() {
+    try {
+        const { achievementManager } = require('./achievement-manager');
+        if (achievementManager && typeof achievementManager.reportWorkshopProgress === 'function') {
+            achievementManager.reportWorkshopProgress();
+        }
+    } catch (e) { /* ignore */ }
+}
+
+/** 工坊内关卡总数（占槽数） */
+function getWorkshopCreatedCount() {
+    return countOccupiedSlots();
+}
+
+/** 作者自通过的关卡数 */
+function getWorkshopAuthorClearCount() {
+    return listStages().filter((s) => s && s.authorBest && s.authorBest.clearedAt).length;
+}
+
+/** 已发布到广场的关卡数 */
+function getWorkshopPublishedCount() {
+    return listStages().filter((s) => s && s.status === STATUS.published).length;
 }
 
 function listStages() {
@@ -216,16 +243,25 @@ function _saveAll(list) {
 function getStage(id) {
     const local = listStages().find((s) => s.stageId === id);
     if (local) return local;
-    const cache = _loadJson(KEYS.plazaCache, {}) || {};
-    if (cache[id]) return cache[id];
     const official = getOfficialPlazaStages().find((s) => s.stageId === id);
-    return official || null;
+    const cache = _loadJson(KEYS.plazaCache, {}) || {};
+    if (official) {
+        return cache[id] ? _mergeOfficialPlazaStage(official, cache[id]) : official;
+    }
+    if (cache[id]) return cache[id];
+    return null;
 }
 
 function cachePlazaStages(stages) {
     const cache = _loadJson(KEYS.plazaCache, {}) || {};
     (stages || []).forEach((s) => {
-        if (s && s.stageId) cache[s.stageId] = s;
+        if (!s || !s.stageId) return;
+        if (_isOfficialPlazaStageId(s.stageId)) {
+            const base = getOfficialPlazaStages().find((o) => o.stageId === s.stageId);
+            cache[s.stageId] = base ? _mergeOfficialPlazaStage(base, s) : s;
+        } else {
+            cache[s.stageId] = s;
+        }
     });
     _saveJson(KEYS.plazaCache, cache);
 }
@@ -273,6 +309,9 @@ function createStage(title) {
     const list = listStages();
     list.unshift(stage);
     _saveAll(list);
+    try {
+        _notifyWorkshopAchievement();
+    } catch (e) { /* ignore */ }
     return { ok: true, stage };
 }
 
@@ -355,6 +394,7 @@ function markAuthorCleared(stageId, best) {
     cur.updatedAt = Date.now();
     list[idx] = cur;
     _saveAll(list);
+    _notifyWorkshopAchievement();
     return { ok: true, stage: cur };
 }
 
@@ -399,6 +439,7 @@ function submitForReview(stageId) {
         list[idx] = cur;
         _saveAll(list);
         cachePlazaStage(cur);
+        _notifyWorkshopAchievement();
         return { ok: true, stage: cur };
     };
 
@@ -502,11 +543,14 @@ function listPlazaLocal(sort) {
     const map = {};
     published.forEach((s) => { map[s.stageId] = s; });
     Object.keys(cache).forEach((id) => {
-        if (cache[id] && cache[id].status === STATUS.published) map[id] = cache[id];
+        if (!cache[id] || cache[id].status !== STATUS.published) return;
+        if (_isOfficialPlazaStageId(id)) return;
+        map[id] = cache[id];
     });
-    // 官方精选：始终合并进广场（本地兜底；云端有同 ID 时以缓存/云为准）
+    // 官方精选：本地包为准，stats 从 cache / 云合并
     getOfficialPlazaStages().forEach((s) => {
-        if (!map[s.stageId]) map[s.stageId] = s;
+        const overlay = map[s.stageId] || cache[s.stageId];
+        map[s.stageId] = overlay ? _mergeOfficialPlazaStage(s, overlay) : s;
     });
     let arr = Object.keys(map).map((k) => map[k]);
     if (sort === 'official') {
@@ -538,23 +582,49 @@ function getOfficialPlazaStages() {
     }));
 }
 
+function _isOfficialPlazaStageId(stageId) {
+    return !!stageId && String(stageId).startsWith('official_plaza_');
+}
+
+/** 官方关以本地包为准，只叠加 stats / heat 等云端字段（避免云 stub 盖掉标题与布局） */
+function _mergeOfficialPlazaStage(base, overlay) {
+    if (!base) return overlay || null;
+    if (!overlay) return base;
+    const mergedStats = Object.assign({}, base.stats || {}, overlay.stats || {});
+    const merged = Object.assign({}, base, {
+        stats: mergedStats,
+        heatScore: _calcHeat(Object.assign({}, base, { stats: mergedStats })),
+    });
+    if (overlay.updatedAt) merged.updatedAt = overlay.updatedAt;
+    return merged;
+}
+
 /**
  * 广场列表：云优先，失败降级本地缓存；官方精选始终可本地返回
  * @returns {Promise<Array>}
  */
 function listPlaza(sort) {
     const mode = sort || 'new';
-    // 官方精选以本地包为准（不依赖云种子是否已导入）
-    if (mode === 'official') {
-        return Promise.resolve(listPlazaLocal('official'));
-    }
     let cloudService;
     try {
         cloudService = require('./cloud-service').cloudService;
     } catch (e) {
-        return Promise.resolve(listPlazaLocal(mode));
+        cloudService = null;
     }
-    if (!cloudService.isAvailable()) {
+    // 官方精选：本地包为准，但 stats 可从云合并（全服通关数）
+    if (mode === 'official') {
+        const local = listPlazaLocal('official');
+        if (!cloudService || !cloudService.isAvailable()) {
+            return Promise.resolve(local);
+        }
+        return cloudService.listPlaza({ sort: 'official', pageSize: 100 }).then((res) => {
+            if (res && res.success && Array.isArray(res.list)) {
+                return _mergeOfficialCloudStats(local, res.list);
+            }
+            return local;
+        }).catch(() => local);
+    }
+    if (!cloudService || !cloudService.isAvailable()) {
         return Promise.resolve(listPlazaLocal(mode));
     }
     return cloudService.listPlaza({ sort: mode, pageSize: 50 }).then((res) => {
@@ -564,7 +634,14 @@ function listPlaza(sort) {
             const official = getOfficialPlazaStages();
             const map = {};
             official.forEach((s) => { map[s.stageId] = s; });
-            res.list.forEach((s) => { map[s.stageId] = s; });
+            res.list.forEach((s) => {
+                if (!s || !s.stageId) return;
+                if (_isOfficialPlazaStageId(s.stageId) && map[s.stageId]) {
+                    map[s.stageId] = _mergeOfficialPlazaStage(map[s.stageId], s);
+                } else {
+                    map[s.stageId] = s;
+                }
+            });
             let arr = Object.keys(map).map((k) => map[k]);
             if (mode === 'heat') {
                 arr.sort((a, b) => (b.heatScore || 0) - (a.heatScore || 0));
@@ -609,7 +686,44 @@ function unlockPlazaStage(stageId) {
     const map = _unlockedMap();
     map[stageId] = Date.now();
     _saveJson(KEYS.unlockedPlaza, map);
+    try {
+        const { achievementManager } = require('./achievement-manager');
+        if (achievementManager && typeof achievementManager.reportPlazaProgress === 'function') {
+            achievementManager.reportPlazaProgress();
+        }
+    } catch (e) { /* ignore */ }
     return { ok: true, cost: PLAZA_UNLOCK_GOLD, balance: goldenBlock.getBalance() };
+}
+
+/** 当前用户是否已通关该广场关卡 */
+function isPlazaCleared(stageId) {
+    if (!stageId) return false;
+    const map = _loadJson(KEYS.clearedPlaza, {}) || {};
+    const rec = map[stageId];
+    return !!(rec && (rec.firstAt || rec.clearsToday > 0 || rec.date));
+}
+
+/** 已通关的不同广场关卡数（按 stageId 去重，含官方/UGC） */
+function getPlazaClearedCount() {
+    const map = _loadJson(KEYS.clearedPlaza, {}) || {};
+    return Object.keys(map).filter((id) => {
+        const rec = map[id];
+        return rec && (rec.firstAt || rec.clearsToday > 0 || rec.date);
+    }).length;
+}
+
+/** 已用金方块解锁的广场关卡数 */
+function getPlazaUnlockedCount() {
+    return Object.keys(_unlockedMap()).length;
+}
+
+/** 已通关的官方精选关卡数 */
+function getPlazaOfficialClearedCount() {
+    const map = _loadJson(KEYS.clearedPlaza, {}) || {};
+    return getOfficialPlazaStages().filter((s) => {
+        const rec = map[s.stageId];
+        return rec && (rec.firstAt || rec.clearsToday > 0 || rec.date);
+    }).length;
 }
 
 function getFreePlayRemaining() {
@@ -647,26 +761,118 @@ function spendChallengeFee() {
     return { ok: true, fee, paid: fee };
 }
 
-function recordPlayStart(stageId) {
+function _ensurePlazaCacheEntry(stageId) {
+    const list = listStages();
+    if (list.findIndex((s) => s.stageId === stageId) >= 0) return false;
+    const cache = _loadJson(KEYS.plazaCache, {}) || {};
+    if (cache[stageId]) return true;
+    const official = getOfficialPlazaStages().find((s) => s.stageId === stageId);
+    if (official) {
+        cache[stageId] = Object.assign({}, official, {
+            rows: cloneRows(official.rows),
+            stats: Object.assign({
+                playCount: 0,
+                clearCount: 0,
+                challengeSendCount: 0,
+                likeCount: 0,
+            }, official.stats || {}),
+        });
+        _saveJson(KEYS.plazaCache, cache);
+        return true;
+    }
+    const stage = getStage(stageId);
+    if (!stage || stage.status !== STATUS.published) return false;
+    cache[stageId] = Object.assign({}, stage, {
+        rows: cloneRows(stage.rows),
+        stats: Object.assign({
+            playCount: 0,
+            clearCount: 0,
+            challengeSendCount: 0,
+            likeCount: 0,
+        }, stage.stats || {}),
+    });
+    _saveJson(KEYS.plazaCache, cache);
+    return true;
+}
+
+function _setPlazaStatsFromCloud(stageId, patch) {
+    if (!stageId || !patch) return;
     const list = listStages();
     const idx = list.findIndex((s) => s.stageId === stageId);
     if (idx >= 0) {
         list[idx].stats = list[idx].stats || {};
-        list[idx].stats.playCount = (list[idx].stats.playCount || 0) + 1;
+        if (patch.playCount != null) list[idx].stats.playCount = patch.playCount;
+        if (patch.clearCount != null) list[idx].stats.clearCount = patch.clearCount;
         list[idx].heatScore = _calcHeat(list[idx]);
         list[idx].updatedAt = Date.now();
         _saveAll(list);
+        return;
     }
+    _ensurePlazaCacheEntry(stageId);
     const cache = _loadJson(KEYS.plazaCache, {}) || {};
-    if (cache[stageId]) {
-        cache[stageId].stats = cache[stageId].stats || {};
-        cache[stageId].stats.playCount = (cache[stageId].stats.playCount || 0) + 1;
+    if (!cache[stageId]) return;
+    cache[stageId].stats = cache[stageId].stats || {};
+    if (patch.playCount != null) cache[stageId].stats.playCount = patch.playCount;
+    if (patch.clearCount != null) cache[stageId].stats.clearCount = patch.clearCount;
+    if (_isOfficialPlazaStageId(stageId)) {
+        const base = getOfficialPlazaStages().find((s) => s.stageId === stageId);
+        if (base) cache[stageId] = _mergeOfficialPlazaStage(base, cache[stageId]);
+    } else {
         cache[stageId].heatScore = _calcHeat(cache[stageId]);
-        _saveJson(KEYS.plazaCache, cache);
     }
+    cache[stageId].updatedAt = Date.now();
+    _saveJson(KEYS.plazaCache, cache);
+}
+
+function _bumpPlazaStat(stageId, statKey) {
+    const list = listStages();
+    const idx = list.findIndex((s) => s.stageId === stageId);
+    if (idx >= 0) {
+        list[idx].stats = list[idx].stats || {};
+        list[idx].stats[statKey] = (list[idx].stats[statKey] || 0) + 1;
+        list[idx].heatScore = _calcHeat(list[idx]);
+        list[idx].updatedAt = Date.now();
+        _saveAll(list);
+        return;
+    }
+    _ensurePlazaCacheEntry(stageId);
+    const cache = _loadJson(KEYS.plazaCache, {}) || {};
+    if (!cache[stageId]) return;
+    cache[stageId].stats = cache[stageId].stats || {};
+    cache[stageId].stats[statKey] = (cache[stageId].stats[statKey] || 0) + 1;
+    cache[stageId].heatScore = _calcHeat(cache[stageId]);
+    cache[stageId].updatedAt = Date.now();
+    _saveJson(KEYS.plazaCache, cache);
+}
+
+function _mergeOfficialCloudStats(localList, cloudList) {
+    if (!Array.isArray(localList) || !Array.isArray(cloudList) || cloudList.length === 0) {
+        return localList;
+    }
+    const statsMap = {};
+    cloudList.forEach((s) => {
+        if (s && s.stageId && s.stats) statsMap[s.stageId] = s.stats;
+    });
+    return localList.map((s) => {
+        const cloudStats = statsMap[s.stageId];
+        if (!cloudStats) return s;
+        const mergedStats = Object.assign({}, s.stats || {}, cloudStats);
+        return Object.assign({}, s, {
+            stats: mergedStats,
+            heatScore: _calcHeat(Object.assign({}, s, { stats: mergedStats })),
+        });
+    });
+}
+
+function recordPlayStart(stageId) {
+    _bumpPlazaStat(stageId, 'playCount');
     try {
         const { cloudService } = require('./cloud-service');
-        cloudService.reportWorkshopPlay(stageId).catch(() => {});
+        cloudService.reportWorkshopPlay(stageId).then((res) => {
+            if (res && res.success && res.playCount != null) {
+                _setPlazaStatsFromCloud(stageId, { playCount: res.playCount });
+            }
+        }).catch(() => {});
     } catch (e) { /* ignore */ }
 }
 
@@ -693,23 +899,7 @@ function rewardPlazaClear(stageId, lines, pieces, timeMs) {
         return { coinWant: 0, coinGained: 0, goldGranted: 0, firstClear: false };
     }
 
-    const list = listStages();
-    const idx = list.findIndex((s) => s.stageId === stageId);
-    if (idx >= 0) {
-        list[idx].stats = list[idx].stats || {};
-        list[idx].stats.clearCount = (list[idx].stats.clearCount || 0) + 1;
-        list[idx].heatScore = _calcHeat(list[idx]);
-        list[idx].updatedAt = Date.now();
-        _saveAll(list);
-    } else {
-        const cache = _loadJson(KEYS.plazaCache, {}) || {};
-        if (cache[stageId]) {
-            cache[stageId].stats = cache[stageId].stats || {};
-            cache[stageId].stats.clearCount = (cache[stageId].stats.clearCount || 0) + 1;
-            cache[stageId].heatScore = _calcHeat(cache[stageId]);
-            _saveJson(KEYS.plazaCache, cache);
-        }
-    }
+    _bumpPlazaStat(stageId, 'clearCount');
 
     const clearedMap = _loadJson(KEYS.clearedPlaza, {}) || {};
     const today = _today();
@@ -736,10 +926,21 @@ function rewardPlazaClear(stageId, lines, pieces, timeMs) {
 
     const gained = coinManager.rewardWorkshopClear(want);
 
+    try {
+        const { achievementManager } = require('./achievement-manager');
+        if (achievementManager && typeof achievementManager.reportPlazaProgress === 'function') {
+            achievementManager.reportPlazaProgress();
+        }
+    } catch (e) { /* ignore */ }
+
     // 云上报通关统计；作者分成需云端钱包（二期），此处不把分成误发给游玩者
     try {
         const { cloudService } = require('./cloud-service');
-        cloudService.reportWorkshopClear(stageId).catch(() => {});
+        cloudService.reportWorkshopClear(stageId).then((res) => {
+            if (res && res.success && res.clearCount != null) {
+                _setPlazaStatsFromCloud(stageId, { clearCount: res.clearCount });
+            }
+        }).catch(() => {});
     } catch (e) { /* ignore */ }
 
     return {
@@ -814,6 +1015,13 @@ module.exports = {
     getOfficialPlazaStages,
     isPlazaUnlocked,
     unlockPlazaStage,
+    isPlazaCleared,
+    getPlazaClearedCount,
+    getPlazaUnlockedCount,
+    getPlazaOfficialClearedCount,
+    getWorkshopCreatedCount,
+    getWorkshopAuthorClearCount,
+    getWorkshopPublishedCount,
     getFreePlayRemaining,
     consumeFreePlay,
     spendPlayFee,

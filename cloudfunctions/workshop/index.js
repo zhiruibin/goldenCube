@@ -338,11 +338,50 @@ async function _findByStageId(stageId) {
   return (res.data && res.data[0]) || null;
 }
 
+/** 官方精选关：首次上报 stats 时自动建 stub（布局仍在客户端本地包） */
+async function _ensureOfficialStatsDoc(stageId) {
+  if (!stageId || !String(stageId).startsWith('official_plaza_')) return null;
+  const existing = await _findByStageId(stageId);
+  if (existing) return existing;
+  const now = Date.now();
+  const stub = {
+    stageId,
+    source: 'official',
+    featured: true,
+    featuredRank: parseInt(String(stageId).slice(-3), 10) || 0,
+    title: stageId,
+    authorOpenid: '',
+    authorName: '官方',
+    authorAvatar: '',
+    status: 'published',
+    stats: {
+      playCount: 0,
+      clearCount: 0,
+      challengeSendCount: 0,
+      likeCount: 0,
+    },
+    publishedAt: now,
+    createdAt: now,
+    updatedAt: now,
+  };
+  stub.heatScore = calcHeat(stub);
+  const addRes = await db.collection(COLLECTION).add({ data: stub });
+  return Object.assign({ _id: addRes._id }, stub);
+}
+
+async function _resolvePublishedStage(stageId) {
+  let doc = await _findByStageId(stageId);
+  if (doc && doc.status === 'published') return doc;
+  if (!doc) doc = await _ensureOfficialStatsDoc(stageId);
+  if (doc && doc.status === 'published') return doc;
+  return null;
+}
+
 async function reportPlay(openid, data) {
   const stageId = String((data && data.stageId) || '').slice(0, 64);
   if (!stageId) return { success: false, errMsg: 'stageId required' };
-  const doc = await _findByStageId(stageId);
-  if (!doc || doc.status !== 'published') return { success: false, errMsg: 'not found' };
+  const doc = await _resolvePublishedStage(stageId);
+  if (!doc) return { success: false, errMsg: 'not found' };
   const stats = doc.stats || {};
   stats.playCount = (stats.playCount || 0) + 1;
   const heatScore = calcHeat(Object.assign({}, doc, { stats }));
@@ -355,8 +394,8 @@ async function reportPlay(openid, data) {
 async function reportClear(openid, data) {
   const stageId = String((data && data.stageId) || '').slice(0, 64);
   if (!stageId) return { success: false, errMsg: 'stageId required' };
-  const doc = await _findByStageId(stageId);
-  if (!doc || doc.status !== 'published') return { success: false, errMsg: 'not found' };
+  const doc = await _resolvePublishedStage(stageId);
+  if (!doc) return { success: false, errMsg: 'not found' };
   const stats = doc.stats || {};
   stats.clearCount = (stats.clearCount || 0) + 1;
   const heatScore = calcHeat(Object.assign({}, doc, { stats }));

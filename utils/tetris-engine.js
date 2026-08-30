@@ -1,4 +1,4 @@
-/*** 方块过把瘾 - 核心俄罗斯方块游戏引擎
+/*** 挖个方块 - 核心俄罗斯方块引擎（残局闯关）
  * 职责：
  *   - 游戏状态管理（初始化/开始/暂停/恢复/重置）
  *   - 7-Bag 随机方块生成
@@ -203,7 +203,7 @@ class TetrisEngine {
 
         this._lastAction = 'spawn';
         this._tSpinType = null;
-        this._mode = 'classic';
+        this._mode = 'stage';
         this._stats = this._createStats();
         this._garbageMask = null;
         this._garbageRemaining = 0;
@@ -701,7 +701,7 @@ class TetrisEngine {
             ? { cleared: 0, lines: [], visibleRows: [], clearedColors: [], isTetris: false, isDifficult: false }
             : this._checkLines();
 
-        // 先发消行 / 落地反馈（与「方块过把瘾」一致），再处理闯关过关，避免终局跳过特效
+        // 先发消行 / 落地反馈，再处理闯关过关，避免终局跳过特效
         if (clearResult.cleared > 0) {
             this._combo++;
             this._calculateScore(clearResult);
@@ -812,7 +812,7 @@ class TetrisEngine {
         const isTetris = fullRows.length === 4;
         const visibleRows = fullRows.map(r => r - HIDDEN_ROWS);
 
-        // 经典模式：从下往上移除满行，顶部补空行
+        // 经典重力消行（非 stage）：从下往上移除满行，顶部补空行
         for (let i = fullRows.length - 1; i >= 0; i--) {
             this._board.splice(fullRows[i], 1);
         }
@@ -1305,11 +1305,10 @@ class TetrisEngine {
         };
     }
 
-    /** 设置游戏模式（classic / timed / marathon / special / stage） */
+    /** 设置规则档（产品对局一律 stage；其它取值仅供引擎单测） */
     setMode(mode) {
-        this._mode = mode || 'classic';
+        this._mode = mode || 'stage';
         this._bag.setSpecialMode(this._mode === 'special');
-        // 闯关模式：固定标准 7 块
         if (this._mode === 'stage') {
             this._bag.setSpecialMode(false);
         }
@@ -1413,13 +1412,13 @@ class TetrisEngine {
         return this._mode;
     }
 
-    /** 模式目标达成时结束游戏（限时赛倒计时结束 / 马拉松达成目标行数） */
+    /** 外部强制结束对局（如挑战超时等扩展点） */
     finishGame(reason) {
         if (this._state !== GameState.PLAYING) return;
         this._gameOver(reason || 'modeFinish');
     }
 
-    /** 看广告复活：清除顶部溢出区域后恢复游戏（仅经典模式、每局最多 1 次） */
+    /** 看广告复活：清除顶部溢出区域后恢复游戏（关卡失败复活复用） */
     revive() {
         if (this._state !== GameState.OVER) return false;
 

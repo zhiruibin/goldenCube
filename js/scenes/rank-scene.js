@@ -50,7 +50,6 @@ class RankScene {
         this._tabAreas = [];
 
         this._replayBtns = [];
-        this._challengeBtns = [];
         this._replayLoading = false;
         this._shareBusy = false;
     }
@@ -216,7 +215,7 @@ class RankScene {
             if (this._offline) {
                 ctx.fillStyle = 'rgba(255,255,255,0.3)';
                 ctx.font = '12px sans-serif';
-                ctx.fillText('（已切换本地模式）', W / 2, (top + bottom) / 2 + 22);
+                ctx.fillText('（当前为离线数据）', W / 2, (top + bottom) / 2 + 22);
             }
             return;
         }
@@ -240,7 +239,6 @@ class RankScene {
         ctx.clip();
 
         this._replayBtns = [];
-        this._challengeBtns = [];
         for (let i = 0; i < this._rankData.length; i++) {
             const item = this._rankData[i];
             const y = top + i * itemH - this._scrollY;
@@ -278,9 +276,6 @@ class RankScene {
             ctx.fillText(item.nickname || '玩家', hasAvatar ? listX + 88 : listX + 60, y + itemH / 2 - 2);
 
             const hasReplay = !!item.hasReplay && i < 10;
-            const isMe = typeof this._myRank === 'number' && this._myRank === i + 1;
-            // 闯关复合榜不以分数发起经典挑战
-            const showChallenge = false;
             const btnW = 48;
             const btnH = 24;
             const btnGap = 6;
@@ -302,31 +297,6 @@ class RankScene {
                 ctx.textBaseline = 'middle';
                 ctx.fillText('回放', btnX + btnW / 2, btnY + btnH / 2);
                 this._replayBtns.push({ x: btnX, y: btnY, w: btnW, h: btnH, replayId: item.id || '' });
-                right = btnX - btnGap;
-            }
-
-            if (showChallenge) {
-                const btnX = right - btnW;
-                const btnY = y + (itemH - btnH) / 2 - 2;
-                ctx.fillStyle = 'rgba(224, 154, 48, 0.28)';
-                this._roundRect(ctx, btnX, btnY, btnW, btnH, 6);
-                ctx.fill();
-                ctx.strokeStyle = 'rgba(224, 154, 48, 0.7)';
-                ctx.lineWidth = 1;
-                this._roundRect(ctx, btnX, btnY, btnW, btnH, 6);
-                ctx.stroke();
-                ctx.fillStyle = '#ffffff';
-                ctx.font = '12px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText('挑战', btnX + btnW / 2, btnY + btnH / 2);
-                this._challengeBtns.push({
-                    x: btnX, y: btnY, w: btnW, h: btnH,
-                    score: item.score || 0,
-                    nickname: item.nickname || '玩家',
-                    avatarUrl: item.avatarUrl || '',
-                    openid: item.openid || '',
-                });
                 right = btnX - btnGap;
             }
 
@@ -465,7 +435,7 @@ class RankScene {
         return this._tab === 'global' ? this._topInset() + 168 : this._topInset() + 128;
     }
 
-    /** 列表底部：好友榜预留「发起挑战」+ 返回；全服榜预留返回 */
+    /** 列表底部：好友榜分享 + 返回；全服榜返回 */
     _listBottom() {
         const H = GameGlobal.game.height;
         return this._tab === 'friend' ? H - 148 : H - 90;
@@ -504,7 +474,7 @@ class RankScene {
         }));
     }
 
-    /** 分享闯关战绩（不创建挑战；真正挑战在已通关关卡上发起） */
+    /** 分享闯关战绩（不创建挑战；挑战在已通关关卡上发起） */
     _shareMyRecord() {
         if (this._shareBusy) return;
         const sums = goldenBlock.getRankSums();
@@ -533,20 +503,6 @@ class RankScene {
         }
         // 部分基础库无 complete，短延迟解锁
         setTimeout(() => { this._shareBusy = false; }, 800);
-    }
-
-    /** 以对方分数为目标开局，打完再发挑战卡 */
-    _startTargetChallenge(targetScore, nickname, avatarUrl, openid) {
-        const score = Math.floor(Number(targetScore) || 0);
-        if (score <= 0) return;
-        GameGlobal.game.sceneManager.switchTo('game', {
-            mode: this._mode,
-            targetScore: score,
-            challengeLaunch: true,
-            challengeTargetName: nickname || '',
-            challengeTargetAvatar: avatarUrl || '',
-            challengeTargetOpenid: openid || '',
-        });
     }
 
     /** 加载排行数据 */
@@ -792,17 +748,8 @@ class RankScene {
             }
         }
 
-        // 全服榜行内回放 / 挑战
+        // 全服榜行内回放
         if (this._tab === 'global') {
-            if (this._challengeBtns && this._challengeBtns.length > 0) {
-                for (const cb of this._challengeBtns) {
-                    if (x >= cb.x && x <= cb.x + cb.w &&
-                        y >= cb.y && y <= cb.y + cb.h) {
-                        this._startTargetChallenge(cb.score, cb.nickname, cb.avatarUrl, cb.openid);
-                        return;
-                    }
-                }
-            }
             if (this._replayBtns.length > 0) {
                 for (const rb of this._replayBtns) {
                     if (x >= rb.x && x <= rb.x + rb.w &&

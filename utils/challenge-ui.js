@@ -1,5 +1,5 @@
 /**
- * 好友挑战 · 挖个方块（残局 stage/workshop 为主，兼容旧 classic 分制）
+ * 好友挑战 · 挖个方块（残局 stage / workshop / plaza）
  */
 
 const { MODE_NAMES } = require('./cloud-config');
@@ -59,6 +59,10 @@ function challengerMetricLabel(rec) {
  */
 function formatResponderResultText(sync) {
     if (!sync || !sync.result) return '';
+    // 应战未通关（顶格/中途结束）：不按消行比拼文案
+    if (sync.failed || sync.challengeFailed) {
+        return '未通关，挑战失败';
+    }
     const puzzle = isPuzzleChallenge(sync);
     const mine = puzzle
         ? (typeof sync.responderLines === 'number' ? sync.responderLines : null)
@@ -139,7 +143,7 @@ function buildCreateChallengePayload(opts) {
     const puzzle = isPuzzleChallenge({ mode, layoutSnapshot, challengerLines });
 
     const payload = {
-        mode: puzzle ? mode : (mode || 'classic'),
+        mode: puzzle ? mode : (mode || 'stage'),
         nickname: (profile.nickname) || '',
         avatarUrl: (profile.avatarUrl) || '',
         targetName: (opponent.name || opponent.targetName || rec && (rec.myRole === 'challenger' ? rec.responderName : rec.challengerName) || '') || '',

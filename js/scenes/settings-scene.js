@@ -133,6 +133,11 @@ class SettingsScene {
                 value: this._settings.arrRepeat || 50,
                 unit: 'ms',
             },
+            {
+                key: 'privacyContract',
+                type: 'textLink',
+                text: '用户隐私保护指引',
+            },
         ];
 
         this._settingAreas = [];
@@ -159,11 +164,13 @@ class SettingsScene {
             ctx.fill();
 
             // 标签
-            ctx.fillStyle = '#ffffff';
-            ctx.font = '15px sans-serif';
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(item.label, listX + 15, y + itemH / 2);
+            if (item.label) {
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '15px sans-serif';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(item.label, listX + 15, y + itemH / 2);
+            }
 
             // 控件
             if (item.type === 'profile') {
@@ -248,6 +255,25 @@ class SettingsScene {
                 this._settingAreas.push({
                     x: listX + listW - 140, y: y + itemH / 2 - 15,
                     w: 120, h: 30, key: item.key, type: 'slider', item,
+                });
+            } else if (item.type === 'textLink') {
+                const linkText = item.text || '用户隐私保护指引';
+                ctx.fillStyle = '#5ec8ff';
+                ctx.font = '15px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(linkText, listX + listW / 2, y + itemH / 2);
+                const textW = ctx.measureText(linkText).width;
+                const linkCx = listX + listW / 2;
+                ctx.strokeStyle = '#5ec8ff';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(linkCx - textW / 2, y + itemH / 2 + 10);
+                ctx.lineTo(linkCx + textW / 2, y + itemH / 2 + 10);
+                ctx.stroke();
+                this._settingAreas.push({
+                    x: listX, y: y,
+                    w: listW, h: itemH, key: item.key, type: 'textLink',
                 });
             }
         }
@@ -530,6 +556,11 @@ class SettingsScene {
                     y >= area.y && y <= area.y + area.h) {
                     if (area.type === 'profile') {
                         this._onEditProfile(area);
+                        return;
+                    }
+                    if (area.type === 'textLink') {
+                        const { openPrivacyContract } = require('../../utils/privacy');
+                        openPrivacyContract();
                         return;
                     }
                     if (area.type === 'toggle') {

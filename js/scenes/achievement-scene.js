@@ -9,7 +9,7 @@ const { achievementManager } = require('../../utils/achievement-manager');
 const { drawCoinHudCentered } = require('../../utils/coin-hud');
 const IconRenderer = require('../render/icon-renderer');
 
-const CATEGORY_ORDER = ['progress', 'social'];
+const CATEGORY_ORDER = ['progress', 'plaza', 'workshop', 'social'];
 
 class AchievementScene {
     constructor() {
@@ -74,8 +74,9 @@ class AchievementScene {
         ctx.fillText(titleText, leftX + iconSize + gap + titleW / 2, titleY);
 
 
-        // 完成度
-        const unlockedCount = achievementManager.getUnlocked().length;
+        // 完成度（仅计当前有效成就，不含 deprecated）
+        const activeIds = new Set(getAllAchievements().map((a) => a.id));
+        const unlockedCount = achievementManager.getUnlocked().filter((id) => activeIds.has(id)).length;
         const total = getAllAchievements().length;
         ctx.font = '12px sans-serif';
         ctx.fillStyle = 'rgba(255,255,255,0.5)';
@@ -94,11 +95,12 @@ class AchievementScene {
 
     _renderTabs(ctx) {
         const W = GameGlobal.game.width;
-        const tabW = 76;
+        const n = CATEGORY_ORDER.length;
+        const gap = 5;
         const tabH = 30;
+        const tabW = Math.min(72, Math.floor((W - 24 - gap * (n - 1)) / n));
         const tabY = this._topInset() + 68;
-        const gap = 6;
-        const totalW = CATEGORY_ORDER.length * tabW + (CATEGORY_ORDER.length - 1) * gap;
+        const totalW = n * tabW + (n - 1) * gap;
         const startX = (W - totalW) / 2;
 
         this._tabAreas = [];

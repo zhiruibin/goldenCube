@@ -17,14 +17,9 @@ try {
 const { ensureProfileForAction } = require('../../utils/user-profile');
 const challengeUi = require('../../utils/challenge-ui');
 
-const { windowWidth: W, windowHeight: H } = wx.getSystemInfoSync();
+const { MODE_NAMES } = require('../../utils/cloud-config');
 
-const MODE_NAMES = {
-  classic: '经典模式',
-  timed: '限时赛',
-  marathon: '马拉松',
-  special: '方块实验室'
-};
+const { windowWidth: W, windowHeight: H } = wx.getSystemInfoSync();
 
 const PANEL_H = 190;
 const BTN_H = 48;
@@ -86,8 +81,8 @@ class ChallengeResultScene {
     // 标题
     drawBrandTitle(ctx, '挑战结束', W / 2, H * 0.10, 'bold 32px sans-serif');
 
-    // 模式标签
-    const mode = this._params.mode || 'classic';
+    // 挑战类型标签
+    const mode = this._params.mode || 'stage';
     ctx.fillStyle = SUBTITLE;
     ctx.font = '14px sans-serif';
     ctx.textAlign = 'center';
@@ -108,20 +103,19 @@ class ChallengeResultScene {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // 分数
+    // 成绩（残局：主展示消行）
+    const lines = Number(this._params.lines) || 0;
+    ctx.fillStyle = MUTED;
+    ctx.font = '14px sans-serif';
+    ctx.fillText('消行', W / 2, panelY + 22);
+
     ctx.fillStyle = ACCENT;
     ctx.font = 'bold 48px sans-serif';
-    ctx.fillText(String(Number(this._params.score) || 0), W / 2, panelY + 60);
+    ctx.fillText(String(lines), W / 2, panelY + 60);
 
-    // 等级
-    ctx.fillStyle = '#e09a30';
-    ctx.font = '20px sans-serif';
-    ctx.fillText('等级 ' + (Number(this._params.level) || 0), W / 2, panelY + 110);
-
-    // 消行
     ctx.fillStyle = '#5cbc6a';
-    ctx.font = '20px sans-serif';
-    ctx.fillText('消行 ' + (Number(this._params.lines) || 0), W / 2, panelY + 150);
+    ctx.font = '16px sans-serif';
+    ctx.fillText('越少越好', W / 2, panelY + 108);
 
     // 按钮
     for (let i = 0; i < this._buttons.length; i++) {
@@ -155,9 +149,17 @@ class ChallengeResultScene {
         onTap: this._retryWithAd,
       });
     }
+    if (this._params && this._params.replayKey) {
+      defs.push({
+        text: '回看本局',
+        color: '#7b52ab',
+        icon: 'play',
+        onTap: this._openReplay,
+      });
+    }
     defs.push(
       { text: '终止挑战', color: '#555555', icon: '', onTap: this._goHome },
-      { text: '发送战报', color: '#2ecc71', icon: 'share', onTap: this._sendReport }
+      { text: '发起挑战', color: '#2ecc71', icon: 'share', onTap: this._sendReport }
     );
 
     const startY = computeLayoutTop(H, defs.length) + PANEL_H + 16;
@@ -200,6 +202,18 @@ class ChallengeResultScene {
     ctx.fillText(btn.text, btn.x + btn.w / 2, btn.y + btn.h / 2);
   }
 
+  _openReplay() {
+    const key = this._params && this._params.replayKey;
+    if (!key) {
+      wx.showToast({ title: '回放不可用', icon: 'none' });
+      return;
+    }
+    GameGlobal.game.sceneManager.switchTo('replay', Object.assign({}, this._params, {
+      replayKey: key,
+      fromChallengeResult: true,
+    }));
+  }
+
   _retryWithAd() {
     const self = this;
     if (!this._adManager || typeof this._adManager.showRewardedVideo !== 'function') {
@@ -213,7 +227,7 @@ class ChallengeResultScene {
       called = true;
       if (res && res.isEnded) {
         GameGlobal.game.sceneManager.switchTo('game', {
-          mode: self._params.mode || 'classic',
+          mode: self._params.mode || 'stage',
           challengeLaunch: true,
           challengeTargetName: (self._params && self._params.challengeTargetName) || '',
           challengeTargetAvatar: (self._params && self._params.challengeTargetAvatar) || '',
@@ -251,12 +265,18 @@ class ChallengeResultScene {
     this._sharing = true;
 
     const self = this;
-    const score = Number(this._params.score) || 0;
-    const mode = this._params.mode || 'classic';
+    const mode = this._params.mode || 'stage';
+    const lines = Number(this._params.lines) || 0;
+    const sharePayload = {
+      mode: mode,
+      score: lines,
+      challengerLines: lines,
+      workshopTitle: (this._params && this._params.workshopTitle) || '',
+    };
 
     const doShare = function (imageUrl, query) {
       const shareData = {
-        title: '向你发起挑战！我在『' + self._modeName(mode) + '』拿了 ' + score + ' 分，敢来超越吗？'
+        title: challengeUi.buildShareTitle({ payload: sharePayload }),
       };
       if (imageUrl) shareData.imageUrl = imageUrl;
       if (query) shareData.query = query;
@@ -309,7 +329,8 @@ class ChallengeResultScene {
       }).then(function (profile) {
         return self._createChallenge({
           mode: mode,
-          score: score,
+          score: lines,
+          lines: lines,
           nickname: (profile && profile.nickname) || '',
           avatarUrl: (profile && profile.avatarUrl) || '',
           targetName: (self._params && self._params.challengeTargetName) || '',
@@ -327,7 +348,7 @@ class ChallengeResultScene {
             }
           } catch (e) {}
         }
-        const query = 'challengeId=' + encodeURIComponent(challengeId) + '&mode=' + encodeURIComponent(mode) + '&score=' + score;
+        const query = challengeUi.buildShareQuery(challengeId, sharePayload);
         self._generateShareImage(function (imageUrl) {
           doShare(imageUrl, query);
         });
@@ -357,6 +378,7 @@ class ChallengeResultScene {
       const payload = {
         mode: data.mode,
         score: data.score,
+        lines: data.lines,
         nickname: data.nickname || '',
         avatarUrl: data.avatarUrl || '',
         targetName: data.targetName || '',
@@ -415,19 +437,19 @@ class ChallengeResultScene {
     ctx.font = '18px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(this._modeName(this._params.mode || 'classic'), 150, 110);
+    ctx.fillText(this._modeName(this._params.mode || 'stage'), 150, 110);
 
     ctx.fillStyle = MUTED;
     ctx.font = '14px sans-serif';
-    ctx.fillText('得分', 150, 160);
+    ctx.fillText('消行', 150, 160);
 
     ctx.fillStyle = ACCENT;
     ctx.font = 'bold 56px sans-serif';
-    ctx.fillText(String(Number(this._params.score) || 0), 150, 210);
+    ctx.fillText(String(Number(this._params.lines) || 0), 150, 210);
 
     ctx.fillStyle = SUBTITLE;
     ctx.font = '15px sans-serif';
-    ctx.fillText('敢来一局吗？', 150, 262);
+    ctx.fillText('敢来挑战吗？', 150, 262);
 
     for (let i = 0; i < AMBIENT_PIECE_COLORS.length; i++) {
       ctx.fillStyle = AMBIENT_PIECE_COLORS[i];
@@ -461,7 +483,7 @@ class ChallengeResultScene {
   }
 
   _modeName(mode) {
-    return MODE_NAMES[mode] || '经典模式';
+    return MODE_NAMES[mode] || '闯关挑战';
   }
 
   _roundRect(ctx, x, y, w, h, r) {

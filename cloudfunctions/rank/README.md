@@ -28,7 +28,7 @@
 ```json
 {
   "action": "submitScore",
-  "data": { "mode": "classic", "score": 1000 }
+  "data": { "mode": "stage", "score": 1000 }
 }
 ```
 
@@ -42,7 +42,7 @@
 |------|------|------|
 | `_id` | string | 自动生成 |
 | `openid` | string | 用户标识（云函数自动获取） |
-| `mode` | string | `classic` / `timed` / `marathon` |
+| `mode` | string | `stage`（榜分区 boardKey） |
 | `score` | number | 该用户该模式历史最高分 |
 | `detail` | object/null | 游戏详情（消行、T-Spin 等） |
 | `nickname` | string | 昵称（可为空，前端显示默认名） |
@@ -59,7 +59,7 @@
 {
   "action": "submitScore",
   "data": {
-    "mode": "classic",
+    "mode": "stage",
     "score": 1000,
     "detail": { "lines": 20 },
     "nickname": "玩家A",
@@ -76,7 +76,7 @@
 {
   "action": "getRankList",
   "data": {
-    "mode": "classic",
+    "mode": "stage",
     "type": "all",
     "period": "total",
     "page": 1,
@@ -92,7 +92,7 @@
 ### 3. `getMyRank` 查询我的排名
 
 ```json
-{ "action": "getMyRank", "data": { "mode": "classic" } }
+{ "action": "getMyRank", "data": { "mode": "stage" } }
 ```
 
 返回：`{ success, myRank, myScore, hasRecord }`

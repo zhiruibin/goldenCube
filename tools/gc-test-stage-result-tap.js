@@ -34,7 +34,11 @@ function assert(cond, msg) {
 }
 
 const scene = new StageResultScene();
-scene.onEnter({ stageId: 1, result: { lines: 4, pieces: 6, timeMs: 30000, reward: 1, first: true } });
+scene.onEnter({
+    stageId: 1,
+    skipReveal: true,
+    result: { lines: 4, pieces: 6, timeMs: 30000, reward: 1, first: true },
+});
 
 // 按钮顺序：下一关 2 / 重玩本关 / 返回关卡选择
 assert(scene._buttons.length === 3, '应有 3 个按钮');

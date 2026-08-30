@@ -1,12 +1,10 @@
 /**
  * cloud-config - 云开发配置
- * 职责：集中管理云开发环境、排行榜集合名、游戏模式等常量
+ * 职责：集中管理云开发环境、排行榜集合名、对局/挑战类型常量
  *
- * 使用方式：
- *   1. 在微信开发者工具中开通「云开发」，创建环境
- *   2. 将下方 CLOUD_ENV 改为你的环境 ID（如 'tetris-1a2b3c'）
- *   3. 将 cloudfunctions/rank 云函数上传部署
- *   4. 在云开发控制台创建集合 rankings（权限：所有用户可读，仅创建者可读写）
+ * 挖个方块没有「经典 / 限时 / 马拉松」等产品模式；
+ * 排行榜字段 mode 实为榜分区 boardKey（仅 stage）；
+ * 挑战字段 mode 实为 challengeKind（stage / workshop / plaza）。
  */
 
 /** 云开发环境 ID（挖个方块独立环境，勿用「方块过把瘾」旧 env） */
@@ -24,20 +22,23 @@ const WORKSHOP_COLLECTION = 'workshop_stages';
 /** 好友榜存储键（微信开放数据域 wx.setUserCloudStorage 使用） */
 const FRIEND_RANK_KEY = 'gc_rank_score';
 
-/** 允许的游戏模式（挖个方块主榜仅闯关复合键） */
+/**
+ * 排行榜分区键（库字段仍叫 mode，语义是 boardKey）
+ * 挖个方块主榜仅闯关复合键
+ */
 const GAME_MODES = ['stage'];
 
-/** 挑战允许的 mode（含工坊残局挑战） */
-const CHALLENGE_MODES = ['stage', 'workshop', 'classic', 'timed', 'marathon', 'special'];
+/**
+ * 挑战内容类型（库字段仍叫 mode，语义是 challengeKind）
+ * 挂在哪类关上：闯关 / 工坊 / 广场
+ */
+const CHALLENGE_MODES = ['stage', 'workshop', 'plaza'];
 
-/** 模式显示名 */
+/** 挑战 / 榜分区展示名（禁止经典限时马拉松文案） */
 const MODE_NAMES = {
     stage: '闯关挑战',
     workshop: '工坊挑战',
-    classic: '经典模式',
-    timed: '限时赛',
-    marathon: '马拉松',
-    special: '方块实验室',
+    plaza: '广场挑战',
 };
 
 /** 排行榜类型 */

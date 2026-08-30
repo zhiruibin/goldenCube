@@ -56,10 +56,14 @@ const BTN_GAP = 12;
 const BLOCK_GAP = 16;
 const CONTENT_H = PANEL_H + STATS_GAP + STATS_H + STATUS_GAP + STATUS_H;
 
+/** 挑战结算无 T-Spin 统计区，内容高度更短，给底部多按钮留空间 */
+const CONTENT_H_CHALLENGE = PANEL_H + 44 + STATUS_H;
+
 /** 计算内容块顶部 Y：面板 + 统计 + 状态行 + 按钮区整体垂直居中，矮屏时钳制在标题下方避免重叠 */
-function computeLayoutTop(H, btnCount) {
+function computeLayoutTop(H, btnCount, contentH) {
+    const ch = contentH != null ? contentH : CONTENT_H;
     const totalH = btnCount * BTN_H + (btnCount - 1) * BTN_GAP;
-    const blockH = CONTENT_H + BLOCK_GAP + totalH;
+    const blockH = ch + BLOCK_GAP + totalH;
     const minTop = Math.min(150, Math.max(120, H * 0.10 + 60));
     return Math.max((H - blockH) / 2, minTop);
 }
@@ -227,7 +231,7 @@ class ResultScene {
         const isPuzzle = this._isChallengePuzzle();
         drawBrandTitle(
             ctx,
-            isChallenge ? '挑战结算' : '游戏结束',
+            isChallenge ? '挑战结算' : '本局结束',
             W / 2,
             H * 0.10,
             'bold 32px sans-serif'
@@ -240,13 +244,12 @@ class ResultScene {
         ctx.fillStyle = SUBTITLE;
         const subLabel = isChallenge && isPuzzle
             ? challengeUi.modeLabel(this._params)
-            : (this._modeName(this._params.mode || 'classic'));
+            : (this._modeName(this._params.mode || 'stage'));
         ctx.fillText(subLabel, W / 2, H * 0.10 + 35);
 
-        // 成绩面板
-        const hasAdOffer = this._hasAdCoinOffer();
-        const btnCount = (hasAdOffer ? 1 : 0) + 3 + (this._replayKey ? 1 : 0);
-        const panelY = computeLayoutTop(H, btnCount);
+        // 成绩面板（按钮数 / 内容高度与 _initUI 一致）
+        const layout = this._settleLayout();
+        const panelY = computeLayoutTop(H, layout.btnCount, layout.contentH);
         const panelW = Math.min(320, W * 0.82);
         const panelH = PANEL_H;
         const panelX = (W - panelW) / 2;
@@ -276,16 +279,22 @@ class ResultScene {
         ctx.font = '16px sans-serif';
         ctx.textAlign = 'center';
 
+        const showCoinLine = (this._coinEarned || 0) > 0 || (this._todayCoinEarned || 0) > 0;
         if (isPuzzle && isChallenge) {
             ctx.fillStyle = '#00f000';
             ctx.fillText(`块数 ${this._params.pieces || 0}`, W / 2 - 70, infoY);
             ctx.fillStyle = '#5ec8d4';
             const sec = Math.max(0, Math.floor((this._params.timeMs || 0) / 1000));
             ctx.fillText(`用时 ${sec}s`, W / 2 + 70, infoY);
+            // 对手行在上、金币在下；间距要够大，避免与 textBaseline 差异叠字
+            const coinLineY = panelY + panelH - 16;
+            const opponentY = showCoinLine ? coinLineY - 28 : coinLineY;
             if (this._targetScore != null) {
-                ctx.fillStyle = 'rgba(255,255,255,0.35)';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'alphabetic';
+                ctx.fillStyle = 'rgba(255,255,255,0.45)';
                 ctx.font = '14px sans-serif';
-                ctx.fillText(`目标 ${this._targetScore} 行（越少越好）`, W / 2, panelY + panelH - 28);
+                ctx.fillText(`对手 ${this._targetScore} 行（越少越好）`, W / 2, opponentY);
             }
         } else {
             ctx.fillStyle = '#f0a000';
@@ -294,7 +303,7 @@ class ResultScene {
             ctx.fillText(`消行 ${lines}`, W / 2 + 60, infoY);
         }
 
-        // 最高分（挑战残局不比排行榜，避免与「目标行」重叠）
+        // 最高分（挑战残局不比排行榜，避免与「对手行」重叠）
         if (!(isChallenge && isPuzzle)) {
             const bestScore = this._getBestScore(this._params.mode) || 0;
             const isNewRecord = !isChallenge && this._isNewRecord(this._params.score || 0, this._params.mode);
@@ -312,22 +321,22 @@ class ResultScene {
             }
         }
 
-        // 金币收益
+        // 金币收益（挑战残局独占面板底行）
         const coinEarned = this._coinEarned || 0;
         const todayEarned = this._todayCoinEarned || 0;
-        if (coinEarned > 0 || todayEarned > 0) {
-            const coinLineY = panelY + panelH - 24;
-            let coinText = coinEarned > 0
+        if (showCoinLine) {
+            const coinLineY = panelY + panelH - 16;
+            const coinText = coinEarned > 0
                 ? `本局金币 +${coinEarned}  ·  今日 ${todayEarned}/${this._dailyLimit}`
                 : `今日金币 ${todayEarned}/${this._dailyLimit}`;
             ctx.font = '14px sans-serif';
             ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
+            ctx.textBaseline = 'alphabetic';
             ctx.fillStyle = '#ffd700';
             ctx.fillText(coinText, W / 2, coinLineY);
         }
 
-        // 详细统计（经典局；挑战残局不展示 T-Spin 等）
+        // 详细统计（非残局挑战时不展示 T-Spin 等）
         const stats = this._params.stats || {};
         if (!(isChallenge && isPuzzle)) {
             this._renderStats(ctx, panelX, panelY + panelH + 14, panelW, stats);
@@ -379,43 +388,49 @@ class ResultScene {
         }
     }
 
+    /**
+     * 结算页按钮数与内容区高度（render / _initUI 共用，避免面板与按钮错位）
+     * 挑战：回击对方 → 闯关 → 关卡广场 → [回看本局] → 返回（回好友挑战；暂无广告）
+     * 普通：再来一局 → 发起挑战 → [回看本局] → [广告] → 返回首页
+     */
+    _settleLayout() {
+        const isChallenge = !!this._challengeId;
+        const showReplay = !!this._replayKey;
+        if (isChallenge) {
+            return {
+                isChallenge: true,
+                showAd: false,
+                showReplay,
+                btnCount: 4 + (showReplay ? 1 : 0),
+                contentH: CONTENT_H_CHALLENGE,
+            };
+        }
+        const showAd = this._hasAdCoinOffer();
+        return {
+            isChallenge: false,
+            showAd,
+            showReplay,
+            btnCount: 3 + (showAd ? 1 : 0) + (showReplay ? 1 : 0),
+            contentH: CONTENT_H,
+        };
+    }
+
     _initUI() {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
         const btnW = Math.min(260, W * 0.7);
-        const btnH = 48;
+        const btnH = BTN_H;
         const centerX = W / 2 - btnW / 2;
-        const gap = 12;
+        const gap = BTN_GAP;
 
-        // 整体垂直居中；挑战局优先「回击对方」，普通局优先「再来一局」
-        const adOffer = this._getAdCoinOffer();
-        const btnCount = (adOffer ? 1 : 0) + 3 + (this._replayKey ? 1 : 0);
-        const startY = computeLayoutTop(H, btnCount) + CONTENT_H + BLOCK_GAP;
+        const layout = this._settleLayout();
+        const startY = computeLayoutTop(H, layout.btnCount, layout.contentH)
+            + layout.contentH + BLOCK_GAP;
 
         let btnIndex = 0;
         this._buttons = [];
 
-        const isChallenge = !!this._challengeId;
-        const replayBtn = {
-            text: '再来一局',
-            icon: 'refresh',
-            color: isChallenge ? '#555' : '#3aa8d8',
-            onClick: () => this._replayGame(),
-        };
-
-        const shareBtn = {
-            text: isChallenge ? '回击对方' : '发起挑战',
-            icon: 'share',
-            color: isChallenge ? '#e09a30' : '#2ecc71',
-            onClick: () => this._share(this._challengeOpponent),
-        };
-
-        const ordered = isChallenge
-            ? [shareBtn, replayBtn]
-            : [replayBtn, shareBtn];
-
-        for (let i = 0; i < ordered.length; i++) {
-            const item = ordered[i];
+        const pushBtn = (item) => {
             this._buttons.push(new Button({
                 x: centerX, y: startY + (btnH + gap) * (btnIndex++),
                 w: btnW, h: btnH,
@@ -424,42 +439,93 @@ class ResultScene {
                 color: item.color,
                 onClick: item.onClick,
             }));
+        };
+
+        if (layout.isChallenge) {
+            // 应战已结束：回击社交 + 去别处玩 + 回看 + 回好友挑战（不是首页）
+            pushBtn({
+                text: '回击对方',
+                icon: 'share',
+                color: '#e09a30',
+                onClick: () => this._share(this._challengeOpponent),
+            });
+            pushBtn({
+                text: '闯关',
+                icon: 'brick',
+                color: '#3aa8d8',
+                onClick: () => GameGlobal.game.sceneManager.leaveTo('stageSelect', {}, ['home']),
+            });
+            pushBtn({
+                text: '关卡广场',
+                icon: 'puzzle',
+                color: '#c9a227',
+                onClick: () => GameGlobal.game.sceneManager.leaveTo('plaza', {}, ['home']),
+            });
+            if (layout.showReplay) {
+                pushBtn({
+                    text: '回看本局',
+                    icon: 'play',
+                    color: '#a000f0',
+                    onClick: () => GameGlobal.game.sceneManager.switchTo(
+                        'replay',
+                        Object.assign({}, this._params, { replayKey: this._replayKey })
+                    ),
+                });
+            }
+            pushBtn({
+                text: '返回',
+                icon: 'back',
+                color: '#555',
+                onClick: () => GameGlobal.game.sceneManager.leaveTo('challenge', {}, ['home']),
+            });
+            return;
         }
 
-        if (this._replayKey) {
-            this._buttons.push(new Button({
-                x: centerX, y: startY + (btnH + gap) * (btnIndex++),
-                w: btnW, h: btnH,
+        pushBtn({
+            text: '再来一局',
+            icon: 'refresh',
+            color: '#3aa8d8',
+            onClick: () => this._replayGame(),
+        });
+        pushBtn({
+            text: '发起挑战',
+            icon: 'share',
+            color: '#2ecc71',
+            onClick: () => this._share(this._challengeOpponent),
+        });
+        if (layout.showReplay) {
+            pushBtn({
                 text: '回看本局',
                 icon: 'play',
                 color: '#a000f0',
-                onClick: () => GameGlobal.game.sceneManager.switchTo('replay', Object.assign({}, this._params, { replayKey: this._replayKey })),
-            }));
+                onClick: () => GameGlobal.game.sceneManager.switchTo(
+                    'replay',
+                    Object.assign({}, this._params, { replayKey: this._replayKey })
+                ),
+            });
         }
-
-        if (adOffer) {
-            this._buttons.push(new Button({
-                x: centerX, y: startY + (btnH + gap) * (btnIndex++),
-                w: btnW, h: btnH,
-                text: adOffer.label,
-                icon: 'tv',
-                color: '#ff6b6b',
-                onClick: () => this._doubleCoins(),
-            }));
+        if (layout.showAd) {
+            const adOffer = this._getAdCoinOffer();
+            if (adOffer) {
+                pushBtn({
+                    text: adOffer.label,
+                    icon: 'tv',
+                    color: '#ff6b6b',
+                    onClick: () => this._doubleCoins(),
+                });
+            }
         }
-
-        this._buttons.push(new Button({
-            x: centerX, y: startY + (btnH + gap) * (btnIndex++),
-            w: btnW, h: btnH,
+        pushBtn({
             text: '返回首页',
             icon: 'home',
             color: '#555',
             onClick: () => GameGlobal.game.sceneManager.switchTo('home'),
-        }));
+        });
     }
 
-    /** 是否仍可提供结算广告金币奖励 */
+    /** 是否仍可提供结算广告金币奖励（挑战结算暂不展示，等广告位申请后再策划） */
     _hasAdCoinOffer() {
+        if (this._challengeId) return false;
         return !!this._getAdCoinOffer();
     }
 
@@ -475,6 +541,7 @@ class ResultScene {
         if (!this._isRewardedAdEntryEnabled()) {
             return null;
         }
+        const { coinManager } = require('../../utils/coin-manager');
         const remaining = coinManager.getAdBonusRemaining();
         if (remaining <= 0) return null;
         const earned = this._coinEarned || 0;
@@ -550,7 +617,7 @@ class ResultScene {
         }
 
         this._syncState = 'syncing';
-        const mode = this._params.mode || 'classic';
+        const mode = this._params.mode || 'stage';
         const detail = {
             lines: this._params.lines || 0,
             level: this._params.level || 1,
@@ -673,6 +740,7 @@ class ResultScene {
                 lines: this._params.lines,
                 pieces: this._params.pieces,
                 timeMs: this._params.timeMs,
+                failed: !!this._params.challengeFailed,
             });
         }).then((res) => {
                 if (!res) {
@@ -690,6 +758,9 @@ class ResultScene {
                 }
                 if (res && res.success) {
                     this._challengeResult = challengeUi.mergeSyncIntoResult(res);
+            if (this._challengeResult && this._params.challengeFailed) {
+                this._challengeResult.failed = true;
+            }
                     this._challengeOpponent = (res.challenge && res.challenge.challengerName) ? {
                         name: res.challenge.challengerName,
                         avatar: res.challenge.challengerAvatar || '',
@@ -750,6 +821,9 @@ class ResultScene {
         }
         if (res.success) {
             this._challengeResult = challengeUi.mergeSyncIntoResult(res);
+            if (this._challengeResult && this._params.challengeFailed) {
+                this._challengeResult.failed = true;
+            }
             this._challengeOpponent = (res.challenge && res.challenge.challengerName) ? {
                 name: res.challenge.challengerName,
                 avatar: res.challenge.challengerAvatar || '',
@@ -907,6 +981,7 @@ class ResultScene {
         const beforeEarned = this._coinEarned || 0;
         this._adManager.showRewardedVideo()
             .then(() => {
+                const { coinManager } = require('../../utils/coin-manager');
                 const gained = coinManager.rewardAdBonusCapped(offer.amount);
                 if (gained > 0) {
                     this._doubleApplied = true;
@@ -938,13 +1013,13 @@ class ResultScene {
             return;
         }
         if (this._challengeId) {
-            sm.replace('game', { mode: this._params.mode || 'classic' });
+            sm.replace('game', { mode: this._params.mode || 'stage' });
             return;
         }
-        sm.replace('game', { mode: this._params.mode || 'classic' });
+        sm.replace('game', { mode: this._params.mode || 'stage' });
     }
 
-    /** 分享 / 回击：残局带 layoutSnapshot，经典带 score */
+    /** 分享 / 回击：残局带 layoutSnapshot */
     _share(opponent) {
         const oppName = (opponent && opponent.name) ? String(opponent.name).slice(0, 12) : '';
         const isCounter = !!this._challengeId;
@@ -1011,22 +1086,22 @@ class ResultScene {
         }
     }
 
-    /** 模式名称 */
+    /** 挑战类型名称 */
     _modeName(mode) {
         const { MODE_NAMES } = require('../../utils/cloud-config');
-        return (MODE_NAMES && MODE_NAMES[mode]) || mode || '经典模式';
+        return (MODE_NAMES && MODE_NAMES[mode]) || mode || '闯关挑战';
     }
 
 
-    /** 获取指定模式最高分 */
+    /** 获取本地最高分（遗留键） */
     _getBestScore(mode) {
-        const key = 'gc_bestScore_' + (mode || 'classic');
+        const key = 'gc_bestScore_stage';
         return wx.getStorageSync(key) || 0;
     }
 
-    /** 判断是否为新模式最高分（首次进入结算时记录） */
+    /** 判断是否为新本地最高分（首次进入结算时记录） */
     _isNewRecord(score, mode) {
-        const key = 'gc_bestScore_' + (mode || 'classic');
+        const key = 'gc_bestScore_stage';
         const prev = wx.getStorageSync(key) || 0;
         if (score > prev) {
             wx.setStorageSync(key, score);
@@ -1035,9 +1110,9 @@ class ResultScene {
         return false;
     }
 
-    /** 保存指定模式最高分 */
+    /** 保存本地最高分（遗留） */
     _saveBestScore(score, mode) {
-        const key = 'gc_bestScore_' + (mode || 'classic');
+        const key = 'gc_bestScore_stage';
         const prev = wx.getStorageSync(key) || 0;
         if (score > prev) {
             wx.setStorageSync(key, score);

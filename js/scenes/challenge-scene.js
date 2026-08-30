@@ -22,6 +22,24 @@ function _shortName(name) {
   return str.length > 6 ? str.slice(0, 6) + '…' : str;
 }
 
+/** 单行文本超出 maxWidth 时末尾省略 */
+function _fillTextEllipsis(ctx, text, x, y, maxWidth) {
+  const t = text == null ? '' : String(text);
+  if (!t || maxWidth <= 0) return;
+  if (ctx.measureText(t).width <= maxWidth) {
+    ctx.fillText(t, x, y);
+    return;
+  }
+  let lo = 0;
+  let hi = t.length;
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    if (ctx.measureText(t.slice(0, mid) + '…').width <= maxWidth) lo = mid;
+    else hi = mid - 1;
+  }
+  ctx.fillText(lo > 0 ? t.slice(0, lo) + '…' : '…', x, y);
+}
+
 /** 列表展示：发起方/应战方成绩 */
 function _scoreLabel(item, side) {
   if (!item) return '--';
@@ -587,17 +605,27 @@ class ChallengeScene {
     const line1 = (myName || '我') + ' ' + myLabel +
       ' : ' + (oppName || '对方') + ' ' + oppLabel;
 
+    const textLeft = LIST_X + 86;
+    const textRight = btnX - 14;
+    const line1MaxW = Math.max(48, textRight - textLeft);
+
     ctx.font = '12px sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,0.75)';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText(line1, LIST_X + 86, rowY + 20);
+    _fillTextEllipsis(ctx, line1, textLeft, rowY + 20, line1MaxW);
 
     ctx.font = '12px sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,0.45)';
-    ctx.fillText((MODE_NAMES[item.mode] || item.mode) + ' · ' + this._formatTime(item.respondedAt), LIST_X + 86, rowY + 43);
-
+    const line2 = (MODE_NAMES[item.mode] || item.mode) + ' · ' + this._formatTime(item.respondedAt);
     const badge = this._getResultBadge(item);
+    ctx.font = 'bold 13px sans-serif';
+    const badgeW = ctx.measureText(badge.text).width;
+    ctx.font = '12px sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    const line2MaxW = Math.max(40, btnX - 14 - badgeW - 8 - textLeft);
+    _fillTextEllipsis(ctx, line2, textLeft, rowY + 43, line2MaxW);
+
     ctx.font = 'bold 13px sans-serif';
     ctx.fillStyle = badge.color;
     ctx.textAlign = 'right';
@@ -830,19 +858,10 @@ class ChallengeScene {
       return;
     }
 
-    // 旧版自由模式挑战（兼容历史数据）
-    let target = null;
-    if (typeof rec.challengerScore === 'number' && !isNaN(rec.challengerScore)) {
-      target = rec.challengerScore;
-    } else if (rec.challengerScore != null) {
-      const parsed = parseInt(rec.challengerScore, 10);
-      target = isNaN(parsed) ? null : parsed;
-    }
-    GameGlobal.game.sceneManager.switchTo('game', {
-      mode: rec.mode || 'classic',
-      challengeId: rec.challengeId,
-      targetScore: target,
-    });
+    // 旧版自由分制挑战已废弃（产品无经典模式）
+    this._showToast('该挑战已过期，请发起新的闯关挑战');
+    removePendingChallenge(rec.challengeId);
+    this._incomingList = getPendingChallenges();
   }
 
   _startPuzzleRespond(rec) {

@@ -18,7 +18,7 @@
 {
   "action": "createChallenge",
   "data": {
-    "mode": "classic",
+    "mode": "stage",
     "score": 1000,
     "nickname": "玩家A"
   }
@@ -44,7 +44,7 @@
 | `challengerOpenid` | string | 发起者 OpenID |
 | `challengerName` | string | 发起者昵称 |
 | `challengerAvatar` | string | 发起者头像 |
-| `mode` | string | 挑战模式（如 `classic`） |
+| `mode` | string | 挑战内容类型 challengeKind：`stage` / `workshop` / `plaza` |
 | `challengerScore` | number | 发起者分数 |
 | `responderOpenid` | string | 应战者 OpenID |
 | `responderName` | string | 应战者昵称 |
@@ -74,7 +74,7 @@
 {
   "action": "createChallenge",
   "data": {
-    "mode": "classic",
+    "mode": "stage",
     "score": 1000,
     "nickname": "玩家A",
     "avatar": "https://example.com/avatar.png"
@@ -93,7 +93,7 @@
     "challengerOpenid": "oXXXX",
     "challengerName": "玩家A",
     "challengerAvatar": "https://example.com/avatar.png",
-    "mode": "classic",
+    "mode": "stage",
     "challengerScore": 1000,
     "status": "pending",
     "createdAt": 1700000000000,
@@ -150,7 +150,7 @@
       "challengerOpenid": "oXXXX",
       "challengerName": "玩家A",
       "challengerAvatar": "https://example.com/avatar.png",
-      "mode": "classic",
+      "mode": "stage",
       "challengerScore": 1000,
       "status": "pending",
       "createdAt": 1700000000000,
@@ -162,7 +162,7 @@
       "_id": "xxxxxxxxxxxxxxxxxxxxxxxx",
       "challengerOpenid": "oXXXX",
       "challengerName": "玩家A",
-      "mode": "classic",
+      "mode": "stage",
       "challengerScore": 1000,
       "responderOpenid": "oYYYY",
       "responderName": "玩家B",
@@ -199,7 +199,7 @@
     "challengerOpenid": "oXXXX",
     "challengerName": "玩家A",
     "challengerAvatar": "https://example.com/avatar.png",
-    "mode": "classic",
+    "mode": "stage",
     "challengerScore": 1000,
     "responderOpenid": "oYYYY",
     "responderName": "玩家B",

@@ -2,7 +2,7 @@
 /*** StageSelectScene - 关卡选择场景（闯关二级页，从首页进入）
  * 职责：章节制闯关选择（横向分页翻章），每章展示 10 关进度与金色方块余额；锁定章节可滑动查看但不可进入。
  * 由首页 Hub 进入的二级页：底部提供「← 返回」按钮（sceneManager.back() 回首页），样式同商店场景。
- * 样式参考 tetris-mini home-scene：满屏夜场背景 + 下落方块装饰 + 标题水平居中。
+ * 样式：满屏夜场背景 + 下落方块装饰 + 标题水平居中。
  */
 const {
     fillNightBackground,
@@ -26,7 +26,7 @@ const CHAPTER_DRAG_RATIO = 0.18;
 /** 快速轻扫速度阈值（px/s），达到即翻章，不依赖位移 */
 const CHAPTER_FLING_VELOCITY = 420;
 
-// 背景装饰：缓慢下落的半透明方块（移植 tetris-mini 首页样式）
+// 背景装饰：缓慢下落的半透明方块
 const BG_TETROMINO_SHAPES = [
     [ [1, 1, 1, 1] ],               // I
     [ [1, 1], [1, 1] ],             // O
@@ -831,7 +831,7 @@ class StageSelectScene {
         const H = GameGlobal.game.height;
         const m = this._getLayoutMetrics();
 
-        // 满屏夜场街机背景（参考 tetris-mini 首页：fillNightBackground 全屏）
+        // 满屏夜场街机背景
         fillNightBackground(ctx, W, H);
         // 背景装饰：缓慢下落的半透明方块
         this._renderFallingBlocks(ctx);

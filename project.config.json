@@ -1,5 +1,5 @@
 {
-  "description": "挖个方块 - 俄罗斯方块残局闯关（fork from tetris-mini）",
+  "description": "挖个方块 - 俄罗斯方块残局闯关小游戏",
   "packOptions": {
     "ignore": [
       {

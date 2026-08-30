@@ -14,7 +14,6 @@ const { Button } = require('../widgets/button');
 const { PIECES, PIECE_COLORS } = require('../../data/pieces');
 const { achievementManager } = require('../../utils/achievement-manager');
 const { coinManager } = require('../../utils/coin-manager');
-const { adManager, isRewardedVideoConfigured } = require('../../utils/ad-manager');
 const IconRenderer = require('../render/icon-renderer');
 const { MiniTetrisFx } = require('../render/mini-tetris-fx');
 const { ConfettiFx } = require('../render/confetti-fx');
@@ -37,7 +36,7 @@ class GameScene {
         this._confettiFx = null;
         this._dirButtons = [];
         this._buttons = [];
-        this._mode = 'classic';
+        this._mode = 'stage';
         this._stageId = null;
         this._stageInfo = null;
         this._stageOverReason = null;
@@ -50,11 +49,6 @@ class GameScene {
         this._surviveTime = 0;
         // 本局消行金币收益（结算页展示用）
         this._coinEarned = 0;
-
-        // 模式计时（限时赛/马拉松）
-        this._modeTimeLeft = 0;
-        this._modeTimeTotal = 0;
-        this._modeTargetLines = 0;
 
         // 误触保护：时间戳，此时间之前屏蔽输入
         this._inputBlockUntil = 0;
@@ -107,7 +101,11 @@ class GameScene {
 
     onEnter(params) {
         this._params = params || {};
-        this._mode = this._params.mode || 'classic';
+        this._mode = this._params.mode || 'stage';
+        // 挖个方块无经典/限时/马拉松；旧入口若仍带 classic 等，一律按残局规则处理
+        if (this._mode !== 'stage') {
+            this._mode = 'stage';
+        }
         this._stageId = this._params.stageId || null;
         this._entryPaid = Number(this._params.entryPaid) || 0;
         this._workshop = !!this._params.workshop;
@@ -155,9 +153,6 @@ class GameScene {
         // 本局已使用方块类型集合
         this._usedPieceTypes = {};
 
-        // 复活状态（每局重置，确保每局都有一次看广告复活机会）
-        this._revivePending = false;
-
         // 摇奖状态（每局重置，确保每局仅摇一次）
         this._luckyDrawUsed = false;
         this._luckyDrawActive = false;
@@ -177,16 +172,10 @@ class GameScene {
             this._stageLuckyDraw = null;
         }
 
-        // 模式参数
+        // 挖个方块仅残局规则，无计时/马拉松参数
         this._modeTimeLeft = 0;
         this._modeTimeTotal = 0;
         this._modeTargetLines = 0;
-        if (this._mode === 'timed') {
-            this._modeTimeTotal = 180; // 3 分钟
-            this._modeTimeLeft = this._modeTimeTotal;
-        } else if (this._mode === 'marathon') {
-            this._modeTargetLines = 150; // 消除 150 行
-        }
 
         // 读取设置
         this._settings = {
@@ -257,7 +246,7 @@ class GameScene {
         });
 
         // 启动引擎（init 已在 _initEngine 内完成；此处不可重复 init，否则清空闯关垃圾布局）
-        // 闯关：先播垃圾掉落开场，再 start；经典等模式直接 start
+        // 闯关：先播垃圾掉落开场，再 start
         this._bindEngineEvents();
         if (this._mode === 'stage' && this._engine) {
             this._beginStageIntro();
@@ -355,20 +344,6 @@ class GameScene {
             // 成就统计：累计存活时长（survive_time 成就）
             if (this._engine.getState() === 'playing') {
                 this._surviveTime += dt;
-
-                // 模式计时
-                if (this._mode === 'timed') {
-                    this._modeTimeLeft -= dt;
-                    if (this._modeTimeLeft <= 0) {
-                        this._modeTimeLeft = 0;
-                        this._engine.finishGame('timeUp');
-                    }
-                } else if (this._mode === 'marathon') {
-                    const lines = this._engine.getLines();
-                    if (lines >= this._modeTargetLines) {
-                        this._engine.finishGame('linesReached');
-                    }
-                }
             }
         }
 
@@ -570,12 +545,7 @@ class GameScene {
             this._renderPauseOverlay(ctx);
         }
 
-        // 复活弹窗（最高层，覆盖暂停遮罩）
-        if (this._revivePending) {
-            this._renderReviveOverlay(ctx);
-        }
-
-        // 摇奖遮罩（最顶层，覆盖复活弹窗）
+        // 摇奖遮罩（最顶层）
         if (this._luckyDrawActive) {
             this._renderLuckyDrawOverlay(ctx);
         }
@@ -743,7 +713,7 @@ class GameScene {
                 const level = this._engine.getLevel();
                 const lines = this._engine.getLines();
                 const stats = this._engine.getStats();
-                // 闯关模式：过关直进关卡结算；失败走复活/重开
+                // 闯关：过关进结算；失败进失败页（重开/广告在失败页）
                 if (this._mode === 'stage') {
                     setTimeout(() => {
                         if (this._stageSettleLocked) return;
@@ -755,29 +725,14 @@ class GameScene {
                             }
                         } else if (this._workshop) {
                             this._goToWorkshopFail();
-                        } else if (!this._reviveConsumed && isRewardedVideoConfigured() === true) {
-                            this._revivePending = true;
                         } else {
                             this._goToStageFail();
                         }
                     }, 0);
                     return;
                 }
-                if (this._audio) {
-                    this._audio.playGameOver();
-                    this._audio.stopBGM();
-                }
-                // 记录本地最高分（按模式）
-                this._saveBestScore(score, this._mode);
-
-                // 游戏结束幸运摇奖：非挑战时、本局消除行数≥50 时先摇奖（每局仅一次）
-                if (!this._challengeLaunch && !this._luckyDrawUsed && lines >= 50) {
-                    this._startLuckyDraw();
-                    return;
-                }
-
-                // 走统一后续流程：看广告复活（经典、每局 1 次、非挑战）或直接进结算
-                this._maybeShowReviveOrResult();
+                // 非闯关路径已废弃；兜底直接结算
+                this._goToResult(score, level, lines, stats);
             }
         });
         this._engine.onLineClear((lineIndices, count, isTetris, colors, tSpinType, combo) => {
@@ -828,7 +783,7 @@ class GameScene {
                 achievementManager.reportTSpin(count);
             }
             // 经济系统：发放消行金币（单消1/双消2/三消3/四消5，T-Spin 加成 full+2/mini+1，受每日上限约束）
-            // 闯关模式不发消行即时币；经典等模式旧接口已废弃恒为 0
+            // 闯关不发消行即时币
             if (this._mode !== 'stage') {
                 this._coinEarned += coinManager.rewardLineClear(count, tSpinType);
             }
@@ -836,7 +791,7 @@ class GameScene {
 
         this._engine.onPieceLock((info) => {
             this._pieceCount++;
-            // 落地快照优先用引擎下发的 lockedSnap（含 matrix/row/col），与「方块过把瘾」表现一致
+            // 落地快照优先用引擎下发的 lockedSnap（含 matrix/row/col）
             const landed = (info && info.matrix)
                 ? info
                 : (this._engine.getCurrentPiece() || info);
@@ -942,9 +897,9 @@ class GameScene {
         this._safeVibrate('light');
     }
 
-    /** 按模式保存最高分 */
+    /** 本地最高分（遗留键；闯关成绩以金方块/关卡最佳为准） */
     _saveBestScore(score, mode) {
-        const key = 'gc_bestScore_' + (mode || 'classic');
+        const key = 'gc_bestScore_stage';
         const prev = wx.getStorageSync(key) || 0;
         if (score > prev) {
             wx.setStorageSync(key, score);
@@ -953,10 +908,9 @@ class GameScene {
         return false;
     }
 
-    /** 获取指定模式最高分 */
+    /** 获取本地最高分（遗留） */
     _getBestScore(mode) {
-        const key = 'gc_bestScore_' + (mode || 'classic');
-        return wx.getStorageSync(key) || 0;
+        return wx.getStorageSync('gc_bestScore_stage') || 0;
     }
 
     // ==================== 渲染器初始化 ====================
@@ -1103,16 +1057,7 @@ class GameScene {
         // 消行
         curY = this._renderInfoItem(ctx, x, curY, pw, '消行', String(this._engine.getLines()), '#00f000');
 
-        if (this._mode === 'timed') {
-            const secs = Math.max(0, Math.ceil(this._modeTimeLeft));
-            const mm = Math.floor(secs / 60);
-            const ss = secs % 60;
-            const timeText = `${mm}:${ss < 10 ? '0' : ''}${ss}`;
-            curY = this._renderInfoItem(ctx, x, curY, pw, '时间', timeText, '#ff6b6b', 14);
-        } else if (this._mode === 'marathon') {
-            const remaining = Math.max(0, this._modeTargetLines - this._engine.getLines());
-            curY = this._renderInfoItem(ctx, x, curY, pw, '目标', `剩 ${remaining} 行`, '#ff6b6b', 14);
-        } else if (this._mode === 'stage') {
+        if (this._mode === 'stage') {
             const remaining = this._engine.getGarbageRemaining ? this._engine.getGarbageRemaining() : 0;
             const theory = this._stageInfo ? this._stageInfo.minLines : 0;
             curY = this._renderInfoItem(ctx, x, curY, pw, '垃圾', `剩 ${remaining} 格`, '#ffcc57', 14);
@@ -1193,7 +1138,7 @@ class GameScene {
     }
 
     /**
-     * 挑战目标侧栏：残局比消行，经典比分数
+     * 挑战目标侧栏：残局比消行
      */
     _renderChallengeTarget(ctx, x, y, pw) {
         const target = this._targetScore;
@@ -1317,26 +1262,11 @@ class GameScene {
         ctx.font = 'bold 18px sans-serif';
         ctx.fillText('继续游戏', W / 2, by1 + bh / 2);
 
-        // 闯关模式：禁止免费「重新开始」（每局须重新付入场费）
+        // 闯关：禁止免费「重新开始」（每局须重新付入场费）
+        this._pauseRestartBtnRect = null;
         let nextY = by1 + bh + 14;
-        if (this._mode === 'stage') {
-            this._pauseRestartBtnRect = null;
-        } else {
-            this._pauseRestartBtnRect = { x: bx, y: nextY, w: bw, h: bh };
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.14)';
-            this._roundRect(ctx, bx, nextY, bw, bh, 12);
-            ctx.fill();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
-            ctx.lineWidth = 1.5;
-            this._roundRect(ctx, bx, nextY, bw, bh, 12);
-            ctx.stroke();
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 18px sans-serif';
-            ctx.fillText('重新开始', W / 2, nextY + bh / 2);
-            nextY += bh + 14;
-        }
 
-        // 返回关卡 / 返回首页
+        // 返回关卡 / 工坊
         this._pauseQuitBtnRect = { x: bx, y: nextY, w: bw, h: bh };
         ctx.fillStyle = 'rgba(255, 255, 255, 0.14)';
         this._roundRect(ctx, bx, nextY, bw, bh, 12);
@@ -1348,13 +1278,11 @@ class GameScene {
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 18px sans-serif';
         ctx.fillText(
-            this._mode === 'stage'
-                ? (this._workshop
-                    ? (this._authorTrial
-                        ? (this._workshopReturnTo === 'editor' ? '返回编辑' : '返回列表')
-                        : '返回工坊')
-                    : '返回关卡')
-                : '返回首页',
+            this._workshop
+                ? (this._authorTrial
+                    ? (this._workshopReturnTo === 'editor' ? '返回编辑' : '返回列表')
+                    : '返回工坊')
+                : '返回关卡',
             W / 2,
             nextY + bh / 2
         );
@@ -1465,16 +1393,6 @@ class GameScene {
         // 摇奖按钮只在 touchEnd→handleTap 响应，按下不切场景，避免同一笔触摸穿透到结算页
         if (this._stageLuckyDraw && this._stageLuckyDraw.isActive()) return;
         if (this._luckyDrawActive) return;
-        // 复活弹窗期间：只响应复活/结束按钮
-        if (this._revivePending) {
-            if (this._reviveBtnRect && this._hitRect(x, y, this._reviveBtnRect)) {
-                this._tryRevive();
-            } else if (this._declineBtnRect && this._hitRect(x, y, this._declineBtnRect)) {
-                this._declineRevive();
-            }
-            return;
-        }
-
         if (this._paused) return;
 
         // 误触保护：输入屏蔽期间忽略所有操作（文档 3.2.9）
@@ -1525,7 +1443,7 @@ class GameScene {
     }
 
     /**
-     * 点击回调（复活弹窗按钮 / 暂停状态下点击恢复）
+     * 点击回调（暂停状态下点击恢复）
      */
     handleTap(x, y) {
         if (this._engine && this._engine.isStageSettling && this._engine.isStageSettling()) return;
@@ -1534,14 +1452,6 @@ class GameScene {
             return;
         }
         if (this._luckyDrawActive) { this._handleLuckyDrawTap(x, y); return; }
-        if (this._revivePending) {
-            if (this._reviveBtnRect && this._hitRect(x, y, this._reviveBtnRect)) {
-                this._tryRevive();
-            } else if (this._declineBtnRect && this._hitRect(x, y, this._declineBtnRect)) {
-                this._declineRevive();
-            }
-            return;
-        }
         // 按钮按下即触发，抬手时不再重复触发（否则点暂停按钮会立即恢复）
         if (this._tapConsumed) {
             this._tapConsumed = false;
@@ -1554,9 +1464,6 @@ class GameScene {
             }
             if (this._pauseRestartBtnRect && this._hitRect(x, y, this._pauseRestartBtnRect)) {
                 // 闯关不提供免费重开
-                if (this._mode !== 'stage') {
-                    this._restartGame();
-                }
                 return;
             }
             if (this._pauseQuitBtnRect && this._hitRect(x, y, this._pauseQuitBtnRect)) {
@@ -1566,14 +1473,10 @@ class GameScene {
             return;
         }
     }
-    // ==================== 幸运摇奖 / 看广告复活 ====================
+    // ==================== 幸运摇奖 ====================
 
-    /** 游戏结束统一后续：看广告复活（经典/每局 1 次/非挑战）或直接进结算 */
+    /** 非闯关路径兜底：直接进结算 */
     _maybeShowReviveOrResult() {
-        if (this._mode === 'classic' && !this._reviveConsumed && !this._challengeLaunch && isRewardedVideoConfigured() === true) {
-            this._revivePending = true;
-            return;
-        }
         this._goToResult(
             this._engine.getScore(),
             this._engine.getLevel(),
@@ -1581,8 +1484,6 @@ class GameScene {
             this._engine.getStats()
         );
     }
-
-    /** 幸运摇奖：经典模式 5% 概率抽中复活大奖，否则金币档 +5/+10/+15 等权 */
 
     /** 幸运摇奖：进入 idle 等待页（用户手动点「开始摇奖」才开转）；idle 阶段预构建方块序列供滚筒展示，点开始后同一批方块进入滚动 */
     _startLuckyDraw() {
@@ -1679,11 +1580,9 @@ class GameScene {
             symbols[resultIdx] = targetSymbol;
         }
 
-        // 4) 奖品映射：三连→经典模式复活 / 20 金币，二连→10 金币，全不同→5 金币
+        // 4) 奖品映射：三连→20 金币，二连→10 金币，全不同→5 金币（无复活大奖）
         if (tier === 3) {
-            this._luckyDrawPrize = this._mode === 'classic'
-                ? { type: 'revive' }
-                : { type: 'gc_coins', amount: 20 };
+            this._luckyDrawPrize = { type: 'gc_coins', amount: 20 };
         } else if (tier === 2) {
             this._luckyDrawPrize = { type: 'gc_coins', amount: 10 };
         } else {
@@ -1793,22 +1692,15 @@ class GameScene {
         }
     }
 
-    /** 结算摇奖：result 阶段确认领取后关闭，复活大奖原地续玩，金币档入账后走统一后续 */
+    /** 结算摇奖：result 阶段确认领取后关闭，金币入账后进结算 */
     _finishLuckyDraw() {
         if (this._luckyDrawPhase !== 'result') return;
         this._luckyDrawActive = false;
-        if (this._luckyDrawPrize && this._luckyDrawPrize.type === 'revive') {
-            // 复活大奖：原地续玩，不消耗广告复活次数、不置 _reviveConsumed
-            this._engine.revive();
-            // _luckyDrawUsed 保持 true，防止再次摇奖
-        } else {
-            // 金币档：即时入账（不计日上限）
-            if (this._luckyDrawPrize) {
-                coinManager.rewardAdBonus(this._luckyDrawPrize.amount);
-                this._coinEarned += this._luckyDrawPrize.amount;
-            }
-            this._maybeShowReviveOrResult();
+        if (this._luckyDrawPrize) {
+            coinManager.rewardAdBonus(this._luckyDrawPrize.amount);
+            this._coinEarned += this._luckyDrawPrize.amount;
         }
+        this._maybeShowReviveOrResult();
     }
     /** 摇奖遮罩渲染 */
     _renderLuckyDrawOverlay(ctx) {
@@ -1898,9 +1790,7 @@ class GameScene {
         if (this._luckyDrawPhase === 'result') {
             ctx.fillStyle = '#ffd700';
             ctx.font = 'bold 22px sans-serif';
-            const text = this._luckyDrawPrize.type === 'revive'
-                ? '三连大奖！幸运复活！'
-                : '+' + this._luckyDrawPrize.amount + ' 金币';
+            const text = '+' + this._luckyDrawPrize.amount + ' 金币';
             ctx.fillText(text, W / 2, H / 2 + 149);
             this._luckyDrawConfirmRect = this._drawLuckyDrawButton(ctx, '确定领取', H / 2 + 205);
         }
@@ -2017,6 +1907,8 @@ class GameScene {
 
     /** 工坊过关：作者自通只记凭证；广场通关只发金币 */
     _goToWorkshopResult(lines) {
+        if (this._stageSettleLocked) return;
+        this._stageSettleLocked = true;
         const timeMs = Date.now() - this._stageStartTime;
         const pieces = this._pieceCount || 0;
         const workshop = require('../../utils/workshop-manager');
@@ -2040,6 +1932,13 @@ class GameScene {
             result.goldGranted = 0;
         }
         if (this._audio) this._audio.stopBGM();
+
+        const replayKey = this._saveWorkshopReplay({
+            lines,
+            pieces,
+            timeMs,
+            coinGained: result.coinGained || 0,
+        });
 
         // 工坊好友挑战应战：先同步结果，获胜则摇奖，再进通用结算页
         if (this._challengeId && !this._authorTrial) {
@@ -2065,6 +1964,7 @@ class GameScene {
                     workshopTitle: this._workshopTitle,
                     workshopStageId: this._workshopStageId,
                     layoutSnapshot,
+                    replayKey,
                 }, lines, pieces, timeMs);
             }, 700);
             return;
@@ -2078,12 +1978,41 @@ class GameScene {
                 workshopReturnTo: this._workshopReturnTo,
                 workshopListParams: this._workshopListParams,
                 result,
+                replayKey,
             }, ['home', 'workshop']);
         }, 700);
     }
 
-    /** 工坊失败：不退开打费；作者试玩按来源返回 */
+    /** 工坊/广场通关：落盘本局回放，供结算页「回看本局」 */
+    _saveWorkshopReplay(extra) {
+        if (!this._recorder || !this._engine) return '';
+        let workshopRows = null;
+        try {
+            const workshop = require('../../utils/workshop-manager');
+            if (this._workshopRows) workshopRows = workshop.cloneRows(this._workshopRows);
+        } catch (e) { /* ignore */ }
+        const meta = Object.assign({
+            score: this._engine.getScore(),
+            level: this._engine.getLevel(),
+            mode: this._mode,
+            duration: Math.floor(this._surviveTime || 0),
+            workshopStageId: this._workshopStageId || '',
+            workshopTitle: this._workshopTitle || '',
+            dropIntervalMs: (this._stageInfo && this._stageInfo.dropIntervalMs) || 1000,
+            workshopRows,
+        }, extra || {});
+        const replayData = this._recorder.finish(meta);
+        if (!replayData || !replayData.inputs || replayData.inputs.length <= 0) return '';
+        const key = this._workshopStageId
+            ? ('gc_replay_workshop_' + this._workshopStageId)
+            : 'gc_replay_workshop_last';
+        this._recorder.save(key, replayData);
+        return key;
+    }
+
+    /** 工坊失败：不退开打费；作者试玩按来源返回；好友应战未通关仍进结算并写回败绩 */
     _goToWorkshopFail() {
+        if (this._stageSettleLocked) return;
         if (this._audio) this._audio.stopBGM();
         if (!this._stageFailRefunded && !this._authorTrial) {
             this._stageFailRefunded = true;
@@ -2093,6 +2022,46 @@ class GameScene {
             this._leaveWorkshopOrigin({
                 toast: '试玩未通关，可继续改盘',
             });
+            return;
+        }
+        // 应战残局未通关：必须进结算并云端写回，否则会卡在「待我应战」且无结算页
+        if (this._challengeId && !this._authorTrial) {
+            this._stageSettleLocked = true;
+            const lines = this._engine ? this._engine.getLines() : 0;
+            const pieces = this._pieceCount || 0;
+            const timeMs = Date.now() - this._stageStartTime;
+            const replayKey = this._saveWorkshopReplay({
+                lines,
+                pieces,
+                timeMs,
+                coinGained: 0,
+            }) || '';
+            setTimeout(() => {
+                let layoutSnapshot = null;
+                try {
+                    const workshop = require('../../utils/workshop-manager');
+                    if (this._workshopRows) layoutSnapshot = workshop.cloneRows(this._workshopRows);
+                } catch (e) { /* ignore */ }
+                this._finishChallengeRespondThenResult({
+                    mode: this._challengeMode === 'stage' ? 'stage' : 'workshop',
+                    challengeMode: this._challengeMode || (this._workshop ? 'workshop' : 'stage'),
+                    score: lines,
+                    level: this._engine ? this._engine.getLevel() : 1,
+                    lines,
+                    pieces,
+                    timeMs,
+                    stats: this._engine ? this._engine.getStats() : {},
+                    coinEarned: 0,
+                    challengeId: this._challengeId,
+                    targetScore: this._targetScore,
+                    workshop: true,
+                    workshopTitle: this._workshopTitle,
+                    workshopStageId: this._workshopStageId,
+                    layoutSnapshot,
+                    replayKey,
+                    challengeFailed: true,
+                }, lines, pieces, timeMs, { failed: true });
+            }, 700);
             return;
         }
         this._leaveWorkshopOrigin({});
@@ -2141,13 +2110,27 @@ class GameScene {
         GameGlobal.game.sceneManager.leaveTo('stageResult', navigateParams, ['home', 'stageSelect']);
     }
 
-    /** 挑战应战：云端写回 → 若获胜则先摇奖 → 再进 result 结算页 */
-    _finishChallengeRespondThenResult(baseParams, lines, pieces, timeMs) {
+    /**
+     * 挑战应战：云端写回 → 若获胜则先摇奖 → 再进 result 结算页
+     * @param {object} [opts] { failed: true } 未通关败绩（不按消行比拼）
+     */
+    _finishChallengeRespondThenResult(baseParams, lines, pieces, timeMs, opts) {
         const challengeId = baseParams.challengeId;
+        const failed = !!(opts && opts.failed) || !!baseParams.challengeFailed;
         const navigate = (extra) => {
+            // 写回成功后立刻清本地「待我应战」，避免结算页异常时仍残留
+            if (extra && extra.challengePreSynced && extra.challengeSyncResult
+                && extra.challengeSyncResult.success) {
+                try {
+                    const ChallengeScene = require('./challenge-scene');
+                    if (ChallengeScene.removePendingChallenge) {
+                        ChallengeScene.removePendingChallenge(challengeId);
+                    }
+                } catch (e) { /* ignore */ }
+            }
             GameGlobal.game.sceneManager.leaveTo(
                 'result',
-                Object.assign({}, baseParams, extra || {}),
+                Object.assign({}, baseParams, { challengeFailed: failed }, extra || {}),
                 ['home', 'challenge']
             );
         };
@@ -2183,6 +2166,7 @@ class GameScene {
             lines,
             pieces,
             timeMs,
+            failed,
         })).then((res) => {
             const synced = {
                 challengePreSynced: true,
@@ -2404,58 +2388,21 @@ class GameScene {
             }
         }, 800);
     }
-    _tryRevive() {
-        if (!this._revivePending) return;
-        this._revivePending = false;
-        adManager.showRewardedVideo()
-            .then(() => {
-                this._reviveConsumed = true;
-                const ok = this._engine.revive();
-                if (!ok) {
-                    this._routeEnding();
-                }
-            })
-            .catch(() => {
-                this._routeEnding();
-            });
-    }
-
-    _declineRevive() {
-        this._revivePending = false;
-        this._routeEnding();
-    }
-
-    /** 闯关失败：返回关选重开；经典：进结算 */
-    _routeEnding() {
-        if (this._mode === 'stage') {
-            this._goToStageFail();
-            return;
-        }
-        this._goToResult(
-            this._engine.getScore(),
-            this._engine.getLevel(),
-            this._engine.getLines(),
-            this._engine.getStats()
-        );
-    }
 
     /**
-     * 暂停菜单：退出对局（闯关回关选，其它模式回首页；不把对局压栈）
+     * 暂停菜单：退出对局（工坊回工坊/广场，闯关回关选；不把对局压栈）
      */
     _quitToHome() {
         this._paused = false;
-        this._revivePending = false;
         this._tapConsumed = false;
         const sm = GameGlobal.game.sceneManager;
-        if (this._mode === 'stage' && this._workshop) {
+        if (this._workshop) {
             this._leaveWorkshopOrigin();
-        } else if (this._mode === 'stage') {
+        } else {
             // 栈仅保留首页，关选「返回」回到首页，而不是回到已放弃的对局
             sm.leaveTo('stageSelect', {
                 stageId: this._params.stageId,
             }, ['home']);
-        } else {
-            sm.leaveTo('home');
         }
     }
 
@@ -2486,58 +2433,6 @@ class GameScene {
 
     _hitRect(x, y, rect) {
         return x >= rect.x && x <= rect.x + rect.w && y >= rect.y && y <= rect.y + rect.h;
-    }
-
-    _renderReviveOverlay(ctx) {
-        const W = GameGlobal.game.width;
-        const H = GameGlobal.game.height;
-
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.78)';
-        ctx.fillRect(0, 0, W, H);
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 28px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('游戏结束', W / 2, H / 2 - 96);
-
-        ctx.font = '15px sans-serif';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.fillText('看一段广告即可复活继续挑战', W / 2, H / 2 - 56);
-
-        const bw = Math.min(240, W - 60);
-        const bh = 56;
-        const bx = W / 2 - bw / 2;
-        const by = H / 2 - 10;
-
-        // 复活按钮
-        this._reviveBtnRect = { x: bx, y: by, w: bw, h: bh };
-        this._roundRect(ctx, bx, by, bw, bh, 12);
-        ctx.fillStyle = '#2ecc71';
-        ctx.fill();
-        const reviveText = '看广告复活';
-        ctx.font = 'bold 16px sans-serif';
-        ctx.fillStyle = '#ffffff';
-        const rtw = ctx.measureText(reviveText).width;
-        const rStartX = W / 2 - (rtw + 26) / 2;
-        IconRenderer.draw(ctx, 'tv', rStartX + 11, by + bh / 2, 22, '#ffffff');
-        // IconRenderer.draw 内部 save/restore 会把 fillStyle 还原为背景色，必须重新置白再绘制文字
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText(reviveText, rStartX + 26 + rtw / 2, by + bh / 2);
-
-        // 结束按钮（实底背景 + 描边，避免透明不可见）
-        const by2 = by + bh + 16;
-        this._declineBtnRect = { x: bx, y: by2, w: bw, h: bh };
-        this._roundRect(ctx, bx, by2, bw, bh, 12);
-        ctx.fillStyle = '#3a3a55';
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-        ctx.lineWidth = 1.5;
-        this._roundRect(ctx, bx, by2, bw, bh, 12);
-        ctx.stroke();
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '16px sans-serif';
-        ctx.fillText('结束游戏', W / 2, by2 + bh / 2);
     }
 }
 

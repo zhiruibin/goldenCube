@@ -25,13 +25,12 @@ const ACTION_MAP = {
 /** 倍速档位（循环切换：1x -> 2x -> 4x -> 1x） */
 const SPEED_LEVELS = [1, 2, 4];
 
-/** 模式中文名（顶部信息栏展示用） */
+/** 对局类型中文名（顶部信息栏；无经典/限时/马拉松） */
 const MODE_LABELS = {
-    classic: '经典',
-    timed: '限时赛',
-    marathon: '马拉松',
-    challenge: '挑战',
     stage: '闯关',
+    workshop: '工坊',
+    plaza: '广场',
+    challenge: '挑战',
 };
 
 class ReplayScene {
@@ -104,6 +103,18 @@ class ReplayScene {
                     result: this._params.result,
                     replayKey: this._params.replayKey,
                 });
+            } else if (this._params && this._params.fromWorkshopResult) {
+                GameGlobal.game.sceneManager.switchTo('workshopResult', {
+                    workshopStageId: this._params.workshopStageId,
+                    workshopTitle: this._params.workshopTitle,
+                    authorTrial: this._params.authorTrial,
+                    workshopReturnTo: this._params.workshopReturnTo,
+                    workshopListParams: this._params.workshopListParams,
+                    result: this._params.result,
+                    replayKey: this._params.replayKey,
+                });
+            } else if (this._params && this._params.fromChallengeResult) {
+                GameGlobal.game.sceneManager.switchTo('challengeResult', this._params);
             } else {
                 GameGlobal.game.sceneManager.switchTo('result', this._params);
             }
@@ -126,10 +137,10 @@ class ReplayScene {
 
         // 用回放种子重建引擎（BagRandomizer 可复现，保证方块序列一致）
         this._engine = new TetrisEngine(data.seed);
-        this._engine.setMode(data.mode || 'classic');
+        this._engine.setMode(data.mode || 'stage');
         this._engine.init();
         const meta = data.meta || {};
-        if (data.mode === 'stage') {
+        if ((data.mode || 'stage') === 'stage') {
             if (meta.workshopRows) {
                 this._engine.initStage(meta.workshopRows, {
                     dropIntervalMs: meta.dropIntervalMs || 1000,
@@ -435,7 +446,7 @@ class ReplayScene {
         let info = `分数: ${this._engine.getScore()}   等级: ${this._engine.getLevel()}   消行: ${this._engine.getLines()}`;
         const mode = this._data && this._data.mode;
         const meta = (this._data && this._data.meta) || {};
-        if (mode === 'stage') {
+        if ((mode || 'stage') === 'stage') {
             const pieces = meta.pieces != null ? meta.pieces : '-';
             const timeMs = meta.timeMs || 0;
             const sec = Math.floor(timeMs / 1000);
@@ -444,7 +455,7 @@ class ReplayScene {
             const timeStr = m + ':' + (ss < 10 ? '0' : '') + ss;
             info = `消行: ${this._engine.getLines()}   用块: ${pieces}   用时: ${timeStr}`;
             if (meta.stageId) info += `   第 ${meta.stageId} 关`;
-        } else if (mode && mode !== 'classic') {
+        } else if (mode) {
             info += `   ${MODE_LABELS[mode] || mode}`;
         }
         ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';

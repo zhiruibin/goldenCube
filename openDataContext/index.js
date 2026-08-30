@@ -103,7 +103,7 @@ function submitScore(m, score) {
     }
 }
 
-/** 同模式缓存与请求节流，避免切换经典/限时/马拉松时触发 frequency limit */
+/** 同榜分区缓存与请求节流，避免切换好友/全服或周期时触发 frequency limit */
 const FETCH_COOLDOWN_MS = 2800;
 const CACHE_TTL_MS = 90 * 1000;
 /** @type {Object.<string, {list:Array, ts:number}>} */

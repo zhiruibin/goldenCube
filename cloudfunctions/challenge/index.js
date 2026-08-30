@@ -24,7 +24,8 @@ const db = cloud.database()
 const _ = db.command
 
 const COLLECTION = 'challenges'
-const ALLOWED_MODES = ['classic', 'timed', 'marathon', 'special', 'stage', 'workshop']
+/** 挑战内容类型（非产品「模式」）：挂在哪类关 */
+const ALLOWED_MODES = ['stage', 'workshop', 'plaza']
 const EXPIRY_MS = 7 * 24 * 60 * 60 * 1000
 const MAX_PENDING = 20
 const MAX_LIST_SIZE = 50
@@ -221,22 +222,29 @@ async function respondChallenge(openid, data) {
       responderLines = Math.max(0, Math.floor(Number(data.lines != null ? data.lines : data.challengerLines) || 0))
       responderPieces = Math.max(0, Math.floor(Number(data.pieces != null ? data.pieces : 0) || 0))
       responderTimeMs = Math.max(0, Math.floor(Number(data.timeMs != null ? data.timeMs : 0) || 0))
-      if (!(responderLines >= 1)) {
-        return { success: false, errMsg: 'invalid lines' }
-      }
-      score = encodeWorkshopScore(responderLines, responderPieces, responderTimeMs)
-      const a = { lines: responderLines, pieces: responderPieces, timeMs: responderTimeMs }
-      const b = {
-        lines: Number(record.challengerLines) || 0,
-        pieces: Number(record.challengerPieces) || 0,
-        timeMs: Number(record.challengerTimeMs) || 0,
-      }
-      if (workshopIsBetter(a, b)) {
-        result = 'responder_win'
-      } else if (workshopIsBetter(b, a)) {
+      // 未通关应战：记败绩并完成挑战（允许 0 行）；通关应战至少 1 行
+      const failed = !!(data.failed || data.cleared === false)
+      if (failed) {
+        score = encodeWorkshopScore(responderLines, responderPieces, responderTimeMs)
         result = 'challenger_win'
       } else {
-        result = 'tie'
+        if (!(responderLines >= 1)) {
+          return { success: false, errMsg: 'invalid lines' }
+        }
+        score = encodeWorkshopScore(responderLines, responderPieces, responderTimeMs)
+        const a = { lines: responderLines, pieces: responderPieces, timeMs: responderTimeMs }
+        const b = {
+          lines: Number(record.challengerLines) || 0,
+          pieces: Number(record.challengerPieces) || 0,
+          timeMs: Number(record.challengerTimeMs) || 0,
+        }
+        if (workshopIsBetter(a, b)) {
+          result = 'responder_win'
+        } else if (workshopIsBetter(b, a)) {
+          result = 'challenger_win'
+        } else {
+          result = 'tie'
+        }
       }
     } else {
       if (!(score >= 0) || score > 99999999) {

@@ -21,6 +21,10 @@ const PLAZA_SORT = [
     { id: 'clearRate', label: '好通关' },
 ];
 
+/** 广场已通关标识：纯文字，不用背景/边框（避免像按钮） */
+const PLAZA_CLEARED = '#5cbc6a';
+const PLAZA_CLEARED_LABEL = '已通关';
+
 class PlazaScene {
     constructor() {
         this._plazaSort = 'official';
@@ -31,6 +35,11 @@ class PlazaScene {
         this._confirm = null;
         this._playDialog = null;
         this._scrollY = 0;
+        this._scrollVel = 0;
+        this._moveSamples = [];
+        this._plazaLoading = false;
+        this._plazaTabCache = {};
+        this._plazaLoadGen = 0;
     }
 
     onEnter(params) {
@@ -40,20 +49,112 @@ class PlazaScene {
         this._confirm = null;
         this._playDialog = null;
         this._scrollY = 0;
+        this._scrollVel = 0;
+        this._moveSamples = [];
+        this._plazaItems = [];
+        this._plazaLoading = true;
         this._rebuild();
     }
 
     onExit() {
         this._buttons = [];
         this._listRects = [];
+        this._scrollVel = 0;
+        this._moveSamples = [];
+        this._plazaTabCache = {};
     }
 
     onResume() {
+        const hasItems = !!(this._plazaItems && this._plazaItems.length);
+        this._rebuild({ silentReload: hasItems });
+    }
+
+    /** 仅官方 Tab 可用本地包即时展示（顺序稳定）；其余 Tab 依赖云排序，先展示会闪 */
+    _useLocalPlazaPreview(sort) {
+        return sort === 'official';
+    }
+
+    _switchPlazaTab(sortId) {
+        this._plazaSort = sortId;
+        this._scrollY = 0;
+        this._scrollVel = 0;
+        const cached = this._plazaTabCache[sortId];
+        if (cached && cached.length) {
+            this._plazaItems = cached;
+            this._plazaLoading = false;
+            this._rebuild({ silentReload: true });
+            return;
+        }
+        this._plazaLoading = true;
+        if (this._useLocalPlazaPreview(sortId)) {
+            this._plazaItems = workshop.listPlazaLocal(sortId);
+        } else {
+            this._plazaItems = [];
+        }
+        this._buildListRects();
         this._rebuild();
     }
 
-    update() {
+    update(dt) {
         if (this._toast && Date.now() > this._toastUntil) this._toast = '';
+        this._applyScrollInertia(dt);
+    }
+
+    _maxScroll() {
+        return Math.max(0, (this._listContentH || 0) - Math.max(1, this._listBottom - this._listTop));
+    }
+
+    _clampScrollY(y) {
+        return Math.max(0, Math.min(this._maxScroll(), y));
+    }
+
+    /** 松手后按最近位移推算惯性速度（px/s，方向同 scrollY） */
+    _launchScrollInertia() {
+        const samples = this._moveSamples || [];
+        this._moveSamples = [];
+        if (this._confirm || this._playDialog || samples.length < 2) {
+            this._scrollVel = 0;
+            return;
+        }
+        const newest = samples[samples.length - 1];
+        let oldest = samples[0];
+        for (let i = samples.length - 2; i >= 0; i--) {
+            if (newest.t - samples[i].t > 100) break;
+            oldest = samples[i];
+        }
+        const dtSec = Math.max(0.016, (newest.t - oldest.t) / 1000);
+        // 手指上滑 y↓ → scrollY↑
+        let vel = (oldest.y - newest.y) / dtSec;
+        const MAX_VEL = 4200;
+        if (vel > MAX_VEL) vel = MAX_VEL;
+        if (vel < -MAX_VEL) vel = -MAX_VEL;
+        this._scrollVel = Math.abs(vel) >= 180 ? vel : 0;
+    }
+
+    _applyScrollInertia(dt) {
+        if (this._confirm || this._playDialog) {
+            this._scrollVel = 0;
+            return;
+        }
+        const vel = this._scrollVel || 0;
+        if (Math.abs(vel) < 28) {
+            this._scrollVel = 0;
+            return;
+        }
+        const sec = Math.max(0, Math.min(0.05, Number(dt) || 0));
+        if (sec <= 0) return;
+        const next = this._clampScrollY((this._scrollY || 0) + vel * sec);
+        // 撞边立刻停
+        if (next <= 0 || next >= this._maxScroll()) {
+            this._scrollY = next;
+            this._scrollVel = 0;
+            this._buildListRects();
+            return;
+        }
+        this._scrollY = next;
+        // 指数衰减，约 0.9 / 帧 @60fps
+        this._scrollVel = vel * Math.pow(0.90, sec * 60);
+        this._buildListRects();
     }
 
     _showToast(msg) {
@@ -75,7 +176,8 @@ class PlazaScene {
         return Math.max(statusBarHeight, safeTop, capsuleBottom) + 12;
     }
 
-    _rebuild() {
+    _rebuild(options) {
+        const opts = options || {};
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
         const top = this._getTopInset();
@@ -97,10 +199,8 @@ class PlazaScene {
                 text: t.label,
                 color: this._plazaSort === t.id ? '#e09a30' : '#444',
                 onClick: () => {
-                    this._plazaSort = t.id;
-                    this._scrollY = 0;
-                    this._plazaItems = [];
-                    this._rebuild();
+                    if (this._plazaSort === t.id) return;
+                    this._switchPlazaTab(t.id);
                 },
             }));
         });
@@ -123,16 +223,80 @@ class PlazaScene {
         this._listBottom = bottomY - 12;
         this._plazaItems = this._plazaItems || [];
         this._buildListRects();
-        this._loadPlaza();
+        this._loadPlaza(!!opts.silentReload);
     }
 
-    _loadPlaza() {
-        const sort = this._plazaSort;
-        Promise.resolve(workshop.listPlaza(sort)).then((items) => {
-            if (this._plazaSort !== sort) return;
-            this._plazaItems = Array.isArray(items) ? items : [];
-            this._buildListRects();
+    _samePlazaOrder(a, b) {
+        if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+        for (let i = 0; i < a.length; i++) {
+            if (a[i].stageId !== b[i].stageId) return false;
+        }
+        return true;
+    }
+
+    _mergePlazaItemsInPlace(prev, next) {
+        const map = {};
+        (next || []).forEach((s) => {
+            if (s && s.stageId) map[s.stageId] = s;
         });
+        return (prev || []).map((s) => (map[s.stageId] ? Object.assign({}, s, map[s.stageId]) : s));
+    }
+
+    _applyPlazaList(sort, list) {
+        const next = Array.isArray(list) ? list : [];
+        if (this._plazaItems && this._plazaItems.length && this._samePlazaOrder(this._plazaItems, next)) {
+            this._plazaItems = this._mergePlazaItemsInPlace(this._plazaItems, next);
+        } else {
+            this._plazaItems = next;
+        }
+        this._plazaTabCache[sort] = this._plazaItems;
+        this._plazaLoading = false;
+        this._buildListRects();
+    }
+
+    _loadPlaza(silentReload) {
+        const sort = this._plazaSort;
+        const gen = ++this._plazaLoadGen;
+
+        if (!silentReload) {
+            this._plazaLoading = true;
+            const cached = this._plazaTabCache[sort];
+            if (cached && cached.length) {
+                this._plazaItems = cached;
+                this._plazaLoading = false;
+                this._buildListRects();
+            } else if (this._useLocalPlazaPreview(sort)) {
+                if (!this._plazaItems || !this._plazaItems.length) {
+                    this._plazaItems = workshop.listPlazaLocal(sort);
+                }
+                this._buildListRects();
+            } else if (!this._plazaItems || !this._plazaItems.length) {
+                this._plazaItems = [];
+                this._buildListRects();
+            }
+        }
+
+        Promise.resolve(workshop.listPlaza(sort)).then((items) => {
+            if (this._plazaLoadGen !== gen || this._plazaSort !== sort) return;
+            this._applyPlazaList(sort, items);
+        }).catch(() => {
+            if (this._plazaLoadGen !== gen || this._plazaSort !== sort) return;
+            this._plazaLoading = false;
+            if (!this._plazaItems || !this._plazaItems.length) {
+                const local = workshop.listPlazaLocal(sort);
+                this._applyPlazaList(sort, local);
+            } else {
+                this._buildListRects();
+            }
+        });
+    }
+
+    _getPlazaListHint() {
+        if (this._plazaLoading) return '加载中…';
+        if (this._plazaSort === 'official') return '暂无官方精选关卡';
+        if (this._plazaSort === 'heat') return '热门分类暂无关卡';
+        if (this._plazaSort === 'clearRate') return '好通关分类暂无关卡';
+        return '暂无玩家发布关卡';
     }
 
     _buildListRects() {
@@ -237,7 +401,7 @@ class PlazaScene {
             ctx.fillStyle = MUTED;
             ctx.font = '14px sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText('广场暂无发布关卡', W / 2, (this._listTop + this._listBottom) / 2);
+            ctx.fillText(this._getPlazaListHint(), W / 2, (this._listTop + this._listBottom) / 2);
         }
 
         this._listRects.forEach((item) => {
@@ -263,28 +427,65 @@ class PlazaScene {
 
     _drawRow(ctx, item) {
         const { stage, x, y, w, h } = item;
+        const cleared = workshop.isPlazaCleared(stage.stageId);
+        const unlocked = workshop.isPlazaUnlocked(stage.stageId);
+        const isOfficial = stage.source === 'official';
+
         ctx.fillStyle = 'rgba(255,255,255,0.08)';
         this._round(ctx, x, y, w, h, 10);
         ctx.fill();
 
+        const miniBoardX = x + w - 56;
+        const titleX = x + 12;
+        const titleY = y + 22;
+        const titleFont = 'bold 15px sans-serif';
+        const clearedFont = '12px sans-serif';
+        const clearedGap = cleared ? 6 : 0;
+
+        ctx.font = clearedFont;
+        const clearedW = cleared ? ctx.measureText(PLAZA_CLEARED_LABEL).width : 0;
+        const titleMaxW = miniBoardX - titleX - 8 - (cleared ? clearedGap + clearedW : 0);
+
+        ctx.font = titleFont;
+        const title = this._truncateText(ctx, stage.title || '未命名', Math.max(0, titleMaxW), titleFont);
+
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 15px sans-serif';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
-        ctx.fillText(stage.title || '未命名', x + 12, y + 22);
+        ctx.fillText(title, titleX, titleY);
 
-        const unlocked = workshop.isPlazaUnlocked(stage.stageId);
-        const isOfficial = stage.source === 'official';
+        const titleW = ctx.measureText(title).width;
+        if (cleared) {
+            ctx.fillStyle = PLAZA_CLEARED;
+            ctx.font = clearedFont;
+            ctx.fillText(PLAZA_CLEARED_LABEL, titleX + titleW + clearedGap, titleY);
+        }
+
         let sub = '垃圾 ' + (stage.garbageCount || 0)
             + ' · 行 ' + (stage.minLines || 0);
         if (isOfficial) sub += ' · 官方';
-        sub += unlocked ? ' · 已解锁' : ' · 需1金解锁';
-        sub += ' · 通关' + ((stage.stats && stage.stats.clearCount) || 0);
+        if (!cleared) {
+            sub += unlocked ? ' · 已解锁' : ' · 需1金解锁';
+        }
+        sub += ' · 全服通关' + ((stage.stats && stage.stats.clearCount) || 0);
         ctx.fillStyle = MUTED;
         ctx.font = '12px sans-serif';
+        ctx.textAlign = 'left';
         ctx.fillText(sub, x + 12, y + 48);
 
         this._drawMiniBoard(ctx, stage.rows, x + w - 56, y + 10, 4);
+    }
+
+    _truncateText(ctx, text, maxW, font) {
+        const raw = String(text || '');
+        if (!raw) return '';
+        if (font) ctx.font = font;
+        if (ctx.measureText(raw).width <= maxW) return raw;
+        let s = raw;
+        while (s.length > 1 && ctx.measureText(s + '…').width > maxW) {
+            s = s.slice(0, -1);
+        }
+        return s + '…';
     }
 
     _drawMiniBoard(ctx, rows, ox, oy, cell) {
@@ -359,7 +560,19 @@ class PlazaScene {
         ctx.fillText(d.stage.title, W / 2, py + 36);
         ctx.fillStyle = SUBTITLE;
         ctx.font = '13px sans-serif';
-        ctx.fillText('开打消耗 ' + d.fee + ' 金币', W / 2, py + 68);
+        const feeLine = '开打消耗 ' + d.fee + ' 金币';
+        const cleared = workshop.isPlazaCleared(d.stage.stageId);
+        const clearedSuffix = cleared ? '（已通关）' : '';
+        const lineW = ctx.measureText(feeLine + clearedSuffix).width;
+        let lx = W / 2 - lineW / 2;
+        ctx.textAlign = 'left';
+        ctx.fillText(feeLine, lx, py + 68);
+        if (cleared) {
+            lx += ctx.measureText(feeLine).width;
+            ctx.fillStyle = PLAZA_CLEARED;
+            ctx.fillText(clearedSuffix, lx, py + 68);
+        }
+        ctx.textAlign = 'center';
 
         const btnW = bw - 40;
         let by = py + 100;
@@ -408,7 +621,10 @@ class PlazaScene {
     onTouchStart(x, y) {
         this._touchStartY = y;
         this._touchMoved = false;
+        this._scrollVel = 0;
         this._lastMoveY = y;
+        const now = Date.now();
+        this._moveSamples = [{ t: now, y: y }];
     }
 
     onTouchMove(x, y) {
@@ -416,9 +632,13 @@ class PlazaScene {
         const prev = this._lastMoveY != null ? this._lastMoveY : y;
         const dy = prev - y;
         if (Math.abs(dy) > 2) this._touchMoved = true;
-        const maxScroll = Math.max(0, (this._listContentH || 0) - Math.max(1, this._listBottom - this._listTop));
-        this._scrollY = Math.max(0, Math.min(maxScroll, (this._scrollY || 0) + dy));
+        this._scrollY = this._clampScrollY((this._scrollY || 0) + dy);
         this._lastMoveY = y;
+        const now = Date.now();
+        this._moveSamples.push({ t: now, y: y });
+        while (this._moveSamples.length > 1 && now - this._moveSamples[0].t > 120) {
+            this._moveSamples.shift();
+        }
         this._buildListRects();
     }
 
@@ -432,6 +652,7 @@ class PlazaScene {
 
     handleTouchEnd() {
         this._lastMoveY = null;
+        this._launchScrollInertia();
     }
 
     handleTap(x, y) {
@@ -440,6 +661,7 @@ class PlazaScene {
 
     onTouchEnd(x, y) {
         this._lastMoveY = null;
+        // 惯性已在 handleTouchEnd 启动；此处仅处理点击
         if (this._confirm) {
             if (this._hit(x, y, this._confirmRects && this._confirmRects.ok)) {
                 if (this._confirm.onOk) this._confirm.onOk();
