@@ -54,7 +54,7 @@
 
 - `game` 对局（含开场垃圾掉落、SETTLING 塌陷）  
 - `stageResult` / `stageFail` 撒花与主按钮操作期（避免与插屏叠）  
-- `challenge` / `challengeResult` 及分享卡流程  
+- `challenge` 及分享卡流程（`result` 应战结算不放插屏/激励视频）  
 - `shop` 购买确认瞬间（可整页不用 Banner）
 
 ### 3.3 频率与形态

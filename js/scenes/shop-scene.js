@@ -757,7 +757,14 @@ class ShopScene {
         const cond = item.unlockCondition;
         if (!cond || cond === 'purchase') return false;
         if (cond === 'default') return true;
-        if (cond === 'score_10000') return (wx.getStorageSync('gc_stat_total_score') || 0) >= 10000;
+        if (cond === 'stages_cleared_10') {
+            try {
+                const goldenBlock = require('../../utils/golden-block-manager');
+                return goldenBlock.getClearedCount() >= 10;
+            } catch (e) {
+                return false;
+            }
+        }
         if (cond === 'games_50') return (wx.getStorageSync('gc_stat_total_games') || 0) >= 50;
         if (cond === 'tetris_count_100') return (wx.getStorageSync('gc_stat_tetris_count') || 0) >= 100;
         return false;
@@ -766,7 +773,7 @@ class ShopScene {
     /** 未满足解锁条件的提示文案 */
     _unlockHint(item) {
         const hints = {
-            score_10000: '累计得分达到 10000 解锁',
+            stages_cleared_10: '主线闯关通关 10 关解锁',
             games_50: '累计对局 50 场解锁',
             tetris_count_100: '累计 100 次 QUAD 解锁',
         };

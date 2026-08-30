@@ -116,8 +116,8 @@ const blockSkins = [
     id: 'pixel',
     name: '像素',
     price: 0,
-    unlockCondition: 'score_10000',
-    description: '累计得分达到10000解锁',
+    unlockCondition: 'stages_cleared_10',
+    description: '主线闯关累计通关10关解锁',
     colors: {
       I: '#22d3ee',
       O: '#facc15',
@@ -358,7 +358,7 @@ const soundPacks = [
 /*** 解锁条件类型说明
  * - 'default'        : 默认解锁，无需条件
  * - 'purchase'       : 需要花费金币购买
- * - 'score_10000'    : 累计得分达到 10000
+ * - 'stages_cleared_10': 主线闯关累计通关 10 关
  * - 'games_50'       : 累计对局达到 50 场
  * - 'tetris_count_100': 累计消除 Tetris 达到 100 次
  */

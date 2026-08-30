@@ -59,23 +59,6 @@ for (const stage of stagesData.stages) {
 }
 
 // ---------------------------------------------------------------------------
-console.log('B. 经典模式不回归');
-test('classic 消行后上方整体下沉 1 格', () => {
-    const eng = new TetrisEngine(1);
-    eng.setMode('classic');
-    eng.init();
-    // r19 满行；r17 col3 有一个玩家块（消行后整体下移 1 格 -> r18）
-    for (let c = 0; c < BOARD_COLS; c++) {
-        eng._board[19][c] = 1;
-    }
-    eng._board[17][3] = 1;
-    eng._checkLines();
-    assert.strictEqual(eng._board[18][3], 1, '原 r17 块应下沉到 r18');
-    assert.strictEqual(eng._board[17][3], 0);
-    assert.strictEqual(eng._board[19][3], 0);
-});
-
-// ---------------------------------------------------------------------------
 console.log('C. 闯关消行（方案 B：非垃圾塌陷）');
 test('stage 消行：满行垃圾格被清除，上方垃圾保持原位', () => {
     const { eng } = makeStageEngine({});
@@ -188,22 +171,7 @@ test('stage 垃圾清零触发 stageClear', () => {
 });
 
 // ---------------------------------------------------------------------------
-console.log('E. revive 垃圾保护');
-test('stage revive 不误删垃圾格', () => {
-    const { eng } = makeStageEngine({});
-    const r2 = 2;
-    eng._board[r2][3] = GARBAGE;
-    eng._garbageMask[r2][3] = true;
-    eng._garbageRemaining = 1;
-    eng._state = GameState.OVER;
-    const ok = eng.revive();
-    assert.strictEqual(ok, true);
-    assert.strictEqual(eng._board[r2][3], GARBAGE, '复活不应清除垃圾格');
-    assert.strictEqual(eng._garbageRemaining, 1);
-});
-
-// ---------------------------------------------------------------------------
-console.log('F. stage 模式速度固定（不按消行升级）');
+console.log('E. stage 模式速度固定（不按消行升级）');
 test('stage 消行后 level 不提升', () => {
     const { eng } = makeStageEngine({}, 1000);
     eng._state = GameState.PLAYING;

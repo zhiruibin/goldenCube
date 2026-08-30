@@ -7,6 +7,7 @@
  */
 
 const { boardSkins, blockSkins } = require('../../data/skins');
+const { GARBAGE, hashSeed, drawGarbageCell } = require('./garbage-cell');
 
 // 棋盘格子数值 -> 方块字母映射（与 data/pieces.js / data/skins.js 一致）
 const TYPE_LETTER = {
@@ -323,7 +324,7 @@ class BoardRenderer {
             for (let c = 0; c < this.cols; c++) {
                 const val = board[r] && board[r][c];
                 if (val && val !== 0) {
-                    this._drawCell(ctx, x + c * cs, y + r * cs, cs, val);
+                    this._drawCell(ctx, x + c * cs, y + r * cs, cs, val, c, r);
                 }
             }
         }
@@ -351,7 +352,9 @@ class BoardRenderer {
                 x + cell.col * cs,
                 y + cell.row * cs,
                 cs,
-                cell.value
+                cell.value,
+                cell.col,
+                Math.floor(cell.row)
             );
         }
     }
@@ -478,7 +481,14 @@ class BoardRenderer {
      * @param {number} size - 格子边长
      * @param {number} colorId - 棋盘格子数值（1-7）
      */
-    _drawCell(ctx, x, y, size, colorId) {
+    _drawCell(ctx, x, y, size, colorId, col, row) {
+        if (colorId === GARBAGE) {
+            const gc = (typeof col === 'number') ? col : Math.floor((x - this.x) / size);
+            const gr = (typeof row === 'number') ? row : Math.floor((y - this.y) / size);
+            drawGarbageCell(ctx, x, y, size, hashSeed(gc, gr));
+            return;
+        }
+
         const color = this._colorMap[colorId] || '#888888';
         const shadow = this._shadowMap[colorId] || '#444444';
         const gradColors = (this._blockGradMap && this._blockGradMap[colorId]) || null;

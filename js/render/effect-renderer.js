@@ -4,6 +4,8 @@
  * 参考产品方案 3.3.1 / 3.3.2 / 3.3.5
  */
 
+const { GARBAGE } = require('../../utils/tetris-engine');
+
 // 粒子配置表（文档 3.3.1）
 const PARTICLE_CONFIG = {
     1: { perCell: 4, speed: [80, 150], life: 0.30, gravity: 0, gold: false },
@@ -52,7 +54,10 @@ const TYPE_HEX = {
     6: '#0000F0', 7: '#F0A000', 8: '#FF6B81', 9: '#FFD700', 10: '#8E9EAB',
     11: '#B33771', 12: '#F5F5F5', 13: '#00BFA5', 14: '#C8A2C8', 15: '#FF7F50',
     16: '#98FB98', 17: '#87CEEB', 18: '#FFE08A',
+    99: '#787880', // 闯关垃圾
 };
+
+const GARBAGE_DEBRIS_COLORS = ['#787880', '#6a6a72', '#909098', '#52525a'];
 
 /** 方块类型字母 → 十六进制颜色（标准 7 种 + 特殊/实验室方块，供残影/波纹取色） */
 const PIECE_TYPE_COLOR_HEX = {
@@ -105,7 +110,44 @@ class EffectRenderer {
             const row = lineIndices[i];
             const rowColors = (opts.colors && opts.colors[i]) ? opts.colors[i] : null;
             this._addRowParticles(row, boardX, boardY, cellSize, count, isTSpin, rowColors);
+            this._addGarbageDebris(row, boardX, boardY, cellSize, rowColors);
         }
+    }
+
+    /** 消行时：被清除的垃圾格额外喷少量灰色碎屑 */
+    _addGarbageDebris(row, boardX, boardY, cellSize, rowColors) {
+        if (!rowColors || !rowColors.length) return;
+        const particles = [];
+        for (let col = 0; col < rowColors.length; col++) {
+            if (rowColors[col] !== GARBAGE) continue;
+            const cx = boardX + (col + 0.5) * cellSize;
+            const cy = boardY + (row + 0.5) * cellSize;
+            const n = 4;
+            for (let i = 0; i < n; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 35 + Math.random() * 65;
+                particles.push({
+                    x: cx + (Math.random() - 0.5) * cellSize * 0.25,
+                    y: cy + (Math.random() - 0.5) * cellSize * 0.25,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 25,
+                    size: cellSize * 0.1 * (0.65 + Math.random() * 0.7),
+                    color: GARBAGE_DEBRIS_COLORS[i % GARBAGE_DEBRIS_COLORS.length],
+                    life: 0.22 + Math.random() * 0.16,
+                    maxLife: 0.38,
+                    gravity: 160,
+                });
+            }
+        }
+        if (particles.length === 0) return;
+        this._effects.push({
+            type: 'particles',
+            particles,
+            color: GARBAGE_DEBRIS_COLORS[0],
+            time: 0,
+            duration: 0.45,
+            done: false,
+        });
     }
 
     /**

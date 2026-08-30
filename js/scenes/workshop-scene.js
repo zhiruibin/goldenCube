@@ -13,6 +13,7 @@ const workshop = require('../../utils/workshop-manager');
 const goldenBlock = require('../../utils/golden-block-manager');
 const { coinManager } = require('../../utils/coin-manager');
 const { achievementManager } = require('../../utils/achievement-manager');
+const { drawGarbageMiniCell } = require('../render/garbage-cell');
 const { adManager, isRewardedVideoConfigured } = require('../../utils/ad-manager');
 
 const STATUS_TABS = [
@@ -638,8 +639,7 @@ class WorkshopScene {
             const line = r[String(y)];
             for (let x = 0; x < 10; x++) {
                 if (line[x] === '#') {
-                    ctx.fillStyle = '#c9a227';
-                    ctx.fillRect(ox + x * cell, oy + (y - 10) * cell, cell - 0.5, cell - 0.5);
+                    drawGarbageMiniCell(ctx, ox + x * cell, oy + (y - 10) * cell, cell - 0.5);
                 }
             }
         }

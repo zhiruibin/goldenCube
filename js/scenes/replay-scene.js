@@ -113,10 +113,12 @@ class ReplayScene {
                     result: this._params.result,
                     replayKey: this._params.replayKey,
                 });
-            } else if (this._params && this._params.fromChallengeResult) {
-                GameGlobal.game.sceneManager.switchTo('challengeResult', this._params);
+            } else if (this._params && this._params.fromChallenge) {
+                GameGlobal.game.sceneManager.leaveTo('challenge', {}, ['home']);
+            } else if (this._params && this._params.challengeId) {
+                GameGlobal.game.sceneManager.leaveTo('result', this._params, ['home', 'challenge']);
             } else {
-                GameGlobal.game.sceneManager.switchTo('result', this._params);
+                GameGlobal.game.sceneManager.switchTo('home');
             }
             return;
         }
@@ -443,10 +445,10 @@ class ReplayScene {
         ctx.font = 'bold 18px sans-serif';
         ctx.fillText('战局回放', W / 2, top);
 
-        let info = `分数: ${this._engine.getScore()}   等级: ${this._engine.getLevel()}   消行: ${this._engine.getLines()}`;
-        const mode = this._data && this._data.mode;
+        let info = `消行: ${this._engine.getLines()}`;
         const meta = (this._data && this._data.meta) || {};
-        if ((mode || 'stage') === 'stage') {
+        const playContext = meta.playContext || ((this._data && this._data.mode) || 'stage');
+        if (playContext === 'stage' || playContext === 'challenge' || playContext === 'plaza' || playContext === 'workshop') {
             const pieces = meta.pieces != null ? meta.pieces : '-';
             const timeMs = meta.timeMs || 0;
             const sec = Math.floor(timeMs / 1000);
@@ -455,8 +457,8 @@ class ReplayScene {
             const timeStr = m + ':' + (ss < 10 ? '0' : '') + ss;
             info = `消行: ${this._engine.getLines()}   用块: ${pieces}   用时: ${timeStr}`;
             if (meta.stageId) info += `   第 ${meta.stageId} 关`;
-        } else if (mode) {
-            info += `   ${MODE_LABELS[mode] || mode}`;
+            else if (meta.workshopTitle) info += `   ${meta.workshopTitle}`;
+            else info += `   ${MODE_LABELS[playContext] || playContext}`;
         }
         ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
         ctx.font = '13px sans-serif';

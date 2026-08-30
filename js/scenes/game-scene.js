@@ -20,9 +20,13 @@ const { ConfettiFx } = require('../render/confetti-fx');
 const goldenBlock = require('../../utils/golden-block-manager');
 const { LuckyDrawOverlay } = require('../widgets/lucky-draw-overlay');
 const luckyDrawManager = require('../../utils/lucky-draw-manager');
+const { normalizeGameParams, replayMetaFromGame } = require('../../utils/play-context');
 
 /** 硬降短时冷却：防止连点/多指瞬时误砸下一块（不改按钮布局） */
 const HARD_DROP_COOLDOWN_MS = 200;
+
+/** 首次闯关：垃圾布局完成后提示通关目标（仅展示一次） */
+const STAGE_TUTORIAL_SEEN_KEY = 'gc_tutorial_garbage_clear_seen';
 
 class GameScene {
     constructor() {
@@ -43,24 +47,20 @@ class GameScene {
         this._pieceCount = 0;
         this._stageStartTime = 0;
 
-        // 成就系统：本局已上报标记 / 已使用方块类型集合
-        this._achievementReported = false;
-        // 本局存活计时（秒，成就统计用）
+        // 本局状态
         this._surviveTime = 0;
-        // 本局消行金币收益（结算页展示用）
         this._coinEarned = 0;
+        this._usedPieceTypes = {};
 
         // 误触保护：时间戳，此时间之前屏蔽输入
         this._inputBlockUntil = 0;
-
         this._hardDropReadyAt = 0;
-        // 回放系统：本局回放录制器与随机种子（引擎开局注入 seed，方块序列可重放）
+
+        // 回放系统
         this._recorder = null;
         this._replaySeed = null;
 
-        // 按键震动节流：上次普通操作震动时间戳
-        this._lastActionVibrateTime = 0;
-        // 按键震动节流：上次普通操作震动时间戳
+        // 按键震动节流
         this._lastActionVibrateTime = 0;
 
         // 棋盘布局参数
@@ -82,30 +82,13 @@ class GameScene {
         this._pauseResumeBtnRect = null;
         this._pauseQuitBtnRect = null;
 
-        // 游戏结束幸运摇奖状态（每局重置，确保每局仅摇一次）
-        this._luckyDrawUsed = false;
-        this._luckyDrawActive = false;
-        this._luckyDrawPhase = 'idle';
-        this._luckyDrawElapsed = 0;
-        this._luckyDrawPrize = null;
-        this._luckyDrawReels = [];
-        this._luckyDrawMatchTypes = [];
-        this._luckyDrawBtnRect = null;
-        this._luckyDrawConfirmRect = null;
-        this._luckyDrawGlowT = 0;
-        this._luckyDrawT1 = 0.35;
-        this._luckyDrawT3 = 1.0;
-        this._luckyDrawVmax = 1100;
         this._stageLuckyDraw = null;
     }
 
     onEnter(params) {
-        this._params = params || {};
-        this._mode = this._params.mode || 'stage';
-        // 挖个方块无经典/限时/马拉松；旧入口若仍带 classic 等，一律按残局规则处理
-        if (this._mode !== 'stage') {
-            this._mode = 'stage';
-        }
+        this._params = normalizeGameParams(params);
+        this._playContext = this._params.playContext || 'stage';
+        this._mode = 'stage';
         this._stageId = this._params.stageId || null;
         this._entryPaid = Number(this._params.entryPaid) || 0;
         this._workshop = !!this._params.workshop;
@@ -124,7 +107,7 @@ class GameScene {
         this._stageStartTime = Date.now();
         this._stageInfo = null;
         this._challengeId = this._params.challengeId || '';
-        this._challengeMode = this._params.challengeMode || '';
+        this._challengeMode = this._params.challengeKind || this._params.challengeMode || '';
         // 挑战目标分：兼容 number / 数字字符串；无效则不展示
         if (typeof this._params.targetScore === 'number' && !isNaN(this._params.targetScore)) {
             this._targetScore = this._params.targetScore;
@@ -134,16 +117,6 @@ class GameScene {
         } else {
             this._targetScore = null;
         }
-        this._challengeLaunch = !!this._params.challengeLaunch;
-        this._challengeTargetName = typeof this._params.challengeTargetName === 'string'
-            ? this._params.challengeTargetName.slice(0, 32)
-            : '';
-        this._challengeTargetAvatar = typeof this._params.challengeTargetAvatar === 'string'
-            ? this._params.challengeTargetAvatar.slice(0, 512)
-            : '';
-        this._challengeTargetOpenid = typeof this._params.challengeTargetOpenid === 'string'
-            ? this._params.challengeTargetOpenid.slice(0, 64)
-            : '';
         this._paused = false;
 
         // 成就系统：本局状态重置
@@ -153,29 +126,10 @@ class GameScene {
         // 本局已使用方块类型集合
         this._usedPieceTypes = {};
 
-        // 摇奖状态（每局重置，确保每局仅摇一次）
-        this._luckyDrawUsed = false;
-        this._luckyDrawActive = false;
-        this._luckyDrawPhase = 'idle';
-        this._luckyDrawElapsed = 0;
-        this._luckyDrawPrize = null;
-        this._luckyDrawReels = [];
-        this._luckyDrawMatchTypes = [];
-        this._luckyDrawBtnRect = null;
-        this._luckyDrawBtnRect = null;
-        this._luckyDrawConfirmRect = null;
-        this._luckyDrawGlowT = 0;
-        this._luckyDrawT3 = 1.0;
-        this._luckyDrawVmax = 1100;
         if (this._stageLuckyDraw) {
             this._stageLuckyDraw.destroy();
             this._stageLuckyDraw = null;
         }
-
-        // 挖个方块仅残局规则，无计时/马拉松参数
-        this._modeTimeLeft = 0;
-        this._modeTimeTotal = 0;
-        this._modeTargetLines = 0;
 
         // 读取设置
         this._settings = {
@@ -212,6 +166,8 @@ class GameScene {
         this._stageIntroGap = 0.08;
         this._stageIntroPhase = 'idle'; // idle | dropping | settle
         this._stageIntroSettleLeft = 0;
+        this._stageTutorialActive = false;
+        this._stageTutorialBtnRect = null;
         this._collapseHintLeft = 0;
 
         this._calculateLayout();
@@ -251,7 +207,7 @@ class GameScene {
         if (this._mode === 'stage' && this._engine) {
             this._beginStageIntro();
         } else {
-            this._engine.start();
+            this._offerStageTutorialOrStart();
         }
     }
 
@@ -334,6 +290,16 @@ class GameScene {
             return;
         }
 
+        // 首次闯关说明：阻塞开局，等用户点「知道了」
+        if (this._stageTutorialActive) {
+            if (this._effectRenderer) this._effectRenderer.update(dt);
+            if (this._boardRenderer) this._boardRenderer.update(dt);
+            if (this._bgEffects) this._bgEffects.update(dt);
+            if (this._miniFx) this._miniFx.update(dt);
+            if (this._confettiFx) this._confettiFx.update(dt);
+            return;
+        }
+
         if (this._engine) {
             this._engine.update(dt);
 
@@ -359,7 +325,6 @@ class GameScene {
         // 更新全屏背景特效（挂现有 update 通道，不新增渲染循环）
         if (this._bgEffects) { this._bgEffects.update(dt); }
         if (this._miniFx) { this._miniFx.update(dt); }
-        this._updateLuckyDraw(dt);
         if (this._stageLuckyDraw) { this._stageLuckyDraw.update(dt); }
         if (this._confettiFx) { this._confettiFx.update(dt); }
     }
@@ -370,12 +335,12 @@ class GameScene {
      */
     _beginStageIntro() {
         if (!this._engine || typeof this._engine.prepareStageIntro !== 'function') {
-            this._engine.start();
+            this._offerStageTutorialOrStart();
             return;
         }
         const cells = this._engine.prepareStageIntro();
         if (!cells || cells.length === 0) {
-            this._engine.start();
+            this._offerStageTutorialOrStart();
             return;
         }
         this._stageIntroCells = cells;
@@ -458,7 +423,40 @@ class GameScene {
         this._stageIntroIndex = 0;
         this._stageIntroTimer = 0;
         this._stageIntroSettleLeft = 0;
-        // 垃圾布局全部完成后才开始掉玩家方块
+        this._offerStageTutorialOrStart();
+    }
+
+    _shouldShowStageTutorial() {
+        try {
+            if (wx.getStorageSync(STAGE_TUTORIAL_SEEN_KEY)) return false;
+        } catch (e) {
+            return false;
+        }
+        if (this._engine && typeof this._engine.getGarbageRemaining === 'function') {
+            return this._engine.getGarbageRemaining() > 0;
+        }
+        return false;
+    }
+
+    _offerStageTutorialOrStart() {
+        if (this._shouldShowStageTutorial()) {
+            this._stageTutorialActive = true;
+            this._inputBlockUntil = Date.now() + 120000;
+            return;
+        }
+        this._startGameplayAfterIntro();
+    }
+
+    _dismissStageTutorial() {
+        try {
+            wx.setStorageSync(STAGE_TUTORIAL_SEEN_KEY, true);
+        } catch (e) { /* ignore */ }
+        this._stageTutorialActive = false;
+        this._stageTutorialBtnRect = null;
+        this._startGameplayAfterIntro();
+    }
+
+    _startGameplayAfterIntro() {
         if (this._engine && this._engine.getState() !== 'playing') {
             this._engine.start();
         }
@@ -544,11 +542,11 @@ class GameScene {
         if (this._paused) {
             this._renderPauseOverlay(ctx);
         }
-
-        // 摇奖遮罩（最顶层）
-        if (this._luckyDrawActive) {
-            this._renderLuckyDrawOverlay(ctx);
+        if (this._stageTutorialActive) {
+            this._renderStageTutorialOverlay(ctx);
         }
+
+        // 进结算前幸运摇奖（LuckyDrawOverlay）
         if (this._stageLuckyDraw && this._stageLuckyDraw.isActive()) {
             this._stageLuckyDraw.render(ctx);
         }
@@ -731,8 +729,6 @@ class GameScene {
                     }, 0);
                     return;
                 }
-                // 非闯关路径已废弃；兜底直接结算
-                this._goToResult(score, level, lines, stats);
             }
         });
         this._engine.onLineClear((lineIndices, count, isTetris, colors, tSpinType, combo) => {
@@ -895,22 +891,6 @@ class GameScene {
         this._lastActionVibrateTime = now;
 
         this._safeVibrate('light');
-    }
-
-    /** 本地最高分（遗留键；闯关成绩以金方块/关卡最佳为准） */
-    _saveBestScore(score, mode) {
-        const key = 'gc_bestScore_stage';
-        const prev = wx.getStorageSync(key) || 0;
-        if (score > prev) {
-            wx.setStorageSync(key, score);
-            return true;
-        }
-        return false;
-    }
-
-    /** 获取本地最高分（遗留） */
-    _getBestScore(mode) {
-        return wx.getStorageSync('gc_bestScore_stage') || 0;
     }
 
     // ==================== 渲染器初始化 ====================
@@ -1134,7 +1114,7 @@ class GameScene {
     /** 是否展示目标 HUD（应战局 或 排行榜「挑战」追分局） */
     _hasChallengeTarget() {
         return this._targetScore != null && !isNaN(this._targetScore)
-            && (!!this._challengeId || !!this._challengeLaunch);
+            && !!this._challengeId;
     }
 
     /**
@@ -1219,7 +1199,56 @@ class GameScene {
         ctx.closePath();
     }
 
-    // ==================== 暂停遮罩 ====================
+    // ==================== 暂停 / 首次说明遮罩 ====================
+
+    _renderStageTutorialOverlay(ctx) {
+        const W = GameGlobal.game.width;
+        const H = GameGlobal.game.height;
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.72)';
+        ctx.fillRect(0, 0, W, H);
+
+        const cardW = Math.min(320, W * 0.86);
+        const cardH = 196;
+        const cardX = (W - cardW) / 2;
+        const cardY = H / 2 - cardH / 2 - 20;
+
+        ctx.fillStyle = 'rgba(28, 28, 52, 0.96)';
+        this._roundRect(ctx, cardX, cardY, cardW, cardH, 16);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 200, 87, 0.55)';
+        ctx.lineWidth = 1.5;
+        this._roundRect(ctx, cardX, cardY, cardW, cardH, 16);
+        ctx.stroke();
+
+        ctx.fillStyle = '#FFE082';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('闯关说明', W / 2, cardY + 42);
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+        ctx.font = '17px sans-serif';
+        const bh = 44;
+        const btnBottomPad = 24;
+        const textBtnGap = 20;
+        const by = cardY + cardH - bh - btnBottomPad;
+        ctx.textBaseline = 'alphabetic';
+        const line2Baseline = by - textBtnGap;
+        const line1Baseline = line2Baseline - 26;
+        ctx.fillText('消除掉所有灰色垃圾方块', W / 2, line1Baseline);
+        ctx.fillText('即可通关', W / 2, line2Baseline);
+
+        const bw = Math.min(200, cardW * 0.62);
+        const bx = W / 2 - bw / 2;
+        this._stageTutorialBtnRect = { x: bx, y: by, w: bw, h: bh };
+        ctx.fillStyle = '#00c6ff';
+        this._roundRect(ctx, bx, by, bw, bh, 12);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 18px sans-serif';
+        ctx.fillText('知道了', W / 2, by + bh / 2);
+    }
 
     _renderPauseOverlay(ctx) {
         const W = GameGlobal.game.width;
@@ -1361,7 +1390,7 @@ class GameScene {
         }
     }
     _togglePause() {
-        if (this._stageIntroActive) return;
+        if (this._stageIntroActive || this._stageTutorialActive) return;
         if (this._engine && this._engine.isStageSettling && this._engine.isStageSettling()) return;
         if (this._paused) {
             this._engine.resume();
@@ -1388,11 +1417,10 @@ class GameScene {
      * @param {number} y - 触点 Y
      */
     handleTouchStart(touchId, x, y) {
-        if (this._stageIntroActive) return;
+        if (this._stageIntroActive || this._stageTutorialActive) return;
         if (this._engine && this._engine.isStageSettling && this._engine.isStageSettling()) return;
         // 摇奖按钮只在 touchEnd→handleTap 响应，按下不切场景，避免同一笔触摸穿透到结算页
         if (this._stageLuckyDraw && this._stageLuckyDraw.isActive()) return;
-        if (this._luckyDrawActive) return;
         if (this._paused) return;
 
         // 误触保护：输入屏蔽期间忽略所有操作（文档 3.2.9）
@@ -1446,13 +1474,18 @@ class GameScene {
      * 点击回调（暂停状态下点击恢复）
      */
     handleTap(x, y) {
+        if (this._stageTutorialActive) {
+            if (this._stageTutorialBtnRect && this._hitRect(x, y, this._stageTutorialBtnRect)) {
+                this._dismissStageTutorial();
+            }
+            return;
+        }
         if (this._engine && this._engine.isStageSettling && this._engine.isStageSettling()) return;
         if (this._stageLuckyDraw && this._stageLuckyDraw.isActive()) {
             this._stageLuckyDraw.handleTap(x, y);
             return;
         }
-        if (this._luckyDrawActive) { this._handleLuckyDrawTap(x, y); return; }
-        // 按钮按下即触发，抬手时不再重复触发（否则点暂停按钮会立即恢复）
+        // 按钮按下即触发
         if (this._tapConsumed) {
             this._tapConsumed = false;
             return;
@@ -1473,390 +1506,6 @@ class GameScene {
             return;
         }
     }
-    // ==================== 幸运摇奖 ====================
-
-    /** 非闯关路径兜底：直接进结算 */
-    _maybeShowReviveOrResult() {
-        this._goToResult(
-            this._engine.getScore(),
-            this._engine.getLevel(),
-            this._engine.getLines(),
-            this._engine.getStats()
-        );
-    }
-
-    /** 幸运摇奖：进入 idle 等待页（用户手动点「开始摇奖」才开转）；idle 阶段预构建方块序列供滚筒展示，点开始后同一批方块进入滚动 */
-    _startLuckyDraw() {
-        this._luckyDrawUsed = true;
-        this._luckyDrawActive = true;
-        this._luckyDrawPhase = 'celebrate';
-        this._luckyDrawElapsed = 0;
-        this._luckyDrawPrize = null;
-        this._buildLuckyDrawReels();
-        this._luckyDrawMatchTypes = [];
-        this._luckyDrawBtnRect = null;
-        this._luckyDrawConfirmRect = null;
-        this._luckyDrawGlowT = 0;
-        const _W = GameGlobal.game.width;
-        const _H = GameGlobal.game.height;
-        if (this._confettiFx) {
-            this._confettiFx.trigger(_W / 2, _H * 0.45);
-        }
-    }
-
-    /** 构建摇奖滚筒三列 7 符号序列（每列一个 SYMBOLS 随机排列 + 随机 resultIdx），idle 阶段预展示，开奖时复用同一批方块 */
-    _buildLuckyDrawReels() {
-        const SYMBOLS = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
-        const reelLen = 7;
-        const reels = [];
-        for (let i = 0; i < 3; i++) {
-            const symbols = SYMBOLS.slice();
-            for (let k = symbols.length - 1; k > 0; k--) {
-                const j = Math.floor(Math.random() * (k + 1));
-                const tmp = symbols[k];
-                symbols[k] = symbols[j];
-                symbols[j] = tmp;
-            }
-            reels.push({
-                rolling: symbols,
-                resultIdx: Math.floor(Math.random() * reelLen),
-                scroll: 0,
-                totalDist: 0,
-                settled: false,
-            });
-        }
-        this._luckyDrawReels = reels;
-    }
-
-    /** 开始摇奖：仅在 idle 阶段响应，抽取奖励、把目标符号换到各列 resultIdx 并规划滚动 */
-    _beginLuckyDrawRoll() {
-        if (this._luckyDrawPhase !== 'idle') return;
-        this._luckyDrawPhase = 'rolling';
-        this._luckyDrawElapsed = 0;
-
-        if (!this._luckyDrawReels || this._luckyDrawReels.length !== 3) {
-            this._buildLuckyDrawReels();
-        }
-
-        // 1) 抽等级：r<0.06 三连、r<0.40 二连、否则全不同
-        const r = Math.random();
-        const tier = r < 0.06 ? 3 : (r < 0.40 ? 2 : 1);
-
-        // 2) 按等级生成 3 个目标符号（对应三列结果行）
-        const SYMBOLS = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
-        const targets = [];
-        if (tier === 3) {
-            const s = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
-            targets.push(s, s, s);
-        } else if (tier === 2) {
-            const s = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
-            let other = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
-            while (other === s) {
-                other = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
-            }
-            const diffReel = Math.floor(Math.random() * 3);
-            for (let i = 0; i < 3; i++) {
-                targets.push(i === diffReel ? other : s);
-            }
-        } else {
-            const shuffled = SYMBOLS.slice();
-            for (let i = shuffled.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                const tmp = shuffled[i];
-                shuffled[i] = shuffled[j];
-                shuffled[j] = tmp;
-            }
-            targets.push(shuffled[0], shuffled[1], shuffled[2]);
-        }
-
-        // 3) 把目标符号换到各列 resultIdx（每列 7 符号排列中符号唯一，交换即可），idle 展示的同一批方块无缝进入滚动
-        const reels = this._luckyDrawReels;
-        for (let i = 0; i < reels.length; i++) {
-            const symbols = reels[i].rolling;
-            const targetSymbol = targets[i];
-            const targetIdx = symbols.indexOf(targetSymbol);
-            const resultIdx = reels[i].resultIdx;
-            symbols[targetIdx] = symbols[resultIdx];
-            symbols[resultIdx] = targetSymbol;
-        }
-
-        // 4) 奖品映射：三连→20 金币，二连→10 金币，全不同→5 金币（无复活大奖）
-        if (tier === 3) {
-            this._luckyDrawPrize = { type: 'gc_coins', amount: 20 };
-        } else if (tier === 2) {
-            this._luckyDrawPrize = { type: 'gc_coins', amount: 10 };
-        } else {
-            this._luckyDrawPrize = { type: 'gc_coins', amount: 5 };
-        }
-
-        // 5) 匹配组符号（出现次数≥2）去重写入，result 阶段描金高亮
-        const countMap = {};
-        for (const s of targets) {
-            countMap[s] = (countMap[s] || 0) + 1;
-        }
-        this._luckyDrawMatchTypes = Object.keys(countMap).filter((s) => countMap[s] >= 2);
-
-        // 6) 滚动规划：共享缓起/缓停曲线，每列独立目标距离形成逐列停定节奏
-        const cellH = 84;
-        const reelLen = 7;
-        const minDist = 3 * reelLen * cellH;
-        const t1 = 0.35;
-        const t3 = 2.0;
-        const vmax = 1100;
-        const distAccel = 0.5 * vmax * t1;
-        const distDecel = vmax * t3 / 3;
-
-        for (let i = 0; i < reels.length; i++) {
-            const target = minDist + ((reelLen - reels[i].resultIdx) % reelLen) * cellH;
-            const constDist = Math.max(0, target - distAccel - distDecel);
-            reels[i].constDist = constDist;
-            reels[i].totalDist = distAccel + constDist + distDecel;
-        }
-
-        this._luckyDrawT1 = t1;
-        this._luckyDrawT3 = t3;
-        this._luckyDrawVmax = vmax;
-    }
-
-    /** 摇奖滚动：按速度曲线积分滚动（缓起→匀速→缓停），位移到目标即定格进入 result 停留展示 */
-    _updateLuckyDraw(dt) {
-        if (!this._luckyDrawActive) return;
-        if (this._luckyDrawPhase === 'celebrate') {
-            this._luckyDrawElapsed += dt;
-            if (this._luckyDrawElapsed >= 1.2) {
-                this._luckyDrawPhase = 'idle';
-                this._luckyDrawElapsed = 0;
-            }
-            return;
-        }
-        if (this._luckyDrawPhase === 'result') return;
-        if (this._luckyDrawPhase !== 'rolling') return;
-        this._luckyDrawElapsed += dt;
-        const t = this._luckyDrawElapsed;
-        const t1 = this._luckyDrawT1;
-        const t3 = this._luckyDrawT3;
-        const vmax = this._luckyDrawVmax;
-
-        for (const reel of this._luckyDrawReels) {
-            if (reel.settled) continue;
-            const tConstEnd = t1 + reel.constDist / vmax;
-
-            let v;
-            if (t < t1) {
-                v = vmax * (t / t1);
-            } else if (t < tConstEnd) {
-                v = vmax;
-            } else {
-                v = Math.max(0, vmax * (1 - (t - tConstEnd) / t3) ** 2);
-            }
-
-            reel.scroll += v * dt;
-            if (reel.scroll >= reel.totalDist) {
-                reel.scroll = reel.totalDist;
-                reel.settled = true;
-            } else if (t >= tConstEnd + t3) {
-                // 减速结束兜底：速度已归零，离散积分误差致 scroll 未达 totalDist 时强制定格
-                reel.scroll = reel.totalDist;
-                reel.settled = true;
-            }
-        }
-
-        if (this._luckyDrawReels.every((reel) => reel.settled)) {
-            this._luckyDrawPhase = 'result';
-            const _W = GameGlobal.game.width;
-            const _H = GameGlobal.game.height;
-            if (this._confettiFx) {
-                this._confettiFx.trigger(_W / 2, _H * 0.45);
-            }
-            if (this._audio) {
-                this._audio.playClick();
-            }
-            if (this._settings.vibrate && wx.vibrateShort) {
-                wx.vibrateShort({ type: 'light' });
-            }
-        }
-    }
-
-    /** 摇奖页按钮点击分发：idle 点「开始摇奖」开转，result 点「确定领取」结算，其余点击忽略 */
-    _handleLuckyDrawTap(x, y) {
-        if (this._luckyDrawPhase === 'idle') {
-            if (this._luckyDrawBtnRect && this._hitRect(x, y, this._luckyDrawBtnRect)) {
-                this._beginLuckyDrawRoll();
-            }
-            return;
-        }
-        if (this._luckyDrawPhase === 'result') {
-            if (this._luckyDrawConfirmRect && this._hitRect(x, y, this._luckyDrawConfirmRect)) {
-                this._finishLuckyDraw();
-            }
-        }
-    }
-
-    /** 结算摇奖：result 阶段确认领取后关闭，金币入账后进结算 */
-    _finishLuckyDraw() {
-        if (this._luckyDrawPhase !== 'result') return;
-        this._luckyDrawActive = false;
-        if (this._luckyDrawPrize) {
-            coinManager.rewardAdBonus(this._luckyDrawPrize.amount);
-            this._coinEarned += this._luckyDrawPrize.amount;
-        }
-        this._maybeShowReviveOrResult();
-    }
-    /** 摇奖遮罩渲染 */
-    _renderLuckyDrawOverlay(ctx) {
-        const W = GameGlobal.game.width;
-        const H = GameGlobal.game.height;
-
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.78)';
-        ctx.fillRect(0, 0, W, H);
-
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
-        // celebrate：金色恭喜标题 + 副文案，期间不渲染三列窗口与按钮（点击不响应）
-        if (this._luckyDrawPhase === 'celebrate') {
-            ctx.fillStyle = '#ffd700';
-            ctx.font = 'bold 36px sans-serif';
-            ctx.fillText('恭喜获得幸运卷轴！', W / 2, H / 2 - 60);
-            ctx.fillStyle = '#ffffff';
-            ctx.font = '16px sans-serif';
-            ctx.fillText('即将进入摇奖…', W / 2, H / 2 + 10);
-            this._luckyDrawBtnRect = null;
-            return;
-        }
-        // 居中标题
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 28px sans-serif';
-        ctx.fillText('幸运卷轴', W / 2, H / 2 - 165);
-
-        // 三列老虎机窗口参数：每列可视 3 行（中间行为结果参考行）
-        const cellH = 84;
-        const winH = cellH * 3;
-        const reelW = 76;
-        const gap = 8;
-        const winW = 3 * reelW + 2 * gap;
-        const winLeft = W / 2 - winW / 2;
-        const winTop = H / 2 - winH / 2 - 8;
-        const centerY = winTop + cellH;
-        const cellW = cellH * 0.86;
-
-        // 深色圆角底板 + 金色描边
-        ctx.fillStyle = 'rgba(10, 12, 30, 0.92)';
-        this._roundRect(ctx, winLeft, winTop, winW, winH, 12);
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 215, 0, 0.9)';
-        ctx.lineWidth = 2;
-        this._roundRect(ctx, winLeft, winTop, winW, winH, 12);
-        ctx.stroke();
-
-        // idle / rolling / result：每列按各自 scroll 裁剪绘制窗口上下各溢出 1 格。
-        // idle 阶段 scroll=0，直接展示预构建的彩色方块序列（老虎机语义），
-        // 点「开始摇奖」后同一批方块无缝进入滚动。
-        for (let i = 0; i < 3; i++) {
-            const reel = this._luckyDrawReels[i];
-            if (!reel || reel.rolling.length === 0) continue;
-            const colLeft = winLeft + i * (reelW + gap);
-            const blockX = colLeft + (reelW - cellW) / 2;
-            const len = reel.rolling.length;
-
-            ctx.save();
-            ctx.beginPath();
-            ctx.rect(colLeft, winTop, reelW, winH);
-            ctx.clip();
-
-            const firstK = Math.floor((winTop - cellH - centerY - reel.scroll) / cellH);
-            for (let k = firstK; k <= firstK + 5; k++) {
-                const sy = k * cellH + reel.scroll + centerY;
-                const idx = ((k % len) + len) % len;
-                const type = reel.rolling[idx];
-                this._drawReelBlock(ctx, blockX, sy, cellW, cellH, type);
-            }
-
-            ctx.restore();
-        }
-        // 中间判定行金色矩形描边框（静态不闪动，绘制在所有方块之上）
-        ctx.strokeStyle = 'rgba(255, 215, 0, 0.9)';
-        ctx.lineWidth = 2.5;
-        this._roundRect(ctx, winLeft - 4, winTop + cellH - 4, winW + 8, cellH + 8, 12);
-        ctx.stroke();
-
-        // idle：方块序列静止展示，绘制「开始摇奖」按钮
-        if (this._luckyDrawPhase === 'idle') {
-            this._luckyDrawBtnRect = this._drawLuckyDrawButton(ctx, '开始摇奖', H / 2 + 205);
-            return;
-        }
-
-        // result：奖品文案 + 确定领取按钮
-        if (this._luckyDrawPhase === 'result') {
-            ctx.fillStyle = '#ffd700';
-            ctx.font = 'bold 22px sans-serif';
-            const text = '+' + this._luckyDrawPrize.amount + ' 金币';
-            ctx.fillText(text, W / 2, H / 2 + 149);
-            this._luckyDrawConfirmRect = this._drawLuckyDrawButton(ctx, '确定领取', H / 2 + 205);
-        }
-    }
-    /** 摇奖滚筒方块：扁平简约风格，背景块暗色统一无立体，七种方块形状彩色且小方块等尺寸，result 中奖格外扩金色静态细框 */
-    _drawReelBlock(ctx, x, y, w, h, type) {
-        const color = 'rgba(80, 85, 120, 0.5)';
-        // 方块主体（圆角矩形，半径与滚筒窗口一致）
-        ctx.fillStyle = color;
-        this._roundRect(ctx, x, y, w, h, 12);
-        ctx.fill();
-
-        // 绘制方块形状（彩色等尺寸小方块，白色细描边，居中）
-        const shape = (PIECES[type] && PIECES[type].shapes && PIECES[type].shapes[0]) || null;
-        if (shape) {
-            const rows = shape.length;
-            const cols = shape[0].length;
-            const cell = Math.floor(Math.min(w, h) * 0.20);
-            const gap = Math.max(1, Math.floor(cell * 0.2));
-            const ox = x + (w - (cols * cell + (cols - 1) * gap)) / 2;
-            const oy = y + (h - (rows * cell + (rows - 1) * gap)) / 2;
-            ctx.fillStyle = (PIECE_COLORS[type] || '#888888');
-            ctx.strokeStyle = 'rgba(255,255,255,0.7)';
-            ctx.lineWidth = 1;
-            for (let r = 0; r < rows; r++) {
-                for (let c = 0; c < cols; c++) {
-                    if (shape[r][c] === 1) {
-                        const bx = ox + c * (cell + gap);
-                        const by = oy + r * (cell + gap);
-                        ctx.fillRect(bx, by, cell, cell);
-                        ctx.strokeRect(bx + 0.5, by + 0.5, cell - 1, cell - 1);
-                    }
-                }
-            }
-        } else {
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold ' + (h * 0.42) + 'px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(type, x + w / 2, y + h / 2);
-        }
-    }
-
-    /** 金色圆角按钮（摇奖页用），返回 {x,y,w,h} 命中区 */
-    _drawLuckyDrawButton(ctx, label, cy) {
-        const W = GameGlobal.game.width;
-        const bw = Math.min(220, W * 0.6);
-        const bh = 50;
-        const bx = W / 2 - bw / 2;
-        const by = cy - bh / 2;
-
-        ctx.fillStyle = '#f0a000';
-        this._roundRect(ctx, bx, by, bw, bh, 12);
-        ctx.fill();
-        ctx.strokeStyle = '#ffd700';
-        ctx.lineWidth = 1.5;
-        this._roundRect(ctx, bx, by, bw, bh, 12);
-        ctx.stroke();
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 18px sans-serif';
-        ctx.fillText(label, W / 2, cy);
-
-        return { x: bx, y: by, w: bw, h: bh };
-    }
-
     /** 工坊试玩/自通：按进入来源返回编辑页、工坊列表或关卡广场 */
     _leaveWorkshopOrigin(extraParams) {
         const sm = GameGlobal.game.sceneManager;
@@ -2000,7 +1649,7 @@ class GameScene {
             workshopTitle: this._workshopTitle || '',
             dropIntervalMs: (this._stageInfo && this._stageInfo.dropIntervalMs) || 1000,
             workshopRows,
-        }, extra || {});
+        }, replayMetaFromGame(this), extra || {});
         const replayData = this._recorder.finish(meta);
         if (!replayData || !replayData.inputs || replayData.inputs.length <= 0) return '';
         const key = this._workshopStageId
@@ -2243,7 +1892,7 @@ class GameScene {
 
         let replayKey = '';
         if (this._recorder && this._engine) {
-            const replayData = this._recorder.finish({
+            const replayData = this._recorder.finish(Object.assign({
                 score: this._engine.getScore(),
                 level: this._engine.getLevel(),
                 lines,
@@ -2252,7 +1901,7 @@ class GameScene {
                 stageId: this._stageId,
                 pieces: this._pieceCount || 0,
                 timeMs,
-            });
+            }, replayMetaFromGame(this)));
             if (replayData && replayData.inputs && replayData.inputs.length > 0) {
                 replayKey = 'gc_replay_stage_' + this._stageId;
                 this._recorder.save(replayKey, replayData);
@@ -2310,7 +1959,7 @@ class GameScene {
 
         let replayKey = '';
         if (this._recorder && this._engine) {
-            const replayData = this._recorder.finish({
+            const replayData = this._recorder.finish(Object.assign({
                 score: this._engine.getScore(),
                 level: this._engine.getLevel(),
                 lines,
@@ -2319,7 +1968,7 @@ class GameScene {
                 stageId: this._stageId,
                 pieces: this._pieceCount || 0,
                 timeMs,
-            });
+            }, replayMetaFromGame(this)));
             if (replayData && replayData.inputs && replayData.inputs.length > 0) {
                 replayKey = 'gc_replay_stage_' + this._stageId;
                 this._recorder.save(replayKey, replayData);
@@ -2339,54 +1988,6 @@ class GameScene {
                 },
             }, ['home', 'stageSelect']);
         }, 700);
-    }
-
-    _goToResult(score, level, lines, stats) {
-        // 成就系统：上报本局结果（仅一次），解锁成就并发放金币
-        if (!this._achievementReported) {
-            this._achievementReported = true;
-            try {
-                achievementManager.reportGameResult({
-                    score, level, lines, mode: this._mode, stats,
-                    duration: Math.floor(this._surviveTime || 0),
-                });
-                // 仅统计标准 7 种方块，特殊方块（C/D/P/M）不参与「用遍所有方块」成就判定
-                const STANDARD_PIECE_TYPES = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
-                const standardUsedCount = Object.keys(this._usedPieceTypes)
-                    .filter((t) => STANDARD_PIECE_TYPES.indexOf(t) >= 0).length;
-                if (standardUsedCount >= 7) {
-                    achievementManager.reportUseAllPieces();
-                }
-            } catch (e) {
-                // 忽略成就上报异常
-            }
-        }
-        // 生成回放数据并持久化（仅当本局录入了有效输入）
-        const replayData = this._recorder ? this._recorder.finish({ score, level, lines, mode: this._mode, duration: Math.floor(this._surviveTime || 0) }) : null;
-        const replayKey = (replayData && replayData.inputs && replayData.inputs.length > 0) ? 'gc_replay_last' : '';
-        if (replayKey) {
-            this._recorder.save(replayKey, replayData);
-        }
-        setTimeout(() => {
-            if (this._challengeLaunch) {
-                GameGlobal.game.sceneManager.switchTo('challengeResult', {
-                    score, level, lines, mode: this._mode, stats,
-                    coinEarned: this._coinEarned || 0,
-                    replayKey,
-                    challengeTargetName: this._challengeTargetName || '',
-                    challengeTargetAvatar: this._challengeTargetAvatar || '',
-                    challengeTargetOpenid: this._challengeTargetOpenid || '',
-                });
-            } else {
-                GameGlobal.game.sceneManager.switchTo('result', {
-                    score, level, lines, mode: this._mode, stats,
-                    coinEarned: this._coinEarned || 0,
-                    challengeId: this._challengeId || '',
-                    targetScore: this._targetScore,
-                    replayKey,
-                });
-            }
-        }, 800);
     }
 
     /**

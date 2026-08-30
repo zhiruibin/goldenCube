@@ -13,7 +13,7 @@
  * 注意：微信小游戏 require 为相对当前文件目录解析，此处使用 ./ 与 ../ 相对路径。
  */
 
-const { PIECE_TYPES, PIECE_COLORS, LAB_PIECE_TYPES } = require('../data/pieces');
+const { PIECE_TYPES, PIECE_COLORS } = require('../data/pieces');
 const SRSRotation = require('./srs-rotation');
 
 // ---------------------------------------------------------------------------
@@ -98,15 +98,12 @@ class BagRandomizer {
         this._bags = [];
         this._bagIdx = 0;
         this._pieceIdx = 0;
-        this._specialMode = false;
         this._seed = typeof seed === 'number' ? seed : null;
         this._rng = this._seed !== null ? mulberry32(this._seed) : Math.random;
     }
 
-    /** 启用/关闭特殊模式（true 时实验室模式使用纯新池） */
-    setSpecialMode(enabled) {
-        this._specialMode = !!enabled;
-    }
+    /** 启用/关闭特殊模式（已废弃，挖个方块不使用） */
+    setSpecialMode() {}
 
     /** 取出下一个方块类型 */
     next() {
@@ -151,9 +148,9 @@ class BagRandomizer {
         return total;
     }
 
-    /** Fisher-Yates 洗牌；实验室模式使用纯新池，标准模式使用标准 7-Bag */
+    /** Fisher-Yates 洗牌；标准 7-Bag */
     _shuffle() {
-        const bag = this._specialMode ? [...LAB_PIECE_TYPES] : [...PIECE_TYPES];
+        const bag = [...PIECE_TYPES];
         for (let i = bag.length - 1; i > 0; i--) {
             const j = Math.floor(this._rng() * (i + 1));
             [bag[i], bag[j]] = [bag[j], bag[i]];
@@ -1305,13 +1302,9 @@ class TetrisEngine {
         };
     }
 
-    /** 设置规则档（产品对局一律 stage；其它取值仅供引擎单测） */
+    /** 设置规则档（产品对局一律 stage 残局规则） */
     setMode(mode) {
-        this._mode = mode || 'stage';
-        this._bag.setSpecialMode(this._mode === 'special');
-        if (this._mode === 'stage') {
-            this._bag.setSpecialMode(false);
-        }
+        this._mode = 'stage';
     }
 
     /**
@@ -1323,7 +1316,6 @@ class TetrisEngine {
      */
     initStage(layout, config) {
         this._mode = 'stage';
-        this._bag.setSpecialMode(false);
         this._stageConfig = config || {};
         this._garbageMask = this._createEmptyMask();
         this._garbageRemaining = 0;
@@ -1416,33 +1408,6 @@ class TetrisEngine {
     finishGame(reason) {
         if (this._state !== GameState.PLAYING) return;
         this._gameOver(reason || 'modeFinish');
-    }
-
-    /** 看广告复活：清除顶部溢出区域后恢复游戏（关卡失败复活复用） */
-    revive() {
-        if (this._state !== GameState.OVER) return false;
-
-        // 清除顶部溢出区域，为新方块留出生成空间
-        const clearTo = Math.min(HIDDEN_ROWS + 4, TOTAL_ROWS);
-        for (let r = 0; r < clearTo; r++) {
-            for (let c = 0; c < BOARD_COLS; c++) {
-                // 闯关模式：复活不误删垃圾格
-                if (this._garbageMask && this._garbageMask[r][c]) continue;
-                this._board[r][c] = EMPTY;
-            }
-        }
-
-        this._state = GameState.PLAYING;
-        this._currentPiece = null;
-        this._inLockDelay = false;
-        this._lockMoves = 0;
-        this._spawnPiece();
-        if (this._state === GameState.PLAYING) {
-            this._startDropTimer();
-        }
-        this._emit(this._onStateChange, this._state);
-        this._emit(this._onBoardChange, this.getVisibleBoard(), this.getCurrentPiece());
-        return true;
     }
 
     // ========================================================================

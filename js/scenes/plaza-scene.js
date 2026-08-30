@@ -13,6 +13,7 @@ const workshop = require('../../utils/workshop-manager');
 const goldenBlock = require('../../utils/golden-block-manager');
 const { coinManager } = require('../../utils/coin-manager');
 const { adManager, isRewardedVideoConfigured } = require('../../utils/ad-manager');
+const { drawGarbageMiniCell } = require('../render/garbage-cell');
 
 const PLAZA_SORT = [
     { id: 'official', label: '官方' },
@@ -21,9 +22,11 @@ const PLAZA_SORT = [
     { id: 'clearRate', label: '好通关' },
 ];
 
-/** 广场已通关标识：纯文字，不用背景/边框（避免像按钮） */
-const PLAZA_CLEARED = '#5cbc6a';
-const PLAZA_CLEARED_LABEL = '已通关';
+/** 与闯关已通关卡片一致的金色底/描边 */
+const PLAZA_CLEARED_FILL = 'rgba(255, 200, 87, 0.14)';
+const PLAZA_CLEARED_STROKE = 'rgba(255, 200, 87, 0.6)';
+const PLAZA_ROW_FILL = 'rgba(255, 255, 255, 0.08)';
+const PLAZA_ROW_STROKE = 'rgba(255, 255, 255, 0.14)';
 
 class PlazaScene {
     constructor() {
@@ -40,6 +43,7 @@ class PlazaScene {
         this._plazaLoading = false;
         this._plazaTabCache = {};
         this._plazaLoadGen = 0;
+        this._challengeBusy = false;
     }
 
     onEnter(params) {
@@ -53,6 +57,7 @@ class PlazaScene {
         this._moveSamples = [];
         this._plazaItems = [];
         this._plazaLoading = true;
+        this._challengeBusy = false;
         this._rebuild();
     }
 
@@ -304,13 +309,28 @@ class PlazaScene {
         const W = GameGlobal.game.width;
         const items = this._plazaItems || [];
         const rowH = 72;
+        const cbW = 92;
+        const cbH = 24;
+        const titleY = 22;
         items.forEach((stage, i) => {
+            const y = this._listTop + i * (rowH + 8) - this._scrollY;
+            const x = 12;
+            const w = W - 24;
+            const cleared = workshop.isPlazaCleared(stage.stageId);
+            const miniBoardX = x + w - 56;
+            const challengeBtn = cleared ? {
+                x: miniBoardX - 8 - cbW,
+                y: y + titleY - cbH / 2,
+                w: cbW,
+                h: cbH,
+            } : null;
             this._listRects.push({
                 stage,
-                x: 12,
-                y: this._listTop + i * (rowH + 8) - this._scrollY,
-                w: W - 24,
+                x,
+                y,
+                w,
                 h: rowH,
+                challengeBtn,
             });
         });
         this._listContentH = items.length * (rowH + 8);
@@ -365,6 +385,90 @@ class PlazaScene {
             },
             entryPaid: o.entryPaid || 0,
             dropIntervalMs: stage.dropIntervalMs || 1000,
+        });
+    }
+
+    /** 已通关广场关：创建残局挑战并分享 */
+    _startPlazaChallenge(stage) {
+        if (!stage || this._challengeBusy) return;
+        const best = workshop.getPlazaBest(stage.stageId);
+        if (!best || !(best.lines >= 1)) {
+            this._showToast('请再打一局以记录最佳成绩');
+            return;
+        }
+        if (!stage.rows) {
+            this._showToast('关卡布局不可用');
+            return;
+        }
+
+        let cloudService = null;
+        try {
+            ({ cloudService } = require('../../utils/cloud-service'));
+        } catch (e) {
+            cloudService = null;
+        }
+        if (!cloudService || !cloudService.isAvailable()) {
+            this._showToast('云开发未配置，无法发起挑战');
+            return;
+        }
+
+        this._challengeBusy = true;
+        this._showToast('创建挑战中…');
+
+        const layoutSnapshot = workshop.cloneRows(stage.rows);
+        const title = (stage.title || '广场关卡').slice(0, 20);
+
+        const { ensureProfileForAction } = require('../../utils/user-profile');
+        ensureProfileForAction({
+            title: '发起好友挑战',
+            content: '授权微信头像昵称后，好友能看到你的资料。也可暂不授权，使用默认昵称继续发起。',
+        }).then((profile) => cloudService.createChallenge({
+            mode: 'plaza',
+            workshopStageId: stage.stageId,
+            workshopTitle: title,
+            layoutSnapshot,
+            challengerLines: best.lines,
+            challengerPieces: best.pieces || 0,
+            challengerTimeMs: best.timeMs || 0,
+            nickname: (profile && profile.nickname) || '',
+            avatarUrl: (profile && profile.avatarUrl) || '',
+        })).then((res) => {
+            this._challengeBusy = false;
+            if (!res || !res.success || !res.challengeId) {
+                this._showToast((res && res.errMsg) || '发起失败');
+                return;
+            }
+            try {
+                workshop.bumpChallengeSend(stage.stageId);
+            } catch (e) { /* ignore */ }
+            try {
+                const { achievementManager } = require('../../utils/achievement-manager');
+                if (achievementManager && typeof achievementManager.reportChallengeCreate === 'function') {
+                    achievementManager.reportChallengeCreate();
+                }
+            } catch (e) { /* ignore */ }
+            try {
+                const challengeShareCard = require('../../utils/challenge-share-card');
+                const sharePayload = {
+                    mode: 'plaza',
+                    workshopStageId: stage.stageId,
+                    workshopTitle: title,
+                    layoutSnapshot,
+                    challengerLines: best.lines,
+                    challengerPieces: best.pieces || 0,
+                    challengerTimeMs: best.timeMs || 0,
+                };
+                challengeShareCard.shareWithCard({
+                    title: title + ' · ' + best.lines + ' 行，约老友来战！',
+                    query: 'challengeId=' + encodeURIComponent(res.challengeId),
+                    cardOpts: challengeShareCard.cardOptsFromPayload(sharePayload, { isCounter: false }),
+                });
+            } catch (e) {
+                this._showToast('挑战已创建，请从分享菜单发送给好友');
+            }
+        }).catch(() => {
+            this._challengeBusy = false;
+            this._showToast('发起失败');
         });
     }
 
@@ -426,40 +530,34 @@ class PlazaScene {
     }
 
     _drawRow(ctx, item) {
-        const { stage, x, y, w, h } = item;
+        const { stage, x, y, w, h, challengeBtn } = item;
         const cleared = workshop.isPlazaCleared(stage.stageId);
         const unlocked = workshop.isPlazaUnlocked(stage.stageId);
         const isOfficial = stage.source === 'official';
+        const best = cleared ? workshop.getPlazaBest(stage.stageId) : null;
 
-        ctx.fillStyle = 'rgba(255,255,255,0.08)';
+        ctx.fillStyle = cleared ? PLAZA_CLEARED_FILL : PLAZA_ROW_FILL;
         this._round(ctx, x, y, w, h, 10);
         ctx.fill();
+        ctx.strokeStyle = cleared ? PLAZA_CLEARED_STROKE : PLAZA_ROW_STROKE;
+        ctx.lineWidth = 1;
+        this._round(ctx, x, y, w, h, 10);
+        ctx.stroke();
 
         const miniBoardX = x + w - 56;
         const titleX = x + 12;
         const titleY = y + 22;
         const titleFont = 'bold 15px sans-serif';
-        const clearedFont = '12px sans-serif';
-        const clearedGap = cleared ? 6 : 0;
-
-        ctx.font = clearedFont;
-        const clearedW = cleared ? ctx.measureText(PLAZA_CLEARED_LABEL).width : 0;
-        const titleMaxW = miniBoardX - titleX - 8 - (cleared ? clearedGap + clearedW : 0);
+        const btnLeft = challengeBtn ? challengeBtn.x : miniBoardX;
+        const titleMaxW = btnLeft - titleX - 8;
 
         ctx.font = titleFont;
         const title = this._truncateText(ctx, stage.title || '未命名', Math.max(0, titleMaxW), titleFont);
 
-        ctx.fillStyle = '#fff';
+        ctx.fillStyle = cleared ? '#ffffff' : '#fff';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
         ctx.fillText(title, titleX, titleY);
-
-        const titleW = ctx.measureText(title).width;
-        if (cleared) {
-            ctx.fillStyle = PLAZA_CLEARED;
-            ctx.font = clearedFont;
-            ctx.fillText(PLAZA_CLEARED_LABEL, titleX + titleW + clearedGap, titleY);
-        }
 
         let sub = '垃圾 ' + (stage.garbageCount || 0)
             + ' · 行 ' + (stage.minLines || 0);
@@ -472,6 +570,26 @@ class PlazaScene {
         ctx.font = '12px sans-serif';
         ctx.textAlign = 'left';
         ctx.fillText(sub, x + 12, y + 48);
+
+        if (cleared && best && best.lines >= 1) {
+            ctx.textAlign = 'right';
+            ctx.fillStyle = MUTED;
+            ctx.fillText('最佳 ' + best.lines + ' 行', x + w - 12, y + 48);
+            ctx.textAlign = 'left';
+        }
+
+        if (cleared && challengeBtn) {
+            const cb = challengeBtn;
+            ctx.fillStyle = 'rgba(224, 154, 48, 0.92)';
+            this._round(ctx, cb.x, cb.y, cb.w, cb.h, 6);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 11px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('约老友来战', cb.x + cb.w / 2, cb.y + cb.h / 2);
+            ctx.textAlign = 'left';
+        }
 
         this._drawMiniBoard(ctx, stage.rows, x + w - 56, y + 10, 4);
     }
@@ -494,8 +612,7 @@ class PlazaScene {
             const line = r[String(y)];
             for (let x = 0; x < 10; x++) {
                 if (line[x] === '#') {
-                    ctx.fillStyle = '#c9a227';
-                    ctx.fillRect(ox + x * cell, oy + (y - 10) * cell, cell - 0.5, cell - 0.5);
+                    drawGarbageMiniCell(ctx, ox + x * cell, oy + (y - 10) * cell, cell - 0.5);
                 }
             }
         }
@@ -562,17 +679,12 @@ class PlazaScene {
         ctx.font = '13px sans-serif';
         const feeLine = '开打消耗 ' + d.fee + ' 金币';
         const cleared = workshop.isPlazaCleared(d.stage.stageId);
-        const clearedSuffix = cleared ? '（已通关）' : '';
-        const lineW = ctx.measureText(feeLine + clearedSuffix).width;
-        let lx = W / 2 - lineW / 2;
-        ctx.textAlign = 'left';
-        ctx.fillText(feeLine, lx, py + 68);
-        if (cleared) {
-            lx += ctx.measureText(feeLine).width;
-            ctx.fillStyle = PLAZA_CLEARED;
-            ctx.fillText(clearedSuffix, lx, py + 68);
-        }
+        const best = cleared ? workshop.getPlazaBest(d.stage.stageId) : null;
+        const infoLine = (cleared && best && best.lines >= 1)
+            ? (feeLine + ' · 最佳 ' + best.lines + ' 行')
+            : feeLine;
         ctx.textAlign = 'center';
+        ctx.fillText(infoLine, W / 2, py + 68);
 
         const btnW = bw - 40;
         let by = py + 100;
@@ -723,6 +835,14 @@ class PlazaScene {
         }
 
         if (y >= this._listTop && y <= this._listBottom) {
+            for (let i = 0; i < this._listRects.length; i++) {
+                const item = this._listRects[i];
+                const cb = item.challengeBtn;
+                if (cb && this._hit(x, y, cb)) {
+                    this._startPlazaChallenge(item.stage);
+                    return;
+                }
+            }
             for (let i = 0; i < this._listRects.length; i++) {
                 const item = this._listRects[i];
                 if (this._hit(x, y, item)) {

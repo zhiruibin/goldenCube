@@ -74,11 +74,6 @@ class AchievementManager {
         return this.checkAll();
     }
 
-    /** 兼容旧局末上报（经典模式遗留）；闯关请用 reportStageProgress */
-    reportGameResult() {
-        return this.checkAll();
-    }
-
     reportLineClear() { return []; }
     reportTSpin() { return []; }
     reportUseAllPieces() { return []; }

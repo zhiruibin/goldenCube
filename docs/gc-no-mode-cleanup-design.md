@@ -1,6 +1,6 @@
 # 挖个方块 · 「模式」残留纠正设计
 
-> 状态：**设计定稿，分阶段改代码**  
+> 状态：**P0–P2 已落地（2026-08-30）**  
 > 背景：产品从「方块过把瘾 / tetris-mini」fork 而来，UI 与经济文档已明确**没有**经典 / 限时 / 马拉松等「模式」；但引擎、结算、挑战、回放、云配置仍大量使用 `mode` 与旧模式名，易造成无效改动与二次污染。  
 > 对齐：[`gc-economy-design.md`](./gc-economy-design.md) §3、「产品只有章节残局闯关」；[`gc-workshop-plaza-design.md`](./gc-workshop-plaza-design.md)。
 
@@ -52,18 +52,16 @@
 | 闯关 / 广场开打 | 多数传 `mode: 'stage'` + `stageId` / workshop 布局 |
 | 经济 / 工坊设计文档 | 已写死「无经典限时马拉松」 |
 
-### 2.2 仍是旧作逻辑（需纠正）
+### 2.2 已纠正（2026-08-30）
 
-| 位置 | 问题 |
+| 位置 | 处理 |
 |------|------|
-| `game-scene.js` | 默认 `_mode = 'classic'`；仍有 `timed` 倒计时、`marathon` 目标行、经典复活分支 |
-| `tetris-engine.js` | `setMode` 默认 `classic`，保留旧模式行为 |
-| `result-scene.js` | `_modeName`、按 `mode` 存 `gc_bestScore_*`、重开带 `mode: classic` |
-| `challenge-result-scene.js` | `MODE_NAMES` 含经典/限时/马拉松；标题区展示「经典模式」 |
-| `utils/cloud-config.js` | `CHALLENGE_MODES` 仍含 `classic/timed/marathon/special`；`MODE_NAMES` 仍有旧名 |
-| `challenge` 云函数 README / 示例 | 示例 `mode: "classic"` |
-| `replay-scene.js` | 缺省 `classic`；非 classic 才附加「模式」文案 |
-| 回放 `meta.mode` | 混用 `stage` / `classic`，语义不清 |
+| `game-scene.js` | 删除 classic 复活、内嵌摇奖、`_goToResult`、`challengeLaunch`；开局 `normalizeGameParams` |
+| `challenge-result-scene.js` | **已删除**（分数挑战遗留） |
+| `result-scene.js` | 收窄为好友挑战应战结算；去掉 `gc_bestScore`、T-Spin 统计、普通局/广告双倍 |
+| `tetris-engine.js` | `setMode` 固定 stage；删除 `revive()` |
+| `shop` / `skins` | `score_10000` → `stages_cleared_10` |
+| `utils/play-context.js` | 新增 `playContext` / `challengeKind` 适配层 |
 
 ### 2.3 易混淆点（改时最容易改错）
 
@@ -173,4 +171,5 @@
 
 | 日期 | 说明 |
 |------|------|
+| 2026-08-30 | P0–P2 代码落地：删 challengeResult、收窄 result、play-context 适配、引擎/商店清理 |
 | 2026-08-30 | 初稿：厘清无「模式」、盘点残留、playContext/challengeKind、分阶段与禁止项 |

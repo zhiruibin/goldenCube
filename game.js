@@ -121,7 +121,6 @@ function onStart() {
     const SettingsScene = require('./js/scenes/settings-scene');
     const AchievementScene = require('./js/scenes/achievement-scene');
     const ChallengeScene = require('./js/scenes/challenge-scene');
-    const ChallengeResultScene = require('./js/scenes/challenge-result-scene');
     const ReplayScene = require('./js/scenes/replay-scene');
     const StageSelectScene = require('./js/scenes/stage-select-scene');
     const StageResultScene = require('./js/scenes/stage-result-scene');
@@ -138,7 +137,6 @@ function onStart() {
     GameGlobal.game.sceneManager.register('settings', SettingsScene);
     GameGlobal.game.sceneManager.register('achievement', AchievementScene);
     GameGlobal.game.sceneManager.register('challenge', ChallengeScene);
-    GameGlobal.game.sceneManager.register('challengeResult', ChallengeResultScene);
     GameGlobal.game.sceneManager.register('replay', ReplayScene);
     GameGlobal.game.sceneManager.register('stageSelect', StageSelectScene);
     GameGlobal.game.sceneManager.register('stageResult', StageResultScene);

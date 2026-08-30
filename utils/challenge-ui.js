@@ -15,15 +15,20 @@ function isPuzzleChallenge(rec) {
     return false;
 }
 
+function challengeKind(rec) {
+    if (!rec) return 'stage';
+    return rec.challengeKind || rec.challengeMode || rec.mode || 'stage';
+}
+
 function challengeTitle(rec) {
     if (!rec) return '好友挑战';
-    return rec.workshopTitle || rec.stageTitle || MODE_NAMES[rec.mode] || '闯关挑战';
+    return rec.workshopTitle || rec.stageTitle || MODE_NAMES[challengeKind(rec)] || '闯关挑战';
 }
 
 function modeLabel(rec) {
     if (!rec) return MODE_NAMES.stage || '闯关挑战';
     if (rec.workshopTitle) return rec.workshopTitle;
-    return MODE_NAMES[rec.mode] || rec.mode || '挑战';
+    return MODE_NAMES[challengeKind(rec)] || '挑战';
 }
 
 function formatLines(lines) {
@@ -278,6 +283,7 @@ function mergeSyncIntoResult(res) {
 module.exports = {
     BRAND_NAME,
     isPuzzleChallenge,
+    challengeKind,
     challengeTitle,
     modeLabel,
     formatLines,

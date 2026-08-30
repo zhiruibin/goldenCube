@@ -13,7 +13,7 @@ const KEYS = {
     stages: 'gc_workshop_stages',
     slotCap: 'gc_workshop_slotCap',
     unlockedPlaza: 'gc_workshop_plazaUnlocked',
-    clearedPlaza: 'gc_workshop_plazaCleared', // { [stageId]: { firstAt, date, clearsToday } }
+    clearedPlaza: 'gc_workshop_plazaCleared', // { [stageId]: { firstAt, date, clearsToday, best? } }
     submitDaily: 'gc_workshop_submitDaily',
     freePlayDaily: 'gc_workshop_freePlayDaily',
     authorShareDaily: 'gc_workshop_authorShareDaily',
@@ -703,6 +703,26 @@ function isPlazaCleared(stageId) {
     return !!(rec && (rec.firstAt || rec.clearsToday > 0 || rec.date));
 }
 
+function _isValidPlazaBest(rec) {
+    return rec && typeof rec.lines === 'number' && rec.lines >= 1;
+}
+
+function _plazaIsBetter(a, b) {
+    if (!_isValidPlazaBest(b)) return true;
+    if (a.lines !== b.lines) return a.lines < b.lines;
+    if ((a.pieces || 0) !== (b.pieces || 0)) return (a.pieces || 0) < (b.pieces || 0);
+    return (a.timeMs || 0) < (b.timeMs || 0);
+}
+
+/** 广场关个人最佳（消行越少越好）；须已通关且有有效纪录 */
+function getPlazaBest(stageId) {
+    if (!stageId) return null;
+    const map = _loadJson(KEYS.clearedPlaza, {}) || {};
+    const rec = map[stageId];
+    if (!rec || !rec.best || !_isValidPlazaBest(rec.best)) return null;
+    return rec.best;
+}
+
 /** 已通关的不同广场关卡数（按 stageId 去重，含官方/UGC） */
 function getPlazaClearedCount() {
     const map = _loadJson(KEYS.clearedPlaza, {}) || {};
@@ -911,6 +931,14 @@ function rewardPlazaClear(stageId, lines, pieces, timeMs) {
     }
     rec.clearsToday += 1;
     if (firstClear) rec.firstAt = Date.now();
+    const attempt = {
+        lines: Math.max(1, Math.floor(Number(lines) || 0)),
+        pieces: Math.max(0, Math.floor(Number(pieces) || 0)),
+        timeMs: Math.max(0, Math.floor(Number(timeMs) || 0)),
+    };
+    if (!_isValidPlazaBest(rec.best) || _plazaIsBetter(attempt, rec.best)) {
+        rec.best = attempt;
+    }
     clearedMap[stageId] = rec;
     _saveJson(KEYS.clearedPlaza, clearedMap);
 
@@ -1016,6 +1044,7 @@ module.exports = {
     isPlazaUnlocked,
     unlockPlazaStage,
     isPlazaCleared,
+    getPlazaBest,
     getPlazaClearedCount,
     getPlazaUnlockedCount,
     getPlazaOfficialClearedCount,

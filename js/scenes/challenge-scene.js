@@ -326,7 +326,7 @@ class ChallengeScene {
     const y0 = sheetY + 52;
     const modes = [
       { mode: 'stageSelect', label: '闯关选关发起', hint: '在已通关关卡上点「挑战」', color: '#e09a30' },
-      { mode: 'workshop', label: '去工坊发起', hint: '选择已自通的工坊关', color: '#2ecc71' },
+      { mode: 'plaza', label: '去关卡广场', hint: '在已通关的广场关点「约老友来战」', color: '#2ecc71' },
     ];
     for (let i = 0; i < modes.length; i++) {
       const m = modes[i];
@@ -418,7 +418,7 @@ class ChallengeScene {
     if (this._sentList.length === 0) {
       this._renderEmptyState(ctx, top, bottom, {
         title: '还没有发出的挑战',
-        hint: '在已通关关卡或工坊关上发起挑战',
+        hint: '在已通关的闯关关或广场关上发起挑战',
         cta: '去选关',
         ctaAction: 'play',
       });
@@ -980,8 +980,8 @@ class ChallengeScene {
       for (const area of this._modeAreas) {
         if (x >= area.x && x <= area.x + area.w && y >= area.y && y <= area.y + area.h) {
           this._sheetOpen = false;
-          if (area.mode === 'workshop') {
-            GameGlobal.game.sceneManager.switchTo('workshop');
+          if (area.mode === 'plaza') {
+            GameGlobal.game.sceneManager.switchTo('plaza', {}, ['home']);
           } else {
             GameGlobal.game.sceneManager.switchTo('stageSelect');
           }
