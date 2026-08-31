@@ -13,7 +13,8 @@ const workshop = require('../../utils/workshop-manager');
 const goldenBlock = require('../../utils/golden-block-manager');
 const { coinManager } = require('../../utils/coin-manager');
 const { adManager, isRewardedVideoConfigured } = require('../../utils/ad-manager');
-const { drawGarbageMiniCell } = require('../render/garbage-cell');
+const { drawGarbageLayoutCell } = require('../render/garbage-cell');
+const { drawLayoutBoardTiles } = require('../render/board-tiles');
 
 const PLAZA_SORT = [
     { id: 'official', label: '官方' },
@@ -22,11 +23,11 @@ const PLAZA_SORT = [
     { id: 'clearRate', label: '好通关' },
 ];
 
-/** 与闯关已通关卡片一致的金色底/描边 */
-const PLAZA_CLEARED_FILL = 'rgba(255, 200, 87, 0.14)';
-const PLAZA_CLEARED_STROKE = 'rgba(255, 200, 87, 0.6)';
-const PLAZA_ROW_FILL = 'rgba(255, 255, 255, 0.08)';
-const PLAZA_ROW_STROKE = 'rgba(255, 255, 255, 0.14)';
+/** 与闯关解锁/已通关卡片一致的金色底/描边 */
+const PLAZA_UNLOCKED_FILL = 'rgba(255, 200, 87, 0.14)';
+const PLAZA_UNLOCKED_STROKE = 'rgba(255, 200, 87, 0.6)';
+const PLAZA_LOCKED_FILL = 'rgba(255, 255, 255, 0.05)';
+const PLAZA_LOCKED_STROKE = 'rgba(255, 255, 255, 0.14)';
 
 class PlazaScene {
     constructor() {
@@ -309,7 +310,7 @@ class PlazaScene {
         const W = GameGlobal.game.width;
         const items = this._plazaItems || [];
         const rowH = 72;
-        const cbW = 92;
+        const cbW = 88;
         const cbH = 24;
         const titleY = 22;
         items.forEach((stage, i) => {
@@ -459,7 +460,7 @@ class PlazaScene {
                     challengerTimeMs: best.timeMs || 0,
                 };
                 challengeShareCard.shareWithCard({
-                    title: title + ' · ' + best.lines + ' 行，约老友来战！',
+                    title: title + ' · ' + best.lines + ' 行，约好友来战！',
                     query: 'challengeId=' + encodeURIComponent(res.challengeId),
                     cardOpts: challengeShareCard.cardOptsFromPayload(sharePayload, { isCounter: false }),
                 });
@@ -536,10 +537,10 @@ class PlazaScene {
         const isOfficial = stage.source === 'official';
         const best = cleared ? workshop.getPlazaBest(stage.stageId) : null;
 
-        ctx.fillStyle = cleared ? PLAZA_CLEARED_FILL : PLAZA_ROW_FILL;
+        ctx.fillStyle = unlocked ? PLAZA_UNLOCKED_FILL : PLAZA_LOCKED_FILL;
         this._round(ctx, x, y, w, h, 10);
         ctx.fill();
-        ctx.strokeStyle = cleared ? PLAZA_CLEARED_STROKE : PLAZA_ROW_STROKE;
+        ctx.strokeStyle = unlocked ? PLAZA_UNLOCKED_STROKE : PLAZA_LOCKED_STROKE;
         ctx.lineWidth = 1;
         this._round(ctx, x, y, w, h, 10);
         ctx.stroke();
@@ -554,7 +555,7 @@ class PlazaScene {
         ctx.font = titleFont;
         const title = this._truncateText(ctx, stage.title || '未命名', Math.max(0, titleMaxW), titleFont);
 
-        ctx.fillStyle = cleared ? '#ffffff' : '#fff';
+        ctx.fillStyle = unlocked ? '#ffffff' : MUTED;
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
         ctx.fillText(title, titleX, titleY);
@@ -562,8 +563,10 @@ class PlazaScene {
         let sub = '垃圾 ' + (stage.garbageCount || 0)
             + ' · 行 ' + (stage.minLines || 0);
         if (isOfficial) sub += ' · 官方';
-        if (!cleared) {
-            sub += unlocked ? ' · 已解锁' : ' · 需1金解锁';
+        if (!unlocked) {
+            sub += ' · 需1金解锁';
+        } else if (!cleared) {
+            sub += ' · 已解锁';
         }
         sub += ' · 全服通关' + ((stage.stats && stage.stats.clearCount) || 0);
         ctx.fillStyle = MUTED;
@@ -580,14 +583,14 @@ class PlazaScene {
 
         if (cleared && challengeBtn) {
             const cb = challengeBtn;
-            ctx.fillStyle = 'rgba(224, 154, 48, 0.92)';
+            ctx.fillStyle = 'rgba(224, 154, 48, 0.9)';
             this._round(ctx, cb.x, cb.y, cb.w, cb.h, 6);
             ctx.fill();
             ctx.fillStyle = '#ffffff';
             ctx.font = 'bold 11px sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText('约老友来战', cb.x + cb.w / 2, cb.y + cb.h / 2);
+            ctx.fillText('约好友来战', cb.x + cb.w / 2, cb.y + cb.h / 2);
             ctx.textAlign = 'left';
         }
 
@@ -607,12 +610,27 @@ class PlazaScene {
     }
 
     _drawMiniBoard(ctx, rows, ox, oy, cell) {
+        const cols = 10;
+        const visRows = 10;
         const r = workshop.cloneRows(rows);
+        const occ = [];
+        for (let y = 10; y < 20; y++) {
+            const rowIdx = y - 10;
+            occ[rowIdx] = [];
+            const line = r[String(y)] || '';
+            for (let x = 0; x < cols; x++) {
+                occ[rowIdx][x] = line[x] === '#';
+            }
+        }
+        if (!drawLayoutBoardTiles(ctx, ox, oy, cols, visRows, cell, occ)) {
+            ctx.fillStyle = 'rgba(0,0,0,0.35)';
+            ctx.fillRect(ox, oy, cols * cell, visRows * cell);
+        }
         for (let y = 10; y < 20; y++) {
             const line = r[String(y)];
-            for (let x = 0; x < 10; x++) {
+            for (let x = 0; x < cols; x++) {
                 if (line[x] === '#') {
-                    drawGarbageMiniCell(ctx, ox + x * cell, oy + (y - 10) * cell, cell - 0.5);
+                    drawGarbageLayoutCell(ctx, ox + x * cell, oy + (y - 10) * cell, cell - 0.5, x, y);
                 }
             }
         }

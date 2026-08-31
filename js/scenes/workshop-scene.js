@@ -13,7 +13,8 @@ const workshop = require('../../utils/workshop-manager');
 const goldenBlock = require('../../utils/golden-block-manager');
 const { coinManager } = require('../../utils/coin-manager');
 const { achievementManager } = require('../../utils/achievement-manager');
-const { drawGarbageMiniCell } = require('../render/garbage-cell');
+const { drawGarbageLayoutCell } = require('../render/garbage-cell');
+const { drawLayoutBoardTiles } = require('../render/board-tiles');
 const { adManager, isRewardedVideoConfigured } = require('../../utils/ad-manager');
 
 const STATUS_TABS = [
@@ -634,12 +635,27 @@ class WorkshopScene {
     }
 
     _drawMiniBoard(ctx, rows, ox, oy, cell) {
+        const cols = 10;
+        const visRows = 10;
         const r = workshop.cloneRows(rows);
+        const occ = [];
+        for (let y = 10; y < 20; y++) {
+            const rowIdx = y - 10;
+            occ[rowIdx] = [];
+            const line = r[String(y)] || '';
+            for (let x = 0; x < cols; x++) {
+                occ[rowIdx][x] = line[x] === '#';
+            }
+        }
+        if (!drawLayoutBoardTiles(ctx, ox, oy, cols, visRows, cell, occ)) {
+            ctx.fillStyle = 'rgba(0,0,0,0.35)';
+            ctx.fillRect(ox, oy, cols * cell, visRows * cell);
+        }
         for (let y = 10; y < 20; y++) {
             const line = r[String(y)];
-            for (let x = 0; x < 10; x++) {
+            for (let x = 0; x < cols; x++) {
                 if (line[x] === '#') {
-                    drawGarbageMiniCell(ctx, ox + x * cell, oy + (y - 10) * cell, cell - 0.5);
+                    drawGarbageLayoutCell(ctx, ox + x * cell, oy + (y - 10) * cell, cell - 0.5, x, y);
                 }
             }
         }

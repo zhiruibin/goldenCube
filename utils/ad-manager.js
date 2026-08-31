@@ -40,6 +40,11 @@ function isRewardedVideoConfigured() {
   return isAdUnitIdReady(AD_UNIT_IDS.rewardedVideo);
 }
 
+/** Banner 广告位是否已配置（与激励视频同理，供首页占位/广告切换） */
+function isBannerConfigured() {
+  return isAdUnitIdReady(AD_UNIT_IDS.banner);
+}
+
 // 频率控制配置（单位：毫秒）
 const FREQUENCY_CONFIG = {
   rewardedVideo: { interval: 60000, maxPerSession: 10 },   // 激励视频：60s 间隔，单次会话最多 10 次
@@ -758,5 +763,6 @@ module.exports = {
   AdManager,
   adManager,
   isRewardedVideoConfigured,
+  isBannerConfigured,
   isAdUnitIdReady,
 };

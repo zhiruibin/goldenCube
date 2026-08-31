@@ -14,6 +14,7 @@ class MiniTetrisFx {
 
   init(layout) {
     this._layout = layout || {};
+    this._interactive = layout.interactive !== false;
     let on = wx.getStorageSync('gc_setting_miniFx') !== false;
     let lowEnd = false;
     try {
@@ -54,7 +55,7 @@ class MiniTetrisFx {
   }
 
   _startListening() {
-    if (this._listening || !wx.onTouchStart) return;
+    if (!this._interactive || this._listening || !wx.onTouchStart) return;
     try {
       this._onTouch = (e) => {
         if (!e.touches || !e.touches.length) return;
@@ -99,10 +100,17 @@ class MiniTetrisFx {
     const W = this._layout.width;
     const H = this._layout.height;
     const bottomSafe = this._layout.bottomSafe || 0;
-    const controlBottom = this._layout.controlBottom || 0;
+    const controlBottom = this._layout.controlBottom;
 
-    const areaTop = controlBottom + 6;
-    const areaBottom = H - bottomSafe - 6;
+    let areaTop;
+    let areaBottom;
+    if (typeof this._layout.areaTop === 'number' && typeof this._layout.areaBottom === 'number') {
+      areaTop = this._layout.areaTop;
+      areaBottom = this._layout.areaBottom;
+    } else {
+      areaTop = (controlBottom || 0) + 6;
+      areaBottom = H - bottomSafe - 6;
+    }
     const areaH = areaBottom - areaTop;
 
     let cell = Math.max(6, Math.min(10, Math.floor((W - 48) / 28)));

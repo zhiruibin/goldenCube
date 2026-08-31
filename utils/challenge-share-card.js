@@ -5,6 +5,7 @@
  */
 
 const challengeUi = require('./challenge-ui');
+const { drawGarbageLayoutCell } = require('../js/render/garbage-cell');
 const {
     ACCENT,
     SUBTITLE,
@@ -105,12 +106,7 @@ function drawMiniBoard(ctx, rows, cx, cy, maxW, maxH) {
             const iy = y - minY;
             const px = ox + ix * (cell + gap);
             const py = oy + iy * (cell + gap);
-            ctx.fillStyle = AMBIENT_PIECE_COLORS[(x + y) % AMBIENT_PIECE_COLORS.length];
-            roundRect(ctx, px, py, cell, cell, Math.max(2, cell * 0.22));
-            ctx.fill();
-            ctx.fillStyle = 'rgba(255,255,255,0.18)';
-            roundRect(ctx, px + 1, py + 1, cell - 2, Math.max(2, cell * 0.35), 2);
-            ctx.fill();
+            drawGarbageLayoutCell(ctx, px, py, cell, x, y);
         }
     }
     return true;

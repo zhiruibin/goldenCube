@@ -156,11 +156,19 @@ const boardSkins = [
     name: '经典',
     price: 0,
     unlockCondition: 'default',
-    description: '夜场街机深色棋盘',
+    description: '格槽铺砖 · 圆角盘面',
     style: {
-      background: '#161d30',
+      background: '#0c101c',
+      gridMode: 'tiles',
+      cellLight: '#1a2236',
+      cellDark: '#141b2c',
+      cellGap: 2,
+      cellInsetBevel: true,
+      borderColor: '#2a3550',
+      frameRadius: 10,
+      frameGlow: 'rgba(88, 118, 188, 0.16)',
+      framePadding: 4,
       gridColor: 'rgba(255, 245, 230, 0.16)',
-      borderColor: '#243050',
       gridLineWidth: 1
     }
   },

@@ -114,6 +114,10 @@ class DPadButton {
      * @param {CanvasRenderingContext2D} ctx
      */
     render(ctx) {
+        const cx = this.x;
+        const cy = this.y;
+        const r = this.radius;
+
         // 连发脉冲动画
         let pulseAlpha = 0;
         if (this._arrActive) {
@@ -121,34 +125,80 @@ class DPadButton {
             pulseAlpha = 0.15 * (0.5 + 0.5 * Math.sin(this._pulsePhase));
         }
 
-        // 背景圆
-        if (this._pressed) {
-            ctx.fillStyle = this._darken(this.color, 0.35);
-        } else {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+        ctx.save();
+
+        if (!this._pressed) {
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+            ctx.shadowBlur = Math.max(3, r * 0.26);
+            ctx.shadowOffsetY = Math.max(2, r * 0.12);
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.02)';
+            ctx.beginPath();
+            ctx.arc(cx, cy, r - 0.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetY = 0;
         }
+
+        let bodyGrad;
+        try {
+            bodyGrad = ctx.createLinearGradient(cx, cy - r, cx, cy + r);
+            if (this._pressed) {
+                bodyGrad.addColorStop(0, this._darken(this.color, 0.62));
+                bodyGrad.addColorStop(0.5, this._darken(this.color, 0.48));
+                bodyGrad.addColorStop(1, this._darken(this.color, 0.35));
+            } else {
+                bodyGrad.addColorStop(0, this._lighten(this.color, 1.18));
+                bodyGrad.addColorStop(0.45, this.color);
+                bodyGrad.addColorStop(1, this._darken(this.color, 0.72));
+            }
+        } catch (e) {
+            bodyGrad = null;
+        }
+        ctx.fillStyle = bodyGrad || (this._pressed ? this._darken(this.color, 0.55) : this.color);
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
         ctx.fill();
 
-        // 边框
-        if (this._pressed) {
-            ctx.strokeStyle = this.color;
-            ctx.lineWidth = 2;
-        } else {
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-            ctx.lineWidth = 1;
-        }
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.arc(cx, cy, r - 0.5, 0, Math.PI * 2);
+        ctx.clip();
+        let gloss;
+        try {
+            gloss = ctx.createLinearGradient(cx, cy - r, cx, cy + r * 0.4);
+            gloss.addColorStop(0, this._pressed ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)');
+            gloss.addColorStop(0.42, 'rgba(255,255,255,0.05)');
+            gloss.addColorStop(1, 'rgba(255,255,255,0)');
+        } catch (e) {
+            gloss = null;
+        }
+        if (gloss) {
+            ctx.fillStyle = gloss;
+            ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+        }
+        if (this._pressed) {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.fillRect(cx - r, cy, r * 2, r);
+        }
+        ctx.restore();
+
+        ctx.strokeStyle = this._pressed
+            ? this._lighten(this.color, 1.12)
+            : 'rgba(255, 255, 255, 0.28)';
+        ctx.lineWidth = this._pressed ? 2 : 1.25;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r - 0.5, 0, Math.PI * 2);
         ctx.stroke();
 
-        // 绘制三角形箭头（Canvas路径，跨设备一致）
-        const alpha = this._pressed ? Math.min(0.95 + pulseAlpha, 1) : 0.5;
-        ctx.fillStyle = this._pressed
-            ? `rgba(255, 255, 255, ${alpha})`
-            : 'rgba(255, 255, 255, 0.5)';
-        const s = this.radius * 0.45;
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r - 1.5, Math.PI * 0.12, Math.PI * 0.88);
+        ctx.stroke();
+
+        const alpha = this._pressed ? Math.min(0.95 + pulseAlpha, 1) : 0.82;
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+        const s = r * 0.45;
         ctx.beginPath();
         if (this.direction === 'left') {
             ctx.moveTo(this.x - s, this.y);
@@ -158,7 +208,7 @@ class DPadButton {
             ctx.moveTo(this.x + s, this.y);
             ctx.lineTo(this.x - s * 0.7, this.y - s);
             ctx.lineTo(this.x - s * 0.7, this.y + s);
-        } else { // down
+        } else {
             ctx.moveTo(this.x, this.y + s);
             ctx.lineTo(this.x - s, this.y - s * 0.7);
             ctx.lineTo(this.x + s, this.y - s * 0.7);
@@ -175,6 +225,13 @@ class DPadButton {
         const g = parseInt(hex.slice(3, 5), 16);
         const b = parseInt(hex.slice(5, 7), 16);
         return `rgb(${Math.floor(r * factor)}, ${Math.floor(g * factor)}, ${Math.floor(b * factor)})`;
+    }
+
+    _lighten(hex, factor) {
+        const r = Math.min(255, Math.floor(parseInt(hex.slice(1, 3), 16) * factor));
+        const g = Math.min(255, Math.floor(parseInt(hex.slice(3, 5), 16) * factor));
+        const b = Math.min(255, Math.floor(parseInt(hex.slice(5, 7), 16) * factor));
+        return `rgb(${r}, ${g}, ${b})`;
     }
 
     /**

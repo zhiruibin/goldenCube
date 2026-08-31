@@ -326,7 +326,7 @@ class ChallengeScene {
     const y0 = sheetY + 52;
     const modes = [
       { mode: 'stageSelect', label: '闯关选关发起', hint: '在已通关关卡上点「挑战」', color: '#e09a30' },
-      { mode: 'plaza', label: '去关卡广场', hint: '在已通关的广场关点「约老友来战」', color: '#2ecc71' },
+      { mode: 'plaza', label: '去关卡广场', hint: '在已通关的广场关点「约好友来战」', color: '#2ecc71' },
     ];
     for (let i = 0; i < modes.length; i++) {
       const m = modes[i];

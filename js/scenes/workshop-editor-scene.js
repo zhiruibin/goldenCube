@@ -10,6 +10,8 @@ const {
     SUBTITLE,
 } = require('../theme/arcade-night');
 const workshop = require('../../utils/workshop-manager');
+const { drawGarbageLayoutCell } = require('../render/garbage-cell');
+const { drawLayoutBoardTiles } = require('../render/board-tiles');
 
 class WorkshopEditorScene {
     constructor() {
@@ -121,10 +123,10 @@ class WorkshopEditorScene {
         const toolsY = H - 150;
         const tw = (W - 40) / 4;
         const tools = [
-            { id: 'paint', label: '绘制', color: '#c9a227' },
-            { id: 'erase', label: '橡皮', color: '#666' },
-            { id: 'clear', label: '清空', color: '#a04040' },
-            { id: 'mirror', label: '镜像', color: '#3a7ab0' },
+            { id: 'paint', label: '绘制', color: '#c9a227', toggle: true },
+            { id: 'erase', label: '橡皮', color: '#6eb5d0', toggle: true },
+            { id: 'clear', label: '清空', color: '#a04040', toggle: false },
+            { id: 'mirror', label: '镜像', color: '#3a7ab0', toggle: false },
         ];
         tools.forEach((t, i) => {
             this._buttons.push(new Button({
@@ -133,7 +135,7 @@ class WorkshopEditorScene {
                 w: tw,
                 h: 40,
                 text: t.label,
-                color: this._tool === t.id ? t.color : '#444',
+                color: t.toggle && this._tool === t.id ? t.color : '#444',
                 onClick: () => {
                     if (t.id === 'clear') {
                         this._pushUndo();
@@ -389,15 +391,26 @@ class WorkshopEditorScene {
             metaY
         );
 
-        ctx.fillStyle = 'rgba(0,0,0,0.35)';
-        ctx.fillRect(this._boardX - 2, this._boardY - 2, this._boardW + 4, this._boardH + 4);
+        const occ = [];
+        for (let r = 0; r < 20; r++) {
+            occ[r] = [];
+            const line = this._rows[String(r)] || '';
+            for (let c = 0; c < 10; c++) {
+                occ[r][c] = line[c] === '#';
+            }
+        }
+        if (!drawLayoutBoardTiles(ctx, this._boardX, this._boardY, 10, 20, this._cell, occ)) {
+            ctx.fillStyle = 'rgba(0,0,0,0.35)';
+            ctx.fillRect(this._boardX - 2, this._boardY - 2, this._boardW + 4, this._boardH + 4);
+        }
         for (let r = 0; r < 20; r++) {
             const line = this._rows[String(r)];
             for (let c = 0; c < 10; c++) {
-                const x = this._boardX + c * this._cell;
-                const y = this._boardY + r * this._cell;
-                ctx.fillStyle = line[c] === '#' ? '#c9a227' : 'rgba(255,255,255,0.06)';
-                ctx.fillRect(x + 0.5, y + 0.5, this._cell - 1, this._cell - 1);
+                const px = this._boardX + c * this._cell;
+                const py = this._boardY + r * this._cell;
+                if (line[c] === '#') {
+                    drawGarbageLayoutCell(ctx, px + 0.5, py + 0.5, this._cell - 1, c, r);
+                }
             }
         }
         ctx.strokeStyle = 'rgba(255,100,100,0.45)';

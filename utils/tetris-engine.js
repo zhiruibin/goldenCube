@@ -205,6 +205,7 @@ class TetrisEngine {
         this._garbageMask = null;
         this._garbageRemaining = 0;
         this._stageConfig = null;
+        this._stageFirstPiecePending = null;
         this._stageSettle = null;
         this._stageSettleAnim = null;
 
@@ -244,6 +245,7 @@ class TetrisEngine {
         this._garbageMask = this._createEmptyMask();
         this._garbageRemaining = 0;
         this._stageConfig = null;
+        this._stageFirstPiecePending = null;
         this._stageSettle = null;
         this._stageSettleAnim = null;
         this._state = GameState.READY;
@@ -626,7 +628,11 @@ class TetrisEngine {
     // ========================================================================
 
     _spawnPiece() {
-        const type = this._bag.next();
+        let type = this._bag.next();
+        if (this._stageFirstPiecePending) {
+            type = this._stageFirstPiecePending;
+            this._stageFirstPiecePending = null;
+        }
         this._initPiece(type, 0);
         this._canHold = true;
     }
@@ -1311,12 +1317,17 @@ class TetrisEngine {
      * 闯关模式：注入固定开局布局（stages-v1.json 的 rows 字段）。
      * 注意：须在 init() 之后、start() 之前调用；行号为可见行号（0=顶部）。
      * @param {Object} layout 行号字符串 -> 10 字符行字符串（'#' 垃圾 / '.' 空）
-     * @param {Object} config 可选：{ dropIntervalMs }
+     * @param {Object} config 可选：{ dropIntervalMs, firstPiece }
      * @returns {{garbageCount: number, minLines: number}}
      */
     initStage(layout, config) {
         this._mode = 'stage';
         this._stageConfig = config || {};
+        this._stageFirstPiecePending = null;
+        const fp = this._stageConfig.firstPiece;
+        if (fp && TYPE_TO_VALUE[fp]) {
+            this._stageFirstPiecePending = fp;
+        }
         this._garbageMask = this._createEmptyMask();
         this._garbageRemaining = 0;
         if (layout) {

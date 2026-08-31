@@ -642,6 +642,7 @@ class GameScene {
             if (stage) {
                 this._stageInfo = this._engine.initStage(stage.rows, {
                     dropIntervalMs: stage.dropIntervalMs,
+                    firstPiece: stage.firstPiece,
                 });
             }
         } else if (this._mode === 'stage' && this._workshop && this._workshopRows) {
@@ -935,7 +936,7 @@ class GameScene {
             y: leftRightY,
             radius: r,
             direction: 'left',
-            color: '#00c6ff',
+            color: '#34889c',
             onAction: () => this._moveLeft(),
         }));
 
@@ -945,7 +946,7 @@ class GameScene {
             y: downY,
             radius: r,
             direction: 'down',
-            color: '#00c6ff',
+            color: '#34889c',
             onAction: () => this._softDrop(),
         }));
 
@@ -955,7 +956,7 @@ class GameScene {
             y: leftRightY,
             radius: r,
             direction: 'right',
-            color: '#00c6ff',
+            color: '#34889c',
             onAction: () => this._moveRight(),
         }));
 
@@ -1856,7 +1857,10 @@ class GameScene {
         );
         const minLines = stage ? stage.minLines : 1;
         const T = stage && stage.coinThreshold ? stage.coinThreshold : minLines * 2;
-        const coinResult = coinManager.rewardStageClear(lines, minLines, T);
+        const isTutorialReplay = goldenBlock.isTutorialStage(this._stageId) && !goldResult.first;
+        const coinResult = isTutorialReplay
+            ? { want: 0, gained: 0, remaining: coinManager.getTodayRemaining() }
+            : coinManager.rewardStageClear(lines, minLines, T);
         this._coinEarned = coinResult.gained || 0;
         let newAchievements = [];
         try {

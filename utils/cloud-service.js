@@ -17,8 +17,9 @@
  *   - cancelChallenge()   ：撤回挑战（仅发起者可撤回 pending 挑战）
  *
  * 架构说明：
- *   - 好友榜的 wx.setUserCloudStorage / wx.getFriendCloudStorage 只能在开放数据域调用，
- *     主域通过 wx.getOpenDataContext().postMessage() 与之通信；
+ *   - 好友 KV 写入：主域直接 wx.setUserCloudStorage（通关时可靠写入）；
+ *     wx.getFriendCloudStorage 仅在开放数据域拉榜；
+ *   - 主域通过 wx.getOpenDataContext().postMessage() 驱动开放域渲染；
  *   - 全服榜走云函数 rank + 云数据库 rankings；
  *   - 云开发未开通/调用失败时自动降级：好友榜显示开放数据域（即使无云开发也能显示
  *     本地好友数据），全服榜显示本地缓存或空列表。
@@ -28,8 +29,12 @@ const {
     CLOUD_ENV,
     GAME_MODES,
     CHALLENGE_MODES,
+    FRIEND_RANK_KEY,
 } = require('./cloud-config');
 const { encodeRankScore } = require('./rank-score');
+
+/** 好友 KV 已写入的最高复合分（禁止用更低的本地分覆盖） */
+const FRIEND_KV_FLOOR_KEY = 'gc_friend_kv_floor';
 
 /** 本地缓存键（按 模式_周期 维度缓存最近一次全服榜结果） */
 function cacheKey(mode, period) {
@@ -118,8 +123,10 @@ class CloudService {
             score = Math.max(0, Math.floor(Number(payload.score) || 0));
         }
 
+        // 好友 KV 只升不降：本地偏低时不能覆盖已有更高分
+        this._submitFriendScore(mode, score);
+
         if (!this.isAvailable()) {
-            this._submitFriendScore(mode, score);
             return {
                 success: false,
                 isNewRecord: false,
@@ -157,7 +164,6 @@ class CloudService {
                     raw: res,
                 });
             }
-            this._submitFriendScore(mode, score);
             return {
                 success: !!r.success,
                 isNewRecord: !!r.isNewRecord,
@@ -169,7 +175,6 @@ class CloudService {
             };
         } catch (e) {
             console.warn('[Cloud] 上报分数失败（callFunction 异常）', e);
-            this._submitFriendScore(mode, score);
             return {
                 success: false,
                 isNewRecord: false,
@@ -180,6 +185,37 @@ class CloudService {
                 errMsg: (e && e.errMsg) || String(e),
             };
         }
+    }
+
+    /**
+     * 用本地闯关进度补同步排行榜。
+     * 本地通关数由各关 gc_stageBest_* 汇总（非单独计数器）；云端仅在 score 高于旧纪录时更新。
+     */
+    async syncStageRankFromLocal() {
+        let goldenBlock;
+        try {
+            goldenBlock = require('./golden-block-manager');
+        } catch (e) {
+            return { success: false, skipped: true };
+        }
+        const sums = goldenBlock.getRankSums();
+        if (!(sums.clearedCount > 0)) {
+            return { success: false, skipped: true };
+        }
+        let profile = {};
+        try {
+            const { getCachedProfile } = require('./user-profile');
+            profile = getCachedProfile() || {};
+        } catch (e) { /* ignore */ }
+        return this.submitScore({
+            mode: 'stage',
+            clearedCount: sums.clearedCount,
+            linesSum: sums.linesSum,
+            piecesSum: sums.piecesSum,
+            timeSum: sums.timeSum,
+            nickname: profile.nickname || '',
+            avatarUrl: profile.avatarUrl || '',
+        });
     }
 
     /**
@@ -219,6 +255,9 @@ class CloudService {
                     myScore: typeof r.myScore === 'number' ? r.myScore : null,
                 };
                 this._writeCache(key, payload);
+                if (typeof payload.myScore === 'number' && payload.myScore > 0) {
+                    this.writeFriendScoreIfHigher(mode, payload.myScore);
+                }
                 return { ...payload, success: true, offline: false, fromCache: false };
             }
             // 云函数返回失败 → 尝试本地缓存
@@ -283,13 +322,17 @@ class CloudService {
                 data: { action: 'getMyRank', data: { mode } },
             });
             const r = (res && res.result) || {};
-            return {
+            const result = {
                 success: !!r.success,
                 myRank: typeof r.myRank === 'number' ? r.myRank : null,
                 myScore: typeof r.myScore === 'number' ? r.myScore : null,
                 hasRecord: !!r.hasRecord,
                 offline: false,
             };
+            if (typeof result.myScore === 'number' && result.myScore > 0) {
+                this.writeFriendScoreIfHigher(mode, result.myScore);
+            }
+            return result;
         } catch (e) {
             return { success: false, myRank: null, myScore: null, offline: false, errMsg: (e && e.errMsg) || String(e) };
         }
@@ -573,9 +616,29 @@ class CloudService {
                 height: opts && opts.height,
                 screenW: opts && opts.screenW,
                 screenH: opts && opts.screenH,
+                forceRefresh: !!(opts && opts.forceRefresh),
+                selfScore: opts && opts.selfScore,
+                selfNickname: opts && opts.selfNickname,
+                selfAvatarUrl: opts && opts.selfAvatarUrl,
             });
         } catch (e) {
             console.warn('[Cloud] 请求好友榜渲染失败', e);
+        }
+    }
+
+    /** 仅更新好友榜「自己」的展示数据（不重拉榜） */
+    syncFriendRankSelf(opts) {
+        try {
+            const od = this._getOpenData();
+            if (!od) return;
+            od.postMessage({
+                action: 'syncSelfScore',
+                selfScore: opts && opts.selfScore,
+                selfNickname: opts && opts.selfNickname,
+                selfAvatarUrl: opts && opts.selfAvatarUrl,
+            });
+        } catch (e) {
+            // 忽略
         }
     }
 
@@ -607,21 +670,61 @@ class CloudService {
     }
 
     /**
-     * 上报好友榜分数（经开放数据域调用 wx.setUserCloudStorage）
-     * @param {string} mode
-     * @param {number} score
+     * 上报好友榜分数：只允许写入不低于历史最高的复合分
      */
     _submitFriendScore(mode, score) {
+        this.writeFriendScoreIfHigher(mode, score);
         try {
             const od = this._getOpenData();
             if (!od) return;
+            const written = this._getFriendKvFloor();
             od.postMessage({
                 action: 'submitScore',
                 mode,
-                score,
+                score: Math.max(Math.floor(Number(score) || 0), written),
             });
         } catch (e) {
-            // 忽略：开放数据域不可用时静默跳过
+            // 忽略
+        }
+    }
+
+    /** 对外：好友 KV 只升不降 */
+    writeFriendScoreIfHigher(mode, score) {
+        this._writeFriendKV(mode, score);
+    }
+
+    _getFriendKvFloor() {
+        try {
+            return Math.max(0, Math.floor(Number(wx.getStorageSync(FRIEND_KV_FLOOR_KEY)) || 0));
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    /** 主域写入好友榜 UserCloudStorage（不会用更低分覆盖） */
+    _writeFriendKV(mode, score) {
+        const encoded = Math.floor(Number(score) || 0);
+        if (!(encoded > 0)) return;
+        const floor = this._getFriendKvFloor();
+        const toWrite = Math.max(encoded, floor);
+        if (toWrite <= 0) return;
+        if (toWrite > floor) {
+            try { wx.setStorageSync(FRIEND_KV_FLOOR_KEY, toWrite); } catch (e) { /* ignore */ }
+        }
+        const key = `${FRIEND_RANK_KEY}_${mode || 'stage'}`;
+        const value = JSON.stringify({
+            wxgame: { score: toWrite, updateTime: Date.now() },
+        });
+        try {
+            if (typeof wx.setUserCloudStorage !== 'function') return;
+            wx.setUserCloudStorage({
+                KVDataList: [{ key, value }],
+                fail: (err) => {
+                    console.warn('[Cloud] setUserCloudStorage fail', err && err.errMsg);
+                },
+            });
+        } catch (e) {
+            console.warn('[Cloud] setUserCloudStorage error', e);
         }
     }
 

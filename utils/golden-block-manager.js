@@ -39,6 +39,12 @@ function getStage(id) {
     return getStages().find((s) => s.id === nid) || null;
 }
 
+/** 演示关：仅首通发金方块，重玩不计破纪录奖励 */
+function isTutorialStage(id) {
+    const stage = getStage(id);
+    return !!(stage && stage.kind === 'tutorial');
+}
+
 function getChapters() {
     return STAGES_DATA.chapters || [];
 }
@@ -224,20 +230,30 @@ function rewardClear(id, lines, pieces, timeMs) {
     const rec = { lines, pieces: pieces || 0, timeMs: timeMs || 0 };
     const prev = getStageBest(id);
     const first = !prev;
-    const isNewBest = !prev || isBetter(rec, prev);
+    let isNewBest = !prev || isBetter(rec, prev);
     let reward = 0;
-    if (first) {
+    const tutorial = isTutorialStage(id);
+
+    if (tutorial) {
+        if (first) {
+            reward = 1;
+            _saveStageBest(id, rec);
+        } else if (isNewBest) {
+            _saveStageBest(id, rec);
+            isNewBest = false;
+        }
+    } else if (first) {
         reward = 1;
+        _saveStageBest(id, rec);
     } else if (isNewBest) {
         const cnt = _getRecordRewardCount(id);
         if (cnt < 2) {
             reward = 1;
             _setRecordRewardCount(id, cnt + 1);
         }
-    }
-    if (first || isNewBest) {
         _saveStageBest(id, rec);
     }
+
     if (reward > 0) addBalance(reward);
 
     let chapterReward = 0;
@@ -415,6 +431,7 @@ function getRankSums() {
 module.exports = {
     getStages,
     getStage,
+    isTutorialStage,
     getChapters,
     getStagesByChapter,
     isChapterUnlocked,

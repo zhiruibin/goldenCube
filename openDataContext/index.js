@@ -73,8 +73,19 @@ function resolveSelf(done) {
         wx.getUserInfo({
             openIdList: ['selfOpenId'],
             success(res) {
-                if (res && res.data && res.data[0] && res.data[0].openid) {
-                    selfOpenId = res.data[0].openid;
+                const me = res && res.data && res.data[0];
+                if (me) {
+                    if (me.openid) selfOpenId = me.openid;
+                    if (typeof me.nickname === 'string' && me.nickname.trim()
+                        && me.nickname.trim() !== '微信用户') {
+                        mainDomainSelfNickname = mainDomainSelfNickname || me.nickname.trim();
+                    }
+                    if (typeof me.avatarUrl === 'string' && me.avatarUrl) {
+                        mainDomainSelfAvatarUrl = mainDomainSelfAvatarUrl || me.avatarUrl;
+                    }
+                    if (rankList.length > 0) {
+                        patchRankListSelfScore();
+                    }
                 }
                 if (typeof done === 'function') done();
             },
@@ -87,19 +98,135 @@ function resolveSelf(done) {
     }
 }
 
+/** 最近一次写入好友 KV 的复合分（KV 传播前用于校正自己的展示） */
+let lastSubmittedScore = 0;
+/** 主域传入的本地复合分（与全服榜一致，优先校正自己行） */
+let mainDomainSelfScore = 0;
+/** 主域传入的自己昵称/头像（getUserInfo 失败时用于匹配自己行） */
+let mainDomainSelfNickname = '';
+let mainDomainSelfAvatarUrl = '';
+
+function applyMainSelfMeta(msg) {
+    if (typeof msg.selfScore === 'number' && msg.selfScore > 0) {
+        mainDomainSelfScore = Math.floor(msg.selfScore);
+    }
+    if (typeof msg.selfNickname === 'string' && msg.selfNickname.trim()) {
+        mainDomainSelfNickname = msg.selfNickname.trim();
+    }
+    if (typeof msg.selfAvatarUrl === 'string') {
+        mainDomainSelfAvatarUrl = msg.selfAvatarUrl;
+    }
+}
+
+function getSelfScoreFloor() {
+    return Math.max(lastSubmittedScore || 0, mainDomainSelfScore || 0);
+}
+
+function findSelfIndex(list) {
+    if (!Array.isArray(list) || !list.length) return -1;
+    if (selfOpenId) {
+        const byId = list.findIndex((u) => u.openid === selfOpenId);
+        if (byId >= 0) return byId;
+    }
+    if (mainDomainSelfNickname && mainDomainSelfNickname !== '我') {
+        const nick = mainDomainSelfNickname;
+        const byNick = list.findIndex((u) => (u.nickname || '').trim() === nick);
+        if (byNick >= 0) return byNick;
+    }
+    if (mainDomainSelfAvatarUrl) {
+        const byAvatar = list.findIndex((u) => u.avatarUrl === mainDomainSelfAvatarUrl);
+        if (byAvatar >= 0) return byAvatar;
+    }
+    return -1;
+}
+
+function parseFriendUsers(users, m) {
+    return (users || [])
+        .map((u) => {
+            let score = 0;
+            try {
+                const kv = (u.KVDataList || []).find((k) => k.key === friendKey(m));
+                if (kv && kv.value) {
+                    const parsed = JSON.parse(kv.value);
+                    score = (parsed.wxgame && parsed.wxgame.score) || 0;
+                }
+            } catch (e) {
+                score = 0;
+            }
+            return {
+                openid: u.openid || '',
+                nickname: u.nickname || '玩家',
+                avatarUrl: u.avatarUrl || '',
+                score: score,
+            };
+        })
+        .filter((u) => u.score > 0)
+        .sort((a, b) => b.score - a.score);
+}
+
+/** 用主域本地进度覆盖/补全自己行（不依赖好友 KV 是否已传播） */
+function mergeSelfFromMain(list) {
+    const floor = getSelfScoreFloor();
+    if (!(floor > 0) || !Array.isArray(list)) {
+        return list || [];
+    }
+    const next = list.slice();
+    const idx = findSelfIndex(next);
+    if (idx >= 0) {
+        const u = next[idx];
+        const score = Math.max(u.score || 0, floor);
+        if (score > (u.score || 0)) {
+            next[idx] = Object.assign({}, u, { score });
+            next.sort((a, b) => b.score - a.score);
+        }
+        return next;
+    }
+    if (mainDomainSelfNickname || selfOpenId) {
+        next.push({
+            openid: selfOpenId || '',
+            nickname: mainDomainSelfNickname || '我',
+            avatarUrl: mainDomainSelfAvatarUrl || '',
+            score: floor,
+        });
+        next.sort((a, b) => b.score - a.score);
+    }
+    return next;
+}
+
+function patchRankListSelfScore() {
+    if (!rankList.length || !(getSelfScoreFloor() > 0)) return;
+    const patched = mergeSelfFromMain(rankList);
+    if (listScoresChanged(patched, rankList)) {
+        publishList(patched, mode);
+    } else {
+        draw();
+    }
+}
+
 /** 上报本用户分数到好友榜（开放数据域专属 API） */
 function submitScore(m, score) {
+    const modeKey = m || 'stage';
+    const encoded = Math.floor(Number(score) || 0);
+    if (encoded > 0) {
+        lastSubmittedScore = encoded;
+        mainDomainSelfScore = Math.max(mainDomainSelfScore, encoded);
+    }
     try {
-        const key = friendKey(m);
+        const key = friendKey(modeKey);
         const value = JSON.stringify({
-            wxgame: { score: Math.floor(Number(score) || 0), updateTime: Date.now() },
+            wxgame: { score: encoded, updateTime: Date.now() },
         });
         wx.setUserCloudStorage({
             KVDataList: [{ key, value }],
-            fail: () => {},
+            success: () => {
+                delete rankCache[modeKey];
+            },
+            fail: () => {
+                delete rankCache[modeKey];
+            },
         });
     } catch (e) {
-        // 忽略
+        delete rankCache[modeKey];
     }
 }
 
@@ -111,6 +238,33 @@ const rankCache = {};
 let lastNetworkFetchAt = 0;
 let fetchTimer = null;
 let fetching = false;
+let pendingForceRefresh = '';
+/** 本会话是否已成功拉取过好友榜（空榜也算，避免反复 reload） */
+let rankLoadedOnce = false;
+
+/** 发布好友榜列表并结束 loading（不等待 getUserInfo，避免卡住加载态） */
+function publishList(finalList, cacheMode) {
+  const m = cacheMode || mode;
+  rankCache[m] = { list: finalList, ts: Date.now() };
+  fetchFailed = false;
+  lastError = '';
+  fetching = false;
+  loading = false;
+  rankLoadedOnce = true;
+  if (mode === m) {
+    rankList = finalList;
+    maxScroll = Math.max(0, rankList.length * ITEM_H - (listBodyH() - HEADER_H));
+    scrollY = Math.min(scrollY, maxScroll);
+    draw();
+  }
+  if (pendingForceRefresh) {
+    const next = pendingForceRefresh;
+    pendingForceRefresh = '';
+    if (next === mode) {
+      loadRankFromNetwork(next, true);
+    }
+  }
+}
 
 /** 可见列表高度（去掉底部粘性提示） */
 function listBodyH() {
@@ -128,22 +282,22 @@ function applyList(list, failed, errText) {
 }
 
 /** 拉取好友分数并重绘（带缓存 + 冷却，防止 frequency limit） */
-function loadRank() {
+function loadRank(skipCache) {
   const m = mode;
   const now = Date.now();
-  const cached = rankCache[m];
+  const cached = skipCache ? null : rankCache[m];
 
-  // 缓存未过期：直接展示，不打接口
+  // 缓存未过期：直接展示，不打接口（仍校正自己行）
   if (cached && (now - cached.ts) < CACHE_TTL_MS) {
-    applyList(cached.list, false, '');
+    applyList(mergeSelfFromMain(cached.list), false, '');
     return;
   }
 
-  const wait = Math.max(0, FETCH_COOLDOWN_MS - (now - lastNetworkFetchAt));
-  if (wait > 0 || fetching) {
+  const wait = skipCache ? 0 : Math.max(0, FETCH_COOLDOWN_MS - (now - lastNetworkFetchAt));
+  if (!skipCache && (wait > 0 || fetching)) {
     // 冷却中：有旧缓存先显示，否则 loading；到期再拉
     if (cached) {
-      applyList(cached.list, false, '');
+      applyList(mergeSelfFromMain(cached.list), false, '');
     } else {
       loading = true;
       draw();
@@ -163,9 +317,18 @@ function loadRank() {
   loadRankFromNetwork(m);
 }
 
-function loadRankFromNetwork(requestMode) {
+function listScoresChanged(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return true;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i].openid !== b[i].openid || a[i].score !== b[i].score) return true;
+  }
+  return false;
+}
+
+function loadRankFromNetwork(requestMode, force) {
   const m = requestMode || mode;
   if (fetching) {
+    if (force) pendingForceRefresh = m;
     return;
   }
   fetching = true;
@@ -176,84 +339,60 @@ function loadRankFromNetwork(requestMode) {
   const afterFetch = function () {
     fetching = false;
     loading = false;
+    rankLoadedOnce = true;
     maxScroll = Math.max(0, rankList.length * ITEM_H - (listBodyH() - HEADER_H));
     scrollY = Math.min(scrollY, maxScroll);
     draw();
+    if (pendingForceRefresh) {
+      const next = pendingForceRefresh;
+      pendingForceRefresh = '';
+      if (next === mode) {
+        loadRankFromNetwork(next, true);
+      }
+    }
   };
 
   try {
+    resolveSelf();
     wx.getFriendCloudStorage({
-      keyList: [friendKey(m)],
-      success: (res) => {
-        // 若用户已切走模式，仍写入对应缓存，当前屏只在模式匹配时刷新
-        const users = res.data || [];
-        const list = users
-          .map((u) => {
-            let score = 0;
-            try {
-              const kv = (u.KVDataList || []).find((k) => k.key === friendKey(m));
-              if (kv && kv.value) {
-                const parsed = JSON.parse(kv.value);
-                score = (parsed.wxgame && parsed.wxgame.score) || 0;
-              }
-            } catch (e) {
-              score = 0;
+        keyList: [friendKey(m)],
+        success: (res) => {
+          const list = parseFriendUsers(res.data, m);
+          publishList(mergeSelfFromMain(list), m);
+        },
+        fail: (err) => {
+          const errMsg = (err && err.errMsg) || 'unknown';
+          console.error('[friendRank] getFriendCloudStorage fail:', err);
+          let tip = errMsg;
+          if (err && (err.errno === 1026 || err.errno === 1025
+            || (errMsg.indexOf('announce your privacy') >= 0))) {
+            tip = '隐私未生效，请同意隐私协议后重试';
+          } else if (errMsg.indexOf('frequency limit') >= 0 || errMsg.indexOf('slowdown') >= 0) {
+            tip = '请求太快，请稍后再切换模式';
+          }
+          const cached = rankCache[m];
+          if (cached && cached.list) {
+            if (mode === m) {
+              publishList(mergeSelfFromMain(cached.list), m);
+              lastError = tip;
+            } else {
+              fetching = false;
+              loading = false;
             }
-            return {
-              openid: u.openid || '',
-              nickname: u.nickname || '玩家',
-              avatarUrl: u.avatarUrl || '',
-              score: score,
-            };
-          })
-          .filter((u) => u.score > 0)
-          .sort((a, b) => b.score - a.score);
-
-        rankCache[m] = { list: list, ts: Date.now() };
-        fetchFailed = false;
-        lastError = '';
-        if (mode === m) {
-          rankList = list;
-          resolveSelf(afterFetch);
-        } else {
-          fetching = false;
-        }
-      },
-      fail: (err) => {
-        const errMsg = (err && err.errMsg) || 'unknown';
-        console.error('[friendRank] getFriendCloudStorage fail:', err);
-        let tip = errMsg;
-        if (err && (err.errno === 1026 || err.errno === 1025
-          || (errMsg.indexOf('announce your privacy') >= 0))) {
-          tip = '隐私未生效，请同意隐私协议后重试';
-        } else if (errMsg.indexOf('frequency limit') >= 0 || errMsg.indexOf('slowdown') >= 0) {
-          tip = '请求太快，请稍后再切换模式';
-        }
-        // 频控失败：优先回退缓存
-        const cached = rankCache[m];
-        if (cached && cached.list) {
+            return;
+          }
           if (mode === m) {
-            rankList = cached.list;
-            fetchFailed = false;
             lastError = tip;
-            resolveSelf(afterFetch);
+            fetchFailed = true;
+            rankList = [];
+            maxScroll = 0;
+            scrollY = 0;
+            afterFetch();
           } else {
             fetching = false;
           }
-          return;
-        }
-        if (mode === m) {
-          lastError = tip;
-          fetchFailed = true;
-          rankList = [];
-          maxScroll = 0;
-          scrollY = 0;
-          afterFetch();
-        } else {
-          fetching = false;
-        }
-      },
-    });
+        },
+      });
   } catch (e) {
     fetching = false;
     lastError = (e && e.errMsg) || String(e);
@@ -354,14 +493,14 @@ function draw() {
 /** 列表底部：距上一名 / 当前第一 */
 function _drawGapFooter() {
     const fy = y0 + height - FOOTER_H;
-    ctx.fillStyle = 'rgba(20, 24, 40, 0.95)';
-    ctx.fillRect(x0, fy, width, FOOTER_H);
+    const lineLeft = x0 + PADDING_X;
+    const lineRight = x0 + width - PADDING_X;
 
     ctx.strokeStyle = 'rgba(255, 200, 87, 0.25)';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(x0 + PADDING_X, fy + 0.5);
-    ctx.lineTo(x0 + width - PADDING_X, fy + 0.5);
+    ctx.moveTo(lineLeft, fy + 0.5);
+    ctx.lineTo(lineRight, fy + 0.5);
     ctx.stroke();
 
     let tip = '打一局上榜，再来比一把';
@@ -394,21 +533,41 @@ function _drawGapFooter() {
     ctx.fillText(tip, x0 + width / 2, fy + FOOTER_H / 2);
 }
 
+/** 头像缓存（避免每帧 createImage 导致反复 onload → draw 闪烁） */
+const avatarCache = {};
+
 /** 绘制圆角头像（异步，加载后重绘当前帧） */
 function _drawAvatar(url, x, y, size) {
     if (!url) return;
+    let entry = avatarCache[url];
+    if (!entry) {
+        entry = { img: null, status: 'loading' };
+        avatarCache[url] = entry;
+        try {
+            const img = wx.createImage();
+            img.onload = () => {
+                entry.img = img;
+                entry.status = 'ok';
+                draw();
+            };
+            img.onerror = () => {
+                entry.status = 'fail';
+            };
+            img.src = url;
+        } catch (e) {
+            entry.status = 'fail';
+        }
+        return;
+    }
+    if (!entry.img) return;
     try {
-        const img = wx.createImage();
-        img.onload = () => {
-            ctx.save();
-            _roundRect(ctx, x, y, size, size, size / 2);
-            ctx.clip();
-            ctx.drawImage(img, x, y, size, size);
-            ctx.restore();
-        };
-        img.src = url;
+        ctx.save();
+        _roundRect(ctx, x, y, size, size, size / 2);
+        ctx.clip();
+        ctx.drawImage(entry.img, x, y, size, size);
+        ctx.restore();
     } catch (e) {
-        // 忽略头像加载异常
+        // 忽略
     }
 }
 
@@ -483,15 +642,33 @@ wx.onMessage((msg) => {
             mode = nextMode;
             if (modeChanged) {
                 scrollY = 0;
+                rankLoadedOnce = false;
             }
-            // 仅模式变化或尚无数据时拉榜；纯布局刷新直接重绘，避免连打接口
-            if (modeChanged || !rankList.length || fetchFailed) {
-                loadRank();
+            const forceRefresh = !!msg.forceRefresh;
+            applyMainSelfMeta(msg);
+            if (forceRefresh) {
+                delete rankCache[mode];
+                rankLoadedOnce = false;
+            }
+            // 强制刷新 / 模式变化 / 首次拉取 / 上次失败 → 拉榜；纯布局刷新直接重绘
+            if (forceRefresh || modeChanged || !rankLoadedOnce || fetchFailed) {
+                loadRank(forceRefresh);
+            } else if (getSelfScoreFloor() > 0 && rankList.length > 0) {
+                patchRankListSelfScore();
             } else {
                 draw();
             }
             break;
         }
+
+        case 'syncSelfScore':
+            applyMainSelfMeta(msg);
+            patchRankListSelfScore();
+            break;
+
+        case 'draw':
+            draw();
+            break;
 
 
         case 'submitScore':
@@ -535,3 +712,5 @@ wx.onMessage((msg) => {
             break;
     }
 });
+
+resolveSelf();

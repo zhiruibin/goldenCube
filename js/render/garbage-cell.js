@@ -4,6 +4,9 @@
 
 const { GARBAGE } = require('../../utils/tetris-engine');
 
+/** 垃圾块主色（工具栏、图例等 UI 与盘面保持一致） */
+const GARBAGE_UI_COLOR = '#787880';
+
 function hashSeed(col, row) {
     return ((col * 73856093) ^ (row * 19349663)) >>> 0;
 }
@@ -23,8 +26,8 @@ function _rand(seed, n) {
  * @param {number} [seed=0]
  */
 function drawGarbageCell(ctx, x, y, size, seed) {
-    const inset = 1;
-    const w = size - inset * 2;
+    const inset = size >= 8 ? 1 : (size >= 4 ? 0.5 : 0);
+    const w = Math.max(1, size - inset * 2);
     const s = seed >>> 0;
 
     let grad;
@@ -36,39 +39,60 @@ function drawGarbageCell(ctx, x, y, size, seed) {
     } catch (e) {
         grad = null;
     }
-    ctx.fillStyle = grad || '#787880';
+    ctx.fillStyle = grad || GARBAGE_UI_COLOR;
     ctx.fillRect(x + inset, y + inset, w, w);
 
-    // 斑驳污迹（减至 2 处，避免与裂纹抢视觉）
-    ctx.save();
-    for (let i = 0; i < 2; i++) {
-        const px = x + inset + _rand(s, i * 3 + 1) * w;
-        const py = y + inset + _rand(s, i * 3 + 2) * w;
-        const pr = Math.max(1.5, size * (0.07 + _rand(s, i * 3 + 3) * 0.08));
-        ctx.globalAlpha = 0.1 + _rand(s, i + 10) * 0.1;
-        ctx.fillStyle = '#2a2a30';
-        ctx.beginPath();
-        ctx.arc(px, py, pr, 0, Math.PI * 2);
-        ctx.fill();
+    if (size >= 8) {
+        ctx.save();
+        for (let i = 0; i < 2; i++) {
+            const px = x + inset + _rand(s, i * 3 + 1) * w;
+            const py = y + inset + _rand(s, i * 3 + 2) * w;
+            const pr = Math.max(1, size * (0.07 + _rand(s, i * 3 + 3) * 0.08));
+            ctx.globalAlpha = 0.1 + _rand(s, i + 10) * 0.1;
+            ctx.fillStyle = '#2a2a30';
+            ctx.beginPath();
+            ctx.arc(px, py, pr, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
     }
-    ctx.restore();
 
-    if (size >= 10) {
+    if (size >= 4) {
         _drawCracks(ctx, x, y, size, inset, w, s);
     }
 
-    // 钝高光 / 磨损暗边（区别于普通方块的高光）
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.07)';
-    ctx.fillRect(x + inset, y + inset, w, Math.max(1, size * 0.08));
-    ctx.fillRect(x + inset, y + inset, Math.max(1, size * 0.08), w);
+    if (size >= 5) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.07)';
+        ctx.fillRect(x + inset, y + inset, w, Math.max(0.5, size * 0.08));
+        ctx.fillRect(x + inset, y + inset, Math.max(0.5, size * 0.08), w);
 
-    ctx.fillStyle = '#3a3a42';
-    ctx.fillRect(x + inset, y + size - inset - Math.max(1, size * 0.08), w, Math.max(1, size * 0.08));
-    ctx.fillRect(x + size - inset - Math.max(1, size * 0.08), y + inset, Math.max(1, size * 0.08), w);
+        ctx.fillStyle = '#3a3a42';
+        ctx.fillRect(
+            x + inset,
+            y + size - inset - Math.max(0.5, size * 0.08),
+            w,
+            Math.max(0.5, size * 0.08)
+        );
+        ctx.fillRect(
+            x + size - inset - Math.max(0.5, size * 0.08),
+            y + inset,
+            Math.max(0.5, size * 0.08),
+            w
+        );
+    }
 
-    ctx.strokeStyle = 'rgba(18, 18, 22, 0.35)';
-    ctx.lineWidth = 0.5;
-    ctx.strokeRect(x + inset + 0.5, y + inset + 0.5, w - 1, w - 1);
+    if (size >= 6) {
+        ctx.strokeStyle = 'rgba(18, 18, 22, 0.35)';
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(x + inset + 0.5, y + inset + 0.5, w - 1, w - 1);
+    }
+}
+
+/**
+ * 布局预览（10×20 rows 中的 # 格）：与对局内垃圾块同款
+ */
+function drawGarbageLayoutCell(ctx, x, y, size, col, row) {
+    drawGarbageCell(ctx, x, y, size, hashSeed(col, row));
 }
 
 function _edgePoint(edge, bx, by, bw, t) {
@@ -108,24 +132,29 @@ function _drawCrackStroke(ctx, points, lw) {
     ctx.globalAlpha = 1;
     _strokeCrackPath(ctx, points, lw);
 
-    ctx.save();
-    ctx.translate(-0.45, -0.55);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
-    ctx.lineWidth = Math.max(0.35, lw * 0.32);
-    ctx.globalAlpha = 0.85;
-    _strokeCrackPath(ctx, points, Math.max(0.35, lw * 0.32));
-    ctx.restore();
+    if (lw >= 0.45) {
+        ctx.save();
+        ctx.translate(-0.45, -0.55);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
+        ctx.lineWidth = Math.max(0.35, lw * 0.32);
+        ctx.globalAlpha = 0.85;
+        _strokeCrackPath(ctx, points, Math.max(0.35, lw * 0.32));
+        ctx.restore();
+    }
 }
 
 function _drawCracks(ctx, x, y, size, inset, w, seed) {
     const bx = x + inset;
     const by = y + inset;
-    const lw = Math.max(0.65, size * 0.042);
+    const lw = size >= 10
+        ? Math.max(0.65, size * 0.042)
+        : Math.max(0.35, size * 0.09);
 
-    // 从一条边射入，在格内 35%~72% 处止，不到对边
     const startEdge = Math.floor(_rand(seed, 1) * 4);
     const start = _edgePoint(startEdge, bx, by, w, 0.18 + _rand(seed, 3) * 0.64);
-    const depth = w * (0.35 + _rand(seed, 4) * 0.37);
+    const depth = w * (size >= 10
+        ? (0.35 + _rand(seed, 4) * 0.37)
+        : (0.28 + _rand(seed, 4) * 0.28));
     const inwardAngle = {
         0: Math.PI / 2 + (_rand(seed, 5) - 0.5) * 0.85,
         1: Math.PI + (_rand(seed, 5) - 0.5) * 0.85,
@@ -157,28 +186,10 @@ function _drawCracks(ctx, x, y, size, inset, w, seed) {
     ctx.restore();
 }
 
-/** 列表缩略图：纯灰色块，不画裂纹 */
-function drawGarbageMiniCell(ctx, x, y, size) {
-    const inset = size >= 6 ? 0.5 : 0;
-    const w = Math.max(1, size - inset * 2);
-    ctx.fillStyle = '#787880';
-    ctx.fillRect(x + inset, y + inset, w, w);
-    if (size >= 5) {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-        ctx.fillRect(x + inset, y + inset, w, Math.max(0.5, size * 0.18));
-        ctx.fillStyle = '#55555c';
-        ctx.fillRect(
-            x + inset,
-            y + inset + w - Math.max(0.5, size * 0.14),
-            w,
-            Math.max(0.5, size * 0.14)
-        );
-    }
-}
-
 module.exports = {
     GARBAGE,
+    GARBAGE_UI_COLOR,
     hashSeed,
     drawGarbageCell,
-    drawGarbageMiniCell,
+    drawGarbageLayoutCell,
 };

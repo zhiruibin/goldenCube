@@ -72,18 +72,20 @@ class Button {
             ctx.translate(-cx, -cy);
         }
 
-        // 按钮背景
-        ctx.fillStyle = this._pressed
-            ? this._darken(this.color, 0.7)
-            : this.color;
-        this._roundRect(ctx, this.x, this.y, this.w, this.h, this.radius);
-        ctx.fill();
-
-        // 按下时加一层暗色遮罩
-        if (this._pressed) {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        if (this._isCircular()) {
+            this._renderCircularBody(ctx);
+        } else {
+            ctx.fillStyle = this._pressed
+                ? this._darken(this.color, 0.7)
+                : this.color;
             this._roundRect(ctx, this.x, this.y, this.w, this.h, this.radius);
             ctx.fill();
+
+            if (this._pressed) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                this._roundRect(ctx, this.x, this.y, this.w, this.h, this.radius);
+                ctx.fill();
+            }
         }
 
         // 图标/文字
@@ -348,6 +350,88 @@ class Button {
         ctx.restore();
     }
 
+    /** 圆形操作钮（对局 Hold / 硬降 / 旋转等） */
+    _isCircular() {
+        return this.w === this.h && this.radius >= this.w / 2 - 1;
+    }
+
+    /** 立体圆形按钮：渐变 + 顶光 + 投影 */
+    _renderCircularBody(ctx) {
+        const cx = this.x + this.w / 2;
+        const cy = this.y + this.h / 2;
+        const r = this.w / 2;
+        const pressed = this._pressed;
+
+        if (!pressed) {
+            ctx.save();
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.42)';
+            ctx.shadowBlur = Math.max(4, r * 0.28);
+            ctx.shadowOffsetY = Math.max(2, r * 0.14);
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.02)';
+            ctx.beginPath();
+            ctx.arc(cx, cy, r - 0.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        let bodyGrad;
+        try {
+            bodyGrad = ctx.createLinearGradient(cx, cy - r, cx, cy + r);
+            if (pressed) {
+                bodyGrad.addColorStop(0, this._darken(this.color, 0.62));
+                bodyGrad.addColorStop(0.5, this._darken(this.color, 0.48));
+                bodyGrad.addColorStop(1, this._darken(this.color, 0.35));
+            } else {
+                bodyGrad.addColorStop(0, this._lighten(this.color, 1.22));
+                bodyGrad.addColorStop(0.45, this.color);
+                bodyGrad.addColorStop(1, this._darken(this.color, 0.72));
+            }
+        } catch (e) {
+            bodyGrad = null;
+        }
+        ctx.fillStyle = bodyGrad || (pressed ? this._darken(this.color, 0.55) : this.color);
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, r - 0.5, 0, Math.PI * 2);
+        ctx.clip();
+        let gloss;
+        try {
+            gloss = ctx.createLinearGradient(cx, cy - r, cx, cy + r * 0.35);
+            gloss.addColorStop(0, pressed ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.32)');
+            gloss.addColorStop(0.38, 'rgba(255,255,255,0.06)');
+            gloss.addColorStop(1, 'rgba(255,255,255,0)');
+        } catch (e) {
+            gloss = null;
+        }
+        if (gloss) {
+            ctx.fillStyle = gloss;
+            ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+        }
+        if (pressed) {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+            ctx.fillRect(cx - r, cy, r * 2, r);
+        }
+        ctx.restore();
+
+        ctx.strokeStyle = pressed
+            ? this._lighten(this.color, 1.08)
+            : 'rgba(255, 255, 255, 0.28)';
+        ctx.lineWidth = pressed ? 1.5 : 1.25;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r - 0.5, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.22)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r - 1.5, Math.PI * 0.15, Math.PI * 0.85);
+        ctx.stroke();
+    }
+
     /**
      * 绘制圆角矩形路径
      */
@@ -374,6 +458,13 @@ class Button {
         const g = parseInt(hex.slice(3, 5), 16);
         const b = parseInt(hex.slice(5, 7), 16);
         return `rgb(${Math.floor(r * factor)}, ${Math.floor(g * factor)}, ${Math.floor(b * factor)})`;
+    }
+
+    _lighten(hex, factor) {
+        const r = Math.min(255, Math.floor(parseInt(hex.slice(1, 3), 16) * factor));
+        const g = Math.min(255, Math.floor(parseInt(hex.slice(3, 5), 16) * factor));
+        const b = Math.min(255, Math.floor(parseInt(hex.slice(5, 7), 16) * factor));
+        return `rgb(${r}, ${g}, ${b})`;
     }
 }
 

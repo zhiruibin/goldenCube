@@ -6,7 +6,7 @@ const { Button } = require('../widgets/button');
 const { Panel } = require('../widgets/panel');
 const { coinManager, DAILY_WELFARE_REWARD } = require('../../utils/coin-manager');
 const { getPendingChallengeCount } = require('./challenge-scene');
-const { adManager, isRewardedVideoConfigured } = require('../../utils/ad-manager');
+const { adManager, isRewardedVideoConfigured, isBannerConfigured } = require('../../utils/ad-manager');
 const {
     AMBIENT_PIECE_COLORS,
     SUBTITLE,
@@ -14,6 +14,13 @@ const {
     fillNightBackground,
     drawBrandTitle,
 } = require('../theme/arcade-night');
+const { drawHomeTitleDecorations } = require('../render/title-decor');
+const { MiniTetrisFx } = require('../render/mini-tetris-fx');
+
+/** 首页底栏槽位高度（占位特效 / 后续 Banner 共用） */
+const HOME_FOOTER_SLOT_H = 72;
+/** 进入首页后延迟展示 Banner（毫秒） */
+const HOME_BANNER_DELAY_MS = 1800;
 
 // 首页背景装饰：缓慢下落的半透明方块（七种俄罗斯方块形状）
 const BG_TETROMINO_SHAPES = [
@@ -30,6 +37,8 @@ const BG_TETROMINO_COLORS = AMBIENT_PIECE_COLORS;
 /** 本会话是否已提醒过待应战（避免反复 toast） */
 let _pendingRemindedSession = false;
 
+const PRIVACY_LINK_TEXT = '用户隐私保护指引';
+
 class HomeScene {
     constructor() {
         this._params = null;
@@ -38,6 +47,10 @@ class HomeScene {
         this._animTime = 0;
         // 背景装饰：缓慢下落的半透明方块
         this._fallingBlocks = [];
+        /** @type {{ x: number, y: number, w: number, h: number } | null} */
+        this._privacyLinkRect = null;
+        this._miniFx = null;
+        this._bannerTimer = null;
     }
 
     onEnter(params) {
@@ -47,11 +60,13 @@ class HomeScene {
         this._initUI();
         this._claimDailyLogin();
         this._maybeRemindPending();
+        this._initFooterContent();
         // 若音频已在用户手势中初始化过，回首页立即恢复 BGM
         this._ensureHomeBgm();
     }
 
     onExit() {
+        this._teardownFooterContent();
         this._buttons = [];
     }
 
@@ -61,6 +76,7 @@ class HomeScene {
         // 从后台/分享返回时刷新待应战角标
         this._initUI();
         this._maybeRemindPending();
+        this._initFooterContent();
         this._ensureHomeBgm();
     }
 
@@ -80,6 +96,7 @@ class HomeScene {
     update(dt) {
         this._animTime += dt;
         this._updateFallingBlocks(dt);
+        if (this._miniFx) this._miniFx.update(dt);
     }
 
     render(ctx) {
@@ -93,7 +110,9 @@ class HomeScene {
         this._renderFallingBlocks(ctx);
 
         const titleY = H * 0.15 + Math.sin(this._animTime * 2) * 5;
-        drawBrandTitle(ctx, '挖个方块', W / 2, titleY, 'bold 48px sans-serif');
+        const titleFont = 'bold 48px sans-serif';
+        drawBrandTitle(ctx, '挖个方块', W / 2, titleY, titleFont);
+        drawHomeTitleDecorations(ctx, '挖个方块', W / 2, titleY, titleFont, this._animTime);
 
         // 副标题：玩（闯关/广场）+ 造（工坊）
         ctx.fillStyle = SUBTITLE;
@@ -107,10 +126,25 @@ class HomeScene {
             btn.render(ctx);
         }
 
-        // 底部信息
+        if (this._miniFx) {
+            this._miniFx.render(ctx);
+        }
+
+        // 底部：隐私指引（纯文字 + 下划线）+ 版本号
+        const privacyY = H - 66;
         ctx.fillStyle = MUTED;
         ctx.font = '12px sans-serif';
-        ctx.fillText('v1.0.0', W / 2, H - 20);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(PRIVACY_LINK_TEXT, W / 2, privacyY);
+        const privacyTextW = ctx.measureText(PRIVACY_LINK_TEXT).width;
+        ctx.strokeStyle = MUTED;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(W / 2 - privacyTextW / 2, privacyY + 8);
+        ctx.lineTo(W / 2 + privacyTextW / 2, privacyY + 8);
+        ctx.stroke();
+        ctx.fillText('v1.0.0', W / 2, H - 40);
     }
 
     _initUI() {
@@ -212,7 +246,7 @@ class HomeScene {
             h: primaryH,
             text: challengeLabel,
             icon: 'handshake',
-            color: pendingCount > 0 ? '#e67e22' : '#555',
+            color: pendingCount > 0 ? '#33d6ff' : '#00c6ff',
             onClick: () => GameGlobal.game.sceneManager.switchTo('challenge', {
                 tab: pendingCount > 0 ? 'incoming' : 'sent',
             }),
@@ -235,6 +269,64 @@ class HomeScene {
                 color: welfareClaimed ? '#444' : '#3a7ab0',
                 onClick: () => this._claimDailyWelfare(),
             }));
+        }
+
+        this._privacyLinkRect = {
+            x: 0,
+            y: H - 84,
+            w: W,
+            h: 44,
+        };
+    }
+
+    /** 底栏槽位：隐私指引上方固定高度区域 */
+    _layoutFooterSlot(H) {
+        const slotBottom = H - 78;
+        return {
+            top: slotBottom - HOME_FOOTER_SLOT_H,
+            bottom: slotBottom,
+        };
+    }
+
+    /**
+     * 底栏内容：Banner 已配置 → 仅广告；未配置 → 7 方块占位特效（互斥）
+     */
+    _initFooterContent() {
+        this._teardownFooterContent(false);
+
+        if (isBannerConfigured()) {
+            this._bannerTimer = setTimeout(() => {
+                this._bannerTimer = null;
+                adManager.showBanner();
+            }, HOME_BANNER_DELAY_MS);
+            return;
+        }
+
+        const W = GameGlobal.game.width;
+        const H = GameGlobal.game.height;
+        const slot = this._layoutFooterSlot(H);
+        this._miniFx = new MiniTetrisFx();
+        this._miniFx.init({
+            width: W,
+            height: H,
+            areaTop: slot.top,
+            areaBottom: slot.bottom,
+            interactive: true,
+        });
+    }
+
+    /** @param {boolean} [hideBanner=true] */
+    _teardownFooterContent(hideBanner) {
+        if (hideBanner !== false) {
+            adManager.hideBanner();
+        }
+        if (this._bannerTimer) {
+            clearTimeout(this._bannerTimer);
+            this._bannerTimer = null;
+        }
+        if (this._miniFx) {
+            this._miniFx.destroy();
+            this._miniFx = null;
         }
     }
 
@@ -393,6 +485,11 @@ class HomeScene {
                 btn.trigger();
                 return;
             }
+        }
+        const r = this._privacyLinkRect;
+        if (r && x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) {
+            const { openPrivacyContract } = require('../../utils/privacy');
+            openPrivacyContract();
         }
     }
 }

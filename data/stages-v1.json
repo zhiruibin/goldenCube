@@ -97,17 +97,16 @@
     {
       "id": 1,
       "chapterId": 1,
-      "name": "竖一",
-      "minLines": 3,
-      "garbageCount": 6,
-      "coinThreshold": 6,
-      "dropIntervalMs": 1000,
+      "name": "入门",
+      "minLines": 1,
+      "garbageCount": 8,
+      "coinThreshold": 2,
+      "dropIntervalMs": 1200,
+      "firstPiece": "O",
       "rows": {
-        "17": "....##....",
-        "18": "....##....",
-        "19": "....##...."
+        "19": "####..####"
       },
-      "kind": "silhouette",
+      "kind": "tutorial",
       "unlockCost": 0
     },
     {

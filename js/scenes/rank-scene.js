@@ -9,7 +9,7 @@
 
 const { Button } = require('../widgets/button');
 const { cloudService } = require('../../utils/cloud-service');
-const { decodeClearedCount } = require('../../utils/rank-score');
+const { decodeClearedCount, encodeRankScore } = require('../../utils/rank-score');
 const IconRenderer = require('../render/icon-renderer');
 const { achievementManager } = require('../../utils/achievement-manager');
 const goldenBlock = require('../../utils/golden-block-manager');
@@ -34,8 +34,13 @@ class RankScene {
 
         // 好友榜 sharedCanvas 区域
         this._friendArea = { x: 0, y: 0, w: 0, h: 0 };
+        this._friendInited = false;
         /** 已请求过好友榜的模式，避免与 _loadRankData 重复 postMessage */
         this._friendMode = '';
+        /** 下次渲染好友榜时强制刷新（跳过 90s 缓存） */
+        this._friendForceRefresh = false;
+        /** 全服榜/本地取较高的自己复合分，用于校正好友榜自己行 */
+        this._friendBestScore = 0;
 
         // 滚动状态
         this._scrollY = 0;
@@ -61,20 +66,28 @@ class RankScene {
         this._mode = 'stage';
         this._period = s.period || 'total';
         this._scrollY = s.scrollY || 0;
+        if (typeof s.myScore === 'number' && s.myScore > 0) {
+            this._myScore = s.myScore;
+            this._friendBestScore = Math.max(this._friendBestScore || 0, s.myScore);
+        }
         this._initUI();
         this._loadRankData();
     }
 
     onExit() {
-        lastViewState = { tab: this._tab, mode: this._mode, period: this._period, scrollY: this._scrollY };
+        lastViewState = {
+            tab: this._tab,
+            mode: this._mode,
+            period: this._period,
+            scrollY: this._scrollY,
+            myScore: this._myScore,
+        };
         this._buttons = [];
     }
 
     onPause() {}
 
     onResume() {}
-
-    update(dt) {}
 
     render(ctx) {
         const W = GameGlobal.game.width;
@@ -122,7 +135,7 @@ class RankScene {
             this._renderGlobalRank(ctx, listTop, listBottom);
         }
 
-        // 底部我的排名条（全服榜）
+        // 底部我的排名条（仅全服榜；好友榜 footer 由开放数据域绘制）
         if (this._tab === 'global' && !this._loading && this._myRank) {
             this._renderMyRankBar(ctx, listBottom);
         }
@@ -138,19 +151,23 @@ class RankScene {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
         const rect = this._listRect(top, bottom);
+        const selfMeta = this._friendSelfMeta();
 
-        // 首次进入 / 区域变化 / 模式切换：只发一次消息（避免与 _loadRankData 双打接口）
+        // 首次进入 / 区域变化 / 强制刷新：发消息拉榜
         const needRequest = !this._friendInited
             || this._friendMode !== this._mode
+            || this._friendForceRefresh
             || this._friendArea.x !== rect.x
             || this._friendArea.y !== rect.y
             || this._friendArea.w !== rect.w
             || this._friendArea.h !== rect.h;
 
         if (needRequest) {
+            const forceRefresh = this._friendForceRefresh;
             this._friendArea = rect;
             this._friendMode = this._mode;
             this._friendInited = true;
+            this._friendForceRefresh = false;
             cloudService.renderFriendRank({
                 mode: this._mode,
                 x: rect.x,
@@ -159,6 +176,10 @@ class RankScene {
                 height: rect.h,
                 screenW: W,
                 screenH: H,
+                forceRefresh,
+                selfScore: selfMeta.score,
+                selfNickname: selfMeta.nickname,
+                selfAvatarUrl: selfMeta.avatarUrl,
             });
         }
 
@@ -505,10 +526,58 @@ class RankScene {
         setTimeout(() => { this._shareBusy = false; }, 800);
     }
 
+    /** 自己行展示用：本地与全服取较高（避免本地偏低把好友 KV 写坏） */
+    _friendSelfMeta() {
+        let nickname = '我';
+        let avatarUrl = '';
+        try {
+            const { getCachedProfile } = require('../../utils/user-profile');
+            const profile = getCachedProfile() || {};
+            if (profile.nickname) nickname = profile.nickname;
+            if (profile.avatarUrl) avatarUrl = profile.avatarUrl;
+        } catch (e) { /* ignore */ }
+        return {
+            score: this._friendSelfScore(),
+            nickname,
+            avatarUrl,
+        };
+    }
+
+    _friendSelfScore() {
+        let local = 0;
+        try {
+            local = encodeRankScore(goldenBlock.getRankSums());
+        } catch (e) { /* ignore */ }
+        return Math.max(local || 0, this._friendBestScore || 0, this._myScore || 0);
+    }
+
+    /** 用全服纪录校正好友榜自己行，并只允许把 KV 往高处写 */
+    _repairFriendSelfFromCloud() {
+        const meta = this._friendSelfMeta();
+        if (meta.score > 0) {
+            cloudService.syncFriendRankSelf(meta);
+        }
+        cloudService.getMyRank({ mode: 'stage' }).then((res) => {
+            if (this._tab !== 'friend') return;
+            const cloudScore = (res && typeof res.myScore === 'number') ? res.myScore : 0;
+            if (cloudScore > 0) {
+                this._myScore = cloudScore;
+                this._friendBestScore = Math.max(this._friendBestScore || 0, cloudScore);
+            }
+            const next = this._friendSelfMeta();
+            if (!(next.score > 0)) return;
+            cloudService.syncFriendRankSelf(next);
+            cloudService.writeFriendScoreIfHigher('stage', next.score);
+        }).catch(() => {});
+    }
+
     /** 加载排行数据 */
     _loadRankData() {
         if (this._tab === 'friend') {
-            // 好友榜：隐私授权后由 _renderFriendRank 经开放数据域拉取
+            this._friendForceRefresh = true;
+            this._friendInited = false;
+            this._friendMode = '';
+            this._repairFriendSelfFromCloud();
             const { ensurePrivacyAuthorize, showPrivacyFailTip } = require('../../utils/privacy');
             ensurePrivacyAuthorize().then((ok) => {
                 if (this._tab !== 'friend') return;
@@ -516,10 +585,7 @@ class RankScene {
                     this._friendInited = false;
                     this._friendMode = '';
                     showPrivacyFailTip({ errMsg: 'privacy not authorized' });
-                    return;
                 }
-                this._friendInited = false;
-                this._friendMode = '';
             });
             return;
         }
@@ -541,6 +607,9 @@ class RankScene {
             this._total = res.total || 0;
             this._myRank = res.myRank || null;
             this._myScore = res.myScore || null;
+            if (typeof this._myScore === 'number' && this._myScore > 0) {
+                this._friendBestScore = Math.max(this._friendBestScore || 0, this._myScore);
+            }
             this._myCleared = typeof res.myClearedCount === 'number'
                 ? res.myClearedCount
                 : decodeClearedCount(this._myScore || 0);

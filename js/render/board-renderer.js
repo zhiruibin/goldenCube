@@ -8,6 +8,12 @@
 
 const { boardSkins, blockSkins } = require('../../data/skins');
 const { GARBAGE, hashSeed, drawGarbageCell } = require('./garbage-cell');
+const {
+    resolveTileStyle,
+    drawBoardChrome,
+    drawBoardTiles,
+    clipBoardInterior,
+} = require('./board-tiles');
 
 // 棋盘格子数值 -> 方块字母映射（与 data/pieces.js / data/skins.js 一致）
 const TYPE_LETTER = {
@@ -107,6 +113,8 @@ class BoardRenderer {
         this._grid = style.gridColor || 'rgba(255, 255, 255, 0.04)';
         this._border = style.borderColor || '#16213e';
         this._gridLineWidth = style.gridLineWidth || 0.5;
+        this._gridMode = style.gridMode || 'lines';
+        this._tileStyle = this._gridMode === 'tiles' ? resolveTileStyle(style) : null;
         this._fxType = skin.effect || null;
         this._fxInitialized = false;
         this._fxParticles = [];
@@ -292,31 +300,43 @@ class BoardRenderer {
         const cs = this.cellSize;
         const x = this.x;
         const y = this.y;
+        const bw = cs * this.cols;
+        const bh = cs * this.rows;
 
-        // 棋盘背景
-        ctx.fillStyle = this._bg;
-        ctx.fillRect(x, y, cs * this.cols, cs * this.rows);
+        if (this._gridMode === 'tiles' && this._tileStyle) {
+            drawBoardChrome(ctx, x, y, bw, bh, cs, this._tileStyle);
 
-        // 动态背景特效（在网格和方块之前绘制）
-        if (this._fxType) {
-            this._renderBackgroundEffect(ctx);
-        }
+            if (this._fxType) {
+                ctx.save();
+                clipBoardInterior(ctx, x, y, bw, bh, cs, this._tileStyle);
+                this._renderBackgroundEffect(ctx);
+                ctx.restore();
+            }
 
-        // 网格线（强制最小 1px 线宽，避免 0.5px 在移动端 DPR 缩放下不可见）
-        const gridLineWidth = Math.max(1, this._gridLineWidth || 1);
-        ctx.strokeStyle = this._grid;
-        ctx.lineWidth = gridLineWidth;
-        for (let r = 0; r <= this.rows; r++) {
-            ctx.beginPath();
-            ctx.moveTo(x, y + r * cs);
-            ctx.lineTo(x + this.cols * cs, y + r * cs);
-            ctx.stroke();
-        }
-        for (let c = 0; c <= this.cols; c++) {
-            ctx.beginPath();
-            ctx.moveTo(x + c * cs, y);
-            ctx.lineTo(x + c * cs, y + this.rows * cs);
-            ctx.stroke();
+            drawBoardTiles(ctx, x, y, this.cols, this.rows, cs, board, this._tileStyle);
+        } else {
+            ctx.fillStyle = this._bg;
+            ctx.fillRect(x, y, bw, bh);
+
+            if (this._fxType) {
+                this._renderBackgroundEffect(ctx);
+            }
+
+            const gridLineWidth = Math.max(1, this._gridLineWidth || 1);
+            ctx.strokeStyle = this._grid;
+            ctx.lineWidth = gridLineWidth;
+            for (let r = 0; r <= this.rows; r++) {
+                ctx.beginPath();
+                ctx.moveTo(x, y + r * cs);
+                ctx.lineTo(x + this.cols * cs, y + r * cs);
+                ctx.stroke();
+            }
+            for (let c = 0; c <= this.cols; c++) {
+                ctx.beginPath();
+                ctx.moveTo(x + c * cs, y);
+                ctx.lineTo(x + c * cs, y + this.rows * cs);
+                ctx.stroke();
+            }
         }
 
         // 已锁定方块
@@ -329,10 +349,11 @@ class BoardRenderer {
             }
         }
 
-        // 棋盘边框
-        ctx.strokeStyle = this._border;
-        ctx.lineWidth = 2;
-        ctx.strokeRect(x - 1, y - 1, cs * this.cols + 2, cs * this.rows + 2);
+        if (this._gridMode !== 'tiles') {
+            ctx.strokeStyle = this._border;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x - 1, y - 1, bw + 2, bh + 2);
+        }
     }
 
     /**
