@@ -1,5 +1,5 @@
 /**
- * 闯关导航栈：结算/失败回关选不应叠两层 stageSelect，返回一次应回首页。
+ * 闯关导航栈：首页 → 世界地图 → 关选 → 游戏；结算回关选后返回一次到地图。
  * 运行：node tools/gc-test-stage-nav-stack.js
  */
 'use strict';
@@ -26,6 +26,7 @@ global.GameGlobal = {
 };
 
 const { SceneManager } = require('../js/runtime/scene-manager');
+const { stagePlayStack, stageSelectStack } = require('../utils/stage-nav');
 
 function makeScene(name) {
     return class {
@@ -46,7 +47,7 @@ function makeScene(name) {
 }
 
 const sm = new SceneManager();
-['home', 'stageSelect', 'game', 'stageResult', 'stageFail'].forEach((n) => {
+['home', 'worldMap', 'stageSelect', 'game', 'stageResult', 'stageFail'].forEach((n) => {
     sm.register(n, makeScene(n));
 });
 
@@ -57,27 +58,39 @@ function assert(cond, msg) {
     }
 }
 
-// 首页 → 关选 → 游戏
+// 首页 → 世界地图 → 关选 → 游戏
 sm.switchTo('home');
-sm.switchTo('stageSelect');
+sm.switchTo('worldMap');
+sm.switchTo('stageSelect', { chapterId: 1 });
 sm.switchTo('game', { mode: 'stage', stageId: 47 });
-assert(sm._stack.length === 2, 'game 栈应为 home+stageSelect');
-assert(sm._stack[0].name === 'home' && sm._stack[1].name === 'stageSelect', 'game 栈顺序');
+assert(sm._stack.length === 3, 'game 栈应为 home+worldMap+stageSelect');
+assert(
+    sm._stack[0].name === 'home'
+        && sm._stack[1].name === 'worldMap'
+        && sm._stack[2].name === 'stageSelect',
+    'game 栈顺序'
+);
 
-// 游戏结束 → 结算（leaveTo 保留 home+stageSelect）
-sm.leaveTo('stageResult', { stageId: 47, result: {} }, ['home', 'stageSelect']);
+// 游戏结束 → 结算（leaveTo 保留 home+worldMap+stageSelect）
+sm.leaveTo('stageResult', { stageId: 47, result: {} }, stagePlayStack());
 assert(sm.currentName === 'stageResult', '当前应为 stageResult');
-assert(sm._stack.length === 2, 'stageResult 栈应为 home+stageSelect');
+assert(sm._stack.length === 3, 'stageResult 栈应为 home+worldMap+stageSelect');
+assert(sm._stack[1].name === 'worldMap', '结算栈应含 worldMap');
 
-// 结算 → 返回关选（leaveTo 重置栈为仅 home，并带 stageId）
-sm.leaveTo('stageSelect', { stageId: 47 }, ['home']);
+// 结算 → 返回关选（leaveTo 重置栈为 home+worldMap）
+sm.leaveTo('stageSelect', { stageId: 47 }, stageSelectStack());
 assert(sm.currentName === 'stageSelect', '当前应为 stageSelect');
-assert(sm._stack.length === 1 && sm._stack[0].name === 'home', '关选栈应仅 home');
+assert(sm._stack.length === 2, '关选栈应为 home+worldMap');
+assert(sm._stack[0].name === 'home' && sm._stack[1].name === 'worldMap', '关选返回目标为世界地图');
 assert(sm.current._params.stageId === 47, '关选应收到 stageId');
 
-// 返回一次 → 首页
+// 返回一次 → 世界地图
 sm.back();
-assert(sm.currentName === 'home', '返回一次应到 home');
+assert(sm.currentName === 'worldMap', '返回一次应到 worldMap');
+
+// 再返回 → 首页
+sm.back();
+assert(sm.currentName === 'home', '再返回应到 home');
 assert(sm._stack.length === 0, '回首页后栈应为空');
 
-console.log('PASS: 闯关导航栈 home→关选→游戏→结算→关选→home');
+console.log('PASS: 闯关导航栈 home→地图→关选→游戏→结算→关选→地图→home');

@@ -8,6 +8,7 @@ const { getAllAchievements, categoryNames } = require('../../data/achievements')
 const { achievementManager } = require('../../utils/achievement-manager');
 const { drawCoinHudCentered } = require('../../utils/coin-hud');
 const IconRenderer = require('../render/icon-renderer');
+const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
 
 const CATEGORY_ORDER = ['progress', 'plaza', 'workshop', 'social'];
 
@@ -43,6 +44,10 @@ class AchievementScene {
     onPause() {}
 
     onResume() {}
+
+    getRenderInterval() {
+        return LIST_FRAME_INTERVAL;
+    }
 
     update(dt) {}
 

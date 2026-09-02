@@ -128,16 +128,10 @@ class DPadButton {
         ctx.save();
 
         if (!this._pressed) {
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-            ctx.shadowBlur = Math.max(3, r * 0.26);
-            ctx.shadowOffsetY = Math.max(2, r * 0.12);
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.02)';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
             ctx.beginPath();
-            ctx.arc(cx, cy, r - 0.5, 0, Math.PI * 2);
+            ctx.arc(cx + 0.5, cy + Math.max(2, r * 0.1), r, 0, Math.PI * 2);
             ctx.fill();
-            ctx.shadowColor = 'transparent';
-            ctx.shadowBlur = 0;
-            ctx.shadowOffsetY = 0;
         }
 
         let bodyGrad;

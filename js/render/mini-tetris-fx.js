@@ -157,6 +157,14 @@ class MiniTetrisFx {
     }
   }
 
+  isBusy() {
+    if (!this._enabled || !this._pieces.length) return false;
+    for (let i = 0; i < this._pieces.length; i++) {
+      if (Math.abs(this._pieces[i].vx) > 2) return true;
+    }
+    return false;
+  }
+
   update(dt) {
     if (!this._enabled || !this._pieces.length) return;
     dt = Math.min(dt, 0.05);

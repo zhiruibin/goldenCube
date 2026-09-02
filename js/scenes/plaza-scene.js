@@ -8,13 +8,15 @@ const {
     drawBrandTitle,
     SUBTITLE,
     MUTED,
+    ACCENT,
 } = require('../theme/arcade-night');
 const workshop = require('../../utils/workshop-manager');
 const goldenBlock = require('../../utils/golden-block-manager');
 const { coinManager } = require('../../utils/coin-manager');
+const { applyShortageHighlight, renderEntryDialog } = require('../../utils/stage-entry-ui');
 const { adManager, isRewardedVideoConfigured } = require('../../utils/ad-manager');
-const { drawGarbageLayoutCell } = require('../render/garbage-cell');
-const { drawLayoutBoardTiles } = require('../render/board-tiles');
+const plazaWall = require('../render/plaza-wall-fx');
+const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
 
 const PLAZA_SORT = [
     { id: 'official', label: '官方' },
@@ -22,12 +24,6 @@ const PLAZA_SORT = [
     { id: 'heat', label: '热门' },
     { id: 'clearRate', label: '好通关' },
 ];
-
-/** 与闯关解锁/已通关卡片一致的金色底/描边 */
-const PLAZA_UNLOCKED_FILL = 'rgba(255, 200, 87, 0.14)';
-const PLAZA_UNLOCKED_STROKE = 'rgba(255, 200, 87, 0.6)';
-const PLAZA_LOCKED_FILL = 'rgba(255, 255, 255, 0.05)';
-const PLAZA_LOCKED_STROKE = 'rgba(255, 255, 255, 0.14)';
 
 class PlazaScene {
     constructor() {
@@ -38,6 +34,7 @@ class PlazaScene {
         this._toastUntil = 0;
         this._confirm = null;
         this._playDialog = null;
+        this._playDialogArmed = false;
         this._scrollY = 0;
         this._scrollVel = 0;
         this._moveSamples = [];
@@ -45,6 +42,13 @@ class PlazaScene {
         this._plazaTabCache = {};
         this._plazaLoadGen = 0;
         this._challengeBusy = false;
+        this._cardState = Object.create(null);
+        this._hudLine = '';
+        this._cachedTopInset = null;
+        this._wallItems = null;
+        this._wallW = 0;
+        this._wallTop = 0;
+        this._focusStageId = '';
     }
 
     onEnter(params) {
@@ -53,16 +57,29 @@ class PlazaScene {
         if (p.toast) this._showToast(p.toast);
         this._confirm = null;
         this._playDialog = null;
-        this._scrollY = 0;
+        this._playDialogArmed = false;
+        this._scrollY = typeof p.scrollY === 'number' && Number.isFinite(p.scrollY)
+            ? Math.max(0, p.scrollY)
+            : 0;
+        this._focusStageId = p.focusStageId ? String(p.focusStageId) : '';
         this._scrollVel = 0;
         this._moveSamples = [];
         this._plazaItems = [];
         this._plazaLoading = true;
         this._challengeBusy = false;
+        this._cardState = Object.create(null);
+        this._hudLine = '';
+        this._cachedTopInset = null;
+        this._wallItems = null;
         this._rebuild();
     }
 
     onExit() {
+        this._params = Object.assign({}, this._params || {}, {
+            plazaSort: this._plazaSort,
+            scrollY: this._scrollY || 0,
+            focusStageId: this._focusStageId || '',
+        });
         this._buttons = [];
         this._listRects = [];
         this._scrollVel = 0;
@@ -84,6 +101,7 @@ class PlazaScene {
         this._plazaSort = sortId;
         this._scrollY = 0;
         this._scrollVel = 0;
+        this._focusStageId = '';
         const cached = this._plazaTabCache[sortId];
         if (cached && cached.length) {
             this._plazaItems = cached;
@@ -97,13 +115,17 @@ class PlazaScene {
         } else {
             this._plazaItems = [];
         }
-        this._buildListRects();
+        this._wallItems = null;
         this._rebuild();
     }
 
     update(dt) {
         if (this._toast && Date.now() > this._toastUntil) this._toast = '';
         this._applyScrollInertia(dt);
+    }
+
+    getRenderInterval() {
+        return LIST_FRAME_INTERVAL;
     }
 
     _maxScroll() {
@@ -154,13 +176,13 @@ class PlazaScene {
         if (next <= 0 || next >= this._maxScroll()) {
             this._scrollY = next;
             this._scrollVel = 0;
-            this._buildListRects();
+            plazaWall.applyScroll(this._listRects, this._listTop, this._scrollY);
             return;
         }
         this._scrollY = next;
         // 指数衰减，约 0.9 / 帧 @60fps
         this._scrollVel = vel * Math.pow(0.90, sec * 60);
-        this._buildListRects();
+        plazaWall.applyScroll(this._listRects, this._listTop, this._scrollY);
     }
 
     _showToast(msg) {
@@ -169,6 +191,7 @@ class PlazaScene {
     }
 
     _getTopInset() {
+        if (this._cachedTopInset != null) return this._cachedTopInset;
         const sys = (GameGlobal && GameGlobal.game && GameGlobal.game.systemInfo) || {};
         const statusBarHeight = Number(sys.statusBarHeight) || 0;
         const safeTop = (sys.safeArea && Number(sys.safeArea.top)) || 0;
@@ -179,7 +202,8 @@ class PlazaScene {
                 if (rect && rect.height > 0) capsuleBottom = rect.bottom;
             }
         } catch (e) { /* ignore */ }
-        return Math.max(statusBarHeight, safeTop, capsuleBottom) + 12;
+        this._cachedTopInset = Math.max(statusBarHeight, safeTop, capsuleBottom) + 12;
+        return this._cachedTopInset;
     }
 
     _rebuild(options) {
@@ -193,7 +217,8 @@ class PlazaScene {
 
         const titleY = top + 6;
         const metaY = titleY + 34;
-        const tabY = metaY + 28;
+        const hintY = metaY + 22;
+        const tabY = hintY + 18;
 
         const sw = (W - side * 2 - gap * 3) / 4;
         PLAZA_SORT.forEach((t, i) => {
@@ -218,17 +243,21 @@ class PlazaScene {
             y: bottomY,
             w: W - side * 2,
             h: bottomH,
-            text: '返回首页',
+            text: '← 返回',
             color: '#555',
             onClick: () => GameGlobal.game.sceneManager.back(),
         }));
 
         this._titleY = titleY;
         this._metaY = metaY;
-        this._listTop = tabY + 42 + 16;
+        this._hintY = hintY;
+        this._listTop = tabY + 42 + 12;
         this._listBottom = bottomY - 12;
         this._plazaItems = this._plazaItems || [];
+        this._refreshHud();
         this._buildListRects();
+        this._refreshPlazaFlags();
+        this._finalizePlazaView();
         this._loadPlaza(!!opts.silentReload);
     }
 
@@ -257,7 +286,11 @@ class PlazaScene {
         }
         this._plazaTabCache[sort] = this._plazaItems;
         this._plazaLoading = false;
+        this._wallItems = null;
+        this._refreshHud();
         this._buildListRects();
+        this._refreshPlazaFlags();
+        this._finalizePlazaView();
     }
 
     _loadPlaza(silentReload) {
@@ -270,14 +303,21 @@ class PlazaScene {
             if (cached && cached.length) {
                 this._plazaItems = cached;
                 this._plazaLoading = false;
+                this._wallItems = null;
                 this._buildListRects();
+                this._refreshPlazaFlags();
+                this._finalizePlazaView();
             } else if (this._useLocalPlazaPreview(sort)) {
                 if (!this._plazaItems || !this._plazaItems.length) {
                     this._plazaItems = workshop.listPlazaLocal(sort);
+                    this._wallItems = null;
                 }
                 this._buildListRects();
+                this._refreshPlazaFlags();
+                this._finalizePlazaView();
             } else if (!this._plazaItems || !this._plazaItems.length) {
                 this._plazaItems = [];
+                this._wallItems = null;
                 this._buildListRects();
             }
         }
@@ -293,6 +333,7 @@ class PlazaScene {
                 this._applyPlazaList(sort, local);
             } else {
                 this._buildListRects();
+                this._finalizePlazaView();
             }
         });
     }
@@ -305,68 +346,113 @@ class PlazaScene {
         return '暂无玩家发布关卡';
     }
 
+    _refreshHud() {
+        this._hudLine = '金' + goldenBlock.getBalance()
+            + ' · 币' + coinManager.getCoins()
+            + ' · 今日免费 ' + workshop.getFreePlayRemaining();
+    }
+
+    _refreshPlazaFlags() {
+        const flags = Object.create(null);
+        const items = this._plazaItems || [];
+        for (let i = 0; i < items.length; i++) {
+            const id = items[i] && items[i].stageId;
+            if (!id) continue;
+            flags[id] = plazaWall.plazaCardState(
+                workshop.isPlazaUnlocked(id),
+                workshop.isPlazaCleared(id)
+            );
+        }
+        this._cardState = flags;
+    }
+
+    /** 列表高度就绪后再夹紧滚动，并刷新刚打过的那张卡 */
+    _finalizePlazaView() {
+        if ((this._plazaItems || []).length && (this._listContentH || 0) > 0) {
+            this._scrollY = this._clampScrollY(this._scrollY || 0);
+        }
+        plazaWall.applyScroll(this._listRects, this._listTop, this._scrollY || 0);
+        if (this._focusStageId) this._refreshFocusedCard(this._focusStageId);
+    }
+
+    _refreshFocusedCard(stageId) {
+        if (!stageId) return;
+        const unlocked = workshop.isPlazaUnlocked(stageId);
+        const cleared = workshop.isPlazaCleared(stageId);
+        if (!this._cardState) this._cardState = Object.create(null);
+        this._cardState[stageId] = plazaWall.plazaCardState(unlocked, cleared);
+        const items = this._plazaItems || [];
+        for (let i = 0; i < items.length; i++) {
+            const s = items[i];
+            if (!s || s.stageId !== stageId) continue;
+            if (cleared) {
+                const n = (s.stats && s.stats.clearCount) || 0;
+                s.stats = Object.assign({}, s.stats || {}, { clearCount: Math.max(n, 1) });
+            }
+            break;
+        }
+        const rects = this._listRects || [];
+        for (let i = 0; i < rects.length; i++) {
+            const box = rects[i];
+            if (box.stage && box.stage.stageId === stageId) {
+                box._metaKey = '';
+                box._meta = null;
+            }
+        }
+    }
+
     _buildListRects() {
-        this._listRects = [];
         const W = GameGlobal.game.width;
         const items = this._plazaItems || [];
-        const rowH = 72;
-        const cbW = 88;
-        const cbH = 24;
-        const titleY = 22;
-        items.forEach((stage, i) => {
-            const y = this._listTop + i * (rowH + 8) - this._scrollY;
-            const x = 12;
-            const w = W - 24;
-            const cleared = workshop.isPlazaCleared(stage.stageId);
-            const miniBoardX = x + w - 56;
-            const challengeBtn = cleared ? {
-                x: miniBoardX - 8 - cbW,
-                y: y + titleY - cbH / 2,
-                w: cbW,
-                h: cbH,
-            } : null;
-            this._listRects.push({
-                stage,
-                x,
-                y,
-                w,
-                h: rowH,
-                challengeBtn,
+        if (this._wallItems !== items || this._wallW !== W || this._wallTop !== this._listTop) {
+            const laid = plazaWall.layoutWall(items, {
+                pad: 12,
+                listTop: this._listTop,
+                scrollY: 0,
+                width: W,
             });
-        });
-        this._listContentH = items.length * (rowH + 8);
+            this._listRects = laid.boxes;
+            this._listContentH = laid.contentH;
+            this._wallItems = items;
+            this._wallW = W;
+            this._wallTop = this._listTop;
+        }
+        plazaWall.applyScroll(this._listRects, this._listTop, this._scrollY || 0);
     }
 
     _tryPlayPlaza(stage) {
-        if (!workshop.isPlazaUnlocked(stage.stageId)) {
-            this._confirm = {
-                title: '解锁关卡',
-                body: '消耗 ' + workshop.PLAZA_UNLOCK_GOLD + ' 金方块永久解锁？',
-                onOk: () => {
-                    const r = workshop.unlockPlazaStage(stage.stageId);
-                    this._confirm = null;
-                    if (!r.ok) {
-                        this._showToast('金方块不足');
-                        return;
-                    }
-                    this._showToast('已解锁');
-                    this._openPlayDialog(stage);
-                    this._rebuild();
-                },
-            };
-            return;
-        }
         this._openPlayDialog(stage);
     }
 
     _openPlayDialog(stage) {
         const fee = workshop.getPlayFee(stage);
+        const unlocked = workshop.isPlazaUnlocked(stage.stageId);
         this._playDialog = {
             stage,
             fee,
+            locked: !unlocked,
+            needGold: unlocked ? 0 : workshop.PLAZA_UNLOCK_GOLD,
             freeLeft: workshop.getFreePlayRemaining(),
-            canAd: isRewardedVideoConfigured() === true,
+            canAd: unlocked && isRewardedVideoConfigured() === true,
+            canChallenge: false,
+            lackGold: false,
+            lackCoins: false,
         };
+        // 开窗这记抬手不能落到「确认」上，余额只在下一次点确认时检查
+        this._playDialogArmed = false;
+    }
+
+    _payAndEnterPlaza(stage) {
+        const r = workshop.enterPlazaStage(stage.stageId);
+        if (!r.ok) {
+            applyShortageHighlight(this._playDialog, r);
+            this._showToast(workshop.plazaEntryShortageText(r));
+            return;
+        }
+        this._playDialog = null;
+        this._refreshHud();
+        this._refreshPlazaFlags();
+        this._startPlazaGame(stage, { entryPaid: r.paid || 0 });
     }
 
     _startPlazaGame(stage, opts) {
@@ -383,6 +469,8 @@ class PlazaScene {
             workshopListParams: {
                 origin: 'plaza',
                 plazaSort: this._plazaSort,
+                scrollY: this._scrollY || 0,
+                focusStageId: stage.stageId,
             },
             entryPaid: o.entryPaid || 0,
             dropIntervalMs: stage.dropIntervalMs || 1000,
@@ -474,6 +562,22 @@ class PlazaScene {
     }
 
     render(ctx) {
+        try {
+            this._renderPlaza(ctx);
+        } catch (e) {
+            console.error('[Plaza] render 失败', e);
+            const W = GameGlobal.game.width;
+            const H = GameGlobal.game.height;
+            fillNightBackground(ctx, W, H);
+            ctx.fillStyle = ACCENT;
+            ctx.font = 'bold 22px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('关卡广场', W / 2, H * 0.4);
+        }
+    }
+
+    _renderPlaza(ctx) {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
         fillNightBackground(ctx, W, H);
@@ -488,12 +592,15 @@ class PlazaScene {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(
-            '金' + goldenBlock.getBalance()
-            + ' · 币' + coinManager.getCoins()
-            + ' · 今日免费 ' + workshop.getFreePlayRemaining(),
+            this._hudLine || '',
             W / 2,
             metaY
         );
+
+        const hintY = this._hintY != null ? this._hintY : metaY + 22;
+        ctx.fillStyle = ACCENT;
+        ctx.font = 'bold 12px sans-serif';
+        ctx.fillText('点嵌板进入该关', W / 2, hintY);
 
         for (const btn of this._buttons) btn.render(ctx);
 
@@ -509,13 +616,16 @@ class PlazaScene {
             ctx.fillText(this._getPlazaListHint(), W / 2, (this._listTop + this._listBottom) / 2);
         }
 
-        this._listRects.forEach((item) => {
-            if (item.y + item.h < this._listTop || item.y > this._listBottom) return;
-            this._drawRow(ctx, item);
-        });
+        const rects = this._listRects;
+        for (let i = 0; i < rects.length; i++) {
+            const item = rects[i];
+            if (item.y + item.h < this._listTop || item.y > this._listBottom) continue;
+            try {
+                this._drawCard(ctx, item);
+            } catch (e) { /* 单卡失败不拖死整墙 */ }
+        }
         ctx.restore();
 
-        if (this._confirm) this._drawConfirm(ctx);
         if (this._playDialog) this._drawPlayDialog(ctx);
 
         if (this._toast) {
@@ -530,218 +640,33 @@ class PlazaScene {
         }
     }
 
-    _drawRow(ctx, item) {
-        const { stage, x, y, w, h, challengeBtn } = item;
-        const cleared = workshop.isPlazaCleared(stage.stageId);
-        const unlocked = workshop.isPlazaUnlocked(stage.stageId);
-        const isOfficial = stage.source === 'official';
-        const best = cleared ? workshop.getPlazaBest(stage.stageId) : null;
-
-        ctx.fillStyle = unlocked ? PLAZA_UNLOCKED_FILL : PLAZA_LOCKED_FILL;
-        this._round(ctx, x, y, w, h, 10);
-        ctx.fill();
-        ctx.strokeStyle = unlocked ? PLAZA_UNLOCKED_STROKE : PLAZA_LOCKED_STROKE;
-        ctx.lineWidth = 1;
-        this._round(ctx, x, y, w, h, 10);
-        ctx.stroke();
-
-        const miniBoardX = x + w - 56;
-        const titleX = x + 12;
-        const titleY = y + 22;
-        const titleFont = 'bold 15px sans-serif';
-        const btnLeft = challengeBtn ? challengeBtn.x : miniBoardX;
-        const titleMaxW = btnLeft - titleX - 8;
-
-        ctx.font = titleFont;
-        const title = this._truncateText(ctx, stage.title || '未命名', Math.max(0, titleMaxW), titleFont);
-
-        ctx.fillStyle = unlocked ? '#ffffff' : MUTED;
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(title, titleX, titleY);
-
-        let sub = '垃圾 ' + (stage.garbageCount || 0)
-            + ' · 行 ' + (stage.minLines || 0);
-        if (isOfficial) sub += ' · 官方';
-        if (!unlocked) {
-            sub += ' · 需1金解锁';
-        } else if (!cleared) {
-            sub += ' · 已解锁';
-        }
-        sub += ' · 全服通关' + ((stage.stats && stage.stats.clearCount) || 0);
-        ctx.fillStyle = MUTED;
-        ctx.font = '12px sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText(sub, x + 12, y + 48);
-
-        if (cleared && best && best.lines >= 1) {
-            ctx.textAlign = 'right';
-            ctx.fillStyle = MUTED;
-            ctx.fillText('最佳 ' + best.lines + ' 行', x + w - 12, y + 48);
-            ctx.textAlign = 'left';
-        }
-
-        if (cleared && challengeBtn) {
-            const cb = challengeBtn;
-            ctx.fillStyle = 'rgba(224, 154, 48, 0.9)';
-            this._round(ctx, cb.x, cb.y, cb.w, cb.h, 6);
-            ctx.fill();
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 11px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('约好友来战', cb.x + cb.w / 2, cb.y + cb.h / 2);
-            ctx.textAlign = 'left';
-        }
-
-        this._drawMiniBoard(ctx, stage.rows, x + w - 56, y + 10, 4);
-    }
-
-    _truncateText(ctx, text, maxW, font) {
-        const raw = String(text || '');
-        if (!raw) return '';
-        if (font) ctx.font = font;
-        if (ctx.measureText(raw).width <= maxW) return raw;
-        let s = raw;
-        while (s.length > 1 && ctx.measureText(s + '…').width > maxW) {
-            s = s.slice(0, -1);
-        }
-        return s + '…';
-    }
-
-    _drawMiniBoard(ctx, rows, ox, oy, cell) {
-        const cols = 10;
-        const visRows = 10;
-        const r = workshop.cloneRows(rows);
-        const occ = [];
-        for (let y = 10; y < 20; y++) {
-            const rowIdx = y - 10;
-            occ[rowIdx] = [];
-            const line = r[String(y)] || '';
-            for (let x = 0; x < cols; x++) {
-                occ[rowIdx][x] = line[x] === '#';
-            }
-        }
-        if (!drawLayoutBoardTiles(ctx, ox, oy, cols, visRows, cell, occ)) {
-            ctx.fillStyle = 'rgba(0,0,0,0.35)';
-            ctx.fillRect(ox, oy, cols * cell, visRows * cell);
-        }
-        for (let y = 10; y < 20; y++) {
-            const line = r[String(y)];
-            for (let x = 0; x < cols; x++) {
-                if (line[x] === '#') {
-                    drawGarbageLayoutCell(ctx, ox + x * cell, oy + (y - 10) * cell, cell - 0.5, x, y);
-                }
-            }
-        }
-    }
-
-    _drawConfirm(ctx) {
-        const W = GameGlobal.game.width;
-        const H = GameGlobal.game.height;
-        const c = this._confirm;
-        ctx.fillStyle = 'rgba(0,0,0,0.55)';
-        ctx.fillRect(0, 0, W, H);
-        const bw = Math.min(300, W * 0.82);
-        const bh = 180;
-        const px = (W - bw) / 2;
-        const py = (H - bh) / 2;
-        ctx.fillStyle = '#2a2a32';
-        this._round(ctx, px, py, bw, bh, 12);
-        ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 17px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(c.title, W / 2, py + 36);
-        ctx.fillStyle = SUBTITLE;
-        ctx.font = '13px sans-serif';
-        const lines = String(c.body || '').split('\n');
-        lines.forEach((ln, i) => ctx.fillText(ln, W / 2, py + 70 + i * 20));
-        const btnW = (bw - 36) / 2;
-        const by = py + bh - 56;
-        ctx.fillStyle = '#555';
-        this._round(ctx, px + 12, by, btnW, 40, 8);
-        ctx.fill();
-        ctx.fillStyle = '#e09a30';
-        this._round(ctx, px + 24 + btnW, by, btnW, 40, 8);
-        ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 15px sans-serif';
-        ctx.fillText('取消', px + 12 + btnW / 2, by + 20);
-        ctx.fillText('确定', px + 24 + btnW + btnW / 2, by + 20);
-        this._confirmRects = {
-            cancel: { x: px + 12, y: by, w: btnW, h: 40 },
-            ok: { x: px + 24 + btnW, y: by, w: btnW, h: 40 },
-        };
+    _drawCard(ctx, item) {
+        const stage = item.stage;
+        const id = stage && stage.stageId;
+        const state = (id && this._cardState && this._cardState[id]) || 'locked';
+        plazaWall.drawCard(ctx, item, state);
     }
 
     _drawPlayDialog(ctx) {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
         const d = this._playDialog;
-        ctx.fillStyle = 'rgba(0,0,0,0.55)';
-        ctx.fillRect(0, 0, W, H);
-        const bw = Math.min(300, W * 0.82);
-        const bh = d.canAd ? 272 : 232;
-        const px = (W - bw) / 2;
-        const py = (H - bh) / 2;
-        ctx.fillStyle = '#2a2a32';
-        this._round(ctx, px, py, bw, bh, 12);
-        ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 17px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(d.stage.title, W / 2, py + 36);
-        ctx.fillStyle = SUBTITLE;
-        ctx.font = '13px sans-serif';
-        const feeLine = '开打消耗 ' + d.fee + ' 金币';
-        const cleared = workshop.isPlazaCleared(d.stage.stageId);
-        const best = cleared ? workshop.getPlazaBest(d.stage.stageId) : null;
-        const infoLine = (cleared && best && best.lines >= 1)
-            ? (feeLine + ' · 最佳 ' + best.lines + ' 行')
-            : feeLine;
-        ctx.textAlign = 'center';
-        ctx.fillText(infoLine, W / 2, py + 68);
-
-        const btnW = bw - 40;
-        let by = py + 100;
-        ctx.fillStyle = '#e09a30';
-        this._round(ctx, px + 20, by, btnW, 40, 8);
-        ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 15px sans-serif';
-        ctx.fillText('支付开打', W / 2, by + 20);
-        this._playRects = {
-            pay: { x: px + 20, y: by, w: btnW, h: 40 },
-        };
-        if (d.canAd) {
-            by += 52;
-            ctx.fillStyle = '#3a7ab0';
-            this._round(ctx, px + 20, by, btnW, 40, 8);
-            ctx.fill();
-            ctx.fillStyle = '#fff';
-            ctx.fillText('看广告免费（余' + d.freeLeft + '）', W / 2, by + 20);
-            this._playRects.ad = { x: px + 20, y: by, w: btnW, h: 40 };
+        if (!d.locked) {
+            const cleared = workshop.isPlazaCleared(d.stage.stageId);
+            const best = cleared ? workshop.getPlazaBest(d.stage.stageId) : null;
+            d.canChallenge = !!(cleared && best && best.lines >= 1);
+        } else {
+            d.canAd = false;
+            d.canChallenge = false;
         }
-        by += 52;
-        ctx.fillStyle = '#555';
-        this._round(ctx, px + 20, by, btnW, 40, 8);
-        ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 15px sans-serif';
-        ctx.fillText('取消', W / 2, by + 20);
-        this._playRects.cancel = { x: px + 20, y: by, w: btnW, h: 40 };
-    }
-
-    _round(ctx, x, y, w, h, r) {
-        ctx.beginPath();
-        ctx.moveTo(x + r, y);
-        ctx.arcTo(x + w, y, x + w, y + h, r);
-        ctx.arcTo(x + w, y + h, x, y + h, r);
-        ctx.arcTo(x, y + h, x, y, r);
-        ctx.arcTo(x, y, x + w, y, r);
-        ctx.closePath();
+        renderEntryDialog(ctx, W, H, d);
+        this._playRects = {
+            pay: d.payRect,
+            cancel: d.cancelRect,
+            ad: d.adRect,
+            challenge: d.challengeRect,
+        };
+        this._playPanel = d.panelRect;
     }
 
     _hit(x, y, r) {
@@ -755,6 +680,7 @@ class PlazaScene {
         this._lastMoveY = y;
         const now = Date.now();
         this._moveSamples = [{ t: now, y: y }];
+        if (this._playDialog) this._playDialogArmed = true;
     }
 
     onTouchMove(x, y) {
@@ -769,7 +695,7 @@ class PlazaScene {
         while (this._moveSamples.length > 1 && now - this._moveSamples[0].t > 120) {
             this._moveSamples.shift();
         }
-        this._buildListRects();
+        plazaWall.applyScroll(this._listRects, this._listTop, this._scrollY);
     }
 
     handleTouchStart(identifier, x, y) {
@@ -792,35 +718,26 @@ class PlazaScene {
     onTouchEnd(x, y) {
         this._lastMoveY = null;
         // 惯性已在 handleTouchEnd 启动；此处仅处理点击
-        if (this._confirm) {
-            if (this._hit(x, y, this._confirmRects && this._confirmRects.ok)) {
-                if (this._confirm.onOk) this._confirm.onOk();
-                return;
-            }
-            if (this._hit(x, y, this._confirmRects && this._confirmRects.cancel)) {
-                this._confirm = null;
-                return;
-            }
-            return;
-        }
         if (this._playDialog) {
+            if (!this._playDialogArmed) {
+                return;
+            }
             const d = this._playDialog;
             const r = this._playRects || {};
             if (this._hit(x, y, r.cancel)) {
                 this._playDialog = null;
+                this._playDialogArmed = false;
                 return;
             }
             if (this._hit(x, y, r.pay)) {
-                const paid = workshop.spendPlayFee(d.stage.stageId);
-                if (!paid.ok) {
-                    this._showToast('金币不足（需 ' + d.fee + '）');
-                    return;
-                }
-                this._playDialog = null;
-                this._startPlazaGame(d.stage, { entryPaid: paid.paid });
+                this._payAndEnterPlaza(d.stage);
                 return;
             }
             if (this._hit(x, y, r.ad)) {
+                if (d.locked) {
+                    this._showToast('请先解锁关卡');
+                    return;
+                }
                 if (d.freeLeft <= 0) {
                     this._showToast('今日免费开打已用完');
                     return;
@@ -831,11 +748,26 @@ class PlazaScene {
                             this._showToast('今日免费开打已用完');
                             return;
                         }
+                        const paid = workshop.enterPlazaStage(d.stage.stageId, { skipFee: true });
+                        if (!paid.ok) {
+                            this._showToast(workshop.plazaEntryShortageText(paid));
+                            return;
+                        }
                         this._playDialog = null;
                         this._startPlazaGame(d.stage, { entryPaid: 0 });
                     })
                     .catch(() => this._showToast('需完整观看广告'));
                 return;
+            }
+            if (this._hit(x, y, r.challenge)) {
+                const stage = d.stage;
+                this._playDialog = null;
+                this._startPlazaChallenge(stage);
+                return;
+            }
+            if (!this._hit(x, y, this._playPanel)) {
+                this._playDialog = null;
+                this._playDialogArmed = false;
             }
             return;
         }
@@ -853,15 +785,7 @@ class PlazaScene {
         }
 
         if (y >= this._listTop && y <= this._listBottom) {
-            for (let i = 0; i < this._listRects.length; i++) {
-                const item = this._listRects[i];
-                const cb = item.challengeBtn;
-                if (cb && this._hit(x, y, cb)) {
-                    this._startPlazaChallenge(item.stage);
-                    return;
-                }
-            }
-            for (let i = 0; i < this._listRects.length; i++) {
+            for (let i = this._listRects.length - 1; i >= 0; i--) {
                 const item = this._listRects[i];
                 if (this._hit(x, y, item)) {
                     this._tryPlayPlaza(item.stage);

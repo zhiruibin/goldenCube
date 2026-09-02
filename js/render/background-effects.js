@@ -11,11 +11,14 @@ const METEOR_SPAWN_MAX = 2.8;
 /** 脉冲星占比（更明显的明暗呼吸） */
 const PULSE_STAR_RATIO = 0.35;
 
-function BackgroundEffects() {
+function BackgroundEffects(opts) {
   const systemInfo = wx.getSystemInfoSync();
   const level = systemInfo.benchmarkLevel || 2;
+  this._lite = !!(opts && opts.lite);
 
-  if (level >= 3) {
+  if (this._lite) {
+    this._maxParticles = level >= 3 ? 10 : 6;
+  } else if (level >= 3) {
     this._maxParticles = 32;
   } else if (level === 2) {
     this._maxParticles = 16;
@@ -110,7 +113,8 @@ BackgroundEffects.prototype.update = function (dt) {
     return;
   }
 
-  // 流星与消行脉冲每帧更新，保证连贯
+  // 流星与消行脉冲每帧更新，保证连贯（对局 lite 模式不刷流星）
+  if (!this._lite) {
   if (this._meteorTimer > 0) {
     this._meteorTimer -= dt;
   }
@@ -123,6 +127,7 @@ BackgroundEffects.prototype.update = function (dt) {
       // 已满：短间隔后再尝试，避免 timer 卡在 0 导致刚腾出空位就连刷
       this._meteorTimer = 0.35 + Math.random() * 0.4;
     }
+  }
   }
   for (let i = this._meteors.length - 1; i >= 0; i--) {
     const m = this._meteors[i];
@@ -186,7 +191,7 @@ BackgroundEffects.prototype.render = function (ctx) {
     if (p.pulse) {
       // 脉冲星：明暗对比更大，亮时带淡光晕
       alpha = p.alpha * (0.2 + 0.8 * wave);
-      if (wave > 0.55) {
+      if (!this._lite && wave > 0.55) {
         ctx.globalAlpha = alpha * 0.28;
         ctx.fillStyle = p.color;
         ctx.beginPath();

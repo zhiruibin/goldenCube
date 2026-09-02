@@ -13,6 +13,7 @@ const { decodeClearedCount, encodeRankScore } = require('../../utils/rank-score'
 const IconRenderer = require('../render/icon-renderer');
 const { achievementManager } = require('../../utils/achievement-manager');
 const goldenBlock = require('../../utils/golden-block-manager');
+const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
 
 let lastViewState = null;
 
@@ -88,6 +89,10 @@ class RankScene {
     onPause() {}
 
     onResume() {}
+
+    getRenderInterval() {
+        return LIST_FRAME_INTERVAL;
+    }
 
     render(ctx) {
         const W = GameGlobal.game.width;

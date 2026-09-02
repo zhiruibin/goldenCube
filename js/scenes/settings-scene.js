@@ -5,6 +5,7 @@
 
 const { Button } = require('../widgets/button');
 const { getCachedProfile, tryAutoFetchProfile, requestWechatProfile, cancelWechatProfile, resolveAvatarUrl } = require('../../utils/user-profile');
+const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
 
 class SettingsScene {
     constructor() {
@@ -37,6 +38,10 @@ class SettingsScene {
     onPause() {}
 
     onResume() {}
+
+    getRenderInterval() {
+        return LIST_FRAME_INTERVAL;
+    }
 
     update(dt) {}
 

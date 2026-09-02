@@ -6,6 +6,7 @@ const { resolveAvatarUrl, ensureProfileForAction, getCachedProfile } = require('
 const { achievementManager } = require('../../utils/achievement-manager');
 const challengeUi = require('../../utils/challenge-ui');
 const challengeShareCard = require('../../utils/challenge-share-card');
+const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
 
 const PENDING_CHALLENGES_KEY = 'gc_pending_challenges';
 /** 与云函数挑战过期一致：本地待应战超过 7 天视为失效 */
@@ -216,6 +217,10 @@ class ChallengeScene {
   onPause() {}
 
   onResume() {}
+
+  getRenderInterval() {
+    return LIST_FRAME_INTERVAL;
+  }
 
   update(dt) {
     if (this._toast && Date.now() > this._toast.expireAt) {
@@ -983,7 +988,7 @@ class ChallengeScene {
           if (area.mode === 'plaza') {
             GameGlobal.game.sceneManager.switchTo('plaza', {}, ['home']);
           } else {
-            GameGlobal.game.sceneManager.switchTo('stageSelect');
+            GameGlobal.game.sceneManager.switchTo('worldMap');
           }
           return;
         }

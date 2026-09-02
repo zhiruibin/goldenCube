@@ -115,6 +115,7 @@ class BoardRenderer {
         this._gridLineWidth = style.gridLineWidth || 0.5;
         this._gridMode = style.gridMode || 'lines';
         this._tileStyle = this._gridMode === 'tiles' ? resolveTileStyle(style) : null;
+        this._tileLayer = null;
         this._fxType = skin.effect || null;
         this._fxInitialized = false;
         this._fxParticles = [];
@@ -304,7 +305,17 @@ class BoardRenderer {
         const bh = cs * this.rows;
 
         if (this._gridMode === 'tiles' && this._tileStyle) {
-            drawBoardChrome(ctx, x, y, bw, bh, cs, this._tileStyle);
+            const layer = this._ensureTileLayer(bw, bh, cs);
+            if (layer) {
+                ctx.drawImage(
+                    layer.canvas,
+                    x - layer.pad, y - layer.pad,
+                    bw + layer.pad * 2, bh + layer.pad * 2
+                );
+            } else {
+                drawBoardChrome(ctx, x, y, bw, bh, cs, this._tileStyle);
+                drawBoardTiles(ctx, x, y, this.cols, this.rows, cs, null, this._tileStyle);
+            }
 
             if (this._fxType) {
                 ctx.save();
@@ -312,8 +323,6 @@ class BoardRenderer {
                 this._renderBackgroundEffect(ctx);
                 ctx.restore();
             }
-
-            drawBoardTiles(ctx, x, y, this.cols, this.rows, cs, board, this._tileStyle);
         } else {
             ctx.fillStyle = this._bg;
             ctx.fillRect(x, y, bw, bh);
@@ -353,6 +362,40 @@ class BoardRenderer {
             ctx.strokeStyle = this._border;
             ctx.lineWidth = 2;
             ctx.strokeRect(x - 1, y - 1, bw + 2, bh + 2);
+        }
+    }
+
+    /** 空格槽 + 外框只烘焙一次，避免每帧 200 格 roundRect / shadowBlur */
+    _ensureTileLayer(bw, bh, cs) {
+        const pad = Math.max(8, (this._tileStyle && this._tileStyle.framePadding) || 4) + 12;
+        const key = [this.x, this.y, cs, this.cols, this.rows, pad].join('|');
+        if (this._tileLayer && this._tileLayer.key === key) {
+            return this._tileLayer;
+        }
+        try {
+            if (typeof wx === 'undefined' || typeof wx.createCanvas !== 'function') {
+                return null;
+            }
+            const dpr = Math.min(
+                (typeof GameGlobal !== 'undefined' && GameGlobal.game && GameGlobal.game.dpr) || 2,
+                2
+            );
+            const canvas = wx.createCanvas();
+            canvas.width = Math.max(1, Math.ceil((bw + pad * 2) * dpr));
+            canvas.height = Math.max(1, Math.ceil((bh + pad * 2) * dpr));
+            const c = canvas.getContext('2d');
+            if (typeof c.setTransform === 'function') {
+                c.setTransform(dpr, 0, 0, dpr, 0, 0);
+            } else {
+                c.scale(dpr, dpr);
+            }
+            drawBoardChrome(c, pad, pad, bw, bh, cs, this._tileStyle);
+            drawBoardTiles(c, pad, pad, this.cols, this.rows, cs, null, this._tileStyle);
+            this._tileLayer = { canvas, key, pad };
+            return this._tileLayer;
+        } catch (e) {
+            this._tileLayer = null;
+            return null;
         }
     }
 

@@ -52,6 +52,11 @@ class Button {
         setTimeout(() => {
             this._pressed = false;
             this._pressScale = 1;
+            try {
+                if (GameGlobal && GameGlobal.game && typeof GameGlobal.game.kickLoop === 'function') {
+                    GameGlobal.game.kickLoop();
+                }
+            } catch (e) { /* ignore */ }
         }, 100);
         this.onClick();
     }
@@ -363,15 +368,10 @@ class Button {
         const pressed = this._pressed;
 
         if (!pressed) {
-            ctx.save();
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.42)';
-            ctx.shadowBlur = Math.max(4, r * 0.28);
-            ctx.shadowOffsetY = Math.max(2, r * 0.14);
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.02)';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
             ctx.beginPath();
-            ctx.arc(cx, cy, r - 0.5, 0, Math.PI * 2);
+            ctx.arc(cx + 0.5, cy + Math.max(2, r * 0.12), r, 0, Math.PI * 2);
             ctx.fill();
-            ctx.restore();
         }
 
         let bodyGrad;

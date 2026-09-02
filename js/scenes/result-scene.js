@@ -299,7 +299,7 @@ class ResultScene {
             text: '闯关',
             icon: 'brick',
             color: '#3aa8d8',
-            onClick: () => GameGlobal.game.sceneManager.leaveTo('stageSelect', {}, ['home']),
+            onClick: () => GameGlobal.game.sceneManager.leaveTo('worldMap', {}, ['home']),
         });
         pushBtn({
             text: '关卡广场',
@@ -322,8 +322,7 @@ class ResultScene {
             });
         }
         pushBtn({
-            text: '返回',
-            icon: 'back',
+            text: '← 返回',
             color: '#555',
             onClick: () => GameGlobal.game.sceneManager.leaveTo('challenge', {}, ['home']),
         });

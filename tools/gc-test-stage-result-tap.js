@@ -40,28 +40,35 @@ scene.onEnter({
     result: { lines: 4, pieces: 6, timeMs: 30000, reward: 1, first: true },
 });
 
-// 按钮顺序：下一关 2 / 重玩本关 / 返回关卡选择
+// 按钮顺序：下一关 2 / 重玩本关 / ← 返回关卡选择
 assert(scene._buttons.length === 3, '应有 3 个按钮');
 
-// 点「下一关」→ replace game(stage, 2)
-replaced = null;
-const next = scene._buttons[0];
-scene.handleTap(next.x + next.w / 2, next.y + next.h / 2);
-assert(replaced !== null, '点击下一关应触发切换');
-assert(replaced.name === 'game', '应切换到 game 场景');
-assert(replaced.params.mode === 'stage' && replaced.params.stageId === 2, 'stageId 应为 2');
-
-// 点空白 → 不触发
 replaced = null;
 scene.handleTap(0, 0);
 assert(replaced === null, '点击空白不应触发切换');
 
-// 点「返回关卡选择」→ leaveTo stageSelect（栈仅 home，并带上 stageId）
 replaced = null;
 const back = scene._buttons[2];
 scene.handleTap(back.x + back.w / 2, back.y + back.h / 2);
 assert(replaced !== null && replaced.name === 'stageSelect', '返回按钮应切到 stageSelect');
 assert(replaced.params && replaced.params.stageId === 1, '应带上本关 stageId');
-assert(Array.isArray(replaced.stackNames) && replaced.stackNames.join() === 'home', '返回栈应仅保留 home');
+assert(Array.isArray(replaced.stackNames) && replaced.stackNames.join() === 'home,worldMap', '返回栈应保留 home+worldMap');
 
-console.log('PASS: stage-result handleTap 下一关=2 / 空白忽略 / 返回=stageSelect');
+replaced = null;
+const next = scene._buttons[0];
+scene.handleTap(next.x + next.w / 2, next.y + next.h / 2);
+assert(replaced === null, '点下一关未解锁不应立刻进游戏');
+assert(scene._entryDialog && scene._entryDialog.locked, '第 2 关未解锁应弹出确认窗');
+assert(scene._entryDialog.needGold === 1, '应告知用金方块解锁');
+
+scene._entryDialog.payRect = { x: 0, y: 0, w: 400, h: 800 };
+scene.handleTap(next.x + next.w / 2, next.y + next.h / 2);
+assert(scene._entryDialog, '开窗同一记抬手不应触发确认');
+assert(replaced === null, '开窗同一记抬手不应进游戏');
+
+scene.handleTouchStart();
+scene._entryDialog.panelRect = { x: 40, y: 200, w: 280, h: 180 };
+scene.handleTap(10, 10);
+assert(!scene._entryDialog, '点蒙层应关闭弹窗');
+
+console.log('PASS: stage-result handleTap 空白忽略 / 返回=stageSelect / 下一关确认窗');

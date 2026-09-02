@@ -16,6 +16,7 @@ const {
 } = require('../theme/arcade-night');
 const { drawHomeTitleDecorations } = require('../render/title-decor');
 const { MiniTetrisFx } = require('../render/mini-tetris-fx');
+const { FRAME_INTERVAL } = require('../runtime/frame-budget');
 
 /** 首页底栏槽位高度（占位特效 / 后续 Banner 共用） */
 const HOME_FOOTER_SLOT_H = 72;
@@ -63,6 +64,10 @@ class HomeScene {
         this._initFooterContent();
         // 若音频已在用户手势中初始化过，回首页立即恢复 BGM
         this._ensureHomeBgm();
+    }
+
+    getRenderInterval() {
+        return FRAME_INTERVAL;
     }
 
     onExit() {
@@ -170,7 +175,14 @@ class HomeScene {
             text: '闯关',
             icon: 'brick',
             color: '#e09a30',
-            onClick: () => GameGlobal.game.sceneManager.switchTo('stageSelect'),
+            onClick: () => {
+                try {
+                    GameGlobal.game.sceneManager.switchTo('worldMap');
+                } catch (e) {
+                    console.error('[Home] 进入世界地图失败', e);
+                    GameGlobal.game.sceneManager.switchTo('stageSelect');
+                }
+            },
         }));
         this._buttons.push(new Button({
             x: centerX - btnW / 2 + halfW + gap,
@@ -394,7 +406,7 @@ class HomeScene {
     _initFallingBlocks() {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
-        const count = 12;
+        const count = 6;
         this._fallingBlocks = [];
         for (let i = 0; i < count; i++) {
             this._fallingBlocks.push(this._createFallingBlock(W, H, true));

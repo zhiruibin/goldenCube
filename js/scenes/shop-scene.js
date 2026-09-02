@@ -7,6 +7,7 @@ const { Button } = require('../widgets/button');
 const { drawCoinHudCentered } = require('../../utils/coin-hud');
 const IconRenderer = require('../render/icon-renderer');
 const { blockSkins, boardSkins, soundPacks, soundPackProfiles } = require('../../data/skins');
+const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
 
 class ShopScene {
     constructor() {
@@ -52,6 +53,10 @@ class ShopScene {
     onPause() {}
 
     onResume() {}
+
+    getRenderInterval() {
+        return LIST_FRAME_INTERVAL;
+    }
 
     update(dt) {}
 

@@ -668,13 +668,107 @@ function isPlazaUnlocked(stageId) {
     return !!_unlockedMap()[stageId];
 }
 
+function _grantPlazaUnlock(stageId) {
+    const map = _unlockedMap();
+    map[stageId] = Date.now();
+    _saveJson(KEYS.unlockedPlaza, map);
+}
+
+function _revokePlazaUnlock(stageId) {
+    const map = _unlockedMap();
+    delete map[stageId];
+    _saveJson(KEYS.unlockedPlaza, map);
+}
+
+function _reportPlazaUnlock() {
+    try {
+        const { achievementManager } = require('./achievement-manager');
+        if (achievementManager && typeof achievementManager.reportPlazaProgress === 'function') {
+            achievementManager.reportPlazaProgress();
+        }
+    } catch (e) { /* ignore */ }
+}
+
+function _plazaEntryShortage(needGold, fee) {
+    const lackGold = needGold > 0 && goldenBlock.getBalance() < needGold;
+    const lackCoins = fee > 0 && coinManager.getCoins() < fee;
+    if (lackGold && lackCoins) return 'no-gold-and-coins';
+    if (lackGold) return 'no-gold';
+    if (lackCoins) return 'no-coins';
+    return '';
+}
+
+/** 开打确认缺资源时的提示文案 */
+function plazaEntryShortageText(result) {
+    if (!result || result.ok) return '';
+    if (result.reason === 'no-gold-and-coins') return '金方块不足，金币也不足';
+    if (result.reason === 'no-gold') return '金方块不足';
+    if (result.reason === 'no-coins') return '金币不足（需 ' + (result.fee || 0) + '）';
+    if (result.reason === 'missing') return '关卡不可用';
+    return '无法开打';
+}
+
+/**
+ * 广场开打：先校验再扣费。未解锁扣金方块+金币；已解锁只扣金币。
+ * @param {string} stageId
+ * @param {{ skipFee?: boolean }} [opts] skipFee 为看广告免开打费（仍须已解锁或另有金方块）
+ */
+function enterPlazaStage(stageId, opts) {
+    const o = opts || {};
+    const skipFee = !!o.skipFee;
+    const stage = getStage(stageId);
+    if (!stage || stage.status !== STATUS.published) {
+        return { ok: false, reason: 'missing', fee: 0, needGold: 0 };
+    }
+    const already = isPlazaUnlocked(stageId);
+    const needGold = already ? 0 : PLAZA_UNLOCK_GOLD;
+    const fullFee = getPlayFee(stage);
+    const fee = skipFee ? 0 : fullFee;
+    const shortage = _plazaEntryShortage(needGold, fee);
+    if (shortage) {
+        return { ok: false, reason: shortage, fee: fullFee, needGold };
+    }
+
+    let goldPaid = 0;
+    if (needGold > 0) {
+        if (!goldenBlock.spendBalance(needGold)) {
+            return { ok: false, reason: 'no-gold', fee: fullFee, needGold };
+        }
+        goldPaid = needGold;
+        _grantPlazaUnlock(stageId);
+        _reportPlazaUnlock();
+    }
+
+    let paid = 0;
+    if (fee > 0) {
+        const coinRes = spendPlayFee(stageId);
+        if (!coinRes.ok) {
+            if (goldPaid > 0) {
+                goldenBlock.addBalance(goldPaid);
+                _revokePlazaUnlock(stageId);
+            }
+            const reason = coinRes.reason === 'no-coins' ? 'no-coins' : (coinRes.reason || 'no-coins');
+            return { ok: false, reason, fee: fullFee, needGold };
+        }
+        paid = coinRes.paid;
+    }
+
+    return {
+        ok: true,
+        already,
+        goldPaid,
+        paid,
+        fee: skipFee ? 0 : fullFee,
+        needGold,
+    };
+}
+
 function unlockPlazaStage(stageId) {
     if (isPlazaUnlocked(stageId)) {
         return { ok: true, already: true, balance: goldenBlock.getBalance() };
     }
     let stage = getStage(stageId);
     if (!stage || stage.status !== STATUS.published) {
-        // 尝试从缓存取；仍无则拒绝（UI 应先 listPlaza）
         return { ok: false, reason: 'missing' };
     }
     if (goldenBlock.getBalance() < PLAZA_UNLOCK_GOLD) {
@@ -683,15 +777,8 @@ function unlockPlazaStage(stageId) {
     if (!goldenBlock.spendBalance(PLAZA_UNLOCK_GOLD)) {
         return { ok: false, reason: 'no-gold', cost: PLAZA_UNLOCK_GOLD };
     }
-    const map = _unlockedMap();
-    map[stageId] = Date.now();
-    _saveJson(KEYS.unlockedPlaza, map);
-    try {
-        const { achievementManager } = require('./achievement-manager');
-        if (achievementManager && typeof achievementManager.reportPlazaProgress === 'function') {
-            achievementManager.reportPlazaProgress();
-        }
-    } catch (e) { /* ignore */ }
+    _grantPlazaUnlock(stageId);
+    _reportPlazaUnlock();
     return { ok: true, cost: PLAZA_UNLOCK_GOLD, balance: goldenBlock.getBalance() };
 }
 
@@ -1043,6 +1130,8 @@ module.exports = {
     getOfficialPlazaStages,
     isPlazaUnlocked,
     unlockPlazaStage,
+    enterPlazaStage,
+    plazaEntryShortageText,
     isPlazaCleared,
     getPlazaBest,
     getPlazaClearedCount,

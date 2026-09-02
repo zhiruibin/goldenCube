@@ -2,6 +2,7 @@
  * 职责：初始化 Canvas、启动主循环、管理全局生命周期
  */
 
+const { FRAME_INTERVAL } = require('./js/runtime/frame-budget');
 const { SceneManager } = require('./js/runtime/scene-manager');
 const { InputManager } = require('./js/runtime/input-manager');
 const { adManager } = require('./utils/ad-manager');
@@ -25,8 +26,13 @@ GameGlobal.game = {
     deltaTime: 0,
     /** 上一帧时间戳 */
     _lastTime: 0,
-    /** 主循环 requestAnimationFrame ID */
+    /** 主循环定时器 ID（rAF 或 setTimeout） */
     _rafId: null,
+    /** 菜单/闲置用 setTimeout，避免 rAF 60Hz 空转发烫 */
+    _loopViaTimeout: false,
+    _loopRunning: false,
+    _hidden: false,
+    kickLoop: null,
 };
 
 /*** 小游戏入口函数
@@ -36,7 +42,8 @@ function onStart() {
     const canvas = wx.createCanvas();
     const ctx = canvas.getContext('2d');
     const info = wx.getSystemInfoSync();
-    const dpr = info.pixelRatio;
+    // 高 DPR 全屏每帧填充是发热主因之一，逻辑分辨率不变，backing store 封顶 2x
+    const dpr = Math.min(Number(info.pixelRatio) || 1, 2);
 
     // 设置 Canvas 物理尺寸（适配高清屏）
     // 窗口尺寸 windowWidth/windowHeight 在显示状态栏时会排除顶部区域，改用整块屏幕尺寸（screen* 优先，回退 window*）
@@ -50,7 +57,7 @@ function onStart() {
     GameGlobal.game.ctx = ctx;
     GameGlobal.game.width = fullW;
     GameGlobal.game.height = fullH;
-    GameGlobal.game.systemInfo = info;
+    GameGlobal.game.dpr = dpr;
     GameGlobal.game.systemInfo = info;
 
     // 全屏沉浸：隐藏「回到首页」圆形胶囊按钮（基础库 2.16+），并把「···」菜单胶囊设为白色融入深色背景
@@ -73,7 +80,7 @@ function onStart() {
                 const h = size && (size.screenHeight || size.windowHeight);
                 if (!w || !h) return;
                 const sys = GameGlobal.game.systemInfo || {};
-                const newDpr = Number(sys.pixelRatio) || GameGlobal.game.dpr || 1;
+                const newDpr = Math.min(Number(sys.pixelRatio) || GameGlobal.game.dpr || 1, 2);
                 canvas.width = Math.round(w * newDpr);
                 canvas.height = Math.round(h * newDpr);
                 if (typeof ctx.setTransform === 'function') {
@@ -122,6 +129,7 @@ function onStart() {
     const AchievementScene = require('./js/scenes/achievement-scene');
     const ChallengeScene = require('./js/scenes/challenge-scene');
     const ReplayScene = require('./js/scenes/replay-scene');
+    const WorldMapScene = require('./js/scenes/world-map-scene');
     const StageSelectScene = require('./js/scenes/stage-select-scene');
     const StageResultScene = require('./js/scenes/stage-result-scene');
     const StageFailScene = require('./js/scenes/stage-fail-scene');
@@ -138,6 +146,7 @@ function onStart() {
     GameGlobal.game.sceneManager.register('achievement', AchievementScene);
     GameGlobal.game.sceneManager.register('challenge', ChallengeScene);
     GameGlobal.game.sceneManager.register('replay', ReplayScene);
+    GameGlobal.game.sceneManager.register('worldMap', WorldMapScene);
     GameGlobal.game.sceneManager.register('stageSelect', StageSelectScene);
     GameGlobal.game.sceneManager.register('stageResult', StageResultScene);
     GameGlobal.game.sceneManager.register('stageFail', StageFailScene);
@@ -161,6 +170,7 @@ function onStart() {
     } catch (e) {
         console.warn('[Game] 读取启动参数失败', e);
     }
+    GameGlobal.game.kickLoop = _kickLoop;
     GameGlobal.game.sceneManager.switchTo('home');
     if (launchQuery) {
         _handleShareChallengeEntry(launchQuery, { fromLaunch: true });
@@ -170,6 +180,8 @@ function onStart() {
 
     // 启动主循环
     GameGlobal.game._lastTime = Date.now();
+    GameGlobal.game._renderAcc = 0;
+    GameGlobal.game._forceRender = true;
     _loop();
 
     console.log('[Game] 挖个方块启动完成', {
@@ -180,24 +192,98 @@ function onStart() {
 }
 
 /*** 主循环
+ * 可见页 60fps；切后台 / 无当前场景 interval=0 停表。
+ * 点按仍会立刻补一帧；滑动中已排队的 rAF 不拆掉重跑，避免一帧画多次把主线程卡死。
  */
+const MENU_RENDER_INTERVAL = FRAME_INTERVAL;
+const RAF_MAX_INTERVAL = 0.02;
+
+function _clearLoopTimer() {
+    const id = GameGlobal.game._rafId;
+    if (id == null) return;
+    if (GameGlobal.game._loopViaTimeout) {
+        clearTimeout(id);
+    } else {
+        cancelAnimationFrame(id);
+    }
+    GameGlobal.game._rafId = null;
+}
+
+function _scheduleLoop(delayMs) {
+    if (GameGlobal.game._hidden || GameGlobal.game._rafId != null) return;
+    const wait = Math.max(8, delayMs || 16);
+    if (wait >= RAF_MAX_INTERVAL * 1000) {
+        GameGlobal.game._loopViaTimeout = true;
+        GameGlobal.game._rafId = setTimeout(_loop, wait);
+    } else {
+        GameGlobal.game._loopViaTimeout = false;
+        GameGlobal.game._rafId = requestAnimationFrame(_loop);
+    }
+}
+
+function _kickLoop() {
+    GameGlobal.game._forceRender = true;
+    if (GameGlobal.game._hidden || GameGlobal.game._loopRunning) return;
+    // 已用 rAF 排队：只标脏，等这一帧，勿 cancel+同步重绘（广场滑动会把 BGM 的 setTimeout 饿死）
+    if (GameGlobal.game._rafId != null && !GameGlobal.game._loopViaTimeout) return;
+    _clearLoopTimer();
+    _loop();
+}
+
+function _resolveRenderInterval(sm) {
+    if (GameGlobal.game._hidden) return 0;
+    if (!sm || !sm.current) return 0;
+    if (typeof sm.current.getRenderInterval === 'function') {
+        const n = Number(sm.current.getRenderInterval());
+        if (n === 0) return 0;
+        if (n > 0) return n;
+    }
+    return MENU_RENDER_INTERVAL;
+}
+
 function _loop() {
-    const now = Date.now();
-    GameGlobal.game.deltaTime = (now - GameGlobal.game._lastTime) / 1000;
-    GameGlobal.game._lastTime = now;
+    GameGlobal.game._loopRunning = true;
+    _clearLoopTimer();
+    let nextDelay = 0;
+    try {
+        const now = Date.now();
+        GameGlobal.game.deltaTime = (now - GameGlobal.game._lastTime) / 1000;
+        GameGlobal.game._lastTime = now;
 
-    // 限制最大帧间隔，防止切后台回来后一次性跳太多
-    if (GameGlobal.game.deltaTime > 0.1) {
-        GameGlobal.game.deltaTime = 0.016;
+        if (GameGlobal.game.deltaTime > 0.1) {
+            GameGlobal.game.deltaTime = 0.016;
+        }
+
+        const sm = GameGlobal.game.sceneManager;
+        if (sm) {
+            try {
+                const interval = _resolveRenderInterval(sm);
+                if (!(interval > 0)) {
+                    return;
+                }
+                nextDelay = Math.max(16, interval * 1000);
+                sm.update(GameGlobal.game.deltaTime);
+                GameGlobal.game._renderAcc = (GameGlobal.game._renderAcc || 0) + GameGlobal.game.deltaTime;
+                if (GameGlobal.game._forceRender || GameGlobal.game._renderAcc >= interval) {
+                    GameGlobal.game._forceRender = false;
+                    GameGlobal.game._renderAcc = 0;
+                    sm.render(GameGlobal.game.ctx);
+                }
+            } catch (e) {
+                console.error('[Game] 主循环异常', e);
+            }
+        }
+    } finally {
+        GameGlobal.game._loopRunning = false;
+        if (GameGlobal.game._hidden) return;
+        if (nextDelay > 0) {
+            _scheduleLoop(nextDelay);
+            return;
+        }
+        // 本帧因切后台算出 interval=0，但 onShow 已把 _hidden 清掉：补排下一帧
+        const again = _resolveRenderInterval(GameGlobal.game.sceneManager);
+        if (again > 0) _scheduleLoop(Math.max(16, again * 1000));
     }
-
-    const sm = GameGlobal.game.sceneManager;
-    if (sm) {
-        sm.update(GameGlobal.game.deltaTime);
-        sm.render(GameGlobal.game.ctx);
-    }
-
-    GameGlobal.game._rafId = requestAnimationFrame(_loop);
 }
 
 /*** 登记来自分享卡的待应战挑战（仅被挑战方调用，按 challengeId 去重）
@@ -537,6 +623,7 @@ function _clearTouchStartScene(touchId) {
 
 // 监听小游戏生命周期
 wx.onTouchStart(function (e) {
+    _kickLoop();
     // 首次用户交互时初始化音频并启动 BGM（满足自动播放策略）
     const audio = GameGlobal.game.audioManager;
     if (audio) {
@@ -584,7 +671,7 @@ wx.onTouchMove(function (e) {
         GameGlobal.game.inputManager.handleTouchMove(e);
     }
 
-    // 路由所有触点移动到当前场景
+    // 先改滚动位置，再要帧，避免用旧坐标白画一整屏
     const sm = GameGlobal.game.sceneManager;
     if (sm && sm.current && sm.current.handleTouchMove) {
         const touches = e.touches;
@@ -596,9 +683,11 @@ wx.onTouchMove(function (e) {
             }
         }
     }
+    _kickLoop();
 });
 
 wx.onTouchEnd(function (e) {
+    _kickLoop();
     const im = GameGlobal.game.inputManager;
     if (im) {
         im.handleTouchEnd(e);
@@ -686,10 +775,8 @@ wx.onTouchCancel(function (e) {
 /*** 小游戏隐藏时暂停
  */
 wx.onHide(function () {
-    if (GameGlobal.game._rafId) {
-        cancelAnimationFrame(GameGlobal.game._rafId);
-        GameGlobal.game._rafId = null;
-    }
+    GameGlobal.game._hidden = true;
+    _clearLoopTimer();
     const sm = GameGlobal.game.sceneManager;
     if (sm && sm.current) {
         sm.current.onPause && sm.current.onPause();
@@ -709,9 +796,12 @@ wx.onShow(function (res) {
     if (res && res.query && res.query.challengeId) {
         _handleShareChallengeEntry(res.query, { fromLaunch: false });
     }
-    if (!GameGlobal.game._rafId) {
+    if (!GameGlobal.game._rafId && !GameGlobal.game._loopRunning) {
+        GameGlobal.game._hidden = false;
         GameGlobal.game._lastTime = Date.now();
-        _loop();
+        _kickLoop();
+    } else {
+        GameGlobal.game._hidden = false;
     }
     const sm = GameGlobal.game.sceneManager;
     if (sm && sm.current) {

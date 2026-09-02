@@ -39,12 +39,22 @@ const AMBIENT_PIECE_COLORS = [
  * @param {number} w
  * @param {number} h
  */
+let _nightBg = null;
+let _nightBgCtx = null;
+let _nightBgW = 0;
+let _nightBgH = 0;
+
 function fillNightBackground(ctx, w, h) {
-  const g = ctx.createLinearGradient(0, 0, 0, h);
-  g.addColorStop(0, BG_TOP);
-  g.addColorStop(0.55, BG_MID);
-  g.addColorStop(1, BG_BOTTOM);
-  ctx.fillStyle = g;
+  if (!_nightBg || _nightBgCtx !== ctx || _nightBgW !== w || _nightBgH !== h) {
+    _nightBg = ctx.createLinearGradient(0, 0, 0, h);
+    _nightBg.addColorStop(0, BG_TOP);
+    _nightBg.addColorStop(0.55, BG_MID);
+    _nightBg.addColorStop(1, BG_BOTTOM);
+    _nightBgCtx = ctx;
+    _nightBgW = w;
+    _nightBgH = h;
+  }
+  ctx.fillStyle = _nightBg;
   ctx.fillRect(0, 0, w, h);
 }
 

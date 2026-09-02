@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>挖个方块 · 关卡广场镶嵌墙</title>
+<style>
+  :root {
+    --bg0: #2a3358;
+    --bg1: #1c2440;
+    --bg2: #12182c;
+    --title: #FFE566;
+    --gold: #FFC857;
+    --cyan: #00c6ff;
+    --sub: rgba(255, 236, 210, 0.75);
+    --muted: rgba(255, 245, 230, 0.42);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", system-ui, sans-serif;
+    color: #fff;
+    background: linear-gradient(180deg, var(--bg0), var(--bg1) 55%, var(--bg2));
+    min-height: 100vh;
+  }
+  header { text-align: center; padding: 24px 16px 8px; }
+  h1 { margin: 0; font-size: 22px; color: var(--title); }
+  header p { margin: 8px auto 0; max-width: 540px; color: var(--sub); font-size: 14px; line-height: 1.55; }
+  .hint { text-align: center; color: var(--muted); font-size: 12px; margin: 6px 0 16px; }
+  .wrap { display: flex; justify-content: center; padding-bottom: 28px; }
+  .phone {
+    width: 390px; height: 780px; border-radius: 36px;
+    border: 1px solid rgba(255, 200, 87, 0.35);
+    background: #0c101c;
+    position: relative; overflow: hidden;
+  }
+  .hud {
+    position: absolute; left: 0; right: 0; top: 0; z-index: 4;
+    padding: 18px 16px 8px;
+    background: linear-gradient(180deg, rgba(12,16,28,.96) 70%, rgba(12,16,28,0));
+  }
+  .hud .row { display: flex; justify-content: space-between; align-items: center; }
+  .hud h2 { margin: 0; font-size: 18px; color: var(--title); }
+  .hud .money { font-size: 13px; color: var(--gold); }
+  .hud .sub { margin-top: 6px; font-size: 12px; color: var(--sub); font-weight: 700; }
+  .tabs { display: flex; gap: 6px; margin-top: 10px; }
+  .tabs button {
+    flex: 1; height: 30px; border-radius: 8px; cursor: pointer;
+    border: 1px solid rgba(255,255,255,.14);
+    background: rgba(255,255,255,.06); color: var(--muted); font-size: 12px;
+  }
+  .tabs button.on {
+    border-color: rgba(255,200,87,.55);
+    background: rgba(255,200,87,.18); color: var(--gold); font-weight: 700;
+  }
+  canvas { display: block; touch-action: none; cursor: grab; }
+  canvas:active { cursor: grabbing; }
+  .back {
+    position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%);
+    z-index: 3; width: 220px; height: 44px; border-radius: 12px;
+    background: #555; color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 15px; pointer-events: none;
+  }
+  .mask {
+    display: none;
+    position: absolute; inset: 0; z-index: 5;
+    background: rgba(0, 0, 0, 0.75);
+  }
+  .mask.on { display: block; }
+  .sheet {
+    display: none;
+    position: absolute; left: 16px; right: 16px; bottom: 68px; z-index: 6;
+    background: #161b2c;
+    border: 1px solid rgba(255,200,87,.55);
+    border-radius: 14px; padding: 12px;
+    box-shadow: 0 10px 28px rgba(0,0,0,.45);
+  }
+  .sheet.on { display: block; }
+  .sheet .name { color: var(--gold); font-weight: 700; font-size: 15px; }
+  .sheet .meta { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .sheet .acts { display: flex; gap: 8px; margin-top: 12px; }
+  .sheet .acts button {
+    flex: 1; height: 36px; border: 0; border-radius: 10px; font-weight: 700; cursor: pointer;
+  }
+  .sheet .ghost { background: #555; color: #fff; }
+  .sheet .gold { background: #FFC857; color: #1a1408; }
+  .sheet .cyan { background: #00c6ff; color: #062028; }
+  .legend {
+    max-width: 540px; margin: 0 auto 40px; padding: 0 16px;
+    color: var(--sub); font-size: 13px; line-height: 1.7;
+  }
+  .legend b.gold { color: var(--gold); }
+  .legend b.cyan { color: var(--cyan); }
+</style>
+</head>
+<body>
+<header>
+  <h1>关卡广场 · 镶嵌墙</h1>
+  <p>官方盘面大小不一地嵌成墙。不是 72 像素横条，也不是闯关那张 10×10 石板。</p>
+</header>
+<p class="hint">上下拖墙 · 点嵌板看解锁 / 开打 · Tab 只换排序</p>
+<div class="wrap">
+  <div class="phone">
+    <div class="hud">
+      <div class="row">
+        <h2>关卡广场</h2>
+        <div class="money">◆ 2　币 827</div>
+      </div>
+      <div class="sub">点嵌板进入该关</div>
+      <div class="tabs">
+        <button class="on" data-sort="official">官方</button>
+        <button data-sort="new">新关</button>
+        <button data-sort="heat">热门</button>
+        <button data-sort="clearRate">好通关</button>
+      </div>
+    </div>
+    <canvas id="wall"></canvas>
+    <div class="mask" id="mask"></div>
+    <div class="sheet" id="sheet"></div>
+    <div class="back">← 返回</div>
+  </div>
+</div>
+<div class="legend">
+  示例进度：<b class="gold">短匕 / 柳叶刀 / 青龙偃月</b> 已通金边；
+  <b class="cyan">方天画戟 / 九齿钉耙 / 金箍棒</b> 已解锁未通；其余未开、无描边。
+  解锁仍是 1 金，开打仍扣币，已通可约好友来战——这面墙只换浏览方式。
+</div>
+<script>
+const STAGES = [
+  { title:'短匕', authorName:'官方', minLines:7, garbageCount:13, clearCount:312, playFee:12, heat:90, state:'cleared', rows:{10:'.....#....',11:'....###...',12:'....###...',13:'.....#....',14:'.....#....',15:'.....#....',16:'....###...'} },
+  { title:'柳叶刀', authorName:'官方', minLines:8, garbageCount:18, clearCount:248, playFee:12, heat:82, state:'cleared', rows:{9:'.....#....',10:'....##....',11:'...####...',12:'...####...',13:'....##....',14:'.....#....',15:'.....#....',16:'....###...'} },
+  { title:'青龙偃月', authorName:'官方', minLines:9, garbageCount:25, clearCount:196, playFee:12, heat:76, state:'cleared', rows:{8:'...####...',9:'..##..##..',10:'.##.......',11:'.##.......',12:'..##..##..',13:'...####...',14:'.....#....',15:'.....#....',16:'....###...'} },
+  { title:'方天画戟', authorName:'官方', minLines:10, garbageCount:24, clearCount:141, playFee:12, heat:70, state:'unlocked', rows:{7:'.....#....',8:'...#####..',9:'..##.#.##.',10:'.....#....',11:'.....#....',12:'.....#....',13:'.....#....',14:'.....#....',15:'....###...',16:'...#####..'} },
+  { title:'九齿钉耙', authorName:'官方', minLines:8, garbageCount:22, clearCount:118, playFee:12, heat:64, state:'unlocked', rows:{8:'#.#.#.#.#.',9:'#########.',10:'.....#....',11:'.....#....',12:'.....#....',13:'.....#....',14:'.....#....',15:'....###...'} },
+  { title:'如意金箍棒', authorName:'官方', minLines:11, garbageCount:19, clearCount:96, playFee:12, heat:58, state:'unlocked', rows:{6:'...#####..',7:'.....#....',8:'.....#....',9:'.....#....',10:'.....#....',11:'.....#....',12:'.....#....',13:'.....#....',14:'.....#....',15:'.....#....',16:'...#####..'} },
+  { title:'火尖枪', authorName:'挖土的猫', minLines:9, garbageCount:19, clearCount:54, playFee:12, heat:51, state:'locked', rows:{7:'.....#....',8:'....###...',9:'...#.#.#..',10:'.....#....',11:'.....#....',13:'.....#....',14:'.....#....',15:'.....###..',16:'....#####.'} },
+  { title:'双股剑', authorName:'官方', minLines:8, garbageCount:24, clearCount:47, playFee:12, heat:47, state:'locked', rows:{8:'..#....#..',9:'..#....#..',10:'..##..##..',11:'..##..##..',12:'..#....#..',13:'..#....#..',14:'..#....#..',15:'.###..###.'} },
+  { title:'霸王枪', authorName:'官方', minLines:12, garbageCount:35, clearCount:33, playFee:16, heat:44, state:'locked', rows:{6:'....###...',7:'...#####..',8:'..###.###.',9:'.....#....',10:'.....#....',11:'.....#....',12:'.....#....',13:'.....#....',14:'.....#....',15:'....###...',16:'...#####..',17:'..#######.'} },
+  { title:'盘古斧', authorName:'金粒铺子', minLines:10, garbageCount:38, clearCount:21, playFee:12, heat:41, state:'locked', rows:{7:'..#######.',8:'.#########',9:'.###...###',10:'..##...##.',11:'.....#....',12:'.....#....',13:'.....#....',14:'.....#....',15:'....###...',16:'...#####..'} },
+  { title:'三叶草', authorName:'官方', minLines:7, garbageCount:19, clearCount:88, playFee:12, heat:38, state:'locked', rows:{10:'...#.#....',11:'..#####...',12:'...###....',13:'..#####...',14:'...#.#....',15:'.....#....',16:'.....#....'} },
+  { title:'四叶草', authorName:'官方', minLines:8, garbageCount:26, clearCount:72, playFee:12, heat:36, state:'locked', rows:{9:'...#.#....',10:'..##.##...',11:'..#####...',12:'...###....',13:'..#####...',14:'..##.##...',15:'...#.#....',16:'.....#....'} },
+  { title:'桃花', authorName:'官方', minLines:8, garbageCount:26, clearCount:61, playFee:12, heat:33, state:'locked', rows:{9:'..##.##...',10:'.##...##..',11:'.##.#.##..',12:'..#####...',13:'...###....',14:'.....#....',15:'.....#....',16:'....###...'} },
+  { title:'梅花', authorName:'官方', minLines:9, garbageCount:27, clearCount:40, playFee:12, heat:29, state:'locked', rows:{8:'....#.....',9:'..##.##...',10:'.##...##..',11:'.##.#.##..',12:'..#####...',13:'...###....',14:'.....#....',15:'.....#....',16:'....###...'} },
+  { title:'向日葵盘', authorName:'官方', minLines:9, garbageCount:34, clearCount:18, playFee:12, heat:22, state:'locked', rows:{8:'...####...',9:'..##..##..',10:'.##....##.',11:'.##.##.##.',12:'.##....##.',13:'..##..##..',14:'...####...',15:'.....#....',16:'....###...'} },
+];
+
+const GOLD = '#FFC857';
+const CYAN = '#00c6ff';
+const PW = 390, PH = 780;
+const HUD_H = 128;
+const BACK_H = 70;
+const PATTERN = [
+  { x: 0, y: 0, w: 232, h: 252 },
+  { x: 240, y: 0, w: 118, h: 122 },
+  { x: 240, y: 130, w: 118, h: 122 },
+  { x: 0, y: 260, w: 175, h: 192 },
+  { x: 183, y: 260, w: 175, h: 192 },
+  { x: 0, y: 460, w: 118, h: 184 },
+  { x: 126, y: 460, w: 116, h: 184 },
+  { x: 250, y: 460, w: 108, h: 184 },
+];
+const BAND_H = 644;
+const PAD = 16;
+
+const canvas = document.getElementById('wall');
+const ctx = canvas.getContext('2d');
+const sheetEl = document.getElementById('sheet');
+const maskEl = document.getElementById('mask');
+let originY = 0;
+let drag = null;
+let vel = 0;
+let sortId = 'official';
+let boxes = [];
+
+function roundRect(x, y, w, h, r) {
+  const rad = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + rad, y);
+  ctx.arcTo(x + w, y, x + w, y + h, rad);
+  ctx.arcTo(x + w, y + h, x, y + h, rad);
+  ctx.arcTo(x, y + h, x, y, rad);
+  ctx.arcTo(x, y, x + w, y, rad);
+  ctx.closePath();
+}
+
+function layout() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = PW * dpr;
+  canvas.height = PH * dpr;
+  canvas.style.width = PW + 'px';
+  canvas.style.height = PH + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  rebuildBoxes();
+}
+
+function sortedStages() {
+  const list = STAGES.slice();
+  if (sortId === 'new') list.reverse();
+  if (sortId === 'heat') list.sort((a, b) => b.heat - a.heat);
+  if (sortId === 'clearRate') list.sort((a, b) => a.minLines - b.minLines);
+  return list;
+}
+
+function rebuildBoxes() {
+  const stages = sortedStages();
+  const innerW = PW - PAD * 2;
+  const scale = innerW / 358;
+  boxes = stages.map((stage, i) => {
+    const band = Math.floor(i / PATTERN.length);
+    const slot = PATTERN[i % PATTERN.length];
+    return {
+      stage,
+      x: PAD + slot.x * scale,
+      y: HUD_H + 8 + band * (BAND_H * scale + 10) + slot.y * scale,
+      w: slot.w * scale,
+      h: slot.h * scale,
+    };
+  });
+}
+
+function contentH() {
+  let max = 0;
+  boxes.forEach((b) => { max = Math.max(max, b.y + b.h); });
+  return max + 24;
+}
+
+function maxOrigin() {
+  return Math.max(0, contentH() - (PH - BACK_H));
+}
+
+function clampOrigin(y) {
+  return Math.max(0, Math.min(maxOrigin(), y));
+}
+
+function rowsToGrid(rows) {
+  const g = Array.from({ length: 20 }, () => Array(10).fill(0));
+  Object.keys(rows || {}).forEach((k) => {
+    const r = +k, line = rows[k] || '';
+    for (let c = 0; c < 10; c++) g[r][c] = line[c] === '#' ? 1 : 0;
+  });
+  let t = 20, b = -1;
+  for (let r = 0; r < 20; r++) if (g[r].some(Boolean)) { if (r < t) t = r; if (r > b) b = r; }
+  if (b < 0) return { g, t: 12, b: 19 };
+  return { g, t: Math.max(0, t - 1), b: Math.min(19, b + 1) };
+}
+
+function drawBg() {
+  const g = ctx.createLinearGradient(0, 0, 0, PH);
+  g.addColorStop(0, '#2a3358');
+  g.addColorStop(0.55, '#1c2440');
+  g.addColorStop(1, '#12182c');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, PW, PH);
+}
+
+function silColors(state) {
+  if (state === 'cleared') return { a: '#c9a227', b: '#7a5a12' };
+  if (state === 'unlocked') return { a: '#4ec8e8', b: '#1a6a82' };
+  return { a: '#6a6a74', b: '#3a3a42' };
+}
+
+function drawSil(rows, x, y, w, h, state) {
+  const { g, t, b } = rowsToGrid(rows);
+  const vis = b - t + 1;
+  ctx.fillStyle = '#0c101c';
+  ctx.fillRect(x, y, w, h);
+  const cs = Math.min(w / 10, h / vis);
+  const ox = x + (w - cs * 10) / 2;
+  const oy = y + (h - cs * vis) / 2;
+  const pal = silColors(state);
+  for (let r = 0; r < vis; r++) {
+    for (let c = 0; c < 10; c++) {
+      const px = ox + c * cs, py = oy + r * cs;
+      ctx.fillStyle = ((c + r) & 1) ? '#1a2236' : '#141b2c';
+      ctx.fillRect(px, py, cs, cs);
+      if (g[t + r][c]) {
+        const grd = ctx.createLinearGradient(px, py, px + cs, py + cs);
+        grd.addColorStop(0, pal.a);
+        grd.addColorStop(1, pal.b);
+        ctx.fillStyle = grd;
+        ctx.fillRect(px + 0.3, py + 0.3, cs - 0.6, cs - 0.6);
+      }
+    }
+  }
+  if (state === 'locked') {
+    ctx.fillStyle = 'rgba(8,10,18,0.42)';
+    ctx.fillRect(x, y, w, h);
+  }
+}
+
+function ellipsize(text, maxW, font) {
+  const raw = String(text || '');
+  ctx.font = font;
+  if (ctx.measureText(raw).width <= maxW) return raw;
+  let s = raw;
+  while (s.length > 1 && ctx.measureText(s + '…').width > maxW) s = s.slice(0, -1);
+  return s + '…';
+}
+
+const META_PAD = 8;
+const META_GAP = 8;
+const META_LINE1 = 13;
+const META_LINE2 = 12;
+const META_LINE3 = 12;
+const META_FOOTER_H = META_PAD + META_LINE1 + META_GAP + META_LINE2 + META_GAP + META_LINE3 + META_PAD;
+
+function footerH() {
+  return META_FOOTER_H;
+}
+
+function drawCardMeta(box, y, fh, st) {
+  const s = box.stage;
+  const x = box.x;
+  const fy = y + box.h - fh;
+  const pad = META_PAD;
+  const maxW = box.w - pad * 2;
+  const narrow = box.w < 130;
+  const titleFont = narrow ? 'bold 12px sans-serif' : 'bold 13px sans-serif';
+  const subFont = narrow ? '10px sans-serif' : '11px sans-serif';
+  const titleColor = st === 'cleared' ? GOLD : st === 'unlocked' ? CYAN : 'rgba(255,236,210,0.72)';
+
+  ctx.fillStyle = 'rgba(8,10,18,0.86)';
+  ctx.fillRect(x, fy, box.w, fh);
+
+  const y1 = fy + pad;
+  const y2 = y1 + META_LINE1 + META_GAP;
+  const y3 = y2 + META_LINE2 + META_GAP;
+
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillStyle = titleColor;
+  ctx.fillText(
+    ellipsize((s.title || '') + '·' + (s.authorName || '官方'), maxW, titleFont),
+    x + pad, y1
+  );
+
+  ctx.fillStyle = 'rgba(255,236,210,0.55)';
+  ctx.fillText(
+    ellipsize(s.garbageCount + '个垃圾块·' + s.minLines + '行', maxW, subFont),
+    x + pad, y2
+  );
+
+  ctx.fillStyle = 'rgba(255,236,210,0.42)';
+  ctx.fillText(
+    ellipsize('通关人数' + s.clearCount + '人', maxW, subFont),
+    x + pad, y3
+  );
+}
+
+function drawWall() {
+  drawBg();
+  boxes.forEach((box) => {
+    const y = box.y - originY;
+    if (y + box.h < HUD_H - 20 || y > PH - BACK_H + 20) return;
+    const st = box.stage.state;
+    const fh = footerH();
+    ctx.save();
+    ctx.shadowColor = st === 'cleared' ? 'rgba(255,200,87,0.35)'
+      : st === 'unlocked' ? 'rgba(0,198,255,0.28)' : 'rgba(0,0,0,0.35)';
+    ctx.shadowBlur = st === 'locked' ? 6 : 12;
+    roundRect(box.x, y, box.w, box.h, 8);
+    ctx.fillStyle = '#0c101c';
+    ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    roundRect(box.x, y, box.w, box.h, 8);
+    ctx.clip();
+    drawSil(box.stage.rows, box.x, y, box.w, box.h - fh, st);
+    drawCardMeta(box, y, fh, st);
+    ctx.restore();
+
+    ctx.strokeStyle = st === 'cleared' ? GOLD
+      : st === 'unlocked' ? CYAN
+      : 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = st === 'cleared' ? 2.4 : st === 'unlocked' ? 2 : 1;
+    roundRect(box.x + 1, y + 1, box.w - 2, box.h - 2, 8);
+    ctx.stroke();
+  });
+}
+
+function hitBox(px, py) {
+  const wy = py + originY;
+  for (let i = boxes.length - 1; i >= 0; i--) {
+    const b = boxes[i];
+    if (px >= b.x && px <= b.x + b.w && wy >= b.y && wy <= b.y + b.h) return b;
+  }
+  return null;
+}
+
+function openSheet(box) {
+  const s = box.stage;
+  let acts = '<button class="ghost" id="sheetClose">取消</button>';
+  if (s.state === 'locked') {
+    acts += '<button class="gold" id="sheetGo">解锁 1金</button>';
+  } else {
+    acts += '<button class="gold" id="sheetGo">开始 ' + s.playFee + '币</button>';
+    if (s.state === 'cleared') acts += '<button class="cyan" id="sheetCh">约好友来战</button>';
+  }
+  sheetEl.innerHTML =
+    '<div class="name">' + s.title + '</div>' +
+    '<div class="meta">' + (s.authorName || '官方')
+      + ' · 垃圾 ' + s.garbageCount
+      + ' · 行 ' + s.minLines
+      + ' · 全服通关 ' + s.clearCount + '</div>' +
+    '<div class="acts">' + acts + '</div>';
+  sheetEl.classList.add('on');
+  maskEl.classList.add('on');
+  sheetEl.querySelector('#sheetClose').onclick = closeSheet;
+  const go = sheetEl.querySelector('#sheetGo');
+  if (go) go.onclick = closeSheet;
+  const ch = sheetEl.querySelector('#sheetCh');
+  if (ch) ch.onclick = closeSheet;
+}
+
+function closeSheet() {
+  sheetEl.classList.remove('on');
+  maskEl.classList.remove('on');
+}
+
+function loop() {
+  originY = clampOrigin(originY + vel);
+  vel *= 0.92;
+  if (Math.abs(vel) < 0.15) vel = 0;
+  drawWall();
+  requestAnimationFrame(loop);
+}
+
+canvas.addEventListener('pointerdown', (e) => {
+  const r = canvas.getBoundingClientRect();
+  drag = {
+    id: e.pointerId,
+    x: e.clientX - r.left,
+    y: e.clientY - r.top,
+    oy: originY,
+    moved: false,
+  };
+  vel = 0;
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove', (e) => {
+  if (!drag || e.pointerId !== drag.id) return;
+  const r = canvas.getBoundingClientRect();
+  const y = e.clientY - r.top;
+  const dy = y - drag.y;
+  if (Math.abs(dy) > 6) drag.moved = true;
+  originY = clampOrigin(drag.oy - dy);
+});
+canvas.addEventListener('pointerup', (e) => {
+  if (!drag || e.pointerId !== drag.id) return;
+  const r = canvas.getBoundingClientRect();
+  const x = e.clientX - r.left;
+  const y = e.clientY - r.top;
+  if (!drag.moved && y > HUD_H && y < PH - BACK_H) {
+    const hit = hitBox(x, y);
+    if (hit) openSheet(hit);
+    else closeSheet();
+  }
+  drag = null;
+});
+canvas.addEventListener('pointercancel', () => { drag = null; });
+
+maskEl.addEventListener('click', closeSheet);
+sheetEl.addEventListener('click', (e) => e.stopPropagation());
+
+document.querySelectorAll('.tabs button').forEach((btn) => {
+  btn.onclick = () => {
+    document.querySelectorAll('.tabs button').forEach((b) => b.classList.toggle('on', b === btn));
+    sortId = btn.dataset.sort;
+    originY = 0;
+    closeSheet();
+    rebuildBoxes();
+  };
+});
+
+layout();
+loop();
+</script>
+</body>
+</html>

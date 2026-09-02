@@ -1,6 +1,6 @@
 /**
  * WorkshopEditorScene - 点涂垃圾布局编辑器
- * 顶栏文字化（‹ 返回 / 保存），试玩前自动保存并提示
+ * 顶栏文字化（← 返回 / 保存），试玩前自动保存并提示
  */
 const { Button } = require('../widgets/button');
 const {
@@ -103,7 +103,7 @@ class WorkshopEditorScene {
             id: 'back',
             x: 8,
             y: chromeY - 18,
-            w: 72,
+            w: 88,
             h: 36,
         });
         this._chromeHits.push({
@@ -114,9 +114,9 @@ class WorkshopEditorScene {
             h: 36,
         });
         this._titleHit = {
-            x: 80,
+            x: 96,
             y: chromeY - 18,
-            w: W - 160,
+            w: W - 176,
             h: 36,
         };
 
@@ -370,7 +370,7 @@ class WorkshopEditorScene {
         ctx.font = '15px sans-serif';
         ctx.textAlign = 'left';
         ctx.fillStyle = 'rgba(255,255,255,0.72)';
-        ctx.fillText('‹ 返回', 14, titleY);
+        ctx.fillText('← 返回', 14, titleY);
 
         ctx.textAlign = 'right';
         ctx.fillStyle = SUBTITLE;

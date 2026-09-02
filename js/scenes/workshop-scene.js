@@ -12,10 +12,12 @@ const {
 const workshop = require('../../utils/workshop-manager');
 const goldenBlock = require('../../utils/golden-block-manager');
 const { coinManager } = require('../../utils/coin-manager');
+const { applyShortageHighlight, renderEntryDialog } = require('../../utils/stage-entry-ui');
 const { achievementManager } = require('../../utils/achievement-manager');
 const { drawGarbageLayoutCell } = require('../render/garbage-cell');
 const { drawLayoutBoardTiles } = require('../render/board-tiles');
 const { adManager, isRewardedVideoConfigured } = require('../../utils/ad-manager');
+const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
 
 const STATUS_TABS = [
     { id: 'draft', label: '待自通', status: workshop.STATUS.draft },
@@ -33,6 +35,7 @@ class WorkshopScene {
         this._toastUntil = 0;
         this._confirm = null;
         this._playDialog = null;
+        this._playDialogArmed = false;
         this._scrollY = 0;
         this._scrollVel = 0;
         this._moveSamples = [];
@@ -46,6 +49,7 @@ class WorkshopScene {
         if (p.toast) this._showToast(p.toast);
         this._confirm = null;
         this._playDialog = null;
+        this._playDialogArmed = false;
         this._actionSheet = null;
         this._scrollY = 0;
         this._scrollVel = 0;
@@ -62,6 +66,10 @@ class WorkshopScene {
 
     onResume() {
         this._rebuild();
+    }
+
+    getRenderInterval() {
+        return LIST_FRAME_INTERVAL;
     }
 
     update(dt) {
@@ -173,7 +181,7 @@ class WorkshopScene {
 
         const bottomH = 48;
         const bottomY = H - bottomH - 18;
-        const backW = 64;
+        const backW = 100;
         const expandW = 88;
         const createW = W - side * 2 - backW - expandW - gap * 2;
 
@@ -182,7 +190,7 @@ class WorkshopScene {
             y: bottomY,
             w: backW,
             h: bottomH,
-            text: '返回',
+            text: '← 返回',
             color: '#555',
             onClick: () => GameGlobal.game.sceneManager.back(),
         }));
@@ -497,35 +505,24 @@ class WorkshopScene {
 
     /** 已发布关：作者也可当玩家开打（回流工坊「已发布」） */
     _tryPlayOwnPublished(stage) {
-        if (!workshop.isPlazaUnlocked(stage.stageId)) {
-            this._confirm = {
-                title: '解锁关卡',
-                body: '消耗 ' + workshop.PLAZA_UNLOCK_GOLD + ' 金方块永久解锁？',
-                onOk: () => {
-                    const r = workshop.unlockPlazaStage(stage.stageId);
-                    this._confirm = null;
-                    if (!r.ok) {
-                        this._showToast('金方块不足');
-                        return;
-                    }
-                    this._showToast('已解锁');
-                    this._openPlayDialog(stage);
-                    this._rebuild();
-                },
-            };
-            return;
-        }
         this._openPlayDialog(stage);
     }
 
     _openPlayDialog(stage) {
         const fee = workshop.getPlayFee(stage);
+        const unlocked = workshop.isPlazaUnlocked(stage.stageId);
         this._playDialog = {
             stage,
             fee,
+            locked: !unlocked,
+            needGold: unlocked ? 0 : workshop.PLAZA_UNLOCK_GOLD,
             freeLeft: workshop.getFreePlayRemaining(),
-            canAd: isRewardedVideoConfigured() === true,
+            canAd: unlocked && isRewardedVideoConfigured() === true,
+            canChallenge: false,
+            lackGold: false,
+            lackCoins: false,
         };
+        this._playDialogArmed = false;
     }
 
     _startWorkshopGame(stage, opts) {
@@ -754,52 +751,20 @@ class WorkshopScene {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
         const d = this._playDialog;
-        ctx.fillStyle = 'rgba(0,0,0,0.55)';
-        ctx.fillRect(0, 0, W, H);
-        const bw = Math.min(300, W * 0.82);
-        const bh = d.canAd ? 272 : 232;
-        const px = (W - bw) / 2;
-        const py = (H - bh) / 2;
-        ctx.fillStyle = '#2a2a32';
-        this._round(ctx, px, py, bw, bh, 12);
-        ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 17px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(d.stage.title, W / 2, py + 36);
-        ctx.fillStyle = SUBTITLE;
-        ctx.font = '13px sans-serif';
-        ctx.fillText('开打消耗 ' + d.fee + ' 金币', W / 2, py + 68);
-
-        const btnW = bw - 40;
-        let by = py + 100;
-        ctx.fillStyle = '#e09a30';
-        this._round(ctx, px + 20, by, btnW, 40, 8);
-        ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 15px sans-serif';
-        ctx.fillText('支付开打', W / 2, by + 20);
-        this._playRects = {
-            pay: { x: px + 20, y: by, w: btnW, h: 40 },
-        };
-        if (d.canAd) {
-            by += 52;
-            ctx.fillStyle = '#3a7ab0';
-            this._round(ctx, px + 20, by, btnW, 40, 8);
-            ctx.fill();
-            ctx.fillStyle = '#fff';
-            ctx.fillText('看广告免费（余' + d.freeLeft + '）', W / 2, by + 20);
-            this._playRects.ad = { x: px + 20, y: by, w: btnW, h: 40 };
+        if (!d.locked) {
+            const best = d.stage && d.stage.authorBest;
+            d.canChallenge = !!(best && best.lines >= 1);
+        } else {
+            d.canAd = false;
+            d.canChallenge = false;
         }
-        by += 52;
-        ctx.fillStyle = '#555';
-        this._round(ctx, px + 20, by, btnW, 40, 8);
-        ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 15px sans-serif';
-        ctx.fillText('取消', W / 2, by + 20);
-        this._playRects.cancel = { x: px + 20, y: by, w: btnW, h: 40 };
+        renderEntryDialog(ctx, W, H, d);
+        this._playRects = {
+            pay: d.payRect,
+            cancel: d.cancelRect,
+            ad: d.adRect,
+            challenge: d.challengeRect,
+        };
     }
 
     _round(ctx, x, y, w, h, r) {
@@ -823,6 +788,7 @@ class WorkshopScene {
         this._lastMoveY = y;
         const now = Date.now();
         this._moveSamples = [{ t: now, y: y }];
+        if (this._playDialog) this._playDialogArmed = true;
     }
 
     onTouchMove(x, y) {
@@ -883,6 +849,9 @@ class WorkshopScene {
             return;
         }
         if (this._playDialog) {
+            if (!this._playDialogArmed) {
+                return;
+            }
             const d = this._playDialog;
             const r = this._playRects || {};
             if (this._hit(x, y, r.cancel)) {
@@ -890,9 +859,10 @@ class WorkshopScene {
                 return;
             }
             if (this._hit(x, y, r.pay)) {
-                const paid = workshop.spendPlayFee(d.stage.stageId);
+                const paid = workshop.enterPlazaStage(d.stage.stageId);
                 if (!paid.ok) {
-                    this._showToast('金币不足（需 ' + d.fee + '）');
+                    applyShortageHighlight(d, paid);
+                    this._showToast(workshop.plazaEntryShortageText(paid));
                     return;
                 }
                 this._playDialog = null;
@@ -906,6 +876,10 @@ class WorkshopScene {
                 return;
             }
             if (this._hit(x, y, r.ad)) {
+                if (d.locked) {
+                    this._showToast('请先解锁关卡');
+                    return;
+                }
                 if (d.freeLeft <= 0) {
                     this._showToast('今日免费开打已用完');
                     return;
@@ -926,6 +900,11 @@ class WorkshopScene {
                         });
                     })
                     .catch(() => this._showToast('需完整观看广告'));
+                return;
+            }
+            if (this._hit(x, y, r.challenge)) {
+                this._playDialog = null;
+                this._startWorkshopChallenge(d.stage);
                 return;
             }
             return;

@@ -294,7 +294,7 @@ class ReplayScene {
         // 底部进度条
         this._renderProgress(ctx);
 
-        // 控制按钮：返回 / 倍速 / 暂停
+        // 控制按钮：← 返回 / 倍速 / 暂停
         this._renderControlButtons(ctx);
 
         // 回放结束遮罩：等末次消行特效播完再出现，避免粒子中途定格
@@ -371,15 +371,16 @@ class ReplayScene {
         // 底部进度条
         this._progressRect = { x: 20, y: progressTop, w: W - 40, h: 8 };
 
-        // 控制按钮：返回 / 倍速 / 暂停（一行居中）
+        // 控制按钮：← 返回 / 倍速 / 暂停（返回略宽，避免箭头+文字挤出）
+        const backW = 88;
         const btnSize = 56;
-        const btnGap = 24;
-        const totalW = btnSize * 3 + btnGap * 2;
+        const btnGap = 20;
+        const totalW = backW + btnSize * 2 + btnGap * 2;
         const startX = Math.floor((W - totalW) / 2);
         const btnY = controlCenterY - btnSize / 2;
-        this._backBtnRect = { x: startX, y: btnY, w: btnSize, h: btnSize };
-        this._speedBtnRect = { x: startX + btnSize + btnGap, y: btnY, w: btnSize, h: btnSize };
-        this._pauseBtnRect = { x: startX + 2 * (btnSize + btnGap), y: btnY, w: btnSize, h: btnSize };
+        this._backBtnRect = { x: startX, y: btnY, w: backW, h: btnSize };
+        this._speedBtnRect = { x: startX + backW + btnGap, y: btnY, w: btnSize, h: btnSize };
+        this._pauseBtnRect = { x: startX + backW + btnGap + btnSize + btnGap, y: btnY, w: btnSize, h: btnSize };
     }
 
     // ==================== 渲染器初始化 ====================
@@ -495,7 +496,7 @@ class ReplayScene {
     }
 
     _renderControlButtons(ctx) {
-        this._drawControlButton(ctx, this._backBtnRect, '返回', '#3a3a55');
+        this._drawControlButton(ctx, this._backBtnRect, '← 返回', '#3a3a55');
         this._drawControlButton(ctx, this._speedBtnRect, this._speed + 'x', '#14506e');
         this._drawControlButton(
             ctx,

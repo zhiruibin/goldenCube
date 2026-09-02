@@ -59,9 +59,16 @@ class SceneManager {
         this.current = new SceneClass();
         this.currentName = name;
         this.current._params = params || null;
+        this._safeEnter(params);
+        this._requestImmediateRender();
+    }
 
-        // 初始化并进入
-        this.current.onEnter && this.current.onEnter(params);
+    _safeEnter(params) {
+        try {
+            if (this.current && this.current.onEnter) this.current.onEnter(params);
+        } catch (e) {
+            console.error('[SceneManager] onEnter "' + this.currentName + '" 失败', e);
+        }
     }
 
     /**
@@ -83,8 +90,8 @@ class SceneManager {
         this.current = new SceneClass();
         this.currentName = name;
         this.current._params = params || null;
-
-        this.current.onEnter && this.current.onEnter(params);
+        this._safeEnter(params);
+        this._requestImmediateRender();
     }
 
     /**
@@ -117,7 +124,8 @@ class SceneManager {
         this.current = new SceneClass();
         this.currentName = name;
         this.current._params = params || null;
-        this.current.onEnter && this.current.onEnter(params);
+        this._safeEnter(params);
+        this._requestImmediateRender();
     }
 
     /**
@@ -143,8 +151,19 @@ class SceneManager {
         this.current = new SceneClass();
         this.currentName = prev.name;
         this.current._params = prev.params;
+        this._safeEnter(prev.params);
+        this._requestImmediateRender();
+    }
 
-        this.current.onEnter && this.current.onEnter(prev.params);
+    _requestImmediateRender() {
+        try {
+            if (typeof GameGlobal !== 'undefined' && GameGlobal.game) {
+                GameGlobal.game._forceRender = true;
+                if (typeof GameGlobal.game.kickLoop === 'function') {
+                    GameGlobal.game.kickLoop();
+                }
+            }
+        } catch (e) { /* ignore */ }
     }
 
     /**
@@ -155,7 +174,7 @@ class SceneManager {
     }
 
     /**
-     * 每帧更新
+     * 只推进当前可见场景。栈里被盖住的页面相当于 0fps：不 update、不 render。
      * @param {number} dt - 帧间隔（秒）
      */
     update(dt) {
@@ -165,7 +184,7 @@ class SceneManager {
     }
 
     /**
-     * 每帧渲染
+     * 只绘制当前可见场景。
      * @param {CanvasRenderingContext2D} ctx
      */
     render(ctx) {

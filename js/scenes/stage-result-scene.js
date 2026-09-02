@@ -16,6 +16,7 @@ const goldenBlock = require('../../utils/golden-block-manager');
 const { coinManager } = require('../../utils/coin-manager');
 const { adManager, isRewardedVideoConfigured } = require('../../utils/ad-manager');
 const { Button } = require('../widgets/button');
+const { stageSelectStack } = require('../../utils/stage-nav');
 const { buildIsoBlockFaces, drawSolidIsoBlock } = require('../render/iso-block-renderer');
 const {
     preloadResultBlockImages,
@@ -26,6 +27,7 @@ const {
     promptStageEntry,
     handleEntryDialogTap,
     renderEntryDialog,
+    renderCenterToast,
     formatStageEntryButtonLabel,
 } = require('../../utils/stage-entry-ui');
 
@@ -132,10 +134,7 @@ class StageResultScene {
             onDialog: (dialog) => {
                 this._entryDialog = dialog;
             },
-            onInsufficient: () => {
-                const canAd = isRewardedVideoConfigured() === true;
-                this._showToast(canAd ? '金币不足，可看广告免费入场' : '金币不足，请先攒够入场费');
-            },
+            onToast: (msg) => this._showToast(msg),
         });
     }
 
@@ -204,11 +203,11 @@ class StageResultScene {
             });
         }
         buttons.push({
-            text: '返回关卡选择',
+            text: '← 返回关卡选择',
             color: '#333',
             onClick: () => GameGlobal.game.sceneManager.leaveTo('stageSelect', {
                 stageId: this._params.stageId,
-            }, ['home']),
+            }, stageSelectStack()),
         });
         const totalH = buttons.length * bh + (buttons.length - 1) * gap;
         this._buttonsTopY = H - bottomInset - totalH - 24;
@@ -445,16 +444,12 @@ class StageResultScene {
 
         if (this._entryDialog) {
             const action = handleEntryDialogTap(this._entryDialog, x, y, {
-                onInsufficient: (fee) => {
-                    const canAd = isRewardedVideoConfigured() === true;
-                    this._showToast(canAd ? '金币不足（需 ' + fee + '）' : '金币不足，请先攒够入场费');
-                },
                 onToast: (msg) => this._showToast(msg),
             });
             if (action === 'dismiss') {
                 this._entryDialog = null;
             }
-            if (action) return;
+            return;
         }
         for (let i = 0; i < this._buttons.length; i++) {
             const btn = this._buttons[i];
@@ -463,6 +458,10 @@ class StageResultScene {
                 return;
             }
         }
+    }
+
+    handleTouchStart() {
+        if (this._entryDialog) this._entryDialog.armed = true;
     }
 
     update(dt) {
@@ -631,22 +630,7 @@ class StageResultScene {
             renderEntryDialog(ctx, W, H, this._entryDialog);
         }
         if (this._toast) {
-            ctx.fillStyle = 'rgba(0,0,0,0.72)';
-            ctx.font = '14px sans-serif';
-            const tw = ctx.measureText(this._toast).width + 24;
-            const th = 34;
-            const tx = W / 2 - tw / 2;
-            const ty = H - 70;
-            ctx.beginPath();
-            if (ctx.roundRect) ctx.roundRect(tx, ty, tw, th, 8);
-            else ctx.rect(tx, ty, tw, th);
-            ctx.fill();
-            ctx.fillStyle = '#ffffff';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(this._toast, W / 2, ty + th / 2);
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'alphabetic';
+            renderCenterToast(ctx, W, H, this._toast);
         }
 
         if (this._confettiFx && this._confettiFx.isActive()) {

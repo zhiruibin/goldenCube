@@ -97,8 +97,12 @@ class WorkshopResultScene {
         const origin = this._resolveOrigin();
         if (origin === 'plaza') {
             sm.leaveTo('plaza', {
-                plazaSort: (this._listParams && this._listParams.plazaSort) || 'new',
+                plazaSort: (this._listParams && this._listParams.plazaSort) || 'official',
                 toast: extraParams.toast || '',
+                scrollY: (this._listParams && typeof this._listParams.scrollY === 'number')
+                    ? this._listParams.scrollY
+                    : 0,
+                focusStageId: (this._listParams && this._listParams.focusStageId) || this._stageId || '',
             }, ['home']);
             return;
         }
@@ -135,7 +139,7 @@ class WorkshopResultScene {
         const defs = [];
 
         if (this._authorTrial) {
-            const primaryLabel = this._returnTo === 'editor' ? '返回编辑' : '返回列表';
+            const primaryLabel = this._returnTo === 'editor' ? '← 返回编辑' : '← 返回列表';
             defs.push({
                 text: primaryLabel,
                 color: '#3a7ab0',
@@ -164,7 +168,7 @@ class WorkshopResultScene {
             }
         } else {
             const origin = this._resolveOrigin();
-            const backLabel = origin === 'workshop' ? '返回工坊' : '返回广场';
+            const backLabel = origin === 'workshop' ? '← 返回工坊' : '← 返回广场';
             defs.push({
                 text: '再玩一局',
                 color: '#e09a30',

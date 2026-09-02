@@ -16,11 +16,13 @@ const { achievementManager } = require('../../utils/achievement-manager');
 const { coinManager } = require('../../utils/coin-manager');
 const IconRenderer = require('../render/icon-renderer');
 const { MiniTetrisFx } = require('../render/mini-tetris-fx');
+const { FRAME_INTERVAL } = require('../runtime/frame-budget');
 const { ConfettiFx } = require('../render/confetti-fx');
 const goldenBlock = require('../../utils/golden-block-manager');
 const { LuckyDrawOverlay } = require('../widgets/lucky-draw-overlay');
 const luckyDrawManager = require('../../utils/lucky-draw-manager');
 const { normalizeGameParams, replayMetaFromGame } = require('../../utils/play-context');
+const { stagePlayStack, stageSelectStack } = require('../../utils/stage-nav');
 
 /** 硬降短时冷却：防止连点/多指瞬时误砸下一块（不改按钮布局） */
 const HARD_DROP_COOLDOWN_MS = 200;
@@ -182,7 +184,7 @@ class GameScene {
         this._initEngine();
         this._initRenderers();
         this._initUI();
-        this._bgEffects = new BackgroundEffects();
+        this._bgEffects = new BackgroundEffects({ lite: true });
         this._bgEffects.init();
         this._bgEffects.setEnabled(this._settings.bgEffects);
         this._confettiFx = new ConfettiFx();
@@ -268,6 +270,11 @@ class GameScene {
         } catch (e) { /* ignore */ }
     }
 
+    /** 对局 60fps；暂停仍在屏上，同样跟满帧 */
+    getRenderInterval() {
+        return FRAME_INTERVAL;
+    }
+
     update(dt) {
         // 塌陷结算必须继续推进：若仅因暂停冻住 update，会停在「无当前方块」状态
         if (this._paused) {
@@ -285,7 +292,7 @@ class GameScene {
             if (this._effectRenderer) this._effectRenderer.update(dt);
             if (this._boardRenderer) this._boardRenderer.update(dt);
             if (this._bgEffects) this._bgEffects.update(dt);
-            if (this._miniFx) this._miniFx.update(dt);
+            if (this._miniFx && this._miniFx.isBusy()) this._miniFx.update(dt);
             if (this._confettiFx) this._confettiFx.update(dt);
             return;
         }
@@ -295,7 +302,7 @@ class GameScene {
             if (this._effectRenderer) this._effectRenderer.update(dt);
             if (this._boardRenderer) this._boardRenderer.update(dt);
             if (this._bgEffects) this._bgEffects.update(dt);
-            if (this._miniFx) this._miniFx.update(dt);
+            if (this._miniFx && this._miniFx.isBusy()) this._miniFx.update(dt);
             if (this._confettiFx) this._confettiFx.update(dt);
             return;
         }
@@ -324,7 +331,7 @@ class GameScene {
         }
         // 更新全屏背景特效（挂现有 update 通道，不新增渲染循环）
         if (this._bgEffects) { this._bgEffects.update(dt); }
-        if (this._miniFx) { this._miniFx.update(dt); }
+        if (this._miniFx && this._miniFx.isBusy()) { this._miniFx.update(dt); }
         if (this._stageLuckyDraw) { this._stageLuckyDraw.update(dt); }
         if (this._confettiFx) { this._confettiFx.update(dt); }
     }
@@ -1310,9 +1317,9 @@ class GameScene {
         ctx.fillText(
             this._workshop
                 ? (this._authorTrial
-                    ? (this._workshopReturnTo === 'editor' ? '返回编辑' : '返回列表')
-                    : '返回工坊')
-                : '返回关卡',
+                    ? (this._workshopReturnTo === 'editor' ? '← 返回编辑' : '← 返回列表')
+                    : '← 返回工坊')
+                : '← 返回关卡',
             W / 2,
             nextY + bh / 2
         );
@@ -1406,6 +1413,9 @@ class GameScene {
                 if (this._audio) this._audio.pauseBGM();
             } catch (e) { /* ignore */ }
         }
+        try {
+            if (GameGlobal.game) GameGlobal.game._forceRender = true;
+        } catch (e) { /* ignore */ }
     }
 
 
@@ -1537,8 +1547,10 @@ class GameScene {
 
         if (origin === 'plaza') {
             sm.leaveTo('plaza', {
-                plazaSort: listParams.plazaSort || 'new',
+                plazaSort: listParams.plazaSort || 'official',
                 toast: listParams.toast || '',
+                scrollY: typeof listParams.scrollY === 'number' ? listParams.scrollY : 0,
+                focusStageId: extra.focusStageId || listParams.focusStageId || this._workshopStageId || '',
             }, ['home']);
             return;
         }
@@ -1757,7 +1769,7 @@ class GameScene {
     }
 
     _enterStageResult(navigateParams) {
-        GameGlobal.game.sceneManager.leaveTo('stageResult', navigateParams, ['home', 'stageSelect']);
+        GameGlobal.game.sceneManager.leaveTo('stageResult', navigateParams, stagePlayStack());
     }
 
     /**
@@ -1990,7 +2002,7 @@ class GameScene {
                     minLines,
                     reason: this._stageOverReason || 'topOut',
                 },
-            }, ['home', 'stageSelect']);
+            }, stagePlayStack());
         }, 700);
     }
 
@@ -2004,10 +2016,10 @@ class GameScene {
         if (this._workshop) {
             this._leaveWorkshopOrigin();
         } else {
-            // 栈仅保留首页，关选「返回」回到首页，而不是回到已放弃的对局
+            // 栈保留首页+世界地图，关选「返回」回到地图，而不是已放弃的对局
             sm.leaveTo('stageSelect', {
                 stageId: this._params.stageId,
-            }, ['home']);
+            }, stageSelectStack());
         }
     }
 

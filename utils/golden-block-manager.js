@@ -132,6 +132,15 @@ function unlockStage(id) {
     return { ok: true, stage, balance: getBalance() };
 }
 
+/** 开打扣金币失败时回滚金方块解锁 */
+function revokeUnlock(id) {
+    const stage = getStage(id);
+    if (!stage) return;
+    const nid = Number(stage.id);
+    const list = getUnlocked().filter((x) => Number(x) !== nid);
+    _saveUnlocked(list);
+}
+
 /** 已通关的关自动视为已解锁（升级 unlockCost 后兼容老存档，不重复扣金） */
 function syncUnlockedFromProgress() {
     const list = getUnlocked();
@@ -440,6 +449,7 @@ module.exports = {
     spendBalance,
     isUnlocked,
     unlockStage,
+    revokeUnlock,
     syncUnlockedFromProgress,
     getStageBest,
     isCleared,

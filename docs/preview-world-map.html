@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>挖个方块 · 世界棋盘预览</title>
+<style>
+  :root {
+    --bg0: #2a3358;
+    --bg1: #1c2440;
+    --bg2: #12182c;
+    --title: #FFE566;
+    --gold: #FFC857;
+    --cyan: #00c6ff;
+    --sub: rgba(255, 236, 210, 0.75);
+    --muted: rgba(255, 245, 230, 0.42);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", system-ui, sans-serif;
+    color: #fff;
+    background: linear-gradient(180deg, var(--bg0), var(--bg1) 55%, var(--bg2));
+    min-height: 100vh;
+  }
+  header { text-align: center; padding: 24px 16px 8px; }
+  h1 { margin: 0; font-size: 22px; color: var(--title); }
+  header p { margin: 8px auto 0; max-width: 520px; color: var(--sub); font-size: 14px; line-height: 1.55; }
+  .hint { text-align: center; color: var(--muted); font-size: 12px; margin: 6px 0 16px; }
+  .wrap { display: flex; justify-content: center; padding-bottom: 28px; }
+  .phone {
+    width: 390px; height: 780px; border-radius: 36px;
+    border: 1px solid rgba(255, 200, 87, 0.35);
+    background: #0c101c;
+    position: relative; overflow: hidden;
+  }
+  .hud {
+    position: absolute; left: 0; right: 0; top: 0; z-index: 3;
+    padding: 18px 16px 10px;
+    background: linear-gradient(180deg, rgba(12,16,28,.92), rgba(12,16,28,0));
+    pointer-events: none;
+  }
+  .hud h2 { margin: 0; font-size: 18px; color: var(--title); }
+  .hud .row { display: flex; justify-content: space-between; align-items: center; }
+  .hud .money { font-size: 13px; color: var(--gold); }
+  .hud .sub { margin-top: 4px; font-size: 12px; color: var(--sub); }
+  canvas { display: block; touch-action: none; cursor: grab; }
+  canvas:active { cursor: grabbing; }
+  .back {
+    position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%);
+    z-index: 3; width: 220px; height: 44px; border-radius: 12px;
+    background: #555; color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 15px; pointer-events: none;
+  }
+  .legend {
+    max-width: 390px; margin: 0 auto 36px; padding: 0 16px;
+    color: var(--sub); font-size: 13px; line-height: 1.7;
+  }
+  .legend b.gold { color: var(--gold); }
+  .legend b.cyan { color: var(--cyan); }
+</style>
+</head>
+<body>
+<header>
+  <h1>世界层 · 可拖棋盘</h1>
+  <p>大块用对局垃圾裂纹；空槽撒碎石、少量金粒、缝里干草。已通金边，正在通青色。</p>
+</header>
+<p class="hint">在棋盘上按住上下拖 · 点垃圾块仅作示意</p>
+<div class="wrap">
+  <div class="phone">
+    <div class="hud">
+      <div class="row">
+        <h2>闯关地图</h2>
+        <div class="money">◆ 2　币 827</div>
+      </div>
+      <div class="sub">上拖查看更多主题</div>
+    </div>
+    <canvas id="board"></canvas>
+    <div class="back">← 返回</div>
+  </div>
+</div>
+<div class="legend">
+  示例进度：<b class="gold">数字课 / 字母墙 / 花田日记</b> 已通；
+  <b class="cyan">萌宠园</b> 正在通；积木城及以上未开。进图时镜头停在正在通的那一块附近。
+</div>
+<script>
+const CHAPTERS = [
+  { id: 1, name: '数字课', col: 2.2, row: 3.2, state: 'cleared' },
+  { id: 2, name: '字母墙', col: 6.4, row: 9.0, state: 'cleared' },
+  { id: 3, name: '花田日记', col: 3.0, row: 15.2, state: 'cleared' },
+  { id: 4, name: '萌宠园', col: 6.8, row: 21.4, state: 'current' },
+  { id: 5, name: '积木城', col: 2.4, row: 27.6, state: 'locked' },
+  { id: 6, name: '车水马龙', col: 6.2, row: 33.8, state: 'locked' },
+  { id: 7, name: '星象台', col: 3.4, row: 40.0, state: 'locked' },
+  { id: 8, name: '几何馆', col: 6.6, row: 46.2, state: 'locked' },
+  { id: 9, name: '地宫迷阵', col: 2.6, row: 52.4, state: 'locked' },
+  { id: 10, name: '金方块殿', col: 6.0, row: 58.8, state: 'locked' },
+];
+const COLS = 10;
+const ROWS = 66;
+const GOLD = '#FFC857';
+const CYAN = '#00c6ff';
+let decors = [];
+
+function hashSeed(col, row) {
+  return ((col * 73856093) ^ (row * 19349663)) >>> 0;
+}
+function rnd(seed, n) {
+  let s = (seed + n * 2654435761) >>> 0;
+  s = Math.imul(s ^ (s >>> 16), 2246822519);
+  s = Math.imul(s ^ (s >>> 13), 3266489917);
+  return ((s ^ (s >>> 16)) >>> 0) / 4294967296;
+}
+function nearChapter(c, r) {
+  let best = 99, state = 'locked';
+  for (const ch of CHAPTERS) {
+    const d = Math.hypot(c - ch.col, r - ch.row);
+    if (d < best) { best = d; state = ch.state; }
+  }
+  return { d: best, state };
+}
+
+const phone = document.querySelector('.phone');
+const canvas = document.getElementById('board');
+const ctx = canvas.getContext('2d');
+let cell = 32;
+let originX = 0;
+let originY = 0; // world Y of top of view; larger = looking higher
+let drag = null;
+let vel = 0;
+
+function layout() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = 390, h = 780;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  cell = Math.floor((w - 36) / COLS);
+  originX = (w - COLS * cell) / 2;
+  buildDecors();
+}
+
+function maxOrigin() {
+  return Math.max(0, ROWS * cell - (780 - 70));
+}
+function clampOrigin(y) {
+  return Math.max(0, Math.min(maxOrigin(), y));
+}
+
+function worldToScreen(col, row) {
+  const x = originX + col * cell;
+  const y = 780 - 58 - (row * cell - originY);
+  return { x, y };
+}
+
+function drawTiles() {
+  const pad = 4;
+  ctx.fillStyle = '#0c101c';
+  ctx.fillRect(0, 0, 390, 780);
+  const boardW = COLS * cell;
+  const boardH = ROWS * cell;
+  const bx = originX;
+  const by = 780 - 58 - (boardH - originY);
+
+  ctx.save();
+  ctx.shadowColor = 'rgba(88,118,188,0.22)';
+  ctx.shadowBlur = 16;
+  roundRect(bx - pad, by - pad, boardW + pad * 2, boardH + pad * 2, 12);
+  ctx.fillStyle = '#0c101c';
+  ctx.fill();
+  ctx.restore();
+
+  roundRect(bx, by, boardW, boardH, 10);
+  ctx.fillStyle = '#0c101c';
+  ctx.fill();
+  ctx.strokeStyle = '#2a3550';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  const visTop = Math.floor(originY / cell) - 1;
+  const visBot = Math.ceil((originY + 780) / cell) + 1;
+  for (let r = visTop; r <= visBot; r++) {
+    if (r < 0 || r >= ROWS) continue;
+    for (let c = 0; c < COLS; c++) {
+      const p = worldToScreen(c, r);
+      const odd = (c + r) & 1;
+      ctx.fillStyle = odd ? '#1a2236' : '#141b2c';
+      const g = 2, rad = 4;
+      roundRect(p.x + g / 2, p.y - cell + g / 2, cell - g, cell - g, rad);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.05)';
+      ctx.fillRect(p.x + g / 2 + 1, p.y - cell + g / 2 + 1, cell - g - 2, 3);
+      ctx.fillStyle = 'rgba(0,0,0,0.22)';
+      ctx.fillRect(p.x + g / 2 + 1, p.y - g / 2 - 4, cell - g - 2, 3);
+    }
+  }
+  drawDecors(visTop, visBot);
+}
+
+function roundRect(x, y, w, h, r) {
+  const rad = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + rad, y);
+  ctx.arcTo(x + w, y, x + w, y + h, rad);
+  ctx.arcTo(x + w, y + h, x, y + h, rad);
+  ctx.arcTo(x, y + h, x, y, rad);
+  ctx.arcTo(x, y, x + w, y, rad);
+  ctx.closePath();
+}
+
+function isoPts(cx, cy, size) {
+  const hw = size * 0.46, hh = size * 0.22, depth = size * 0.52;
+  const midY = cy - depth * 0.2;
+  const slice = (d) => ({
+    T: { x: cx, y: midY - hh + d },
+    L: { x: cx - hw, y: midY + d },
+    R: { x: cx + hw, y: midY + d },
+    B: { x: cx, y: midY + hh + d },
+  });
+  const top0 = slice(0), bot = slice(depth);
+  return {
+    top: [top0.T, top0.R, top0.B, top0.L],
+    left: [top0.L, top0.B, bot.B, bot.L],
+    right: [top0.R, top0.B, bot.B, bot.R],
+    shadow: { cx, cy: bot.B.y + size * 0.05, rx: hw * 0.95, ry: hh * 0.95 },
+    topCenter: { x: cx, y: midY - 4 },
+  };
+}
+
+function face(pts, fill, stroke, lw) {
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.closePath();
+  ctx.fillStyle = fill;
+  ctx.fill();
+  if (stroke) {
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = lw || 1.4;
+    ctx.stroke();
+  }
+}
+
+function strokeCrack(points, lw) {
+  if (!points || points.length < 2) return;
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.translate(0.7, 0.9);
+  ctx.strokeStyle = 'rgba(0,0,0,0.42)';
+  ctx.lineWidth = lw + 0.8;
+  ctx.globalAlpha = 0.55;
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+  ctx.stroke();
+  ctx.restore();
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = 'rgba(24,22,28,0.9)';
+  ctx.lineWidth = lw;
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+  ctx.stroke();
+  ctx.translate(-0.45, -0.55);
+  ctx.strokeStyle = 'rgba(255,255,255,0.14)';
+  ctx.lineWidth = Math.max(0.35, lw * 0.32);
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function crackOnQuad(pts, seed, lwScale) {
+  const bx = Math.min(pts[0].x, pts[1].x, pts[2].x, pts[3].x);
+  const by = Math.min(pts[0].y, pts[1].y, pts[2].y, pts[3].y);
+  const bw = Math.max(pts[0].x, pts[1].x, pts[2].x, pts[3].x) - bx;
+  const bh = Math.max(pts[0].y, pts[1].y, pts[2].y, pts[3].y) - by;
+  const w = Math.min(bw, bh);
+  const lw = Math.max(0.65, w * 0.045 * (lwScale || 1));
+  const startEdge = Math.floor(rnd(seed, 1) * 4);
+  const t0 = 0.18 + rnd(seed, 3) * 0.64;
+  const start = [
+    { x: bx + t0 * bw, y: by },
+    { x: bx + bw, y: by + t0 * bh },
+    { x: bx + t0 * bw, y: by + bh },
+    { x: bx, y: by + t0 * bh },
+  ][startEdge];
+  const depth = w * (0.35 + rnd(seed, 4) * 0.37);
+  const inward = {
+    0: Math.PI / 2 + (rnd(seed, 5) - 0.5) * 0.85,
+    1: Math.PI + (rnd(seed, 5) - 0.5) * 0.85,
+    2: -Math.PI / 2 + (rnd(seed, 5) - 0.5) * 0.85,
+    3: (rnd(seed, 5) - 0.5) * 0.85,
+  }[startEdge];
+  const mid = { x: start.x + Math.cos(inward) * depth * 0.52, y: start.y + Math.sin(inward) * depth * 0.52 };
+  const end = { x: start.x + Math.cos(inward) * depth, y: start.y + Math.sin(inward) * depth };
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.closePath();
+  ctx.clip();
+  strokeCrack([start, mid, end], lw);
+  if (rnd(seed, 7) > 0.45) {
+    const ba = inward + (Math.PI / 2) * (rnd(seed, 8) > 0.5 ? 1 : -1) + (rnd(seed, 9) - 0.5) * 0.35;
+    const bl = w * (0.1 + rnd(seed, 10) * 0.14);
+    strokeCrack([mid, { x: mid.x + Math.cos(ba) * bl, y: mid.y + Math.sin(ba) * bl }], lw * 0.68);
+  }
+  for (let i = 0; i < 2; i++) {
+    ctx.globalAlpha = 0.1 + rnd(seed, 20 + i) * 0.12;
+    ctx.fillStyle = '#2a2a30';
+    ctx.beginPath();
+    ctx.arc(bx + rnd(seed, 30 + i) * bw, by + rnd(seed, 40 + i) * bh, Math.max(1.2, w * 0.05), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function buildDecors() {
+  decors = [];
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const near = nearChapter(c + 0.5, r + 0.5);
+      if (near.d < 2.35) continue;
+      const seed = hashSeed(c, r);
+      let chance = 0.12;
+      if (near.state === 'cleared' && near.d < 5.5) chance = 0.4;
+      else if (near.state === 'current' && near.d < 5) chance = 0.22;
+      else if (near.d < 4) chance = 0.16;
+      if (rnd(seed, 1) > chance) continue;
+      const roll = rnd(seed, 2);
+      let kind = 'rubble';
+      if (near.state === 'cleared' && near.d < 5 && roll > 0.88) kind = 'gold';
+      else if (roll > 0.62 && roll <= 0.88) kind = 'grass';
+      else if (roll > 0.88) kind = 'chip';
+      const tuftRoll = rnd(seed, 7);
+      const tuft = tuftRoll > 0.82 ? 15 : tuftRoll > 0.48 ? 7 : 3;
+      decors.push({
+        c: c + 0.15 + rnd(seed, 3) * 0.7,
+        r: r + 0.15 + rnd(seed, 4) * 0.7,
+        kind,
+        seed,
+        tuft,
+        rot: (rnd(seed, 5) - 0.5) * 0.6,
+        scale: 0.55 + rnd(seed, 6) * 0.45,
+      });
+    }
+  }
+}
+
+function drawGrassTuft(cx, cy, count, seed, scale) {
+  const spread = count <= 3 ? 5.5 : count <= 7 ? 8.5 : 12;
+  const s = 0.75 + scale * 0.55;
+  ctx.save();
+  ctx.fillStyle = 'rgba(62, 52, 38, 0.35)';
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + 1.2, spread * 0.38 * s, 2.1 * s, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  for (let i = 0; i < count; i++) {
+    const t = count === 1 ? 0.5 : i / (count - 1);
+    const fan = (t - 0.5) * 2;
+    const wobble = (rnd(seed, 20 + i) - 0.5) * (count > 7 ? 4.2 : 2.4);
+    const bx = cx + fan * spread * 0.42 * s + wobble;
+    const by = cy + (rnd(seed, 40 + i) - 0.5) * 1.6;
+    const h = (5.5 + rnd(seed, 60 + i) * 7.5) * s * (0.78 + (1 - Math.abs(fan)) * 0.35);
+    const lean = fan * (count > 7 ? 5.5 : 3.8) + (rnd(seed, 80 + i) - 0.5) * 3.2;
+    const midX = bx + lean * 0.35 + (rnd(seed, 100 + i) - 0.5) * 2.5;
+    const tipX = bx + lean;
+    const dark = rnd(seed, 120 + i) > 0.55;
+    ctx.strokeStyle = dark ? 'rgba(86, 94, 56, 0.78)' : 'rgba(118, 126, 76, 0.82)';
+    ctx.lineWidth = (0.85 + rnd(seed, 140 + i) * 0.55) * s;
+    ctx.beginPath();
+    ctx.moveTo(bx, by);
+    ctx.quadraticCurveTo(midX, by - h * 0.48, tipX, by - h);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawContactShadow(geo, alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.ellipse(geo.shadow.cx, geo.shadow.cy, geo.shadow.rx, geo.shadow.ry, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawDecors(visTop, visBot) {
+  for (const d of decors) {
+    if (d.r < visTop - 1 || d.r > visBot + 1) continue;
+    const p = worldToScreen(d.c, d.r);
+    const cx = p.x, cy = p.y - cell * 0.35;
+    if (d.kind === 'grass') {
+      drawGrassTuft(cx, cy, d.tuft, d.seed, d.scale);
+      continue;
+    }
+    if (d.kind === 'gold') {
+      const geo = isoPts(cx, cy - 2, cell * 0.55 * d.scale);
+      drawContactShadow(geo, 0.32);
+      face(geo.left, '#b8860b', '#7a5a10', 0.8);
+      face(geo.right, '#d4a017', '#8a6a12', 0.8);
+      face(geo.top, '#FFE566', '#c9a227', 0.8);
+      continue;
+    }
+    const sz = cell * (d.kind === 'chip' ? 0.42 : 0.72) * d.scale;
+    const geo = isoPts(cx, cy - 1, sz);
+    drawContactShadow(geo, d.kind === 'chip' ? 0.22 : 0.28);
+    ctx.save();
+    ctx.globalAlpha = 0.92;
+    face(geo.left, '#5a5a62', '#3a3a42', 0.7);
+    face(geo.right, '#6e6e76', '#404048', 0.7);
+    face(geo.top, '#84848c', '#5c5c64', 0.7);
+    crackOnQuad(geo.top, d.seed, 1.2);
+    ctx.restore();
+  }
+}
+
+function drawCube(ch) {
+  const p = worldToScreen(ch.col, ch.row);
+  const lifted = ch.state === 'current' ? 7 : 0;
+  const size = cell * 2.35;
+  const cx = p.x + cell * 0.2;
+  const cy = p.y - cell * 0.35 - lifted;
+  const geo = isoPts(cx, cy, size);
+  const locked = ch.state === 'locked';
+  const glow = ch.state === 'current' ? CYAN : ch.state === 'cleared' ? GOLD : null;
+
+  if (glow) {
+    ctx.save();
+    ctx.shadowColor = glow;
+    ctx.shadowBlur = ch.state === 'current' ? 22 : 12;
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.ellipse(geo.shadow.cx, geo.shadow.cy - 2, geo.shadow.rx * 1.05, geo.shadow.ry * 1.35, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  ctx.save();
+  ctx.globalAlpha = 0.35;
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.ellipse(geo.shadow.cx, geo.shadow.cy + (lifted ? 3 : 0), geo.shadow.rx, geo.shadow.ry, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  const dim = locked ? 0.55 : 1;
+  ctx.save();
+  ctx.globalAlpha = dim;
+  face(geo.left, '#5a5a62', '#3a3a42', 1);
+  face(geo.right, '#6e6e76', '#404048', 1);
+  face(geo.top, locked ? '#7a7a82' : '#909098', '#5c5c64', 1);
+  crackOnQuad(geo.top, hashSeed(ch.id, 11), locked ? 0.7 : 1);
+  crackOnQuad(geo.left, hashSeed(ch.id, 22), locked ? 0.55 : 0.85);
+  crackOnQuad(geo.right, hashSeed(ch.id, 33), locked ? 0.45 : 0.7);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.10)';
+  ctx.beginPath();
+  ctx.moveTo(geo.top[0].x, geo.top[0].y);
+  ctx.lineTo(geo.top[1].x, geo.top[1].y);
+  ctx.lineTo((geo.top[1].x + geo.top[2].x) / 2, (geo.top[1].y + geo.top[2].y) / 2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  if (glow) {
+    ctx.save();
+    ctx.strokeStyle = glow;
+    ctx.lineWidth = ch.state === 'current' ? 2.6 : 1.7;
+    ctx.shadowColor = glow;
+    ctx.shadowBlur = ch.state === 'current' ? 16 : 8;
+    ctx.beginPath();
+    const ring = geo.top.concat([geo.top[0]]);
+    ctx.moveTo(ring[0].x, ring[0].y);
+    geo.top.forEach((pt) => ctx.lineTo(pt.x, pt.y));
+    ctx.closePath();
+    ctx.stroke();
+    // side rim
+    ctx.beginPath();
+    ctx.moveTo(geo.left[0].x, geo.left[0].y);
+    ctx.lineTo(geo.left[3].x, geo.left[3].y);
+    ctx.lineTo(geo.left[2].x, geo.left[2].y);
+    ctx.moveTo(geo.right[0].x, geo.right[0].y);
+    ctx.lineTo(geo.right[3].x, geo.right[3].y);
+    ctx.lineTo(geo.right[2].x, geo.right[2].y);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  const tx = geo.topCenter.x;
+  const ty = geo.top[0].y - 18;
+
+  ctx.save();
+  ctx.fillStyle = locked ? 'rgba(0,0,0,0.14)' : 'rgba(0,0,0,0.22)';
+  ctx.beginPath();
+  ctx.ellipse(geo.topCenter.x, geo.topCenter.y + 1, 20, 6.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.save();
+  ctx.font = 'bold 13px "PingFang SC", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(0,0,0,0.38)';
+  ctx.shadowBlur = 5;
+  ctx.shadowOffsetY = 2;
+  ctx.fillStyle = locked ? 'rgba(255,245,230,0.38)' : '#fff8e8';
+  ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+  ctx.lineWidth = 3;
+  ctx.strokeText(ch.name, tx, ty);
+  ctx.fillText(ch.name, tx, ty);
+  ctx.restore();
+}
+
+function draw() {
+  drawTiles();
+  const order = CHAPTERS.slice().sort((a, b) => b.row - a.row);
+  order.forEach(drawCube);
+}
+
+function currentOrigin() {
+  const cur = CHAPTERS.find((c) => c.state === 'current');
+  const y = cur.row * cell - 780 * 0.55;
+  return clampOrigin(y);
+}
+
+layout();
+originY = currentOrigin();
+draw();
+
+let lastT = 0;
+function tick(t) {
+  const dt = lastT ? Math.min(0.04, (t - lastT) / 1000) : 0.016;
+  lastT = t;
+  if (!drag && Math.abs(vel) > 8) {
+    originY = clampOrigin(originY + vel * dt);
+    vel *= 0.92;
+    if (Math.abs(vel) < 8) vel = 0;
+    draw();
+  }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+function py(e) {
+  const r = canvas.getBoundingClientRect();
+  const y = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+  return y * (780 / r.height);
+}
+
+canvas.addEventListener('pointerdown', (e) => {
+  canvas.setPointerCapture(e.pointerId);
+  drag = { y: py(e), o: originY, t: performance.now() };
+  vel = 0;
+});
+canvas.addEventListener('pointermove', (e) => {
+  if (!drag) return;
+  const y = py(e);
+  const dy = y - drag.y;
+  originY = clampOrigin(drag.o + dy);
+  const now = performance.now();
+  vel = (originY - (drag.lastO != null ? drag.lastO : drag.o)) / Math.max(0.008, (now - (drag.lastT || drag.t)) / 1000);
+  drag.lastO = originY;
+  drag.lastT = now;
+  draw();
+});
+function endDrag() { drag = null; }
+canvas.addEventListener('pointerup', endDrag);
+canvas.addEventListener('pointercancel', endDrag);
+window.addEventListener('resize', () => { layout(); originY = clampOrigin(originY); draw(); });
+</script>
+</body>
+</html>
