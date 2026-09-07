@@ -130,11 +130,19 @@ function truncateText(ctx, text, maxW, font) {
 
 function ensureMeta(ctx, box, state) {
     const w = Math.round(box.w);
-    const key = state + '|' + w;
-    if (box._metaKey === key && box._meta) return box._meta;
     const s = box.stage || {};
+    const isEndless = s.kind === 'endless' || s.stageId === 'plaza_endless';
+    const endlessKey = isEndless
+        ? ('|' + (Number(s.endlessBest) || 0)
+            + '|' + (s.endlessResume ? 1 : 0)
+            + '|' + (Number(s.endlessResumeScore) || 0)
+            + '|' + (Number(s.garbageCount) || 0))
+        : '';
+    const key = state + '|' + w + endlessKey;
+    if (box._metaKey === key && box._meta) return box._meta;
     const pad = META_PAD;
-    const maxW = Math.max(0, box.w - pad * 2);
+    const helpReserve = isEndless ? Math.min(28, Math.max(22, Math.floor(META_FOOTER_H * 0.42))) + 10 : 0;
+    const maxW = Math.max(0, box.w - pad * 2 - helpReserve);
     const narrow = box.w < 130;
     const titleFont = narrow ? 'bold 12px sans-serif' : 'bold 13px sans-serif';
     const subFont = narrow ? '10px sans-serif' : '11px sans-serif';
@@ -149,6 +157,19 @@ function ensureMeta(ctx, box, state) {
         subFont,
         titleColor,
     };
+    if (isEndless) {
+        const best = Number(s.endlessBest) || 0;
+        const current = s.endlessResume ? (Number(s.endlessResumeScore) || 0) : 0;
+        meta.t2 = truncateText(
+            ctx,
+            s.endlessResume
+                ? ('当前 ' + current + ' 分 · 可续玩')
+                : ('当前 ' + current + ' 分'),
+            maxW,
+            subFont
+        );
+        meta.t3 = truncateText(ctx, '最高 ' + best + ' 分', maxW, subFont);
+    }
     box._metaKey = key;
     box._meta = meta;
     return meta;
@@ -204,6 +225,23 @@ function clearCountOf(stage) {
     return (stage && stage.stats && stage.stats.clearCount) || 0;
 }
 
+function endlessHelpBtnRect(box) {
+    const fh = META_FOOTER_H;
+    const fy = box.y + box.h - fh;
+    const size = Math.min(28, Math.max(22, Math.floor(fh * 0.42)));
+    const pad = 8;
+    return {
+        x: box.x + box.w - pad - size,
+        y: fy + (fh - size) / 2,
+        w: size,
+        h: size,
+    };
+}
+
+function isEndlessStage(stage) {
+    return !!(stage && (stage.kind === 'endless' || stage.stageId === 'plaza_endless'));
+}
+
 function drawCardMeta(ctx, box, state) {
     const fh = META_FOOTER_H;
     const fy = box.y + box.h - fh;
@@ -226,6 +264,29 @@ function drawCardMeta(ctx, box, state) {
     ctx.fillText(meta.t2, box.x + pad, y2);
     ctx.fillStyle = 'rgba(255,236,210,0.42)';
     ctx.fillText(meta.t3, box.x + pad, y3);
+
+    box.helpRect = null;
+    if (isEndlessStage(box.stage)) {
+        const hr = endlessHelpBtnRect(box);
+        box.helpRect = hr;
+        const cx = hr.x + hr.w / 2;
+        const cy = hr.y + hr.h / 2;
+        const r = hr.w / 2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 198, 255, 0.16)';
+        ctx.fill();
+        ctx.strokeStyle = CYAN;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.fillStyle = CYAN;
+        ctx.font = 'bold ' + Math.max(12, Math.floor(hr.w * 0.55)) + 'px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('?', cx, cy + 0.5);
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+    }
 }
 
 function drawCard(ctx, box, state) {
@@ -258,4 +319,6 @@ module.exports = {
     truncateText,
     authorOf,
     clearCountOf,
+    endlessHelpBtnRect,
+    isEndlessStage,
 };

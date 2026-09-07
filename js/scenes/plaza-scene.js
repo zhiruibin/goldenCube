@@ -10,14 +10,20 @@ const {
     MUTED,
     ACCENT,
 } = require('../theme/arcade-night');
-const { drawThemeBackground } = require('../theme/theme-images');
+const { drawThemeBackground, drawThemeButtonSkin } = require('../theme/theme-images');
 const workshop = require('../../utils/workshop-manager');
 const goldenBlock = require('../../utils/golden-block-manager');
 const { coinManager } = require('../../utils/coin-manager');
-const { applyShortageHighlight, renderEntryDialog } = require('../../utils/stage-entry-ui');
+const {
+    applyShortageHighlight,
+    renderEntryDialog,
+    fillGoldBorderedPanel,
+} = require('../../utils/stage-entry-ui');
 const { adManager, isRewardedVideoConfigured } = require('../../utils/ad-manager');
 const plazaWall = require('../render/plaza-wall-fx');
 const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
+const endless = require('../../utils/endless-manager');
+const { roundRectPath } = require('../render/board-tiles');
 
 const PLAZA_SORT = [
     { id: 'official', label: '官方' },
@@ -50,6 +56,7 @@ class PlazaScene {
         this._wallW = 0;
         this._wallTop = 0;
         this._focusStageId = '';
+        this._endlessIntro = null;
     }
 
     onEnter(params) {
@@ -59,6 +66,7 @@ class PlazaScene {
         this._confirm = null;
         this._playDialog = null;
         this._playDialogArmed = false;
+        this._endlessIntro = null;
         this._scrollY = typeof p.scrollY === 'number' && Number.isFinite(p.scrollY)
             ? Math.max(0, p.scrollY)
             : 0;
@@ -294,7 +302,7 @@ class PlazaScene {
     }
 
     _applyPlazaList(sort, list) {
-        const next = Array.isArray(list) ? list : [];
+        const next = endless.prependEndlessIfOfficial(sort, Array.isArray(list) ? list : []);
         if (this._plazaItems && this._plazaItems.length && this._samePlazaOrder(this._plazaItems, next)) {
             this._plazaItems = this._mergePlazaItemsInPlace(this._plazaItems, next);
         } else {
@@ -325,7 +333,10 @@ class PlazaScene {
                 this._finalizePlazaView();
             } else if (this._useLocalPlazaPreview(sort)) {
                 if (!this._plazaItems || !this._plazaItems.length) {
-                    this._plazaItems = workshop.listPlazaLocal(sort);
+                    this._plazaItems = endless.prependEndlessIfOfficial(
+                        sort,
+                        workshop.listPlazaLocal(sort)
+                    );
                     this._wallItems = null;
                 }
                 this._buildListRects();
@@ -374,12 +385,18 @@ class PlazaScene {
         for (let i = 0; i < items.length; i++) {
             const id = items[i] && items[i].stageId;
             if (!id) continue;
+            if (endless.isEndlessStageId(id)) {
+                items[i] = endless.getEndlessStageMeta();
+                flags[id] = 'unlocked';
+                continue;
+            }
             flags[id] = plazaWall.plazaCardState(
                 workshop.isPlazaUnlocked(id),
                 workshop.isPlazaCleared(id)
             );
         }
         this._cardState = flags;
+        this._wallItems = null;
     }
 
     /** 列表高度就绪后再夹紧滚动，并刷新刚打过的那张卡 */
@@ -437,7 +454,120 @@ class PlazaScene {
     }
 
     _tryPlayPlaza(stage) {
+        if (endless.isEndlessStageId(stage && stage.stageId)) {
+            this._tryPlayEndless(stage);
+            return;
+        }
         this._openPlayDialog(stage);
+    }
+
+    _tryPlayEndless(stage) {
+        if (!endless.hasSeenIntro()) {
+            this._showEndlessIntro(stage);
+            return;
+        }
+        this._startEndlessGame();
+    }
+
+    _showEndlessIntro(stage) {
+        this._endlessIntro = { stage: stage || endless.getEndlessStageMeta() };
+    }
+
+    _startEndlessGame() {
+        this._endlessIntro = null;
+        endless.markIntroSeen();
+        const meta = endless.getEndlessStageMeta();
+        const run = endless.loadRun();
+        const opening = run && run.snapshot
+            ? null
+            : endless.generateOpeningLayout();
+        GameGlobal.game.sceneManager.switchTo('game', {
+            mode: 'stage',
+            workshop: true,
+            endless: true,
+            workshopStageId: endless.STAGE_ID,
+            workshopTitle: '无尽',
+            workshopRows: opening ? opening.rows : {},
+            authorTrial: false,
+            workshopReturnTo: 'list',
+            workshopListParams: {
+                origin: 'plaza',
+                plazaSort: this._plazaSort,
+                scrollY: this._scrollY || 0,
+                focusStageId: endless.STAGE_ID,
+            },
+            entryPaid: 0,
+            dropIntervalMs: 900,
+            endlessResume: !!(run && run.snapshot),
+            endlessSnapshot: run && run.snapshot ? run.snapshot : null,
+        });
+    }
+
+    _drawEndlessIntro(ctx) {
+        const W = GameGlobal.game.width;
+        const H = GameGlobal.game.height;
+        if (!this._endlessIntro) return;
+
+        ctx.fillStyle = 'rgba(10, 7, 4, 0.62)';
+        ctx.fillRect(0, 0, W, H);
+
+        const bw = Math.min(300, W * 0.86);
+        const lines = [
+            '开局从底部生成随机垃圾（不超过 9 行）',
+            '只有消掉含垃圾的行，底部才会补同样行数',
+            '纯玩家块行消掉不补行，但照样计分',
+            '不计金币、金方块；消任意行都涨分',
+            '计分：1 行 +1，2 行 +4，3 行 +8，4 行 +16',
+            '中途退出可续玩；失败后再进会重新开局',
+        ];
+        const btnH = 40;
+        const gap = 10;
+        const topPad = 20;
+        const bodyTop = topPad + 36;
+        const bodyH = lines.length * 22 + 8;
+        const panelH = bodyTop + bodyH + btnH * 2 + gap + 20;
+        const px = (W - bw) / 2;
+        const py = (H - panelH) / 2;
+        fillGoldBorderedPanel(ctx, px, py, bw, panelH, 14);
+
+        ctx.fillStyle = '#fff8ef';
+        ctx.font = 'bold 18px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('无尽练习', W / 2, py + 28);
+
+        ctx.fillStyle = 'rgba(255,248,239,0.78)';
+        ctx.font = '13px sans-serif';
+        ctx.textAlign = 'left';
+        lines.forEach((ln, i) => {
+            ctx.fillText('· ' + ln, px + 18, py + bodyTop + i * 22);
+        });
+
+        const btnW = bw - 40;
+        const bx = px + 20;
+        let by = py + bodyTop + bodyH + 8;
+        this._endlessIntroStartRect = { x: bx, y: by, w: btnW, h: btnH };
+        if (!drawThemeButtonSkin(ctx, 'btnBarGold', bx, by, btnW, btnH)) {
+            ctx.fillStyle = '#c9a227';
+            roundRectPath(ctx, bx, by, btnW, btnH, 8);
+            ctx.fill();
+        }
+        ctx.fillStyle = '#241408';
+        ctx.font = 'bold 15px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('开始练习', bx + btnW / 2, by + btnH / 2 + 1);
+
+        by += btnH + gap;
+        this._endlessIntroCancelRect = { x: bx, y: by, w: btnW, h: btnH };
+        if (!drawThemeButtonSkin(ctx, 'btnBarBrown', bx, by, btnW, btnH)) {
+            ctx.fillStyle = '#5a4030';
+            roundRectPath(ctx, bx, by, btnW, btnH, 8);
+            ctx.fill();
+        }
+        ctx.fillStyle = '#fff8ef';
+        ctx.font = 'bold 15px sans-serif';
+        ctx.fillText('稍后再说', bx + btnW / 2, by + btnH / 2 + 1);
+        ctx.textAlign = 'left';
     }
 
     _openPlayDialog(stage) {
@@ -650,6 +780,7 @@ class PlazaScene {
         ctx.restore();
 
         if (this._playDialog) this._drawPlayDialog(ctx);
+        if (this._endlessIntro) this._drawEndlessIntro(ctx);
 
         if (this._toast) {
             ctx.fillStyle = 'rgba(0,0,0,0.72)';
@@ -707,7 +838,7 @@ class PlazaScene {
     }
 
     onTouchMove(x, y) {
-        if (this._confirm || this._playDialog) return;
+        if (this._confirm || this._playDialog || this._endlessIntro) return;
         const prev = this._lastMoveY != null ? this._lastMoveY : y;
         const dy = prev - y;
         if (Math.abs(dy) > 2) this._touchMoved = true;
@@ -741,6 +872,17 @@ class PlazaScene {
     onTouchEnd(x, y) {
         this._lastMoveY = null;
         // 惯性已在 handleTouchEnd 启动；此处仅处理点击
+        if (this._endlessIntro) {
+            if (this._hit(x, y, this._endlessIntroStartRect)) {
+                this._startEndlessGame();
+                return;
+            }
+            if (this._hit(x, y, this._endlessIntroCancelRect)) {
+                this._endlessIntro = null;
+                return;
+            }
+            return;
+        }
         if (this._playDialog) {
             if (!this._playDialogArmed) {
                 return;
@@ -810,6 +952,10 @@ class PlazaScene {
         if (y >= this._listTop && y <= this._listBottom) {
             for (let i = this._listRects.length - 1; i >= 0; i--) {
                 const item = this._listRects[i];
+                if (item.helpRect && this._hit(x, y, item.helpRect)) {
+                    this._showEndlessIntro(item.stage);
+                    return;
+                }
                 if (this._hit(x, y, item)) {
                     this._tryPlayPlaza(item.stage);
                     return;

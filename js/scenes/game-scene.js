@@ -25,6 +25,7 @@ const { LuckyDrawOverlay } = require('../widgets/lucky-draw-overlay');
 const luckyDrawManager = require('../../utils/lucky-draw-manager');
 const { normalizeGameParams, replayMetaFromGame } = require('../../utils/play-context');
 const { stagePlayStack, stageSelectStack } = require('../../utils/stage-nav');
+const endless = require('../../utils/endless-manager');
 
 /** 硬降短时冷却：防止连点/多指瞬时误砸下一块（不改按钮布局） */
 const HARD_DROP_COOLDOWN_MS = 200;
@@ -100,6 +101,10 @@ class GameScene {
         this._workshopRows = this._params.workshopRows || null;
         this._workshopTitle = this._params.workshopTitle || '';
         this._authorTrial = !!this._params.authorTrial;
+        this._endless = !!this._params.endless
+            || endless.isEndlessStageId(this._workshopStageId);
+        this._endlessResume = !!(this._endless && this._params.endlessResume && this._params.endlessSnapshot);
+        this._endlessSnapshot = this._endlessResume ? this._params.endlessSnapshot : null;
         this._workshopReturnTo = this._params.workshopReturnTo
             || (this._authorTrial ? 'editor' : 'list');
         this._workshopListParams = this._params.workshopListParams || {
@@ -208,7 +213,9 @@ class GameScene {
         // 启动引擎（init 已在 _initEngine 内完成；此处不可重复 init，否则清空闯关垃圾布局）
         // 闯关：先播垃圾掉落开场，再 start
         this._bindEngineEvents();
-        if (this._mode === 'stage' && this._engine) {
+        if (this._endless && this._endlessResume) {
+            this._startGameplayAfterIntro();
+        } else if (this._mode === 'stage' && this._engine) {
             this._beginStageIntro();
         } else {
             this._offerStageTutorialOrStart();
@@ -436,6 +443,7 @@ class GameScene {
     }
 
     _shouldShowStageTutorial() {
+        if (this._endless) return false;
         try {
             if (wx.getStorageSync(STAGE_TUTORIAL_SEEN_KEY)) return false;
         } catch (e) {
@@ -658,10 +666,22 @@ class GameScene {
                     firstPiece: stage.firstPiece,
                 });
             }
-        } else if (this._mode === 'stage' && this._workshop && this._workshopRows) {
-            this._stageInfo = this._engine.initStage(this._workshopRows, {
+        } else if (this._mode === 'stage' && this._workshop && (this._workshopRows || this._endless)) {
+            const rows = this._workshopRows || {};
+            this._stageInfo = this._engine.initStage(rows, {
                 dropIntervalMs: this._params.dropIntervalMs || 1000,
+                endless: !!this._endless,
+                lineFactory: this._endless ? () => endless.generateGarbageLine() : null,
             });
+            if (this._endless && this._endlessSnapshot) {
+                this._engine.restoreEndlessSnapshot(this._endlessSnapshot);
+                this._stageInfo = {
+                    garbageCount: this._engine.getGarbageRemaining
+                        ? this._engine.getGarbageRemaining()
+                        : 0,
+                    minLines: 0,
+                };
+            }
         }
     }
 
@@ -1062,11 +1082,15 @@ class GameScene {
         // 消行
         curY = this._renderInfoItem(ctx, x, curY, pw, '消行', String(this._engine.getLines()), '#8fd98a');
 
-        if (this._mode === 'stage') {
+        if (this._mode === 'stage' && !this._endless) {
             const remaining = this._engine.getGarbageRemaining ? this._engine.getGarbageRemaining() : 0;
             const theory = this._stageInfo ? this._stageInfo.minLines : 0;
             curY = this._renderInfoItem(ctx, x, curY, pw, '垃圾', `剩 ${remaining} 格`, '#FFC857', 14);
             curY = this._renderInfoItem(ctx, x, curY, pw, '消行', `${this._engine.getLines()} / 理论 ${theory}`, '#ff8a7a', 14);
+        }
+        if (this._endless) {
+            const best = endless.getBestScore();
+            curY = this._renderInfoItem(ctx, x, curY, pw, '最高', String(best), '#FFC857', 14);
         }
 
         // 挑战局：侧栏展示目标分与还差（不改操作区布局）
@@ -1339,11 +1363,13 @@ class GameScene {
         ctx.fillStyle = '#fff4e0';
         ctx.font = 'bold 18px sans-serif';
         ctx.fillText(
-            this._workshop
-                ? (this._authorTrial
-                    ? (this._workshopReturnTo === 'editor' ? '← 返回编辑' : '← 返回列表')
-                    : '← 返回工坊')
-                : '← 返回关卡',
+            this._endless
+                ? '← 返回广场'
+                : (this._workshop
+                    ? (this._authorTrial
+                        ? (this._workshopReturnTo === 'editor' ? '← 返回编辑' : '← 返回列表')
+                        : '← 返回工坊')
+                    : '← 返回关卡'),
             W / 2,
             nextY + bh / 2 + 1
         );
@@ -1593,6 +1619,7 @@ class GameScene {
 
     /** 工坊过关：作者自通只记凭证；广场通关只发金币 */
     _goToWorkshopResult(lines) {
+        if (this._endless) return;
         if (this._stageSettleLocked) return;
         this._stageSettleLocked = true;
         const timeMs = Date.now() - this._stageStartTime;
@@ -1710,6 +1737,44 @@ class GameScene {
     _goToWorkshopFail() {
         if (this._stageSettleLocked) return;
         if (this._audio) this._audio.stopBGM();
+        if (this._endless) {
+            this._stageSettleLocked = true;
+            const score = this._engine ? this._engine.getScore() : 0;
+            const lines = this._engine ? this._engine.getLines() : 0;
+            const pieces = this._pieceCount || 0;
+            const timeMs = Date.now() - this._stageStartTime;
+            const isNewBest = endless.noteBestScore(score);
+            endless.clearRun();
+            const best = endless.getBestScore();
+            const listParams = Object.assign(
+                { origin: 'plaza' },
+                this._workshopListParams || {}
+            );
+            setTimeout(() => {
+                GameGlobal.game.sceneManager.leaveTo('workshopResult', {
+                    workshopStageId: this._workshopStageId,
+                    workshopTitle: this._workshopTitle || '无尽',
+                    authorTrial: false,
+                    endless: true,
+                    workshopReturnTo: 'list',
+                    workshopListParams: listParams,
+                    failed: true,
+                    result: {
+                        score,
+                        best,
+                        isNewBest: !!isNewBest,
+                        lines,
+                        pieces,
+                        timeMs,
+                        coinWant: 0,
+                        coinGained: 0,
+                        goldGranted: 0,
+                    },
+                    replayKey: '',
+                }, ['home', 'plaza']);
+            }, 500);
+            return;
+        }
         if (!this._stageFailRefunded && !this._authorTrial) {
             this._stageFailRefunded = true;
             this._entryPaid = 0;
@@ -2109,6 +2174,9 @@ class GameScene {
     _quitToHome() {
         this._paused = false;
         this._tapConsumed = false;
+        if (this._endless) {
+            this._saveEndlessRun();
+        }
         const sm = GameGlobal.game.sceneManager;
         if (this._workshop) {
             this._leaveWorkshopOrigin();
@@ -2118,6 +2186,20 @@ class GameScene {
                 stageId: this._params.stageId,
             }, stageSelectStack());
         }
+    }
+
+    _saveEndlessRun() {
+        if (!this._endless || !this._engine) return;
+        try {
+            const score = this._engine.getScore();
+            const snap = this._engine.exportEndlessSnapshot();
+            endless.noteBestScore(score);
+            endless.saveRun({
+                snapshot: snap,
+                score,
+                lines: this._engine.getLines(),
+            });
+        } catch (e) { /* ignore */ }
     }
 
     /**

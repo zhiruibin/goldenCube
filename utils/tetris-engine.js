@@ -204,6 +204,7 @@ class TetrisEngine {
         this._stats = this._createStats();
         this._garbageMask = null;
         this._garbageRemaining = 0;
+        this._endlessMode = false;
         this._stageConfig = null;
         this._stageFirstPiecePending = null;
         this._stageSettle = null;
@@ -244,6 +245,7 @@ class TetrisEngine {
         this._stats = this._createStats();
         this._garbageMask = this._createEmptyMask();
         this._garbageRemaining = 0;
+        this._endlessMode = false;
         this._stageConfig = null;
         this._stageFirstPiecePending = null;
         this._stageSettle = null;
@@ -344,7 +346,7 @@ class TetrisEngine {
         if (this._isValidPosition(p.type, p.rotation, p.row + 1, p.col)) {
             p.row++;
             this._lastAction = 'drop';
-            this._addScore(SOFT_DROP_SCORE);
+            if (!this._endlessMode) this._addScore(SOFT_DROP_SCORE);
             if (this._inLockDelay) {
                 this._cancelLockDelay();
             }
@@ -366,7 +368,7 @@ class TetrisEngine {
         const ghostRow = this.getGhostRow();
         const dropDist = ghostRow - this._currentPiece.row;
         this._currentPiece.row = ghostRow;
-        this._addScore(HARD_DROP_SCORE * dropDist);
+        if (!this._endlessMode) this._addScore(HARD_DROP_SCORE * dropDist);
         this._lastAction = 'hardDrop';
         this._stats.hardDropCount++;
         this._cancelLockDelay();
@@ -388,7 +390,7 @@ class TetrisEngine {
         // 钻头直达底部
         const dropDist = (TOTAL_ROWS - 1) - p.row;
         this._currentPiece.row = TOTAL_ROWS - 1;
-        this._addScore(HARD_DROP_SCORE * dropDist);
+        if (!this._endlessMode) this._addScore(HARD_DROP_SCORE * dropDist);
         this._lastAction = 'hardDrop';
         this._stats.hardDropCount++;
         this._cancelLockDelay();
@@ -725,7 +727,7 @@ class TetrisEngine {
         }
         this._emit(this._onPieceLock, lockedSnap);
 
-        if (this._mode === 'stage' && this._garbageRemaining === 0) {
+        if (this._mode === 'stage' && !this._endlessMode && this._garbageRemaining === 0) {
             // 闯关过关：特效已发出，再停表切 OVER
             this._clearTimers();
             this._state = GameState.OVER;
@@ -948,6 +950,7 @@ class TetrisEngine {
         this._stageSettle = {
             lockedSnap,
             totalCleared: 0,
+            garbageLinesCleared: 0,
             visibleRowsAll: [],
             clearedColorsAll: [],
             anyTetris: false,
@@ -956,6 +959,23 @@ class TetrisEngine {
             startedAt: this._engineTime,
         };
         this._stageSettleAnim = null;
+    }
+
+    /** 该行是否含垃圾块（须在清行前调用） */
+    _rowHasGarbage(r) {
+        if (!this._garbageMask || !this._garbageMask[r]) return false;
+        for (let c = 0; c < BOARD_COLS; c++) {
+            if (this._garbageMask[r][c]) return true;
+        }
+        return false;
+    }
+
+    _countGarbageLinesAmong(rows) {
+        let n = 0;
+        for (let i = 0; i < rows.length; i++) {
+            if (this._rowHasGarbage(rows[i])) n++;
+        }
+        return n;
     }
 
     _stageStartNextWave() {
@@ -978,8 +998,13 @@ class TetrisEngine {
         const visibleRows = fullRows.map(r => r - HIDDEN_ROWS);
         const clearedColors = fullRows.map(r => this._board[r].slice());
         const isTetris = fullRows.length === 4;
+        // 无尽：只统计「含垃圾」的满行；纯玩家块行清掉不补底
+        const garbageLines = this._endlessMode
+            ? this._countGarbageLinesAmong(fullRows)
+            : 0;
 
         this._stageSettle.totalCleared += fullRows.length;
+        this._stageSettle.garbageLinesCleared += garbageLines;
         this._stageSettle.visibleRowsAll.push(...visibleRows);
         this._stageSettle.clearedColorsAll.push(...clearedColors);
         if (isTetris) this._stageSettle.anyTetris = true;
@@ -1004,6 +1029,10 @@ class TetrisEngine {
             this._tSpinType,
             this._combo
         );
+
+        if (this._endlessMode) {
+            this._addEndlessLineScore(fullRows.length);
+        }
 
         const duration = this._calcStageFallDuration(moves);
         this._stageSettleAnim = {
@@ -1087,12 +1116,18 @@ class TetrisEngine {
                 isTetris: settle.anyTetris,
                 isDifficult: settle.anyTetris || this._tSpinType !== null,
             };
-            this._calculateScore(result);
+            if (!this._endlessMode) {
+                this._calculateScore(result);
+            } else {
+                // 仅清掉含垃圾的行时补底：清几行含垃圾就补几行
+                const refill = settle.garbageLinesCleared || 0;
+                if (refill > 0) this.injectBottomGarbageRows(refill);
+            }
         } else {
             this._combo = -1;
         }
 
-        if (this._mode === 'stage' && this._garbageRemaining === 0) {
+        if (this._mode === 'stage' && !this._endlessMode && this._garbageRemaining === 0) {
             this._clearTimers();
             this._state = GameState.OVER;
             this._emit(this._onStateChange, this._state);
@@ -1330,6 +1365,8 @@ class TetrisEngine {
         }
         this._garbageMask = this._createEmptyMask();
         this._garbageRemaining = 0;
+        this._endlessMode = !!(this._stageConfig && this._stageConfig.endless);
+        this._endlessLineFactory = (this._stageConfig && this._stageConfig.lineFactory) || null;
         if (layout) {
             Object.keys(layout).forEach((rowKey) => {
                 const visibleRow = parseInt(rowKey, 10);
@@ -1349,6 +1386,138 @@ class TetrisEngine {
             this._dropInterval = this._stageConfig.dropIntervalMs;
         }
         return { garbageCount: this._garbageRemaining, minLines: this._countGarbageRows() };
+    }
+
+    isEndlessMode() {
+        return !!this._endlessMode;
+    }
+
+    /**
+     * 无尽：从底部顶入 n 行随机垃圾（整盘上移）
+     * @param {number} n
+     * @param {function(): string} [lineFactory] 返回 10 字符 '#'/'.' 行
+     */
+    injectBottomGarbageRows(n, lineFactory) {
+        const count = Math.max(0, Math.min(BOARD_ROWS, Math.floor(Number(n) || 0)));
+        if (count <= 0 || !this._garbageMask) return;
+        for (let r = 0; r < TOTAL_ROWS - count; r++) {
+            this._board[r] = this._board[r + count].slice();
+            this._garbageMask[r] = this._garbageMask[r + count].slice();
+        }
+        const mkLine = typeof lineFactory === 'function'
+            ? lineFactory
+            : (typeof this._endlessLineFactory === 'function'
+                ? this._endlessLineFactory
+                : () => {
+                    const cells = [];
+                    for (let i = 0; i < BOARD_COLS; i++) cells.push(Math.random() < 0.55 ? '#' : '.');
+                    if (cells.every((ch) => ch === '#')) cells[Math.floor(Math.random() * BOARD_COLS)] = '.';
+                    return cells.join('');
+                });
+        for (let i = 0; i < count; i++) {
+            const r = TOTAL_ROWS - count + i;
+            const line = String(mkLine() || '').padEnd(BOARD_COLS, '.');
+            for (let c = 0; c < BOARD_COLS; c++) {
+                if (line[c] === '#') {
+                    this._board[r][c] = GARBAGE;
+                    this._garbageMask[r][c] = true;
+                    this._garbageRemaining++;
+                } else {
+                    this._board[r][c] = EMPTY;
+                    this._garbageMask[r][c] = false;
+                }
+            }
+        }
+        this._emit(this._onBoardChange, this.getVisibleBoard(), this.getCurrentPiece());
+    }
+
+    _addEndlessLineScore(cleared) {
+        const n = Math.min(4, Math.max(0, Math.floor(Number(cleared) || 0)));
+        const table = [0, 1, 4, 8, 16];
+        const pts = table[n] || 0;
+        if (pts > 0) this._addScore(pts);
+        this._lines += Math.max(0, Math.floor(Number(cleared) || 0));
+    }
+
+    /** 无尽续玩快照 */
+    exportEndlessSnapshot() {
+        const bag = this._bag;
+        return {
+            board: this._board.map((row) => row.slice()),
+            garbageMask: this._garbageMask
+                ? this._garbageMask.map((row) => row.slice())
+                : null,
+            garbageRemaining: this._garbageRemaining,
+            score: this._score,
+            lines: this._lines,
+            level: this._level,
+            dropInterval: this._dropInterval,
+            holdPiece: this._holdPiece ? { type: this._holdPiece.type } : null,
+            canHold: !!this._canHold,
+            bag: bag
+                ? {
+                    bags: (bag._bags || []).map((b) => b.slice()),
+                    bagIdx: bag._bagIdx || 0,
+                    pieceIdx: bag._pieceIdx || 0,
+                    seed: bag._seed,
+                }
+                : null,
+            currentPiece: this._currentPiece
+                ? {
+                    type: this._currentPiece.type,
+                    row: this._currentPiece.row,
+                    col: this._currentPiece.col,
+                    rotation: this._currentPiece.rotation,
+                }
+                : null,
+        };
+    }
+
+    restoreEndlessSnapshot(snap) {
+        if (!snap || !Array.isArray(snap.board)) return false;
+        this._endlessMode = true;
+        this._mode = 'stage';
+        this._board = snap.board.map((row) => row.slice());
+        this._garbageMask = snap.garbageMask
+            ? snap.garbageMask.map((row) => row.slice())
+            : this._createEmptyMask();
+        this._garbageRemaining = Math.max(0, Number(snap.garbageRemaining) || 0);
+        this._score = Math.max(0, Number(snap.score) || 0);
+        this._lines = Math.max(0, Number(snap.lines) || 0);
+        this._level = Math.max(1, Number(snap.level) || 1);
+        if (snap.dropInterval) this._dropInterval = snap.dropInterval;
+        this._holdPiece = snap.holdPiece && snap.holdPiece.type
+            ? { type: snap.holdPiece.type, rotation: 0 }
+            : null;
+        this._canHold = snap.canHold !== false;
+        if (snap.bag && this._bag) {
+            this._bag._bags = Array.isArray(snap.bag.bags)
+                ? snap.bag.bags.map((b) => b.slice())
+                : [];
+            this._bag._bagIdx = snap.bag.bagIdx || 0;
+            this._bag._pieceIdx = snap.bag.pieceIdx || 0;
+            if (typeof snap.bag.seed === 'number') {
+                this._bag._seed = snap.bag.seed;
+                this._bag._rng = mulberry32(snap.bag.seed);
+            }
+        }
+        this._currentPiece = null;
+        this._inLockDelay = false;
+        this._lockMoves = 0;
+        this._state = GameState.READY;
+        if (snap.currentPiece && snap.currentPiece.type) {
+            this._currentPiece = {
+                type: snap.currentPiece.type,
+                row: snap.currentPiece.row,
+                col: snap.currentPiece.col,
+                rotation: snap.currentPiece.rotation || 0,
+            };
+        }
+        this._emit(this._onBoardChange, this.getVisibleBoard(), this.getCurrentPiece());
+        this._emit(this._onHoldChange, this.getHoldPiece());
+        this._emit(this._onNextChange, this.getNextPieces());
+        this._emit(this._onScoreChange, this._score, this._level, this._lines);
+        return true;
     }
 
     /**

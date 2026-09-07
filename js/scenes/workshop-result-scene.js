@@ -18,6 +18,7 @@ const {
 } = require('../render/result-block-image');
 const { buildIsoBlockFaces, drawSolidIsoBlock } = require('../render/iso-block-renderer');
 const workshop = require('../../utils/workshop-manager');
+const endless = require('../../utils/endless-manager');
 
 class WorkshopResultScene {
     constructor() {
@@ -34,8 +35,10 @@ class WorkshopResultScene {
         this._result = this._params.result || {};
         this._failed = !!this._params.failed;
         this._authorTrial = !!this._params.authorTrial;
+        this._endless = !!this._params.endless
+            || endless.isEndlessStageId(this._params.workshopStageId);
         this._stageId = this._params.workshopStageId;
-        this._title = this._params.workshopTitle || '工坊关卡';
+        this._title = this._params.workshopTitle || (this._endless ? '无尽' : '工坊关卡');
         this._returnTo = this._params.workshopReturnTo || 'editor';
         this._listParams = this._params.workshopListParams || {
             origin: this._authorTrial ? 'workshop' : 'plaza',
@@ -49,7 +52,7 @@ class WorkshopResultScene {
         const H = GameGlobal.game.height;
         if (this._confettiFx) this._confettiFx.destroy();
         this._confettiFx = null;
-        if (!this._failed) {
+        if (!this._failed && !this._endless) {
             this._confettiFx = new ConfettiFx();
             this._confettiFx.init();
             this._confettiFx.trigger(W / 2, H * 0.42);
@@ -154,6 +157,29 @@ class WorkshopResultScene {
         });
     }
 
+    _retryEndless() {
+        endless.clearRun();
+        const opening = endless.generateOpeningLayout();
+        GameGlobal.game.sceneManager.replace('game', {
+            mode: 'stage',
+            workshop: true,
+            endless: true,
+            workshopStageId: endless.STAGE_ID,
+            workshopTitle: '无尽',
+            workshopRows: opening.rows,
+            authorTrial: false,
+            workshopReturnTo: 'list',
+            workshopListParams: Object.assign(
+                { origin: 'plaza', plazaSort: 'official', focusStageId: endless.STAGE_ID },
+                this._listParams || {}
+            ),
+            entryPaid: 0,
+            dropIntervalMs: 900,
+            endlessResume: false,
+            endlessSnapshot: null,
+        });
+    }
+
     _openReplay() {
         if (!this._replayKey) {
             return;
@@ -184,6 +210,7 @@ class WorkshopResultScene {
         let contentBottom = footY + 26;
         if (this._failed) {
             contentBottom = footY + 26;
+            if (this._endless) contentBottom = footY + 48;
         } else if (this._authorTrial) {
             contentBottom = footY + 76;
         } else {
@@ -213,7 +240,22 @@ class WorkshopResultScene {
         const gapY = 10;
         const rows = [];
 
-        if (this._authorTrial) {
+        if (this._endless) {
+            rows.push({
+                text: '再来一局',
+                color: '#c9a227',
+                skin: 'btnBarGold',
+                labelColor: '#241408',
+                onClick: () => this._retryEndless(),
+            });
+            rows.push({
+                text: '返回广场',
+                color: '#5a4030',
+                skin: 'btnBarBrown',
+                labelColor: '#fff8ef',
+                onClick: () => this._goList(),
+            });
+        } else if (this._authorTrial) {
             rows.push({
                 text: '再试一次',
                 color: '#c9a227',
@@ -294,7 +336,7 @@ class WorkshopResultScene {
         }
 
         const totalH = rows.length * bh + Math.max(0, rows.length - 1) * gapY;
-        const isPlaza = !this._authorTrial;
+        const isPlaza = !this._authorTrial || this._endless;
         if (isPlaza) {
             // 广场结算：按钮顶贴上方文案底 + 30px（成功/失败同款）
             const layout = this._computeContentLayout();
@@ -405,6 +447,22 @@ class WorkshopResultScene {
 
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
+        if (this._endless) {
+            ctx.fillStyle = this._failed ? '#ff8a7a' : ACCENT;
+            ctx.font = 'bold 36px sans-serif';
+            ctx.fillText(String(r.score || 0) + ' 分', cx, y);
+            y += 32;
+            ctx.fillStyle = MUTED;
+            ctx.font = '14px sans-serif';
+            ctx.fillText(
+                '最高 ' + (r.best != null ? r.best : endless.getBestScore())
+                + ' · 消行 ' + (r.lines || 0)
+                + ' · ' + this._formatTime(r.timeMs || 0),
+                cx, y
+            );
+            return;
+        }
+
         ctx.fillStyle = this._failed ? '#ff8a7a' : ACCENT;
         ctx.font = 'bold 36px sans-serif';
         ctx.fillText(String(r.lines || 0) + ' 行', cx, y);
@@ -447,9 +505,13 @@ class WorkshopResultScene {
         }
 
         const topInset = this._getTopInset() - 30;
-        const headline = this._failed
-            ? '未通关'
-            : (this._authorTrial ? '自通成功' : '通关！');
+        const headline = this._endless
+            ? (this._failed
+                ? ((this._result && this._result.isNewBest) ? '新纪录！' : '本局结束')
+                : '无尽')
+            : (this._failed
+                ? '未通关'
+                : (this._authorTrial ? '自通成功' : '通关！'));
         // 与闯关结算页同级上间距
         drawBrandTitle(ctx, headline, W / 2, topInset + 96, 'bold 24px sans-serif');
 
@@ -466,7 +528,7 @@ class WorkshopResultScene {
         let heroCy = layout.heroCy;
         const heroSize = layout.heroSize;
         // 非广场（作者试玩）仍用按钮顶限制英雄位，避免与按钮重叠
-        if (this._authorTrial) {
+        if (this._authorTrial && !this._endless) {
             const labelReserve = this._failed ? 42 : 78;
             const maxCy = (this._buttonsTopY || H * 0.72) - labelReserve - heroSize * 0.52;
             if (heroCy > maxCy) heroCy = Math.max(layout.statsBottom + heroSize * 0.4, maxCy);
@@ -476,7 +538,17 @@ class WorkshopResultScene {
         const footY = heroCy + heroSize * 0.72;
         ctx.textAlign = 'center';
 
-        if (this._failed) {
+        if (this._endless) {
+            ctx.fillStyle = MUTED;
+            ctx.font = '14px sans-serif';
+            ctx.fillText(
+                (this._result && this._result.isNewBest)
+                    ? '新最高分已记录，再来一局重新开局'
+                    : '失败后进度已清空，再来一局重新开局',
+                W / 2,
+                footY + 18
+            );
+        } else if (this._failed) {
             ctx.fillStyle = MUTED;
             ctx.font = '14px sans-serif';
             ctx.fillText(
