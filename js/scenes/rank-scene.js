@@ -262,10 +262,16 @@ class RankScene {
             const y = top + i * itemH - this._scrollY;
             if (y + itemH < top || y > bottom) continue;
 
-            // 行背景
-            ctx.fillStyle = i % 2 === 0 ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.06)';
-            this._roundRect(ctx, listX, y, listW, itemH - 4, 8);
+            // 行卡片：对齐成就列表（深棕底 + 青绿描边）
+            const rowH = itemH - 4;
+            ctx.fillStyle = 'rgba(28,20,14,0.88)';
+            this._roundRect(ctx, listX, y, listW, rowH, 10);
             ctx.fill();
+            this._roundRect(ctx, listX + 0.75, y + 0.75, listW - 1.5, rowH - 1.5, 9);
+            ctx.strokeStyle = 'rgba(31,155,152,0.55)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.lineWidth = 1;
             // 名次
             const medalColors = ['#ffd700', '#c0c0c0', '#cd7f32'];
             ctx.font = 'bold 18px sans-serif';

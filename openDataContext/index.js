@@ -406,12 +406,10 @@ function loadRankFromNetwork(requestMode, force) {
 
 /** 绘制一帧（屏幕逻辑坐标，列表左上角为 (x0, y0)） */
 function draw() {
-    // 清空整张 sharedCanvas（其余区域保持透明，露出主域背景）
+    // 清空整张 sharedCanvas（其余区域保持透明，露出主域矿洞背景）
     ctx.clearRect(0, 0, sharedCanvas.width, sharedCanvas.height);
 
-    // 列表背景（与主域列表底色一致，仅填充列表区域）
-    ctx.fillStyle = 'rgba(15, 15, 35, 0.9)';
-    ctx.fillRect(x0, y0, width, height);
+    // 不再铺深蓝整板底色，避免盖住主域主题背景
 
     if (loading) {
         ctx.fillStyle = 'rgba(255,255,255,0.4)';
@@ -449,13 +447,20 @@ function draw() {
         if (y + ITEM_H < y0 || y > bodyBottom) continue;
 
         const isMe = selfOpenId && item.openid === selfOpenId;
+        const rowX = x0 + PADDING_X;
+        const rowY = y + 2;
+        const rowW = width - PADDING_X * 2;
+        const rowH = ITEM_H - 4;
 
-        // 行背景（自己行略暖高亮）
-        ctx.fillStyle = isMe
-            ? 'rgba(255, 200, 87, 0.14)'
-            : (i % 2 === 0 ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.06)');
-        _roundRect(ctx, x0 + PADDING_X, y + 2, width - PADDING_X * 2, ITEM_H - 4, 8);
+        // 行卡片：对齐成就列表（深棕底 + 青绿/金色描边）
+        ctx.fillStyle = isMe ? 'rgba(201,162,39,0.16)' : 'rgba(28,20,14,0.88)';
+        _roundRect(ctx, rowX, rowY, rowW, rowH, 10);
         ctx.fill();
+        _roundRect(ctx, rowX + 0.75, rowY + 0.75, rowW - 1.5, rowH - 1.5, 9);
+        ctx.strokeStyle = isMe ? 'rgba(201,162,39,0.55)' : 'rgba(31,155,152,0.55)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.lineWidth = 1;
 
         ctx.font = 'bold 14px sans-serif';
         ctx.fillStyle = '#ffffff';
