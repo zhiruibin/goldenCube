@@ -1,0 +1,31 @@
+{
+	"id": "0e840247-bfa0-4f36-8866-63fbdbac2a4e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "input.gesture-threshold-values",
+	"title": "触摸手势判定阈值",
+	"statement": "InputManager 将按住超过 200ms 且未移动的触点判定为长按并触发长按开始回调；触点位移超过 20px 时进入拖动状态并取消待触发的长按。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311855099,
+	"updatedAt": 1788311855099,
+	"createdByTaskId": "business-init",
+	"latestEventId": "18794551-0680-4351-b111-6babc806cb96",
+	"tags": [],
+	"aliases": [
+		"滑动判定阈值",
+		"长按判定时间",
+		"拖动取消长按"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/runtime/input-manager.js"
+		},
+		{
+			"type": "symbol",
+			"symbol": "InputManager"
+		}
+	]
+}

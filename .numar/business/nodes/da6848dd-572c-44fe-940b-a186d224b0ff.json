@@ -1,0 +1,32 @@
+{
+	"id": "da6848dd-572c-44fe-940b-a186d224b0ff",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.friend.self-row-display-correction",
+	"title": "好友榜自己行展示校正",
+	"statement": "开放域用最近一次写入好友 KV 的复合分和主域传入的本地复合分校正自己行的展示分数（应对 KV 传播延迟），并在 getUserInfo 失败时用主域昵称/头像匹配自己行。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315317012,
+	"updatedAt": 1788315317012,
+	"createdByTaskId": "business-init",
+	"latestEventId": "ee70dac7-7154-4bc4-a05a-e5ef8ad6472e",
+	"tags": [],
+	"aliases": [
+		"自己行校正",
+		"KV传播校正",
+		"好友榜自身分数"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "openDataContext/index.js"
+		},
+		{
+			"type": "symbol",
+			"path": "openDataContext/index.js",
+			"symbol": "applyMainSelfMeta"
+		}
+	]
+}

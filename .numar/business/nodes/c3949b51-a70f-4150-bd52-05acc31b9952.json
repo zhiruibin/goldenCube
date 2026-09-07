@@ -1,0 +1,31 @@
+{
+	"id": "c3949b51-a70f-4150-bd52-05acc31b9952",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "input.das-arr-defaults",
+	"title": "InputManager DAS/ARR 默认参数",
+	"statement": "InputManager 的 DAS/ARR 连发状态默认关闭（enabled=false），初始 DAS 延迟为 170ms、ARR 重复间隔为 50ms。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311855107,
+	"updatedAt": 1788311855107,
+	"createdByTaskId": "business-init",
+	"latestEventId": "1bc16dca-e0a6-4823-bace-7baebc237bf2",
+	"tags": [],
+	"aliases": [
+		"DAS 默认延迟",
+		"ARR 重复间隔",
+		"连发默认参数"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/runtime/input-manager.js"
+		},
+		{
+			"type": "symbol",
+			"symbol": "InputManager._das"
+		}
+	]
+}

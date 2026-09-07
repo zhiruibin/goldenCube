@@ -1,0 +1,12 @@
+{
+	"id": "6f409a71-ab2c-484d-bb1f-f31cf4b68b30",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "f5f80055-0845-45a6-9c6f-bba1e1d989ac",
+	"operation": "create",
+	"after": "回放结算元数据会记录 playContext、stageId、workshopStageId、workshopRows、workshopTitle、challengeId、challengeKind 等来源字段。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/play-context.js"
+	],
+	"createdAt": 1788316084170
+}

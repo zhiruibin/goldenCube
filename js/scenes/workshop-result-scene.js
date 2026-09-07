@@ -1,5 +1,6 @@
 /**
  * WorkshopResultScene - 工坊/广场结算（只展示金币，永不发金方块）
+ * 含作者试玩通关 / 未通关。
  */
 const {
     fillNightBackground,
@@ -8,6 +9,7 @@ const {
     SUBTITLE,
     MUTED,
 } = require('../theme/arcade-night');
+const { drawThemeBackground } = require('../theme/theme-images');
 const { Button } = require('../widgets/button');
 const { ConfettiFx } = require('../render/confetti-fx');
 const {
@@ -30,6 +32,7 @@ class WorkshopResultScene {
         this._params = params || {};
         this._animTime = 0;
         this._result = this._params.result || {};
+        this._failed = !!this._params.failed;
         this._authorTrial = !!this._params.authorTrial;
         this._stageId = this._params.workshopStageId;
         this._title = this._params.workshopTitle || '工坊关卡';
@@ -45,16 +48,18 @@ class WorkshopResultScene {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
         if (this._confettiFx) this._confettiFx.destroy();
-        this._confettiFx = new ConfettiFx();
-        this._confettiFx.init();
-        this._confettiFx.trigger(W / 2, H * 0.42);
-
-        try {
-            const audio = GameGlobal.game && GameGlobal.game.audioManager;
-            if (audio && typeof audio.playLevelUp === 'function') {
-                audio.playLevelUp();
-            }
-        } catch (e) { /* ignore */ }
+        this._confettiFx = null;
+        if (!this._failed) {
+            this._confettiFx = new ConfettiFx();
+            this._confettiFx.init();
+            this._confettiFx.trigger(W / 2, H * 0.42);
+            try {
+                const audio = GameGlobal.game && GameGlobal.game.audioManager;
+                if (audio && typeof audio.playLevelUp === 'function') {
+                    audio.playLevelUp();
+                }
+            } catch (e) { /* ignore */ }
+        }
     }
 
     onExit() {
@@ -123,32 +128,105 @@ class WorkshopResultScene {
             return;
         }
         if (this._authorTrial) {
-            this._goList({ mineSub: 'cleared' });
+            this._goList({ mineSub: this._failed ? 'draft' : 'cleared' });
             return;
         }
         this._goList();
+    }
+
+    _retryTrial() {
+        const stage = workshop.getStage(this._stageId);
+        if (!stage) {
+            this._goOrigin();
+            return;
+        }
+        GameGlobal.game.sceneManager.replace('game', {
+            mode: 'stage',
+            workshop: true,
+            workshopStageId: this._stageId,
+            workshopTitle: stage.title || this._title,
+            workshopRows: workshop.cloneRows(stage.rows),
+            authorTrial: true,
+            workshopReturnTo: this._returnTo,
+            workshopListParams: this._listParams,
+            dropIntervalMs: stage.dropIntervalMs || 1000,
+            entryPaid: 0,
+        });
+    }
+
+    _openReplay() {
+        if (!this._replayKey) {
+            return;
+        }
+        GameGlobal.game.sceneManager.switchTo('replay', {
+            replayKey: this._replayKey,
+            fromWorkshopResult: true,
+            workshopStageId: this._stageId,
+            workshopTitle: this._title,
+            authorTrial: this._authorTrial,
+            workshopReturnTo: this._returnTo,
+            workshopListParams: this._listParams,
+            result: this._result,
+            failed: this._failed,
+        });
+    }
+
+    /** 英雄位与文案底边（不依赖按钮，避免互相顶开） */
+    _computeContentLayout() {
+        const H = GameGlobal.game.height;
+        const topInset = this._getTopInset() - 30;
+        const panelY = topInset + 156;
+        const panelH = 88;
+        const statsBottom = panelY + panelH;
+        const heroSize = 108;
+        const heroCy = statsBottom + 18 + heroSize * 0.52 + 30;
+        const footY = heroCy + heroSize * 0.72;
+        let contentBottom = footY + 26;
+        if (this._failed) {
+            contentBottom = footY + 26;
+        } else if (this._authorTrial) {
+            contentBottom = footY + 76;
+        } else {
+            // 「+N 金币」+「广场通关不奖励金方块」
+            contentBottom = footY + 52;
+        }
+        return {
+            topInset,
+            panelY,
+            panelH,
+            statsBottom,
+            heroSize,
+            heroCy,
+            footY,
+            contentBottom: Math.min(contentBottom, H - 120),
+        };
     }
 
     _buildButtons() {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
         const bottomInset = this._getBottomInset();
-        const bw = Math.min(260, W * 0.7);
-        const bh = 46;
-        const gap = 12;
-        const defs = [];
+        // 通栏条形钮：命中框与贴图同为 4:1，contain 避免再被拉扁
+        const btnW = Math.min(240, Math.round(W * 0.64));
+        const hPad = (W - btnW) / 2;
+        const bh = Math.round(btnW / 4);
+        const gapY = 10;
+        const rows = [];
 
         if (this._authorTrial) {
-            const primaryLabel = this._returnTo === 'editor' ? '← 返回编辑' : '← 返回列表';
-            defs.push({
-                text: primaryLabel,
-                color: '#3a7ab0',
-                onClick: () => this._goOrigin(),
+            rows.push({
+                text: '再试一次',
+                color: '#c9a227',
+                skin: 'btnBarGold',
+                labelColor: '#241408',
+                onClick: () => this._retryTrial(),
             });
             if (this._returnTo === 'list') {
-                defs.push({
+                rows.push({
                     text: '去编辑',
-                    color: '#555',
+                    color: '#c89840',
+                    skin: 'btnBarAmber',
+                    labelColor: '#241408',
                     onClick: () => {
                         GameGlobal.game.sceneManager.leaveTo('workshopEditor', {
                             stageId: this._stageId,
@@ -156,22 +234,39 @@ class WorkshopResultScene {
                     },
                 });
             } else {
-                defs.push({
+                rows.push({
                     text: '我的关卡',
-                    color: '#555',
+                    color: '#c89840',
+                    skin: 'btnBarAmber',
+                    labelColor: '#241408',
                     onClick: () => {
                         GameGlobal.game.sceneManager.leaveTo('workshop', {
-                            mineSub: 'cleared',
+                            mineSub: this._failed ? 'draft' : 'cleared',
                         }, ['home']);
                     },
                 });
             }
+            rows.push({
+                text: '回看本局',
+                color: '#c89840',
+                skin: 'btnBarAmber',
+                labelColor: '#241408',
+                onClick: () => this._openReplay(),
+            });
+            rows.push({
+                text: this._returnTo === 'editor' ? '返回编辑' : '返回列表',
+                color: '#5a4030',
+                skin: 'btnBarBrown',
+                labelColor: '#fff8ef',
+                onClick: () => this._goOrigin(),
+            });
         } else {
-            const origin = this._resolveOrigin();
-            const backLabel = origin === 'workshop' ? '← 返回工坊' : '← 返回广场';
-            defs.push({
-                text: '再玩一局',
-                color: '#e09a30',
+            // 广场 / 他人关：与闯关结算同款竖排通栏
+            rows.push({
+                text: this._failed ? '再试一次' : '再玩一局',
+                color: '#c9a227',
+                skin: 'btnBarGold',
+                labelColor: '#241408',
                 onClick: () => {
                     const stage = workshop.getStage(this._stageId);
                     if (!stage) {
@@ -181,47 +276,59 @@ class WorkshopResultScene {
                     this._goList({ toast: '请再次开打' });
                 },
             });
-            defs.push({
-                text: backLabel,
-                color: '#555',
+            rows.push({
+                text: '回看本局',
+                color: '#c89840',
+                skin: 'btnBarAmber',
+                labelColor: '#241408',
+                onClick: () => this._openReplay(),
+            });
+            const origin = this._resolveOrigin();
+            rows.push({
+                text: origin === 'workshop' ? '返回工坊' : '返回广场',
+                color: '#5a4030',
+                skin: 'btnBarBrown',
+                labelColor: '#fff8ef',
                 onClick: () => this._goList(),
             });
         }
-        if (this._replayKey) {
-            defs.splice(Math.max(0, defs.length - 1), 0, {
-                text: '回看本局',
-                color: '#7b52ab',
-                onClick: () => {
-                    GameGlobal.game.sceneManager.switchTo('replay', {
-                        replayKey: this._replayKey,
-                        fromWorkshopResult: true,
-                        workshopStageId: this._stageId,
-                        workshopTitle: this._title,
-                        authorTrial: this._authorTrial,
-                        workshopReturnTo: this._returnTo,
-                        workshopListParams: this._listParams,
-                        result: this._result,
-                    });
-                },
-            });
+
+        const totalH = rows.length * bh + Math.max(0, rows.length - 1) * gapY;
+        const isPlaza = !this._authorTrial;
+        if (isPlaza) {
+            // 广场结算：按钮顶贴上方文案底 + 30px（成功/失败同款）
+            const layout = this._computeContentLayout();
+            this._contentLayout = layout;
+            let topY = layout.contentBottom + 30;
+            const maxBottom = H - bottomInset - 12;
+            if (topY + totalH > maxBottom) {
+                topY = Math.max(layout.footY + 8, maxBottom - totalH);
+            }
+            this._buttonsTopY = topY;
+        } else {
+            this._contentLayout = null;
+            this._buttonsTopY = H - bottomInset - totalH - 24;
         }
 
-        const totalH = defs.length * bh + (defs.length - 1) * gap;
-        this._buttonsTopY = H - bottomInset - totalH - 24;
+        this._buttons = [];
         let y = this._buttonsTopY;
-        this._buttons = defs.map((d) => {
-            const btn = new Button({
-                x: (W - bw) / 2,
+        for (let i = 0; i < rows.length; i++) {
+            const b = rows[i];
+            this._buttons.push(new Button({
+                x: hPad,
                 y,
-                w: bw,
+                w: btnW,
                 h: bh,
-                text: d.text,
-                color: d.color,
-                onClick: d.onClick,
-            });
-            y += bh + gap;
-            return btn;
-        });
+                text: b.text,
+                color: b.color,
+                skin: b.skin,
+                skinMode: 'contain',
+                labelColor: b.labelColor,
+                fontScale: 0.88,
+                onClick: b.onClick,
+            }));
+            y += bh + gapY;
+        }
     }
 
     _roundRect(ctx, x, y, w, h, r) {
@@ -248,11 +355,27 @@ class WorkshopResultScene {
 
     _drawHeroBlock(ctx, cx, cy, size) {
         const r = this._result || {};
-        const kind = this._authorTrial
-            ? 'clear'
-            : ((r.coinGained || 0) > 0 ? 'record' : 'clear');
+        const kind = this._failed
+            ? 'fail'
+            : (this._authorTrial
+                ? 'clear'
+                : ((r.coinGained || 0) > 0 ? 'record' : 'clear'));
         const drawn = drawResultBlockImage(ctx, kind, cx, cy, size * 1.35, this._animTime);
         if (drawn) return;
+
+        if (this._failed) {
+            const geo = buildIsoBlockFaces(cx, cy, size * 0.92, 'cube');
+            drawSolidIsoBlock(ctx, geo, {
+                left: 'rgba(72, 78, 92, 0.55)',
+                right: 'rgba(108, 116, 132, 0.55)',
+                top: 'rgba(178, 186, 200, 0.5)',
+                bottom: 'rgba(42, 46, 58, 0.35)',
+                backEdge: 'rgba(200, 210, 225, 0.75)',
+                frontEdge: 'rgba(220, 228, 240, 0.65)',
+                shadowAlpha: 0.35,
+            });
+            return;
+        }
 
         const geo = buildIsoBlockFaces(cx, cy, size * 0.92, 'cube');
         drawSolidIsoBlock(ctx, geo, {
@@ -272,8 +395,8 @@ class WorkshopResultScene {
         ctx.fillStyle = 'rgba(255, 245, 230, 0.06)';
         ctx.fill();
         this._roundRect(ctx, px, panelY, panelW, panelH, 14);
-        ctx.strokeStyle = 'rgba(255, 245, 230, 0.14)';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(31, 155, 152, 0.65)';
+        ctx.lineWidth = 1.5;
         ctx.stroke();
 
         const r = this._result || {};
@@ -282,10 +405,10 @@ class WorkshopResultScene {
 
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = ACCENT;
-        ctx.font = 'bold 44px sans-serif';
+        ctx.fillStyle = this._failed ? '#ff8a7a' : ACCENT;
+        ctx.font = 'bold 36px sans-serif';
         ctx.fillText(String(r.lines || 0) + ' 行', cx, y);
-        y += 34;
+        y += 32;
 
         ctx.fillStyle = MUTED;
         ctx.font = '14px sans-serif';
@@ -316,33 +439,54 @@ class WorkshopResultScene {
     render(ctx) {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
-        fillNightBackground(ctx, W, H);
+        if (!drawThemeBackground(ctx, 'homeBg', W, H)) {
+            fillNightBackground(ctx, W, H);
+        } else {
+            ctx.fillStyle = 'rgba(10, 7, 4, 0.42)';
+            ctx.fillRect(0, 0, W, H);
+        }
 
-        const topInset = this._getTopInset();
-        const headline = this._authorTrial ? '自通成功' : '通关！';
-        drawBrandTitle(ctx, headline, W / 2, topInset + 10, 'bold 30px sans-serif');
+        const topInset = this._getTopInset() - 30;
+        const headline = this._failed
+            ? '未通关'
+            : (this._authorTrial ? '自通成功' : '通关！');
+        // 与闯关结算页同级上间距
+        drawBrandTitle(ctx, headline, W / 2, topInset + 96, 'bold 24px sans-serif');
 
         ctx.fillStyle = SUBTITLE;
-        ctx.font = '16px sans-serif';
+        ctx.font = '15px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(this._title, W / 2, topInset + 52);
+        ctx.fillText(this._title, W / 2, topInset + 126);
 
+        const layout = this._contentLayout || this._computeContentLayout();
         const panelW = Math.min(300, W * 0.86);
-        const panelH = 88;
-        const panelY = topInset + 78;
-        this._drawStatsPanel(ctx, W, panelY, panelW, panelH);
+        this._drawStatsPanel(ctx, W, layout.panelY, panelW, layout.panelH);
 
-        const heroTop = panelY + panelH + 12;
-        const heroBottom = (this._buttonsTopY || H * 0.72) - 28;
-        const heroCy = (heroTop + heroBottom) / 2 - 8;
-        const heroSize = Math.min(110, Math.max(72, (heroBottom - heroTop) * 0.42));
+        let heroCy = layout.heroCy;
+        const heroSize = layout.heroSize;
+        // 非广场（作者试玩）仍用按钮顶限制英雄位，避免与按钮重叠
+        if (this._authorTrial) {
+            const labelReserve = this._failed ? 42 : 78;
+            const maxCy = (this._buttonsTopY || H * 0.72) - labelReserve - heroSize * 0.52;
+            if (heroCy > maxCy) heroCy = Math.max(layout.statsBottom + heroSize * 0.4, maxCy);
+        }
         this._drawHeroBlock(ctx, W / 2, heroCy, heroSize);
 
         const footY = heroCy + heroSize * 0.72;
         ctx.textAlign = 'center';
 
-        if (this._authorTrial) {
+        if (this._failed) {
+            ctx.fillStyle = MUTED;
+            ctx.font = '14px sans-serif';
+            ctx.fillText(
+                this._authorTrial
+                    ? '试玩未通关，可继续改盘后再试'
+                    : '未通关，可再试一次',
+                W / 2,
+                footY + 18
+            );
+        } else if (this._authorTrial) {
             this._drawCredentialBadge(ctx, W, footY + 8);
             ctx.fillStyle = MUTED;
             ctx.font = '13px sans-serif';

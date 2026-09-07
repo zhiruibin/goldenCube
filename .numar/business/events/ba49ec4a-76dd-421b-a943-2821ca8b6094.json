@@ -1,0 +1,13 @@
+{
+	"id": "ba49ec4a-76dd-421b-a943-2821ca8b6094",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "6ecdc77d-1456-4a2d-8cbc-0a862adff0c2",
+	"operation": "create",
+	"after": "通关后一次性结算金币，coinThreshold T = minLines×2；消行数 clamp 后按 clamp(20 + round((T − lines')/(T − minLines) × 80), 20, 100) 发币；等于 minLines 得 100 金币，达到/超过 T 得保底 20 金币，失败不发。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"docs/gc-chapter-stages-design.md §1.3",
+		"docs/gc-economy-design.md §2 金币线"
+	],
+	"createdAt": 1788312287192
+}

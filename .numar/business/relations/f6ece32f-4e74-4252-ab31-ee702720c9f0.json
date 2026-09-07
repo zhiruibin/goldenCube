@@ -1,0 +1,15 @@
+{
+	"id": "f6ece32f-4e74-4252-ab31-ee702720c9f0",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "953edbc1-371e-4aff-bd8b-a1abd15627f3",
+	"toNodeId": "c902e3b7-2a19-4766-a644-6bb37a025bbb",
+	"type": "belongsTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"utils/coin-manager.js",
+		"docs/gc-economy-design.md"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788315982027,
+	"updatedAt": 1788317490810
+}

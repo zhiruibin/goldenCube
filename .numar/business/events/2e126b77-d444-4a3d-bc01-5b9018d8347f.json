@@ -1,0 +1,12 @@
+{
+	"id": "2e126b77-d444-4a3d-bc01-5b9018d8347f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "7729585d-e2b0-43d7-b0c5-5ab66cdda3a5",
+	"operation": "create",
+	"after": "成就定义包含 rewardGold 与 rewardCoins 两条独立奖励线：主线进度类成就发放 rewardGold（如 1-3），广场类成就发放 rewardCoins（如 plaza_clear_1 奖励 15 硬币）。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"data/achievements.js"
+	],
+	"createdAt": 1788310807234
+}

@@ -1,0 +1,31 @@
+{
+	"id": "580b340e-370b-4b39-b04f-2e4b5d619d96",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "home.banner.delay-1800ms",
+	"title": "首页 Banner 延迟展示",
+	"statement": "首页进入后延迟 1800ms 才展示底部 Banner，底栏槽位高度为 72px。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311855135,
+	"updatedAt": 1788311855135,
+	"createdByTaskId": "business-init",
+	"latestEventId": "ee1b2d71-da1b-4a7d-88f9-e6fd2c61a841",
+	"tags": [],
+	"aliases": [
+		"Banner 延迟展示",
+		"首页底栏广告延迟",
+		"底栏槽位"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/home-scene.js"
+		},
+		{
+			"type": "symbol",
+			"symbol": "HOME_BANNER_DELAY_MS"
+		}
+	]
+}

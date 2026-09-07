@@ -1,0 +1,14 @@
+{
+	"id": "30de3457-e705-48f2-a867-87c02904453e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "a821599f-44f5-42d4-b1f2-4836b9727d08",
+	"toNodeId": "ffdcdc71-c413-41b0-8232-e595f31ad8cc",
+	"type": "constrains",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"js/scenes/rank-scene.js"
+	],
+	"createdByTaskId": "business-relationship-scan",
+	"createdAt": 1788322948300,
+	"updatedAt": 1788322948300
+}

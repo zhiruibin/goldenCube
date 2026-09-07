@@ -1,0 +1,27 @@
+{
+	"id": "9b957953-75ba-4a8a-b855-e50ee07117b1",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "render.ghost-piece.translucent-fill-bold-outline",
+	"title": "Ghost piece translucent fill and bold outline",
+	"statement": "Ghost piece preview cells are rendered with 0.18 alpha fill and a 2px 0.65 alpha outline using the equipped skin color.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311734470,
+	"updatedAt": 1788311734470,
+	"createdByTaskId": "business-init",
+	"latestEventId": "fdc4cec2-5b2a-46f9-90f9-325eb52ad3f8",
+	"tags": [],
+	"aliases": [
+		"Ghost 半透明预览",
+		"落点描边"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/render/piece-renderer.js",
+			"symbol": "PieceRenderer.renderGhost"
+		}
+	]
+}

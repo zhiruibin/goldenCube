@@ -1,0 +1,15 @@
+{
+	"id": "397b7d53-c462-458d-82fc-2eddfdc8c5de",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "25ca6d7b-ae1d-48cb-89bb-16cdcc29fb97",
+	"toNodeId": "40fd5f63-f98a-4024-b441-bb7b746fd51c",
+	"type": "belongsTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"js/runtime/scene-manager.js:leaveTo 操作 _stack 重置逻辑，属于场景栈导航能力",
+		"js/runtime/scene-manager.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788311855142,
+	"updatedAt": 1788314716748
+}

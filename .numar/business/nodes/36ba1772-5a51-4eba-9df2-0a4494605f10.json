@@ -1,0 +1,27 @@
+{
+	"id": "36ba1772-5a51-4eba-9df2-0a4494605f10",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "result.block-illustration.radial-gradient-glow",
+	"title": "Result illustration glow drawn with radial gradient",
+	"statement": "Result block illustration glow is drawn with a canvas radial gradient; the PNG only supplies the block body, avoiding bitmap glow jaggies.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311734495,
+	"updatedAt": 1788311734495,
+	"createdByTaskId": "business-init",
+	"latestEventId": "42400dba-cf76-4383-aa89-3a1148062008",
+	"tags": [],
+	"aliases": [
+		"径向渐变光晕",
+		"光晕绘制"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/render/result-block-image.js",
+			"symbol": "_drawSoftGlow"
+		}
+	]
+}

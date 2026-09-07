@@ -1,0 +1,16 @@
+{
+	"id": "230241e5-a2e1-4988-9c1b-7520ddb6506a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "9d6d7989-b42e-4a99-b2fd-7e516918fb04",
+	"toNodeId": "1f27208d-69d5-4d93-801f-4186b3e0bb2b",
+	"type": "appliesTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"cloudfunctions/challenge/README.md",
+		"js/scenes/challenge-scene.js:PENDING_EXPIRY_MS",
+		"js/scenes/challenge-scene.js"
+	],
+	"createdByTaskId": "business-relationship-scan",
+	"createdAt": 1788313891520,
+	"updatedAt": 1788316964573
+}

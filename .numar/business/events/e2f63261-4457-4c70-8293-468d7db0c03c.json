@@ -1,0 +1,13 @@
+{
+	"id": "e2f63261-4457-4c70-8293-468d7db0c03c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "f39c3c49-647b-4523-ba5f-fad3d85697dc",
+	"operation": "create",
+	"after": "已发布关被游玩/被通关会更新统计与热度，并给作者金币分成；分成设有日上限，且不产金方块。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"docs/gc-workshop-plaza-design.md",
+		"cloudfunctions/workshop/README.md"
+	],
+	"createdAt": 1788316265683
+}

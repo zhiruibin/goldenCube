@@ -1,0 +1,12 @@
+{
+	"id": "d284c9f1-abed-4a4a-bd89-d171929308ea",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "a43057f8-c8c5-453e-a5d3-5a5d5470518c",
+	"operation": "create",
+	"after": "成就系统在本地最多保留最近 20 条挑战/应战结果记录，双十等社交成就的判定只取末尾 10 条。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/achievement-manager.js"
+	],
+	"createdAt": 1788316348082
+}

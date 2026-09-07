@@ -1,0 +1,28 @@
+{
+	"id": "9995321f-9f02-497c-b069-f95108d768c7",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "workshop.submit-daily-max-3",
+	"title": "工坊每日最多提交 3 关",
+	"statement": "工坊云函数限定单个用户每天最多提交发布 3 个关卡（SUBMIT_DAILY_MAX = 3）。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316189006,
+	"updatedAt": 1788316189006,
+	"createdByTaskId": "business-init",
+	"latestEventId": "1913ff66-9b0e-4aff-b736-82f880ce9ad5",
+	"tags": [],
+	"aliases": [
+		"每日发布上限",
+		"每天最多提交3关",
+		"发布次数限制"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "cloudfunctions/workshop/index.js",
+			"symbol": "SUBMIT_DAILY_MAX"
+		}
+	]
+}

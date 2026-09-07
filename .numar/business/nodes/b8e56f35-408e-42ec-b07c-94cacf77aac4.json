@@ -1,0 +1,26 @@
+{
+	"id": "b8e56f35-408e-42ec-b07c-94cacf77aac4",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage.nav.stack-home-worldmap-stageselect-game",
+	"title": "Stage navigation stack through game",
+	"statement": "Stage navigation builds the stack home → worldMap → stageSelect before entering game; game result leaves to stageResult on the same stack; returning from stageResult to stageSelect resets the stack to home + worldMap, and subsequent backs return to worldMap then home.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315405074,
+	"updatedAt": 1788315405074,
+	"createdByTaskId": "business-init",
+	"latestEventId": "9956c26a-c111-4636-af9d-e164376ed9b9",
+	"tags": [],
+	"aliases": [
+		"闯关导航栈",
+		"结算回关选后返回地图"
+	],
+	"implementationRefs": [
+		{
+			"type": "test",
+			"path": "tools/gc-test-stage-nav-stack.js"
+		}
+	]
+}

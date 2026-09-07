@@ -1,0 +1,27 @@
+{
+	"id": "38730921-1d9e-4cf4-afa8-e936c436f253",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "plaza.official-featured.catalog-and-fee",
+	"title": "广场官方精选约 100 关与费用档",
+	"statement": "广场官方精选目标约 100 关，由官方作者提供，source='official'、featured=true、featuredRank、seriesId 标识；通关只发金币不产金方块；开打费按轻/中/重档 8/12/16 币；官方关必须通过工坊 validateLayout（垃圾 8–80、含垃圾行 3–16、顶垃圾行 ≥6、禁止满行垃圾）。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312287216,
+	"updatedAt": 1788312287216,
+	"createdByTaskId": "business-init",
+	"latestEventId": "eead752c-a47d-4abb-9f95-eb3080e56083",
+	"tags": [],
+	"aliases": [
+		"官方精选",
+		"广场费用档",
+		"featuredRank"
+	],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "docs/gc-plaza-official-featured-plan.md"
+		}
+	]
+}

@@ -1,0 +1,12 @@
+{
+	"id": "54611839-db6b-4b81-8024-dba51c7fde45",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "388a64b2-76bb-4b29-8362-d9a6c38365a4",
+	"operation": "create",
+	"after": "已通关/审核中/已发布状态可即时发起好友挑战，使用对应快照，私域免审核；只有提交广场需要过审。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"docs/gc-workshop-plaza-design.md"
+	],
+	"createdAt": 1788316265705
+}

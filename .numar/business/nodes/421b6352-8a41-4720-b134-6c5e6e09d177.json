@@ -1,0 +1,27 @@
+{
+	"id": "421b6352-8a41-4720-b134-6c5e6e09d177",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "plaza.view-state.persist-sort-scroll-focus",
+	"title": "广场视图状态持久化",
+	"statement": "PlazaScene 退出时保存当前排序、滚动位置与焦点关卡 ID；重新进入时可恢复这些状态。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311965328,
+	"updatedAt": 1788311965328,
+	"createdByTaskId": "business-init",
+	"latestEventId": "047f335d-902b-4c9d-b3a4-320940be0249",
+	"tags": [],
+	"aliases": [
+		"广场状态恢复",
+		"plaza 滚动位置保存"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/plaza-scene.js",
+			"symbol": "onExit"
+		}
+	]
+}

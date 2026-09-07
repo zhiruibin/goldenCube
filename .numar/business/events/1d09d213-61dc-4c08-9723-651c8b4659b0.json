@@ -1,0 +1,12 @@
+{
+	"id": "1d09d213-61dc-4c08-9723-651c8b4659b0",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "582e1b6a-6f3a-4905-a6a3-eed37583a2d3",
+	"operation": "create",
+	"after": "LuckyDrawOverlay starts in the celebrate phase when opened, auto-advances to idle after about 1.2 seconds, and only then allows the rolling phase; rolling settles into result and done after all reels settle.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/widgets/lucky-draw-overlay.js: update() advances celebrate to idle after 1.2s and rolling to result when all reels settle"
+	],
+	"createdAt": 1788312151881
+}

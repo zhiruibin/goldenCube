@@ -1,0 +1,12 @@
+{
+	"id": "8b782a72-8b2e-47c3-95f1-824786c30aa9",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "424880bc-dfb0-48a0-a4c4-4329c95d1b5f",
+	"operation": "create",
+	"after": "During scrolling frames the plaza wall only uses fillRect / fillText / a single stroke; per-cell roundRect, gradient, clip, and storage reads are forbidden.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/plaza-wall-fx.js"
+	],
+	"createdAt": 1788311734483
+}

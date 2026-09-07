@@ -6,9 +6,10 @@
 	"type": "appliesTo",
 	"verificationStatus": "candidate",
 	"evidenceIds": [
-		"cloudfunctions/challenge/index.js:main"
+		"cloudfunctions/challenge/index.js:main",
+		"cloudfunctions/challenge/index.js"
 	],
 	"createdByTaskId": "business-init",
 	"createdAt": 1787229097872,
-	"updatedAt": 1787229097872
+	"updatedAt": 1788313782323
 }

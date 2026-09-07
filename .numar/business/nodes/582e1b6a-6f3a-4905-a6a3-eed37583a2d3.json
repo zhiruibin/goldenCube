@@ -1,0 +1,33 @@
+{
+	"id": "582e1b6a-6f3a-4905-a6a3-eed37583a2d3",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "lucky-draw.overlay.phase-machine",
+	"title": "Lucky draw overlay is a phase machine with celebrate start",
+	"statement": "LuckyDrawOverlay starts in the celebrate phase when opened, auto-advances to idle after about 1.2 seconds, and only then allows the rolling phase; rolling settles into result and done after all reels settle.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312151881,
+	"updatedAt": 1788312151881,
+	"createdByTaskId": "business-init",
+	"latestEventId": "1d09d213-61dc-4c08-9723-651c8b4659b0",
+	"tags": [],
+	"aliases": [
+		"幸运卷轴状态流程",
+		"摇奖 phase 机器",
+		"celebrate→rolling→result"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/widgets/lucky-draw-overlay.js",
+			"symbol": "LuckyDrawOverlay"
+		},
+		{
+			"type": "symbol",
+			"path": "js/widgets/lucky-draw-overlay.js",
+			"symbol": "update"
+		}
+	]
+}

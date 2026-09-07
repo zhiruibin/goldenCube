@@ -1,0 +1,12 @@
+{
+	"id": "3eedb3af-2f65-41ee-9129-d58589ab0b63",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "61eabd75-ec98-4833-83dc-30ea4fde6691",
+	"operation": "create",
+	"after": "背景星空粒子数按系统 benchmarkLevel 分档：非轻量模式在 level≥3 时 32 粒、level=2 时 16 粒、更低时 8 粒；轻量模式在 level≥3 时 10 粒、更低时 6 粒。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/background-effects.js:BackgroundEffects constructor"
+	],
+	"createdAt": 1788316189075
+}

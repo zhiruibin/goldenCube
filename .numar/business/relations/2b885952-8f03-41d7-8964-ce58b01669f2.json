@@ -7,9 +7,11 @@
 	"verificationStatus": "verified",
 	"evidenceIds": [
 		"js/scenes/result-scene.js#_getAdCoinOffer",
-		"广告入口按剩余额度裁剪"
+		"广告入口按剩余额度裁剪",
+		"utils/coin-manager.js",
+		"js/scenes/result-scene.js"
 	],
 	"createdByTaskId": "request_f0aaf24d-b35f-4102-8cd7-e93af669d924",
 	"createdAt": 1787309680938,
-	"updatedAt": 1787309680938
+	"updatedAt": 1788317344436
 }

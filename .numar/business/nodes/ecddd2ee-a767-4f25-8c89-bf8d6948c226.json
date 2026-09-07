@@ -1,0 +1,35 @@
+{
+	"id": "ecddd2ee-a767-4f25-8c89-bf8d6948c226",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "workshop.slot-expansion-costs",
+	"title": "工坊槽位免费额度与扩容金价",
+	"statement": "工坊初始免费 3 个槽位，上限 10 个；第 4-10 槽扩容金价为 2/3/5/8/12/18/25 金方块。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311439805,
+	"updatedAt": 1788311439805,
+	"createdByTaskId": "business-init",
+	"latestEventId": "44eb9857-f47f-468b-ab54-bbd22dcec3bc",
+	"tags": [],
+	"aliases": [
+		"槽位扩容",
+		"免费 3 槽",
+		"MAX_SLOTS 10"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"symbol": "FREE_SLOTS"
+		},
+		{
+			"type": "symbol",
+			"symbol": "MAX_SLOTS"
+		},
+		{
+			"type": "symbol",
+			"symbol": "SLOT_EXPAND_COST"
+		}
+	]
+}

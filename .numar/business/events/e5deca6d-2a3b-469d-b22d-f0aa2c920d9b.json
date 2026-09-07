@@ -1,0 +1,12 @@
+{
+	"id": "e5deca6d-2a3b-469d-b22d-f0aa2c920d9b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "e54753c6-6b46-4028-9e74-028fca6b81cc",
+	"operation": "create",
+	"after": "闯关榜复合键按 clearedCount 降序 → linesSum 升序 → piecesSum 升序 → timeSum 升序编码为单一可降序比较的数字，云端 orderBy 与好友 KV 共用。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/rank-score.js"
+	],
+	"createdAt": 1788316084248
+}

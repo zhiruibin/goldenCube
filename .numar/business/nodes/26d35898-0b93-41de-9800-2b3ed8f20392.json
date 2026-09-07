@@ -1,0 +1,28 @@
+{
+	"id": "26d35898-0b93-41de-9800-2b3ed8f20392",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.puzzle.detection-rules",
+	"title": "Puzzle challenge detection rules",
+	"statement": "A challenge is classified as a puzzle when it is a workshop challenge, or a stage challenge carrying layoutSnapshot, challengerLines, or workshop markers; puzzle challenges use line-metric comparison instead of score.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315981626,
+	"updatedAt": 1788315981626,
+	"createdByTaskId": "business-init",
+	"latestEventId": "3ecb829f-e329-4f7e-9dcb-2fd471702bc7",
+	"tags": [],
+	"aliases": [
+		"残局判定",
+		"挑战是否按残局",
+		"puzzle challenge 判断"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/challenge-ui.js",
+			"symbol": "isPuzzleChallenge"
+		}
+	]
+}

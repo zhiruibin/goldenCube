@@ -1,0 +1,12 @@
+{
+	"id": "a53b6e7e-8ede-4d73-9171-53ca0f6efaf6",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "ad1b641c-1fe3-45c5-81b1-af7f35350766",
+	"operation": "create",
+	"after": "LuckyDrawOverlay wires the drawn prize to the rollCoinPrize utility in the lucky-draw manager instead of computing prize values inline.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/widgets/lucky-draw-overlay.js: imports { rollCoinPrize } from utils/lucky-draw-manager and stores this._prize"
+	],
+	"createdAt": 1788312151886
+}

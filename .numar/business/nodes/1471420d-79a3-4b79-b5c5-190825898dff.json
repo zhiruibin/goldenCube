@@ -1,0 +1,27 @@
+{
+	"id": "1471420d-79a3-4b79-b5c5-190825898dff",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "workshop-result.plaza-return-preserves-sort-scroll",
+	"title": "Workshop result returns to plaza with sort and scroll",
+	"statement": "When a workshop result originates from the plaza, returning to the plaza scene passes the previous plazaSort and scrollY so the list state is preserved.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312028805,
+	"updatedAt": 1788312028805,
+	"createdByTaskId": "business-init",
+	"latestEventId": "c29a02c1-11e2-434f-be4d-ab967312713b",
+	"tags": [],
+	"aliases": [
+		"广场返回保留排序",
+		"plaza return sort scroll"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/workshop-result-scene.js",
+			"symbol": "_goList"
+		}
+	]
+}

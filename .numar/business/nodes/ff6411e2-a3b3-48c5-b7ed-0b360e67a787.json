@@ -1,0 +1,31 @@
+{
+	"id": "ff6411e2-a3b3-48c5-b7ed-0b360e67a787",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "lucky-draw.coin-prize.tier-probabilities",
+	"title": "摇奖金币档概率",
+	"statement": "幸运摇奖仅产出金币：三连档 20 金币概率 6%，二连档 10 金币概率 34%，单配档 5 金币概率 60%；不产出金方块。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316084106,
+	"updatedAt": 1788316084106,
+	"createdByTaskId": "business-init",
+	"latestEventId": "ff99995e-755c-471b-8eec-b882ad810dea",
+	"tags": [],
+	"aliases": [
+		"摇奖金币概率",
+		"幸运摇奖三连二连单配"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/lucky-draw-manager.js"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/lucky-draw-manager.js",
+			"symbol": "rollCoinPrize"
+		}
+	]
+}

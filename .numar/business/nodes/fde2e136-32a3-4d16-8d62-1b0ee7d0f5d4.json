@@ -1,0 +1,33 @@
+{
+	"id": "fde2e136-32a3-4d16-8d62-1b0ee7d0f5d4",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage.fail.free-retry-daily-quota-3",
+	"title": "Players get 3 free stage retries per day",
+	"statement": "Players receive 3 free retries per day after failing a stage (gc_dailyFreeRetry), tracked separately from free entries.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315981758,
+	"updatedAt": 1788315981758,
+	"createdByTaskId": "business-init",
+	"latestEventId": "22a5fbbe-21f7-414d-8a1c-6ff184d5f616",
+	"tags": [],
+	"aliases": [
+		"每日免费重试3次",
+		"失败免费复活3次",
+		"gc_dailyFreeRetry"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "FREE_RETRY_DAILY"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "FREE_RETRY_KEY"
+		}
+	]
+}

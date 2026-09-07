@@ -1,0 +1,26 @@
+{
+	"id": "51e488c9-9d06-4954-a59c-eaf9bf2fbb77",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.friend-mode.requested-once",
+	"title": "好友榜同模式只请求一次",
+	"statement": "RankScene 记录已请求过好友榜的模式，避免与 _loadRankData 重复向开放数据域发送消息。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311965345,
+	"updatedAt": 1788311965345,
+	"createdByTaskId": "business-init",
+	"latestEventId": "9e4a4e75-77b8-4619-b579-1520ecca3d9d",
+	"tags": [],
+	"aliases": [
+		"好友榜防重复请求"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/rank-scene.js",
+			"symbol": "_friendMode"
+		}
+	]
+}

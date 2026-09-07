@@ -1,0 +1,12 @@
+{
+	"id": "40e87146-e160-49ec-be77-b898f17dfc7a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "3342cdc3-851c-46b5-87ab-dcaa3cb8eeff",
+	"operation": "create",
+	"after": "首页对待应战挑战的提醒在单次会话内最多提示一次（模块级标志 _pendingRemindedSession），避免反复 toast。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/home-scene.js:_pendingRemindedSession 注释“本会话是否已提醒过待应战”"
+	],
+	"createdAt": 1788311855132
+}

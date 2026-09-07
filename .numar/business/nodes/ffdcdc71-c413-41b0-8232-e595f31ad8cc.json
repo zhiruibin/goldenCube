@@ -1,0 +1,27 @@
+{
+	"id": "ffdcdc71-c413-41b0-8232-e595f31ad8cc",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.scene.view-state-restore",
+	"title": "排行榜视图状态恢复",
+	"statement": "RankScene 在模块级保存上次查看的 Tab、模式、周期、滚动位置与本人成绩，再次进入时恢复这些状态。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311965332,
+	"updatedAt": 1788311965332,
+	"createdByTaskId": "business-init",
+	"latestEventId": "64ac46ab-b782-4967-9b4a-a98046d569ab",
+	"tags": [],
+	"aliases": [
+		"排行榜状态恢复",
+		"lastViewState"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/rank-scene.js",
+			"symbol": "lastViewState"
+		}
+	]
+}

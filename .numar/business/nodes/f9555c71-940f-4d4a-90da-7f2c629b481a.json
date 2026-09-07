@@ -1,0 +1,32 @@
+{
+	"id": "f9555c71-940f-4d4a-90da-7f2c629b481a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage-result.reveal.gold-block-rise-duration",
+	"title": "Stage result golden-block reveal timing",
+	"statement": "StageResultScene reveals the golden block with a rise animation: 1.1 seconds when gold reward total is greater than 0, otherwise 0.85 seconds; UI fades in after reveal progress 0.52 and buttons become available 0.28 seconds after the reveal completes.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312028771,
+	"updatedAt": 1788312028771,
+	"createdByTaskId": "business-init",
+	"latestEventId": "d6adb5a2-5569-4c80-9100-226bd4f1cf00",
+	"tags": [],
+	"aliases": [
+		"金方块揭示动画",
+		"gold block reveal timing"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/stage-result-scene.js",
+			"symbol": "REVEAL_RISE_SEC"
+		},
+		{
+			"type": "symbol",
+			"path": "js/scenes/stage-result-scene.js",
+			"symbol": "onEnter"
+		}
+	]
+}

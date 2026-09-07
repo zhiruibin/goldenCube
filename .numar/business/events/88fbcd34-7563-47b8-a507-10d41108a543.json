@@ -1,0 +1,13 @@
+{
+	"id": "88fbcd34-7563-47b8-a507-10d41108a543",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "3a14bc17-75b6-42bd-98ed-bedf513f6826",
+	"operation": "create",
+	"after": "方块生成器 BagRandomizer 接受数值 seed，使用 mulberry32 伪随机数生成同一种子下的同一序列；未传 seed 时使用 Math.random。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/tetris-engine.js:BagRandomizer.constructor",
+		"utils/tetris-engine.js:mulberry32"
+	],
+	"createdAt": 1788311439795
+}

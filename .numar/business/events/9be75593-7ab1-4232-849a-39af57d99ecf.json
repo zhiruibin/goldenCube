@@ -1,0 +1,12 @@
+{
+	"id": "9be75593-7ab1-4232-849a-39af57d99ecf",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "d6e10723-2cf0-4862-acd3-2574e6e3ae72",
+	"operation": "create",
+	"after": "官方闯关入场与广场一致：点击关卡卡只打开入场弹窗，用户确认开始时才校验并扣除金方块/金币。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/stage-entry-ui.js 模块注释"
+	],
+	"createdAt": 1788311439780
+}

@@ -1,0 +1,12 @@
+{
+	"id": "18794551-0680-4351-b111-6babc806cb96",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "0e840247-bfa0-4f36-8866-63fbdbac2a4e",
+	"operation": "create",
+	"after": "InputManager 将按住超过 200ms 且未移动的触点判定为长按并触发长按开始回调；触点位移超过 20px 时进入拖动状态并取消待触发的长按。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/runtime/input-manager.js:_swipeThreshold=20,_longPressTime=200,handleTouchStart,handleTouchMove"
+	],
+	"createdAt": 1788311855099
+}

@@ -1,0 +1,32 @@
+{
+	"id": "a69321b4-3a2c-4a17-8a75-2de090dfaace",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage-select.initial-chapter-resolution",
+	"title": "Stage select initial chapter resolved from params and progress",
+	"statement": "StageSelectScene syncs chapter unlock state from progress and resolves the initial chapter index from chapterIndex, chapterId, or stageId parameters via goldenBlock.resolveInitialChapterIndex.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312028787,
+	"updatedAt": 1788312028787,
+	"createdByTaskId": "business-init",
+	"latestEventId": "f946fa9f-c6d3-4342-8c38-c382ce5afe9a",
+	"tags": [],
+	"aliases": [
+		"章节初始定位",
+		"chapter initial selection"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/stage-select-scene.js",
+			"symbol": "onEnter"
+		},
+		{
+			"type": "symbol",
+			"path": "js/utils/golden-block-manager.js",
+			"symbol": "resolveInitialChapterIndex"
+		}
+	]
+}

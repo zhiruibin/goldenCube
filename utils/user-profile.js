@@ -222,25 +222,25 @@ function renderProfileAuthDialog(ctx, W, H) {
     const skip = L.skip;
 
     ctx.save();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.58)';
+    ctx.fillStyle = 'rgba(10, 7, 4, 0.62)';
     ctx.fillRect(0, 0, W, H);
 
     // panel
-    ctx.fillStyle = 'rgba(28, 32, 52, 0.98)';
+    ctx.fillStyle = 'rgba(28, 20, 14, 0.96)';
     roundRectPath(ctx, p.x, p.y, p.w, p.h, 14);
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
-    ctx.lineWidth = 1;
-    roundRectPath(ctx, p.x, p.y, p.w, p.h, 14);
+    ctx.strokeStyle = 'rgba(31, 155, 152, 0.7)';
+    ctx.lineWidth = 1.5;
+    roundRectPath(ctx, p.x + 0.75, p.y + 0.75, p.w - 1.5, p.h - 1.5, 13);
     ctx.stroke();
 
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#fff8ef';
     ctx.font = 'bold 18px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('使用微信头像昵称', p.x + p.w / 2, p.y + 42);
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+    ctx.fillStyle = 'rgba(255, 248, 239, 0.72)';
     ctx.font = '14px sans-serif';
     const lines = ['授权后排行榜与好友挑战将显示', '你的微信资料；也可暂不授权。'];
     for (let i = 0; i < lines.length; i++) {
@@ -248,17 +248,17 @@ function renderProfileAuthDialog(ctx, W, H) {
     }
 
     // 暂不授权（canvas）
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
-    roundRectPath(ctx, skip.x, skip.y, skip.w, skip.h, skip.h / 2);
+    ctx.fillStyle = 'rgba(90, 64, 48, 0.9)';
+    roundRectPath(ctx, skip.x, skip.y, skip.w, skip.h, 8);
     ctx.fill();
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = '16px sans-serif';
     ctx.fillText('暂不授权', skip.x + skip.w / 2, skip.y + skip.h / 2);
 
     // 去授权区域仅留底色，文案由 UserInfoButton 绘制
     const auth = L.auth;
-    ctx.fillStyle = 'rgba(0, 198, 255, 0.35)';
-    roundRectPath(ctx, auth.x, auth.y, auth.w, auth.h, auth.h / 2);
+    ctx.fillStyle = '#c9a227';
+    roundRectPath(ctx, auth.x, auth.y, auth.w, auth.h, 8);
     ctx.fill();
 
     ctx.restore();

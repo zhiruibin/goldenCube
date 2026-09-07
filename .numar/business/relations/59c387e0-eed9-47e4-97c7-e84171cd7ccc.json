@@ -1,0 +1,15 @@
+{
+	"id": "59c387e0-eed9-47e4-97c7-e84171cd7ccc",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "153be3e1-3ab4-4f2d-aac4-ab04f4c50704",
+	"toNodeId": "c2e58c02-36f1-43d5-aa36-21a2123fab3b",
+	"type": "belongsTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"utils/stage-nav.js",
+		"tools/gc-test-stage-nav-stack.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788311439823,
+	"updatedAt": 1788314393709
+}

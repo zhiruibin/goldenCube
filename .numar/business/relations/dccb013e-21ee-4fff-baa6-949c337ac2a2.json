@@ -1,0 +1,15 @@
+{
+	"id": "dccb013e-21ee-4fff-baa6-949c337ac2a2",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "233f6b51-65fe-43b5-b46f-1a789a515589",
+	"toNodeId": "a3efbac4-b114-4145-b7de-efde5335abd6",
+	"type": "appliesTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"tools/gc-prefix-storage.py PREFIX_KEYS 包含 'equipped_'",
+		"tools/gc-prefix-storage.py"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788315317114,
+	"updatedAt": 1788330714974
+}

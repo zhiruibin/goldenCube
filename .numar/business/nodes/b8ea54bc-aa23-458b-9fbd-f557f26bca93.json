@@ -1,0 +1,26 @@
+{
+	"id": "b8ea54bc-aa23-458b-9fbd-f557f26bca93",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage.revive.garbage-retained",
+	"title": "闯关复活保留垃圾格",
+	"statement": "闯关模式 revive 时不清除垃圾格，复活后垃圾布局保持不变。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315317069,
+	"updatedAt": 1788315317069,
+	"createdByTaskId": "business-init",
+	"latestEventId": "2f423613-8b7a-4283-a7b6-dba362951a91",
+	"tags": [],
+	"aliases": [
+		"复活保留垃圾",
+		"闯关复活规则"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "tools/gc-stage-engine.py"
+		}
+	]
+}

@@ -1,0 +1,14 @@
+{
+	"id": "1ca6cb20-6db6-4187-ae60-065131d111b6",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "c33c05e1-0cba-42c9-a9ee-0c08bb1f05f9",
+	"toNodeId": "50a6921a-f801-4101-be51-5f81e0e3422a",
+	"type": "dependsOn",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"js/scenes/shop-scene.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788311965384,
+	"updatedAt": 1788311965384
+}

@@ -1,0 +1,12 @@
+{
+	"id": "30935b64-8a3a-4eb2-9f9d-5164302f90b9",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "00637fd5-409c-4b59-a54c-ffbf4f486ea8",
+	"operation": "create",
+	"after": "Plaza card silhouette palette is selected by state: cleared gold, unlocked cyan, locked muted gray.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/plaza-wall-fx.js"
+	],
+	"createdAt": 1788311734489
+}

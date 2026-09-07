@@ -1,0 +1,16 @@
+{
+	"id": "6c4058c7-6f1f-4fd7-86fe-dbd942884840",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "a0231ece-e7ac-41eb-a2f6-49e68d20546e",
+	"toNodeId": "c6faeaf9-549e-4ec8-a48d-ce23e3d48135",
+	"type": "belongsTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"utils/srs-rotation.js:C_STATES",
+		"data/pieces.js",
+		"utils/srs-rotation.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788311439831,
+	"updatedAt": 1788314393723
+}

@@ -1,0 +1,13 @@
+{
+	"id": "44ecaf32-9a80-46e8-8fb9-bc6d4829a33e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "f5385a55-b5f8-4def-9af4-14ecbc72e754",
+	"operation": "create",
+	"after": "工坊每日提交上限 3 个、免费开打 8 局、通关奖励金币 120、作者分享奖励金币 80。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/workshop-manager.js:SUBMIT_DAILY_MAX",
+		"utils/workshop-manager.js:WORKSHOP_CLEAR_DAILY"
+	],
+	"createdAt": 1788311439810
+}

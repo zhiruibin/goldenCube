@@ -1,0 +1,28 @@
+{
+	"id": "51a49d20-9b1a-463b-8229-99b4fc38436f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "replay.speed-levels.cycle-1x-2x-4x",
+	"title": "回放倍速档位",
+	"statement": "战局回放播放支持 1x/2x/4x 三档倍速，并循环切换（1x -> 2x -> 4x -> 1x）。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311965348,
+	"updatedAt": 1788311965348,
+	"createdByTaskId": "business-init",
+	"latestEventId": "d70cf720-8f56-427f-a9f3-4e59717b1784",
+	"tags": [],
+	"aliases": [
+		"回放倍速",
+		"回放加速",
+		"1x 2x 4x"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/replay-scene.js",
+			"symbol": "SPEED_LEVELS"
+		}
+	]
+}

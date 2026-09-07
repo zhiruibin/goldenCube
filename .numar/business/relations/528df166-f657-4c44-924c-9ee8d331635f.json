@@ -1,0 +1,14 @@
+{
+	"id": "528df166-f657-4c44-924c-9ee8d331635f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "142c4e8d-e1f3-4514-88fc-96a8d816c791",
+	"toNodeId": "d6e10723-2cf0-4862-acd3-2574e6e3ae72",
+	"type": "constrains",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"tools/gc-test-stage-select-tap.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788315405170,
+	"updatedAt": 1788315405170
+}

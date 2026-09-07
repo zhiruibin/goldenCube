@@ -1,0 +1,12 @@
+{
+	"id": "7165866d-5ed1-4397-a3d2-6176b059fc2d",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "557db6ef-4f69-436f-8e45-98ae673c7fe2",
+	"operation": "create",
+	"after": "闯关模式落块消行后检查垃圾格是否清零，清零即 finishGame('stageClear') 结束游戏。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"tools/gc-stage-engine.py 改动点 6"
+	],
+	"createdAt": 1788315317033
+}

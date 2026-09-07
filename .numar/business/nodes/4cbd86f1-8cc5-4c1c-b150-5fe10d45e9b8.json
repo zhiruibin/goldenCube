@@ -1,0 +1,27 @@
+{
+	"id": "4cbd86f1-8cc5-4c1c-b150-5fe10d45e9b8",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "workshop-editor.undo-depth-40",
+	"title": "Workshop editor undo stack limit",
+	"statement": "WorkshopEditorScene keeps a clone-based undo stack capped at 40 snapshots; older snapshots are dropped beyond that depth.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312028795,
+	"updatedAt": 1788312028795,
+	"createdByTaskId": "business-init",
+	"latestEventId": "733e0cdb-50e3-4ee9-8b3e-287715824e97",
+	"tags": [],
+	"aliases": [
+		"撤销上限",
+		"undo 40 steps"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/workshop-editor-scene.js",
+			"symbol": "_pushUndo"
+		}
+	]
+}

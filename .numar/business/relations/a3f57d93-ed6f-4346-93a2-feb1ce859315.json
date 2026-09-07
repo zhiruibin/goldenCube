@@ -1,0 +1,14 @@
+{
+	"id": "a3f57d93-ed6f-4346-93a2-feb1ce859315",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "d183810c-8f40-4ea6-8a6f-4a0fa2dae1bb",
+	"toNodeId": "4d2871dc-d5b7-4145-b250-8c8b479c9419",
+	"type": "belongsTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"js/render/world-map-fx.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788311734515,
+	"updatedAt": 1788311734515
+}

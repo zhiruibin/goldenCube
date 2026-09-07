@@ -1,0 +1,12 @@
+{
+	"id": "1913ff66-9b0e-4aff-b736-82f880ce9ad5",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "9995321f-9f02-497c-b069-f95108d768c7",
+	"operation": "create",
+	"after": "工坊云函数限定单个用户每天最多提交发布 3 个关卡（SUBMIT_DAILY_MAX = 3）。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/workshop/index.js:SUBMIT_DAILY_MAX"
+	],
+	"createdAt": 1788316189006
+}

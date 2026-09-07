@@ -1,0 +1,31 @@
+{
+	"id": "a0f596bd-9df0-4611-9db0-688e1de02261",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "skins.block.pixel-unlock-stages-10",
+	"title": "像素皮肤通关解锁",
+	"statement": "像素方块皮肤（pixel）不是购买解锁（price=0），而是主线累计通关 10 关后解锁（unlockCondition='stages_cleared_10'）；其余非默认方块皮肤多为购买解锁。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788310807252,
+	"updatedAt": 1788310807252,
+	"createdByTaskId": "business-init",
+	"latestEventId": "c5978957-dc67-4a10-b46e-6b76141f41aa",
+	"tags": [],
+	"aliases": [
+		"像素皮肤解锁条件",
+		"通关10关解锁皮肤"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "data/skins.js"
+		},
+		{
+			"type": "symbol",
+			"path": "data/skins.js",
+			"symbol": "blockSkins.pixel"
+		}
+	]
+}

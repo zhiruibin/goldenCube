@@ -1,0 +1,27 @@
+{
+	"id": "5d5259a4-44fc-4c5b-8302-b5bbb591e6a0",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "effects.confetti.benchmark-capacity-tiering",
+	"title": "彩纸特效按 benchmarkLevel 分档粒子容量",
+	"statement": "庆祝彩纸特效的粒子池容量按 benchmarkLevel 分档硬上限：level >= 3 为 140 粒子、level === 2 为 90、其余默认 50；level < 1 的低端设备直接关闭特效（容量为 0）。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311636506,
+	"updatedAt": 1788311636506,
+	"createdByTaskId": "business-init",
+	"latestEventId": "41ce90da-e5ef-4f05-b03a-ede02367383e",
+	"tags": [],
+	"aliases": [
+		"彩纸粒子分档上限",
+		"confetti 容量分档"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/render/confetti-fx.js",
+			"symbol": "ConfettiFx.init"
+		}
+	]
+}

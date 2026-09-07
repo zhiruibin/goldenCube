@@ -1,0 +1,13 @@
+{
+	"id": "c6f2ea5d-6136-460d-8270-6e723a37a6b2",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "dca3dd68-6261-4b92-bdf1-c374b475a576",
+	"operation": "create",
+	"after": "用户在首页授权层点「稍后再说」后不再首启强提示（设置页仍可授权）；授权成功后清除该标记，便于换号等场景再次引导。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/user-profile.js:markProfileAuthSkipped",
+		"utils/user-profile.js:clearProfileAuthSkipped"
+	],
+	"createdAt": 1788311439803
+}

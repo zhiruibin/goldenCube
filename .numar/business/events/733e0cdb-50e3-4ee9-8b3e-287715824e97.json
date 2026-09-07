@@ -1,0 +1,12 @@
+{
+	"id": "733e0cdb-50e3-4ee9-8b3e-287715824e97",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "4cbd86f1-8cc5-4c1c-b150-5fe10d45e9b8",
+	"operation": "create",
+	"after": "WorkshopEditorScene keeps a clone-based undo stack capped at 40 snapshots; older snapshots are dropped beyond that depth.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/workshop-editor-scene.js"
+	],
+	"createdAt": 1788312028795
+}

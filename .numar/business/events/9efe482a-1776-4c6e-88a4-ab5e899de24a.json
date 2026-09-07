@@ -1,0 +1,12 @@
+{
+	"id": "9efe482a-1776-4c6e-88a4-ab5e899de24a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "b2b7ef62-7ff1-4735-9ce6-808e39905466",
+	"operation": "create",
+	"after": "成就奖励的金方块累计上限为：总关卡数 ≥100 时上限 15 个，否则上限 8 个。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/golden-block-manager.js"
+	],
+	"createdAt": 1788316083955
+}

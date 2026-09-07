@@ -1,0 +1,27 @@
+{
+	"id": "cf2ee940-e367-46c5-852d-02c213baf9a6",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "effects.climax.particle-cap",
+	"title": "QUAD/T-Spin 高潮碎片粒子硬上限 110",
+	"statement": "QUAD/T-Spin 高潮演出的碎片粒子总数硬上限为 110，作为低端机性能防线。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311636518,
+	"updatedAt": 1788311636518,
+	"createdByTaskId": "business-init",
+	"latestEventId": "2f4d6dc6-9f5b-46be-9dfe-7d960550fc3f",
+	"tags": [],
+	"aliases": [
+		"高潮碎片上限",
+		"climax 粒子数上限"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/render/effect-renderer.js",
+			"symbol": "CLIMAX_PARTICLE_LIMIT"
+		}
+	]
+}

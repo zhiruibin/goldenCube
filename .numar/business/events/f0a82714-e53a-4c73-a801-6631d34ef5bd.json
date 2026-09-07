@@ -1,0 +1,12 @@
+{
+	"id": "f0a82714-e53a-4c73-a801-6631d34ef5bd",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "1e792e9a-448a-450c-a0c6-26eeb6bb6d50",
+	"operation": "create",
+	"after": "对局上下文依次按显式 playContext、challengeId、来自广场的 workshop（非作者试玩）、一般 workshop、stageId 解析，缺省为 stage；合法值包括 stage、plaza、workshop、challenge。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/play-context.js"
+	],
+	"createdAt": 1788316084126
+}

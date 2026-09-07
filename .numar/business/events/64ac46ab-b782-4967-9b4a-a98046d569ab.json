@@ -1,0 +1,12 @@
+{
+	"id": "64ac46ab-b782-4967-9b4a-a98046d569ab",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "ffdcdc71-c413-41b0-8232-e595f31ad8cc",
+	"operation": "create",
+	"after": "RankScene 在模块级保存上次查看的 Tab、模式、周期、滚动位置与本人成绩，再次进入时恢复这些状态。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/rank-scene.js"
+	],
+	"createdAt": 1788311965332
+}

@@ -1,0 +1,12 @@
+{
+	"id": "15319c4c-e567-4561-b139-1d1aa2806a35",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "ff6d6faa-465a-4a47-81ec-5aaa71a80967",
+	"operation": "create",
+	"after": "If WorkshopEditorScene is entered with a stageId that has no workshop stage, it immediately navigates back instead of showing an editor.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/workshop-editor-scene.js"
+	],
+	"createdAt": 1788312028799
+}

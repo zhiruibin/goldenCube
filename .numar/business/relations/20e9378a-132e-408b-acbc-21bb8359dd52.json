@@ -1,0 +1,14 @@
+{
+	"id": "20e9378a-132e-408b-acbc-21bb8359dd52",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "24d384b0-e0c2-4e9b-9a11-a8c1ce1c1f22",
+	"toNodeId": "8c84c6e9-f837-40a5-b2af-4714f0f82be8",
+	"type": "appliesTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"utils/coin-manager.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788315981954,
+	"updatedAt": 1788315981954
+}

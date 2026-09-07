@@ -1,0 +1,14 @@
+{
+	"id": "5fd77957-5c06-4015-90cb-bef87760b3ab",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "51a49d20-9b1a-463b-8229-99b4fc38436f",
+	"toNodeId": "8809c450-1f61-48c8-b226-fef81369f36c",
+	"type": "dependsOn",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"js/scenes/replay-scene.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788311965377,
+	"updatedAt": 1788311965377
+}

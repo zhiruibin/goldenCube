@@ -1,0 +1,12 @@
+{
+	"id": "37a7ea33-b86d-4b8c-8997-70087940e6b5",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "7208cad0-6c22-42ad-b614-d139d7cc4730",
+	"operation": "create",
+	"after": "闯关模式下 _checkLevelUp 跳过基于消行的等级提升，关卡难度不受消行驱动。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"tools/gc-stage-engine.py 改动点 7"
+	],
+	"createdAt": 1788315317055
+}

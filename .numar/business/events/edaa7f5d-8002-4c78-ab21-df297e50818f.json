@@ -1,0 +1,12 @@
+{
+	"id": "edaa7f5d-8002-4c78-ab21-df297e50818f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "7f2ecd34-0b69-4ca9-8472-1eefc5c178da",
+	"operation": "create",
+	"after": "游戏入口尽早注册 wx.onNeedPrivacyAuthorization（自定义隐私弹窗），以满足小游戏隐私授权要求。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"game.js"
+	],
+	"createdAt": 1788310807258
+}

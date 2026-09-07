@@ -1,0 +1,12 @@
+{
+	"id": "f22b28f0-1170-4ff8-a5f8-5e9ddc2dcfbe",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "0f786aec-72ef-415f-8005-21e0a3df5dae",
+	"operation": "create",
+	"after": "World map scattered debris/tuft decorations use a hash-based deterministic pseudo-random generator (hashSeed/rnd), so the same coordinates produce stable results.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/world-map-fx.js"
+	],
+	"createdAt": 1788311734505
+}

@@ -1,0 +1,12 @@
+{
+	"id": "543ebfa0-f713-40e5-8847-df4a82cdb566",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "ef17594a-41d6-417f-820b-f8dd3957309e",
+	"operation": "create",
+	"after": "开放数据域不能直接监听触摸事件，好友榜滚动由主域捕获触摸后经消息转发，开放域据此更新 scrollY。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"openDataContext/index.js 触摸状态注释"
+	],
+	"createdAt": 1788315317004
+}

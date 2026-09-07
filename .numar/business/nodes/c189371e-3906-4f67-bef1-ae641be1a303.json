@@ -1,0 +1,26 @@
+{
+	"id": "c189371e-3906-4f67-bef1-ae641be1a303",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "workshop.cloud-function-actions",
+	"title": "工坊云函数动作集",
+	"statement": "workshop 云函数提供 publishStage/delistStage/listPlaza/getStage/reportPlay/reportClear/bumpChallenge 动作，客户端不直连 workshop_stages 集合，一律 callFunction。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316265768,
+	"updatedAt": 1788316265768,
+	"createdByTaskId": "business-init",
+	"latestEventId": "49dacab7-50c9-4c93-88d0-0f8530d1b57e",
+	"tags": [],
+	"aliases": [
+		"工坊云函数API",
+		"publishStage/reportClear"
+	],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "cloudfunctions/workshop/README.md"
+		}
+	]
+}

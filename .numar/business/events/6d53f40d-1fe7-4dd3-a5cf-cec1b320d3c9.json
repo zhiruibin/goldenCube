@@ -1,0 +1,12 @@
+{
+	"id": "6d53f40d-1fe7-4dd3-a5cf-cec1b320d3c9",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "a7f0b1e2-a2f6-40d5-ba98-3089d940bdce",
+	"operation": "create",
+	"after": "工坊挑战比较两个战绩时按优先级依次判定：消行数少者优，若相同则块数少者优，若仍相同则用时短者优。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/challenge/index.js:workshopIsBetter"
+	],
+	"createdAt": 1788316188943
+}

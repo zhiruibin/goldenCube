@@ -1,0 +1,15 @@
+{
+	"id": "10def5cd-76fd-490f-ab40-ce9b52deeffe",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "16188691-02d5-40a9-b04b-65576d67b30b",
+	"toNodeId": "38730921-1d9e-4cf4-afa8-e936c436f253",
+	"type": "belongsTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"tools/build-plaza-official-p0.js 文件头 '生成广场官方精选 P0'",
+		"tools/build-plaza-official-p0.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788315317089,
+	"updatedAt": 1788322463859
+}

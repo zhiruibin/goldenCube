@@ -1,0 +1,12 @@
+{
+	"id": "caa0e4d5-4c52-434f-b3e6-c20d06676207",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "d1af5110-b3c3-4e30-ac5d-814e46ecfd6a",
+	"operation": "create",
+	"after": "StageResultScene reveal animation can be skipped by passing skipReveal=true; this is intended for tests and replay viewing.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/stage-result-scene.js"
+	],
+	"createdAt": 1788312028777
+}

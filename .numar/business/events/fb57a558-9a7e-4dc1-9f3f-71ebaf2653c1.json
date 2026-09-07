@@ -1,0 +1,12 @@
+{
+	"id": "fb57a558-9a7e-4dc1-9f3f-71ebaf2653c1",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "f9322876-c3ae-4c24-952b-cb5429c7b251",
+	"operation": "create",
+	"after": "The daily welfare ad reward grants 30 coins (DAILY_WELFARE_REWARD), tracked with the once-per-day gc_dailyWelfareClaimed key.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/coin-manager.js"
+	],
+	"createdAt": 1788315981725
+}

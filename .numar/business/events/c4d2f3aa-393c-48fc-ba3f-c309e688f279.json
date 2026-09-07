@@ -1,0 +1,12 @@
+{
+	"id": "c4d2f3aa-393c-48fc-ba3f-c309e688f279",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "8db56cbb-357f-412e-85d3-fa37e088e993",
+	"operation": "create",
+	"after": "主线第 1 关为教学关（kind=tutorial），首块固定为 O 方块（firstPiece='O'），解锁费用为 0，最低消行 1 行、金币门槛 2。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"data/stages-v1.js"
+	],
+	"createdAt": 1788310807245
+}

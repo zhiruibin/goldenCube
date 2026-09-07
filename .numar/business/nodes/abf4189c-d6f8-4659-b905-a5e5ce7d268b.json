@@ -1,0 +1,27 @@
+{
+	"id": "abf4189c-d6f8-4659-b905-a5e5ce7d268b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "ad.passive.banner-interstitial-placement",
+	"title": "Banner/插屏低频安全断点策略",
+	"statement": "Banner 允许在首页/选关延迟 1.5–2s 展示、15s 自动关闭、两次间隔≥30s、单次进入场景最多 1 次；插屏只允许在闯关失败/成功后自然断点和既有经典结算（前 5 局免、之后每 6 局 1 次），并受 180s 最小间隔与单会话 3 次双闸限制；对局中与挑战链路禁止展示。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312287207,
+	"updatedAt": 1788312287207,
+	"createdByTaskId": "business-init",
+	"latestEventId": "22be0b0a-88e2-4070-a46f-485b01484192",
+	"tags": [],
+	"aliases": [
+		"Banner策略",
+		"插屏双闸",
+		"被动广告"
+	],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "docs/gc-ad-banner-interstitial.md"
+		}
+	]
+}

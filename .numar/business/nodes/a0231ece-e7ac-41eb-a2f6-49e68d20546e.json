@@ -1,0 +1,26 @@
+{
+	"id": "a0231ece-e7ac-41eb-a2f6-49e68d20546e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "srs.c-piece-rotation-states",
+	"title": "C 直角块 2×2 四旋转状态",
+	"statement": "C 方块（直角块）为 2×2 矩阵，提供 4 个各不相同的旋转状态。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311439776,
+	"updatedAt": 1788311439776,
+	"createdByTaskId": "business-init",
+	"latestEventId": "9bfcf8a8-4aa5-4707-bc40-0c293f645fa7",
+	"tags": [],
+	"aliases": [
+		"C 直角块",
+		"C 方块旋转矩阵"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"symbol": "C_STATES"
+		}
+	]
+}

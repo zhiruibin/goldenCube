@@ -1,0 +1,14 @@
+{
+	"id": "31d33c11-1f0f-4703-836d-e65bc01768cd",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "7774b1e4-aeab-44ec-a062-a59355614b2c",
+	"toNodeId": "8a89f486-aec0-43f2-a264-38efcabc275f",
+	"type": "belongsTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"utils/cloud-config.js"
+	],
+	"createdByTaskId": "business-relationship-scan",
+	"createdAt": 1788317244642,
+	"updatedAt": 1788317244642
+}

@@ -1,0 +1,12 @@
+{
+	"id": "aedaf10c-377a-46fe-8d55-ab00bf918872",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "cfbc5b22-a193-41dc-8efd-8acc8b3d0a47",
+	"operation": "create",
+	"after": "闯关模式消行只移除满行：玩家块按列塌缩，垃圾块保持在原位（方案 B），由 _clearFullRowsStage 处理。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"tools/gc-stage-engine.py 改动点 5 方案 B"
+	],
+	"createdAt": 1788315317025
+}

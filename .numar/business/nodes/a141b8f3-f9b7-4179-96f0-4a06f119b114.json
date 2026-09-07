@@ -1,0 +1,31 @@
+{
+	"id": "a141b8f3-f9b7-4179-96f0-4a06f119b114",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "privacy.contract-name.bracketed-label",
+	"title": "隐私指引名称书名号格式化",
+	"statement": "隐私弹窗中的指引链接文案默认使用《用户隐私保护指引》，并会确保文案带书名号；名称可由 getPrivacySetting 返回的 privacyContractName 刷新。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316084189,
+	"updatedAt": 1788316084189,
+	"createdByTaskId": "business-init",
+	"latestEventId": "02bb8f5d-866d-4862-af4f-45dc2cf1a2da",
+	"tags": [],
+	"aliases": [
+		"隐私保护指引链接",
+		"书名号文案"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/privacy.js"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/privacy.js",
+			"symbol": "_linkLabel"
+		}
+	]
+}

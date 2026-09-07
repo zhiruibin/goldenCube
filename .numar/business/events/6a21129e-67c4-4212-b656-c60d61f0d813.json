@@ -1,0 +1,12 @@
+{
+	"id": "6a21129e-67c4-4212-b656-c60d61f0d813",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "1f27208d-69d5-4d93-801f-4186b3e0bb2b",
+	"operation": "create",
+	"after": "本地待应战列表（gc_pending_challenges）中超过 7 天的挑战被视为失效，与云函数挑战过期时间保持一致，用于清理过期待应战。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/challenge-scene.js:PENDING_EXPIRY_MS=7*24*60*60*1000 及注释“与云函数挑战过期一致”"
+	],
+	"createdAt": 1788311855121
+}

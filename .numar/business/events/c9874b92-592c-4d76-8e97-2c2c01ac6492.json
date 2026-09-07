@@ -1,0 +1,12 @@
+{
+	"id": "c9874b92-592c-4d76-8e97-2c2c01ac6492",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "6e702cc6-39ec-4f95-8da3-0c66de8f35e2",
+	"operation": "create",
+	"after": "回放输入动作与引擎方法一一映射：left/right/rotateCW/rotateCCW/softDrop/hardDrop/hold 对应相应引擎方法，动作命名与 ReplayRecorder.record 对齐。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/replay-scene.js"
+	],
+	"createdAt": 1788311965354
+}

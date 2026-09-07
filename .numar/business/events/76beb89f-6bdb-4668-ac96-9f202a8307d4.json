@@ -1,0 +1,12 @@
+{
+	"id": "76beb89f-6bdb-4668-ac96-9f202a8307d4",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "22cd4108-3266-4734-acc2-65556c04d9ac",
+	"operation": "create",
+	"after": "闯关模式固定使用标准 7 种方块并关闭特殊块（special），setMode/initStage 中均强制 setSpecialMode(false)。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"tools/gc-stage-engine.py setMode/initStage '固定标准 7 块'"
+	],
+	"createdAt": 1788315317047
+}

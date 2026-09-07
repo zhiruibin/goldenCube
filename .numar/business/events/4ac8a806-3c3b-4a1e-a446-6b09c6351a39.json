@@ -1,0 +1,12 @@
+{
+	"id": "4ac8a806-3c3b-4a1e-a446-6b09c6351a39",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "e5ddee7f-7008-4ea1-9955-c8db1dd2c465",
+	"operation": "create",
+	"after": "方块类型映射为棋盘存储值：标准方块 I/O/T/S/Z/J/L 为 1-7，特殊 C/D/P/M 为 8-11，实验室 R/Q/X/K/W/A/N 为 12-18。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/tetris-engine.js:TYPE_TO_VALUE"
+	],
+	"createdAt": 1788311439800
+}

@@ -1,0 +1,15 @@
+{
+	"id": "5d2aae5a-3021-4c54-818d-7adcd4c63e03",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "0e840247-bfa0-4f36-8866-63fbdbac2a4e",
+	"toNodeId": "d5e7fe79-3e5a-416a-b673-233aadf3577e",
+	"type": "appliesTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"js/runtime/input-manager.js:handleTouchMove 位移超过 _swipeThreshold 时 _dragging=true 并 _clearLongPressTimer()",
+		"js/runtime/input-manager.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788311855140,
+	"updatedAt": 1788314317724
+}

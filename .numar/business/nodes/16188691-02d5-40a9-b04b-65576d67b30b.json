@@ -1,0 +1,27 @@
+{
+	"id": "16188691-02d5-40a9-b04b-65576d67b30b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "plaza.official-p0.catalog-series-composition",
+	"title": "广场官方精选 P0 目录构成",
+	"statement": "广场官方精选 P0 共 30 关，按系列生成（冷兵器/花瓣/叶子），每关用剪影行定义并放置在 10 列棋盘，系列内以 seriesId/seriesIndex 标识。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315316975,
+	"updatedAt": 1788315316975,
+	"createdByTaskId": "business-init",
+	"latestEventId": "d680e5ec-cdcd-4228-8723-9030b8243956",
+	"tags": [],
+	"aliases": [
+		"官方精选P0",
+		"30关官方关卡",
+		"冷兵器花瓣叶子系列"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "tools/build-plaza-official-p0.js"
+		}
+	]
+}

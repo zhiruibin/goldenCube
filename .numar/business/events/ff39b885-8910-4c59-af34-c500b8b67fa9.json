@@ -1,0 +1,12 @@
+{
+	"id": "ff39b885-8910-4c59-af34-c500b8b67fa9",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "d4ad4411-c351-4d54-85ba-2f83f216b6dc",
+	"operation": "create",
+	"after": "Challenge list/card challenger metric displays cleared lines for puzzle challenges with a legacy fallback that interprets a challengerScore under 10000 as lines, and displays score for non-puzzle challenges; missing metrics render as '--'.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/challenge-ui.js"
+	],
+	"createdAt": 1788315981660
+}

@@ -1,0 +1,27 @@
+{
+	"id": "4f8755b6-591d-4066-adb3-be3190080263",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "plaza.wall.card-state.tri-state",
+	"title": "Plaza wall card tri-state",
+	"statement": "Plaza wall card state is derived from cleared and unlocked flags: cleared wins, then unlocked, otherwise locked.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311734475,
+	"updatedAt": 1788311734475,
+	"createdByTaskId": "business-init",
+	"latestEventId": "47dfbd4c-0c16-4255-8454-f612134ecccb",
+	"tags": [],
+	"aliases": [
+		"广场卡片三态",
+		"cleared/unlocked/locked"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/render/plaza-wall-fx.js",
+			"symbol": "plazaCardState"
+		}
+	]
+}

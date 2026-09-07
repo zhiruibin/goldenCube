@@ -6,9 +6,10 @@
 	"type": "belongsTo",
 	"verificationStatus": "candidate",
 	"evidenceIds": [
-		"utils/achievement-manager.js reportLineClear"
+		"utils/achievement-manager.js reportLineClear",
+		"utils/achievement-manager.js"
 	],
 	"createdByTaskId": "business-init",
 	"createdAt": 1787227659803,
-	"updatedAt": 1787227659803
+	"updatedAt": 1788313581040
 }

@@ -1,0 +1,12 @@
+{
+	"id": "a90528ca-56fd-4d1b-870b-c14cc87fb2b9",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "8f794c26-f47e-4243-ad33-441cbd72896d",
+	"operation": "create",
+	"after": "用户微信授权后可通过 syncMyProfile 操作刷新本人相关挑战记录上的昵称与头像。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/challenge/index.js:syncMyProfile"
+	],
+	"createdAt": 1788316189119
+}

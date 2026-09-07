@@ -1,0 +1,12 @@
+{
+	"id": "c1d1e336-17b3-4436-9178-d745b770aacd",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "100abfc2-0ef9-41d2-ad52-a463f42d3fce",
+	"operation": "create",
+	"after": "A friend KV floor (gc_friend_kv_floor) records the highest composite score already written to friend storage so that a later lower local score cannot overwrite the stored friend KV.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/cloud-service.js"
+	],
+	"createdAt": 1788315981701
+}

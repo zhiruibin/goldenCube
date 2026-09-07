@@ -1,0 +1,32 @@
+{
+	"id": "e119a2d3-db51-41fa-babe-79f8fb815447",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "plaza.official-stage-catalog",
+	"title": "广场官方精选关卡目录",
+	"statement": "广场官方精选关卡以 P0 数据包提供，包含冷兵器、花瓣、叶子三个系列共 30 关；每关标记为官方来源并带 featured 精选位（featuredRank），记录系列序号、标签、标题、作者信息、布局行与布局哈希、最低消行、垃圾数、金币门槛、入场费和播放/通关/挑战/点赞统计与热度分。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788310807215,
+	"updatedAt": 1788310807215,
+	"createdByTaskId": "business-init",
+	"latestEventId": "47da66d7-4a9b-4b58-a50d-35a170d6cca0",
+	"tags": [],
+	"aliases": [
+		"官方精选关卡",
+		"广场 P0 数据包",
+		"官方精选舞台"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "data/plaza-official-v1.js"
+		},
+		{
+			"type": "symbol",
+			"path": "data/plaza-official-v1.js",
+			"symbol": "stages"
+		}
+	]
+}

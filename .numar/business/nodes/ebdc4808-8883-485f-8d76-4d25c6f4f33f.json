@@ -1,0 +1,26 @@
+{
+	"id": "ebdc4808-8883-485f-8d76-4d25c6f4f33f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "workshop.storage-keys",
+	"title": "工坊本地存储键集合",
+	"statement": "工坊/广场使用本地存储键：gc_workshop_stages、gc_workshop_slotCap、gc_workshop_plazaUnlocked、gc_workshop_plazaCleared、gc_workshop_submitDaily、gc_workshop_freePlayDaily、gc_workshop_authorShareDaily、gc_workshop_plazaCache。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311439819,
+	"updatedAt": 1788311439819,
+	"createdByTaskId": "business-init",
+	"latestEventId": "84d9dc65-4697-4e44-a05d-354c9fc54f41",
+	"tags": [],
+	"aliases": [
+		"gc_workshop_*",
+		"工坊存储键"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"symbol": "KEYS"
+		}
+	]
+}

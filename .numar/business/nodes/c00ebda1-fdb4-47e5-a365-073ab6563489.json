@@ -1,0 +1,31 @@
+{
+	"id": "c00ebda1-fdb4-47e5-a365-073ab6563489",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage.tutorial.garbage-clear-target-once",
+	"title": "首次闯关垃圾布局通关目标提示仅展示一次",
+	"statement": "首次进入闯关时，垃圾布局完成后会展示一次通关目标提示，通过存储键 gc_tutorial_garbage_clear_seen 控制只展示一次。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311855129,
+	"updatedAt": 1788311855129,
+	"createdByTaskId": "business-init",
+	"latestEventId": "380b7cfe-94e4-4ad5-a919-f42dcdee0269",
+	"tags": [],
+	"aliases": [
+		"首次闯关提示",
+		"垃圾布局通关目标提示",
+		"仅展示一次"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/game-scene.js"
+		},
+		{
+			"type": "symbol",
+			"symbol": "STAGE_TUTORIAL_SEEN_KEY"
+		}
+	]
+}

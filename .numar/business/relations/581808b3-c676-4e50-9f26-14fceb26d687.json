@@ -1,0 +1,16 @@
+{
+	"id": "581808b3-c676-4e50-9f26-14fceb26d687",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "931b7802-ac43-4a86-b5c3-76402cec6123",
+	"toNodeId": "ae79b2c1-07d4-41dd-b32d-1a17225603ae",
+	"type": "dependsOn",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"js/scenes/achievement-scene.js:render 使用 activeIds 过滤已解锁 id，注释“仅计当前有效成就，不含 deprecated”",
+		"js/scenes/achievement-scene.js",
+		"data/achievements.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788311855143,
+	"updatedAt": 1788316461320
+}

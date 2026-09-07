@@ -1,0 +1,31 @@
+{
+	"id": "0625e7ea-cd6e-4100-af24-987f38a06f0d",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "privacy.consent.custom-canvas-dialog",
+	"title": "隐私授权使用自定义弹窗并需点击同意",
+	"statement": "隐私授权弹窗为 canvas 自定义弹窗，弹窗内隐私指引必须可点并调用 wx.openPrivacyContract；用户点击同意后才在点击回调中 resolve({ event:'agree' })；wx.showModal 正文无法提供可点链接。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316084227,
+	"updatedAt": 1788316084227,
+	"createdByTaskId": "business-init",
+	"latestEventId": "c10031f9-a9d8-4f5c-911e-bb0a74ba4cca",
+	"tags": [],
+	"aliases": [
+		"隐私授权弹窗",
+		"隐私协议链接"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/privacy.js"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/privacy.js",
+			"symbol": "_showCustomPrivacyModal"
+		}
+	]
+}

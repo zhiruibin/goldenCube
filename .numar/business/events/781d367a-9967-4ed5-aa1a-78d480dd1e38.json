@@ -1,0 +1,12 @@
+{
+	"id": "781d367a-9967-4ed5-aa1a-78d480dd1e38",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "d183810c-8f40-4ea6-8a6f-4a0fa2dae1bb",
+	"operation": "create",
+	"after": "World map chapter nodes alternate between left and right preset column arrays by index parity, with row increasing by index, forming a zigzag path.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/world-map-fx.js"
+	],
+	"createdAt": 1788311734503
+}

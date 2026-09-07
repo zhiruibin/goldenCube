@@ -1,0 +1,27 @@
+{
+	"id": "319e5e76-e736-47f4-92b9-930b95611c38",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "world-map.chapter-node.tap-enters-stage-select",
+	"title": "世界地图章节点按进入关卡选择",
+	"statement": "在世界地图上点按某章节点（垃圾块或主题名区域）会切换到 stageSelect 场景并携带等于该节点 id 的 chapterId；点按空白处不切换场景。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316348029,
+	"updatedAt": 1788316348029,
+	"createdByTaskId": "business-init",
+	"latestEventId": "7926d808-37c5-499d-901c-f2f7470b1191",
+	"tags": [],
+	"aliases": [
+		"世界地图点块进关卡选择",
+		"点击章节块进入 stageSelect",
+		"world map tap chapter node"
+	],
+	"implementationRefs": [
+		{
+			"type": "test",
+			"path": "tools/gc-test-world-map-tap.js"
+		}
+	]
+}

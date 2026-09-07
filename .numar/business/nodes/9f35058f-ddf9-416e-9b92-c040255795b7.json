@@ -1,0 +1,30 @@
+{
+	"id": "9f35058f-ddf9-416e-9b92-c040255795b7",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage.settle-animation-timeout-guard",
+	"title": "闯关塌陷动画时序与超时保护",
+	"statement": "闯关塌陷动画使用固定时序常量（闪烁 150ms、逐行塌陷 150-300ms、链式间隔 80ms），并设 4000ms 超时保护，防止动画状态卡死导致无方块可操作。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311439792,
+	"updatedAt": 1788311439792,
+	"createdByTaskId": "business-init",
+	"latestEventId": "6325aa5c-cdf1-4ea2-b0eb-51418c1c3053",
+	"tags": [],
+	"aliases": [
+		"塌陷动画超时",
+		"SETTLING 超时保护"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"symbol": "STAGE_SETTLE_TIMEOUT_MS"
+		},
+		{
+			"type": "symbol",
+			"symbol": "STAGE_SETTLE_FALL_MS_PER_ROW"
+		}
+	]
+}

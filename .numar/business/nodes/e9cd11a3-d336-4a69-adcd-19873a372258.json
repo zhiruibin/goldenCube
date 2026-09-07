@@ -1,0 +1,26 @@
+{
+	"id": "e9cd11a3-d336-4a69-adcd-19873a372258",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "workshop.ugc-excluded-from-main-leaderboard",
+	"title": "UGC 不进主线复合榜",
+	"statement": "官方 clearedCount 只计官方关，工坊 UGC 不进入主线复合榜；工坊另设热度/作者榜，奖励仅金币或徽章。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316265672,
+	"updatedAt": 1788316265672,
+	"createdByTaskId": "business-init",
+	"latestEventId": "cb11205f-1236-41b0-8a7d-e3ec7883c36b",
+	"tags": [],
+	"aliases": [
+		"UGC不进主榜",
+		"工坊另立热度榜"
+	],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "docs/gc-workshop-plaza-design.md"
+		}
+	]
+}

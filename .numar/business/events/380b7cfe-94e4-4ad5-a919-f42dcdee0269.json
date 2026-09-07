@@ -1,0 +1,12 @@
+{
+	"id": "380b7cfe-94e4-4ad5-a919-f42dcdee0269",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "c00ebda1-fdb4-47e5-a365-073ab6563489",
+	"operation": "create",
+	"after": "首次进入闯关时，垃圾布局完成后会展示一次通关目标提示，通过存储键 gc_tutorial_garbage_clear_seen 控制只展示一次。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/game-scene.js:STAGE_TUTORIAL_SEEN_KEY 注释“首次闯关：垃圾布局完成后提示通关目标（仅展示一次）”"
+	],
+	"createdAt": 1788311855129
+}

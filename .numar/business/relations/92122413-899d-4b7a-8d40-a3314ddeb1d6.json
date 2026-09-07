@@ -1,0 +1,15 @@
+{
+	"id": "92122413-899d-4b7a-8d40-a3314ddeb1d6",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "6ffd404a-1bec-430e-9c0b-18da5d0ef02f",
+	"toNodeId": "e37303bd-e013-49e7-b133-91aea37e0d29",
+	"type": "appliesTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"js/scenes/stage-select-scene.js",
+		"utils/coin-manager.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788312028816,
+	"updatedAt": 1788330907822
+}

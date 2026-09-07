@@ -1,0 +1,15 @@
+{
+	"id": "78c21efc-07f3-4fa5-ad45-e3c67da6a6cb",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "c189371e-3906-4f67-bef1-ae641be1a303",
+	"toNodeId": "bf4ac920-d220-4eba-800d-0bb821492a62",
+	"type": "dependsOn",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"cloudfunctions/workshop/README.md",
+		"utils/cloud-config.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788316265858,
+	"updatedAt": 1788333241192
+}

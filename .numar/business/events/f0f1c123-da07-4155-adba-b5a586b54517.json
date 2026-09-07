@@ -1,0 +1,12 @@
+{
+	"id": "f0f1c123-da07-4155-adba-b5a586b54517",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "955a5423-649a-4f76-8c24-480b3c94329b",
+	"operation": "create",
+	"after": "所有 UI 图标用 Canvas 路径原语（moveTo/lineTo/arc/bezierCurveTo/quadraticCurveTo/rect）绘制，不依赖任何 PNG/图片资源，保证不同机型与分辨率下渲染结果 100% 一致；图标以 (x, y) 为中心、size 为外接正方形边长绘制。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/icon-renderer.js"
+	],
+	"createdAt": 1788311636535
+}

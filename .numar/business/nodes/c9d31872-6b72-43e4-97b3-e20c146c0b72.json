@@ -1,0 +1,26 @@
+{
+	"id": "c9d31872-6b72-43e4-97b3-e20c146c0b72",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage.mode.entry-preserves-stage-garbage-layout",
+	"title": "Stage mode entry preserves stage garbage layout",
+	"statement": "In stage mode, after GameScene integration enters the stage, the board keeps the stage garbage layout (garbageCount consistent) and the engine state is playing, rather than having the garbage cleared or the first piece landing triggering an immediate over.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315405032,
+	"updatedAt": 1788315405032,
+	"createdByTaskId": "business-init",
+	"latestEventId": "56149621-b6c3-4c89-a003-793af2c509ea",
+	"tags": [],
+	"aliases": [
+		"进入关卡保留垃圾布局",
+		"关卡垃圾不清空"
+	],
+	"implementationRefs": [
+		{
+			"type": "test",
+			"path": "tools/gc-test-game-scene-stage.js"
+		}
+	]
+}

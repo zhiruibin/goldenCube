@@ -1,0 +1,26 @@
+{
+	"id": "486a4620-f519-4470-8e49-14f8f0e957e3",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "srs.prism-piece-i-shaped-rotation",
+	"title": "R 光棱方块旋转状态同 I 方块",
+	"statement": "实验室 R 方块（光棱）的 4 个旋转状态使用与 I 方块相同的 4×4 矩阵。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311439770,
+	"updatedAt": 1788311439770,
+	"createdByTaskId": "business-init",
+	"latestEventId": "f0e88ab3-bff7-4ac6-ba9e-c9940ce0d745",
+	"tags": [],
+	"aliases": [
+		"R 光棱矩阵",
+		"prism 同 I 形长条"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"symbol": "R_STATES"
+		}
+	]
+}

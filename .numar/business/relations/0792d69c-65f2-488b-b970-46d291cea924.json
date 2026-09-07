@@ -6,9 +6,10 @@
 	"type": "dependsOn",
 	"verificationStatus": "candidate",
 	"evidenceIds": [
-		"utils/coin-manager.js:rewardLineClear"
+		"utils/coin-manager.js:rewardLineClear",
+		"utils/coin-manager.js"
 	],
 	"createdByTaskId": "business-init",
 	"createdAt": 1787229097864,
-	"updatedAt": 1787229097864
+	"updatedAt": 1788317490767
 }

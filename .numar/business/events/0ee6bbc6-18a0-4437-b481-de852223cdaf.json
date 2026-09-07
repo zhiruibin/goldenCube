@@ -1,0 +1,12 @@
+{
+	"id": "0ee6bbc6-18a0-4437-b481-de852223cdaf",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "4308d426-8515-42f1-9f77-299e6a9c6fb4",
+	"operation": "create",
+	"after": "WorkshopScene's list scroll inertia requires at least two movement samples within a 100ms window, caps velocity at 4200, only starts inertia for velocities >= 180, and is suppressed when a confirm dialog, action sheet, or play dialog is open.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/workshop-scene.js"
+	],
+	"createdAt": 1788312028814
+}

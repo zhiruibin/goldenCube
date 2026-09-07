@@ -1,0 +1,12 @@
+{
+	"id": "2fd1e01d-d5c6-4dc1-bfc1-e2521c3b6b81",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "b6691f56-3223-4a66-adfd-7b723eb5e0b1",
+	"operation": "create",
+	"after": "排行榜仅接受 stage 模式；上报 clearedCount、linesSum、piecesSum、timeSum 后按 clearedCount 降序、lines/pieces/time 升序编码为单一 score，并设上限：clearedCount≤999、linesSum≤90000、piecesSum≤90000、timeSum≤99999（秒）。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/rank/index.js:encodeRankScore"
+	],
+	"createdAt": 1788316189029
+}

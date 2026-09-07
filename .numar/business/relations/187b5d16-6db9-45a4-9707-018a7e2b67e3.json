@@ -1,0 +1,14 @@
+{
+	"id": "187b5d16-6db9-45a4-9707-018a7e2b67e3",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "afc1b35a-6617-4fbf-8c61-62ca03700d1a",
+	"toNodeId": "28377bab-d677-4e35-8787-034ffded32a2",
+	"type": "belongsTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"data/skins.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788310807266,
+	"updatedAt": 1788310807266
+}

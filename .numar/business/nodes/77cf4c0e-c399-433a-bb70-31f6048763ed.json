@@ -1,0 +1,27 @@
+{
+	"id": "77cf4c0e-c399-433a-bb70-31f6048763ed",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "workshop-scene.status-tabs-first-level",
+	"title": "Workshop status tabs are primary",
+	"statement": "WorkshopScene surfaces status tabs (draft, cleared, reviewing, published) as first-level tabs for managing own levels; the plaza has been split into a separate scene.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312028808,
+	"updatedAt": 1788312028808,
+	"createdByTaskId": "business-init",
+	"latestEventId": "ba2d0471-d644-43be-af5c-78eed7ea62c0",
+	"tags": [],
+	"aliases": [
+		"工坊状态Tab",
+		"workshop status tabs"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/workshop-scene.js",
+			"symbol": "STATUS_TABS"
+		}
+	]
+}

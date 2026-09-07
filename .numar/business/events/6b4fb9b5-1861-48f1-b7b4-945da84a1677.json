@@ -1,0 +1,12 @@
+{
+	"id": "6b4fb9b5-1861-48f1-b7b4-945da84a1677",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "25ca6d7b-ae1d-48cb-89bb-16cdcc29fb97",
+	"operation": "create",
+	"after": "SceneManager.leaveTo 切换场景时不将当前场景压栈，并将返回栈重置为默认 ['home']（或传入的 stackNames）；目标是 home 时清空栈，用于暂停退出、通关结算、失败回关选等不应再回到对局页的跳转。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/runtime/scene-manager.js:leaveTo 注释及实现（不压栈并重置 _stack）"
+	],
+	"createdAt": 1788311855112
+}

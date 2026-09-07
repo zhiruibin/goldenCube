@@ -1,0 +1,15 @@
+{
+	"id": "9631289e-9293-4300-b2ad-83c7359bca63",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "6eabea3a-0527-4564-a56f-2b61f9291fa9",
+	"toNodeId": "53972c30-67fa-4069-870e-7ceffe7d3c58",
+	"type": "dependsOn",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"utils/coin-manager.js",
+		"js/scenes/game-scene.js"
+	],
+	"createdByTaskId": "business-relationship-scan",
+	"createdAt": 1788314150090,
+	"updatedAt": 1788317490783
+}

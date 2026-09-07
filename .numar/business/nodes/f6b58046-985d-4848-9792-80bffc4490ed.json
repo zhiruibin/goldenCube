@@ -1,0 +1,31 @@
+{
+	"id": "f6b58046-985d-4848-9792-80bffc4490ed",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage.config-fields",
+	"title": "关卡配置字段与下落间隔覆盖",
+	"statement": "每个关卡配置包含 id、chapterId、name、minLines、garbageCount、coinThreshold、dropIntervalMs、kind、unlockCost 与 rows 布局，并可指定 firstPiece 首块；关卡级 dropIntervalMs 可覆盖章节默认值（如第 1 关为 1200ms，而所属章节默认 1000ms）。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788310807243,
+	"updatedAt": 1788310807243,
+	"createdByTaskId": "business-init",
+	"latestEventId": "61766810-f804-4d1a-a6fa-c12e9b3e927c",
+	"tags": [],
+	"aliases": [
+		"关卡数据字段",
+		"每一关配置结构"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "data/stages-v1.js"
+		},
+		{
+			"type": "symbol",
+			"path": "data/stages-v1.js",
+			"symbol": "stages"
+		}
+	]
+}

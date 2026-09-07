@@ -7,6 +7,8 @@ const { achievementManager } = require('../../utils/achievement-manager');
 const challengeUi = require('../../utils/challenge-ui');
 const challengeShareCard = require('../../utils/challenge-share-card');
 const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
+const { drawThemeBackground, drawThemeImageContain, drawThemeButtonSkin } = require('../theme/theme-images');
+const { fillNightBackground, drawBrandTitle } = require('../theme/arcade-night');
 
 const PENDING_CHALLENGES_KEY = 'gc_pending_challenges';
 /** 与云函数挑战过期一致：本地待应战超过 7 天视为失效 */
@@ -15,7 +17,7 @@ const PENDING_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
 const { windowWidth: W = 375, windowHeight: H = 667 } = wx.getSystemInfoSync();
 const ITEM_W = Math.min(340, W * 0.85);
 const LIST_X = (W - ITEM_W) / 2;
-const ITEM_H = 64;
+const ITEM_H = 72;
 
 function _shortName(name) {
   if (!name) return '';
@@ -229,21 +231,15 @@ class ChallengeScene {
   }
 
   render(ctx) {
-    ctx.fillStyle = '#0f0f23';
-    ctx.fillRect(0, 0, W, H);
+    if (!drawThemeBackground(ctx, 'mapMineBg', W, H)) {
+      fillNightBackground(ctx, W, H);
+    } else {
+      ctx.fillStyle = 'rgba(12, 8, 4, 0.36)';
+      ctx.fillRect(0, 0, W, H);
+    }
 
-    const title = '挑战';
-    const titleY = this._topInset() + 30;
-    const iconSize = 24;
-    const gap = 8;
-    ctx.font = 'bold 28px sans-serif';
-    const titleW = ctx.measureText(title).width;
-    const startX = (W - (iconSize + gap + titleW)) / 2;
-    IconRenderer.draw(ctx, 'trophy', startX + iconSize / 2, titleY, iconSize, '#ffffff');
-    ctx.fillStyle = '#ffffff';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(title, startX + iconSize + gap + titleW / 2, titleY);
+    const titleY = this._topInset() + 18;
+    drawBrandTitle(ctx, '挑战', W / 2, titleY, 'bold 28px sans-serif');
 
     this._renderTabs(ctx);
     this._renderList(ctx);
@@ -267,22 +263,34 @@ class ChallengeScene {
       { tab: 'incoming', label: '待我应战' },
       { tab: 'completed', label: '已完成' }
     ];
-    const tabW = Math.min(104, (W - 40 - 2 * 10) / 3);
-    const tabH = 36;
-    const gap = 10;
-    const tabY = this._topInset() + 50;
+    const gap = 8;
+    const tabH = 42;
+    const tabW = Math.min(110, Math.floor((W - 32 - gap * 2) / 3));
+    const tabY = this._topInset() + 52;
     const totalW = tabW * 3 + gap * 2;
     let x = (W - totalW) / 2;
     for (const t of tabs) {
       const selected = this._tab === t.tab;
-      ctx.fillStyle = selected ? '#00c6ff' : 'rgba(255,255,255,0.1)';
-      this._roundRect(ctx, x, tabY, tabW, tabH, 8);
-      ctx.fill();
-      ctx.fillStyle = selected ? '#ffffff' : 'rgba(255,255,255,0.5)';
-      ctx.font = '14px sans-serif';
+      const skin = selected ? 'cardStageGold' : 'cardStageBrown';
+      const cx = x + tabW / 2;
+      const cy = tabY + tabH / 2;
+      const drawn = drawThemeImageContain(ctx, skin, cx, cy, tabW, tabH);
+      if (!drawn.drawn) {
+        ctx.fillStyle = selected ? '#c9a227' : '#5a4030';
+        this._roundRect(ctx, x, tabY, tabW, tabH, 8);
+        ctx.fill();
+      }
+      ctx.fillStyle = selected ? '#241408' : '#ffffff';
+      ctx.font = 'bold 13px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(t.label, x + tabW / 2, tabY + tabH / 2 + 1);
+      ctx.shadowColor = 'rgba(0,0,0,0.35)';
+      ctx.shadowBlur = 2;
+      ctx.shadowOffsetY = 1;
+      ctx.fillText(t.label, cx, cy + 1);
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
       this._tabAreas.push({ x, y: tabY, w: tabW, h: tabH, tab: t.tab });
       x += tabW + gap;
     }
@@ -293,61 +301,99 @@ class ChallengeScene {
     const w = W - 12 - (12 + 110 + 10);
     const y = H - 80;
     const h = 48;
-    ctx.fillStyle = '#2ecc71';
-    this._roundRect(ctx, x, y, w, h, 10);
-    ctx.fill();
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '16px sans-serif';
+    if (!drawThemeButtonSkin(ctx, 'btnBarGold', x, y, w, h)) {
+      const drawn = drawThemeImageContain(ctx, 'cardStageGold', x + w / 2, y + h / 2, w, h);
+      if (!drawn.drawn) {
+        ctx.fillStyle = '#c9a227';
+        this._roundRect(ctx, x, y, w, h, 10);
+        ctx.fill();
+      }
+    }
+    ctx.fillStyle = '#241408';
+    ctx.font = 'bold 16px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0,0,0,0.35)';
+    ctx.shadowBlur = 2;
+    ctx.shadowOffsetY = 1;
     ctx.fillText('发起新挑战', x + w / 2, y + h / 2 + 1);
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
     this._launchArea = { x, y, w, h };
   }
 
   _renderSheet(ctx) {
     this._modeAreas = [];
-    const sheetH = 200;
+    const sheetH = 220;
     const sheetY = H - sheetH;
     this._sheetY = sheetY;
-    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillStyle = 'rgba(10, 7, 4, 0.62)';
     ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = '#1c1c38';
+
     this._roundRect(ctx, 0, sheetY, W, sheetH, 16);
+    ctx.fillStyle = 'rgba(28, 20, 14, 0.96)';
     ctx.fill();
+    this._roundRect(ctx, 0.75, sheetY + 0.75, W - 1.5, sheetH - 1.5, 15);
+    ctx.strokeStyle = 'rgba(31, 155, 152, 0.7)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
     ctx.font = 'bold 16px sans-serif';
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#fff8ef';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('发起新挑战', W / 2, sheetY + 22);
-    ctx.font = '14px sans-serif';
-    ctx.fillText('关闭', W - 28, sheetY + 22);
-    this._sheetCloseArea = { x: W - 56, y: sheetY, w: 56, h: 44 };
+    ctx.fillText('发起新挑战', W / 2, sheetY + 24);
+
+    // 右上角关闭
+    const closeSize = 30;
+    const closeCx = W - 28;
+    const closeCy = sheetY + 24;
+    const closeDrawn = drawThemeImageContain(ctx, 'btnCircleRose', closeCx, closeCy, closeSize, closeSize);
+    if (!closeDrawn.drawn) {
+      ctx.beginPath();
+      ctx.arc(closeCx, closeCy, closeSize / 2, 0, Math.PI * 2);
+      ctx.fillStyle = '#b24a3a';
+      ctx.fill();
+    }
+    IconRenderer.draw(ctx, 'close', closeCx, closeCy, closeSize * 0.7, '#fff8ef');
+    this._sheetCloseArea = {
+      x: closeCx - closeSize / 2 - 4,
+      y: closeCy - closeSize / 2 - 4,
+      w: closeSize + 8,
+      h: closeSize + 8,
+    };
 
     const gridW = Math.min(300, W * 0.8);
     const gap = 12;
     const cardW = gridW;
-    const cardH = 52;
+    const cardH = 54;
     const x0 = (W - gridW) / 2;
-    const y0 = sheetY + 52;
+    const y0 = sheetY + 56;
     const modes = [
-      { mode: 'stageSelect', label: '闯关选关发起', hint: '在已通关关卡上点「挑战」', color: '#e09a30' },
-      { mode: 'plaza', label: '去关卡广场', hint: '在已通关的广场关点「约好友来战」', color: '#2ecc71' },
+      { mode: 'stageSelect', label: '闯关选关发起', hint: '在已通关关卡上点「挑战」', skin: 'cardStageAmber' },
+      { mode: 'plaza', label: '去关卡广场', hint: '在已通关的广场关点「约好友来战」', skin: 'cardStageGold' },
     ];
     for (let i = 0; i < modes.length; i++) {
       const m = modes[i];
       const x = x0;
       const y = y0 + i * (cardH + gap);
-      ctx.fillStyle = m.color;
-      this._roundRect(ctx, x, y, cardW, cardH, 10);
-      ctx.fill();
-      ctx.fillStyle = '#ffffff';
+      const cx = x + cardW / 2;
+      const cy = y + cardH / 2;
+      const drawn = drawThemeImageContain(ctx, m.skin, cx, cy, cardW, cardH);
+      if (!drawn.drawn) {
+        ctx.fillStyle = '#c9a227';
+        this._roundRect(ctx, x, y, cardW, cardH, 10);
+        ctx.fill();
+      }
+      ctx.fillStyle = '#241408';
       ctx.font = 'bold 15px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(m.label, x + cardW / 2, y + 18);
+      ctx.fillText(m.label, cx, y + 18);
       ctx.font = '12px sans-serif';
-      ctx.fillStyle = 'rgba(255,255,255,0.85)';
-      ctx.fillText(m.hint, x + cardW / 2, y + 36);
+      ctx.fillStyle = 'rgba(36, 20, 8, 0.72)';
+      ctx.fillText(m.hint, cx, y + 36);
       this._modeAreas.push({ mode: m.mode, x, y, w: cardW, h: cardH });
     }
   }
@@ -389,17 +435,22 @@ class ChallengeScene {
     ctx.font = '13px sans-serif';
     ctx.fillText(opts.hint || '', W / 2, cy + 12);
     if (opts.cta && opts.ctaAction) {
-      const tw = ctx.measureText(opts.cta).width + 36;
-      const th = 34;
+      const tw = Math.max(120, ctx.measureText(opts.cta).width + 48);
+      const th = 40;
       const tx = W / 2 - tw / 2;
       const ty = cy + 36;
       this._emptyCtaArea = { x: tx, y: ty, w: tw, h: th, action: opts.ctaAction };
-      ctx.fillStyle = 'rgba(0, 198, 255, 0.2)';
-      this._roundRect(ctx, tx, ty, tw, th, th / 2);
-      ctx.fill();
-      ctx.fillStyle = '#00c6ff';
-      ctx.font = '14px sans-serif';
-      ctx.fillText(opts.cta, W / 2, ty + th / 2);
+      const drawn = drawThemeImageContain(
+        ctx, 'cardStageGold', tx + tw / 2, ty + th / 2, tw, th
+      );
+      if (!drawn.drawn) {
+        ctx.fillStyle = '#c9a227';
+        this._roundRect(ctx, tx, ty, tw, th, 8);
+        ctx.fill();
+      }
+      ctx.fillStyle = '#241408';
+      ctx.font = 'bold 14px sans-serif';
+      ctx.fillText(opts.cta, W / 2, ty + th / 2 + 1);
     }
   }
 
@@ -437,7 +488,6 @@ class ChallengeScene {
       const item = this._sentList[i];
       const rowY = top + i * ITEM_H - this._scrollY;
       if (rowY + ITEM_H < top || rowY > bottom) continue;
-      if (i > 0) this._drawRowDivider(ctx, rowY);
       this._drawSentRow(ctx, item, i, rowY, top, bottom);
     }
     ctx.restore();
@@ -459,7 +509,6 @@ class ChallengeScene {
       const item = this._incomingList[i];
       const rowY = top + i * ITEM_H - this._scrollY;
       if (rowY + ITEM_H < top || rowY > bottom) continue;
-      if (i > 0) this._drawRowDivider(ctx, rowY);
       this._drawIncomingRow(ctx, item, i, rowY, top, bottom);
     }
     ctx.restore();
@@ -499,25 +548,31 @@ class ChallengeScene {
       const item = this._completedList[i];
       const rowY = top + i * ITEM_H - this._scrollY;
       if (rowY + ITEM_H < top || rowY > bottom) continue;
-      if (i > 0) this._drawRowDivider(ctx, rowY);
       this._drawCompletedRow(ctx, item, i, rowY, top, bottom);
     }
     ctx.restore();
   }
 
-  _drawRowDivider(ctx, y) {
-    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(LIST_X + 12, y + 0.5);
-    ctx.lineTo(LIST_X + ITEM_W - 12, y + 0.5);
+  _drawRowCard(ctx, rowY) {
+    const padY = 3;
+    const x = LIST_X;
+    const y = rowY + padY;
+    const w = ITEM_W;
+    const h = ITEM_H - padY * 2;
+    ctx.fillStyle = 'rgba(28, 20, 14, 0.88)';
+    this._roundRect(ctx, x, y, w, h, 10);
+    ctx.fill();
+    this._roundRect(ctx, x + 0.75, y + 0.75, w - 1.5, h - 1.5, 9);
+    ctx.strokeStyle = 'rgba(31, 155, 152, 0.65)';
+    ctx.lineWidth = 1.5;
     ctx.stroke();
   }
 
   _drawSentRow(ctx, item, index, rowY, top, bottom) {
-    const btnW = 56;
-    const btnH = 30;
-    const btnX = LIST_X + ITEM_W - btnW - 10;
+    this._drawRowCard(ctx, rowY);
+    const btnW = 68;
+    const btnH = 36;
+    const btnX = LIST_X + ITEM_W - btnW - 12;
     const btnY = rowY + (ITEM_H - btnH) / 2;
 
     // 「待对方应战」展示被挑战方（意向目标）；未知时用「好友」占位，勿显示发起方自己
@@ -532,28 +587,29 @@ class ChallengeScene {
     ctx.textBaseline = 'middle';
     ctx.fillText(
       (item.workshopTitle || MODE_NAMES[item.mode] || item.mode),
-      LIST_X + 58, rowY + 21
+      LIST_X + 58, rowY + 24
     );
 
     ctx.font = '12px sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.45)';
-    ctx.fillText(targetName + ' · ' + this._formatTime(item.createdAt), LIST_X + 58, rowY + 43);
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillText(targetName + ' · ' + this._formatTime(item.createdAt), LIST_X + 58, rowY + 46);
 
     ctx.font = 'bold 16px sans-serif';
-    ctx.fillStyle = '#00f0f0';
+    ctx.fillStyle = '#c9a227';
     ctx.textAlign = 'right';
-    ctx.fillText(_scoreLabel(item, 'challenger'), btnX - 14, rowY + 23);
+    ctx.fillText(_scoreLabel(item, 'challenger'), btnX - 12, rowY + 26);
 
     if (btnY >= top && btnY + btnH <= bottom) {
-      this._drawActionButton(ctx, btnX, btnY, btnW, btnH, '撤回', '#ff6b6b');
+      this._drawActionButton(ctx, btnX, btnY, btnW, btnH, '撤回', 'cardStageBrown', '#ffffff');
       this._actionAreas.push({ x: btnX, y: btnY, w: btnW, h: btnH, type: 'withdraw', index });
     }
   }
 
   _drawIncomingRow(ctx, item, index, rowY, top, bottom) {
-    const btnW = 56;
-    const btnH = 30;
-    const btnX = LIST_X + ITEM_W - btnW - 10;
+    this._drawRowCard(ctx, rowY);
+    const btnW = 68;
+    const btnH = 36;
+    const btnX = LIST_X + ITEM_W - btnW - 12;
     const btnY = rowY + (ITEM_H - btnH) / 2;
 
     this._drawAvatar(ctx, item.challengerAvatar, LIST_X + 14, rowY + (ITEM_H - 32) / 2, 32, item.challengerName || '玩家');
@@ -564,28 +620,29 @@ class ChallengeScene {
     ctx.textBaseline = 'middle';
     ctx.fillText(
       (item.workshopTitle || MODE_NAMES[item.mode] || item.mode),
-      LIST_X + 58, rowY + 21
+      LIST_X + 58, rowY + 24
     );
 
     ctx.font = '12px sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.45)';
-    ctx.fillText((item.challengerName || '玩家') + ' · ' + this._formatTime(item.createdAt), LIST_X + 58, rowY + 43);
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillText((item.challengerName || '玩家') + ' · ' + this._formatTime(item.createdAt), LIST_X + 58, rowY + 46);
 
     ctx.font = 'bold 16px sans-serif';
-    ctx.fillStyle = '#00f0f0';
+    ctx.fillStyle = '#c9a227';
     ctx.textAlign = 'right';
-    ctx.fillText(_scoreLabel(item, 'challenger'), btnX - 14, rowY + 23);
+    ctx.fillText(_scoreLabel(item, 'challenger'), btnX - 12, rowY + 26);
 
     if (btnY >= top && btnY + btnH <= bottom) {
-      this._drawActionButton(ctx, btnX, btnY, btnW, btnH, '应战', '#00c6ff');
+      this._drawActionButton(ctx, btnX, btnY, btnW, btnH, '应战', 'cardStageGold', '#241408');
       this._actionAreas.push({ x: btnX, y: btnY, w: btnW, h: btnH, type: 'respond', index });
     }
   }
 
   _drawCompletedRow(ctx, item, index, rowY, top, bottom) {
-    const btnW = 56;
-    const btnH = 30;
-    const btnX = LIST_X + ITEM_W - btnW - 10;
+    this._drawRowCard(ctx, rowY);
+    const btnW = 68;
+    const btnH = 36;
+    const btnX = LIST_X + ITEM_W - btnW - 12;
     const btnY = rowY + (ITEM_H - btnH) / 2;
 
     const isChallenger = item.myRole === 'challenger';
@@ -611,46 +668,55 @@ class ChallengeScene {
       ' : ' + (oppName || '对方') + ' ' + oppLabel;
 
     const textLeft = LIST_X + 86;
-    const textRight = btnX - 14;
+    const textRight = btnX - 12;
     const line1MaxW = Math.max(48, textRight - textLeft);
 
     ctx.font = '12px sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.fillStyle = 'rgba(255,255,255,0.78)';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    _fillTextEllipsis(ctx, line1, textLeft, rowY + 20, line1MaxW);
+    _fillTextEllipsis(ctx, line1, textLeft, rowY + 24, line1MaxW);
 
     ctx.font = '12px sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
     const line2 = (MODE_NAMES[item.mode] || item.mode) + ' · ' + this._formatTime(item.respondedAt);
     const badge = this._getResultBadge(item);
     ctx.font = 'bold 13px sans-serif';
     const badgeW = ctx.measureText(badge.text).width;
     ctx.font = '12px sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.45)';
-    const line2MaxW = Math.max(40, btnX - 14 - badgeW - 8 - textLeft);
-    _fillTextEllipsis(ctx, line2, textLeft, rowY + 43, line2MaxW);
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    const line2MaxW = Math.max(40, btnX - 12 - badgeW - 8 - textLeft);
+    _fillTextEllipsis(ctx, line2, textLeft, rowY + 46, line2MaxW);
 
     ctx.font = 'bold 13px sans-serif';
     ctx.fillStyle = badge.color;
     ctx.textAlign = 'right';
-    ctx.fillText(badge.text, btnX - 14, rowY + 43);
+    ctx.fillText(badge.text, btnX - 12, rowY + 46);
 
     if (btnY >= top && btnY + btnH <= bottom) {
-      this._drawActionButton(ctx, btnX, btnY, btnW, btnH, '回击', '#a000f0');
+      this._drawActionButton(ctx, btnX, btnY, btnW, btnH, '回击', 'cardStageAmber', '#241408');
       this._actionAreas.push({ x: btnX, y: btnY, w: btnW, h: btnH, type: 'counter', index });
     }
   }
 
-  _drawActionButton(ctx, x, y, w, h, text, color) {
-    ctx.fillStyle = color;
-    this._roundRect(ctx, x, y, w, h, 8);
-    ctx.fill();
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '13px sans-serif';
+  _drawActionButton(ctx, x, y, w, h, text, skin, labelColor) {
+    const drawn = drawThemeImageContain(ctx, skin, x + w / 2, y + h / 2, w, h);
+    if (!drawn.drawn) {
+      ctx.fillStyle = '#6b4a2e';
+      this._roundRect(ctx, x, y, w, h, 8);
+      ctx.fill();
+    }
+    ctx.fillStyle = labelColor || '#ffffff';
+    ctx.font = 'bold 13px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0,0,0,0.35)';
+    ctx.shadowBlur = 2;
+    ctx.shadowOffsetY = 1;
     ctx.fillText(text, x + w / 2, y + h / 2 + 1);
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
   }
 
   _getAvatarImage(url) {
@@ -1082,8 +1148,12 @@ class ChallengeScene {
       y: H - 80,
       w: 110,
       h: 48,
-      text: '← 返回',
-      color: '#555',
+      text: '返回',
+      color: '#6b4a2e',
+      skin: 'cardStageBrown',
+      skinMode: 'contain',
+      labelColor: '#ffffff',
+      fontScale: 0.92,
       onClick: () => {
         GameGlobal.game.sceneManager.back();
       }

@@ -1,0 +1,27 @@
+{
+	"id": "208aade6-e1b5-4392-8e83-bf18f5eb12ba",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "lucky-draw.reel-symbols.tetromino-set",
+	"title": "Lucky draw reels use the seven tetromino symbols",
+	"statement": "The lucky-draw reels are built from the standard seven tetromino symbols I, O, T, S, Z, J, L.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312151884,
+	"updatedAt": 1788312151884,
+	"createdByTaskId": "business-init",
+	"latestEventId": "6b8e0139-d8d3-40e9-a8a5-49d54cb29092",
+	"tags": [],
+	"aliases": [
+		"转轮符号 I/O/T/S/Z/J/L",
+		"七个方块符号"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/widgets/lucky-draw-overlay.js",
+			"symbol": "SYMBOLS"
+		}
+	]
+}

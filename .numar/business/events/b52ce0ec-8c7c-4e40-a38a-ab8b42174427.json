@@ -1,0 +1,12 @@
+{
+	"id": "b52ce0ec-8c7c-4e40-a38a-ab8b42174427",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "ca17d90d-3dd6-4770-8676-9b703448fdab",
+	"operation": "create",
+	"after": "垃圾方块的裂纹图案由 (col, row) 哈希种子确定性生成，同一格子每次渲染的裂纹完全一致；布局预览复用同款绘制。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/garbage-cell.js"
+	],
+	"createdAt": 1788311636529
+}

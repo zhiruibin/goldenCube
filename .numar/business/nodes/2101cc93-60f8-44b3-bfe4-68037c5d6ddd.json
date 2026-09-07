@@ -1,0 +1,31 @@
+{
+	"id": "2101cc93-60f8-44b3-bfe4-68037c5d6ddd",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "economy.golden-block.tutorial-first-clear-only",
+	"title": "演示关仅首通发金",
+	"statement": "kind 为 tutorial 的演示关仅首通发放金方块，重玩不计算破纪录奖励。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316084052,
+	"updatedAt": 1788316084052,
+	"createdByTaskId": "business-init",
+	"latestEventId": "396931ff-b534-4f9c-9eea-05f7a9878269",
+	"tags": [],
+	"aliases": [
+		"演示关金方块",
+		"仅首通发金"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/golden-block-manager.js"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/golden-block-manager.js",
+			"symbol": "isTutorialStage"
+		}
+	]
+}

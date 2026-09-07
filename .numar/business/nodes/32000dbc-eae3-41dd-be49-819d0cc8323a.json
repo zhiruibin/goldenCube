@@ -1,0 +1,28 @@
+{
+	"id": "32000dbc-eae3-41dd-be49-819d0cc8323a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "workshop.stage-status-lifecycle",
+	"title": "工坊关卡状态集合",
+	"statement": "工坊/广场关卡状态包括 draft、cleared、reviewing、published、rejected、delisted。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311439808,
+	"updatedAt": 1788311439808,
+	"createdByTaskId": "business-init",
+	"latestEventId": "bbc8b2b4-903a-4dd0-abf7-908e340c5d48",
+	"tags": [],
+	"aliases": [
+		"草稿",
+		"审核中",
+		"已发布",
+		"已下架"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"symbol": "STATUS"
+		}
+	]
+}

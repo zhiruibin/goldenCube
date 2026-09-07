@@ -1,0 +1,28 @@
+{
+	"id": "53973a02-13c6-4258-bc98-6ef4f41b4170",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "background-effects.meteor-lite-disabled",
+	"title": "轻量模式不生成流星",
+	"statement": "背景特效在 lite 模式下不生成或更新流星，只有非轻量模式才播发流星。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316189098,
+	"updatedAt": 1788316189098,
+	"createdByTaskId": "business-init",
+	"latestEventId": "f917bffc-f081-422a-aa2d-c8a7fb257625",
+	"tags": [],
+	"aliases": [
+		"轻量模式无流星",
+		"流星特效开关",
+		"lite不刷流星"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/render/background-effects.js",
+			"symbol": "update"
+		}
+	]
+}

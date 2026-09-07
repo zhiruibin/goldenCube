@@ -1,0 +1,30 @@
+{
+	"id": "0dbf3f05-9d89-4e2a-bf4d-6b6d6821ef3e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "lucky-draw.challenge-win.lifetime-once",
+	"title": "挑战获胜摇奖终身一次",
+	"statement": "挑战获胜的幸运摇奖按 challengeId 终身最多领取 1 次，存储键为 gc_luckyChallenge_<challengeId>。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316084082,
+	"updatedAt": 1788316084082,
+	"createdByTaskId": "business-init",
+	"latestEventId": "6a682df3-3bcf-4d5b-b6da-44fa3433fd84",
+	"tags": [],
+	"aliases": [
+		"挑战摇奖终身一次"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/lucky-draw-manager.js"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/lucky-draw-manager.js",
+			"symbol": "canClaimChallengeWin"
+		}
+	]
+}

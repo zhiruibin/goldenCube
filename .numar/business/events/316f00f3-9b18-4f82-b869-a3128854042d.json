@@ -1,0 +1,12 @@
+{
+	"id": "316f00f3-9b18-4f82-b869-a3128854042d",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "a15707d6-d6f5-45d8-ae90-c89437474cec",
+	"operation": "create",
+	"after": "撤回挑战仅允许发起者在挑战仍为 pending 状态时操作，未决挑战可被发起方取消。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/challenge/index.js:cancelChallenge"
+	],
+	"createdAt": 1788316189138
+}

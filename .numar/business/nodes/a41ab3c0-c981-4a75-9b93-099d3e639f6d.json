@@ -1,0 +1,35 @@
+{
+	"id": "a41ab3c0-c981-4a75-9b93-099d3e639f6d",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "achievement.chapter-clear-tiers",
+	"title": "章节通关成就阶梯",
+	"statement": "章节通关类成就设三档：「任意 1 章」「累计 5 章」「10 章全部通关」（prog_chapter_any_1 / prog_chapter_any_5 / prog_chapter_all），与主线共 10 章对应。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788310807231,
+	"updatedAt": 1788310807231,
+	"createdByTaskId": "business-init",
+	"latestEventId": "29c43dbc-5abe-422b-95ac-1fc3a69eebd0",
+	"tags": [],
+	"aliases": [
+		"通章数三档",
+		"章节通关1/5/10"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "data/achievements.js"
+		},
+		{
+			"type": "symbol",
+			"path": "data/achievements.js",
+			"symbol": "prog_chapter_all"
+		},
+		{
+			"type": "file",
+			"path": "data/stages-v1.js"
+		}
+	]
+}

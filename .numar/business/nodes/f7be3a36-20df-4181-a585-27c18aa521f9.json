@@ -1,0 +1,33 @@
+{
+	"id": "f7be3a36-20df-4181-a585-27c18aa521f9",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "effects.line-clear.particle-flash-config-per-level",
+	"title": "消行特效按消除行数与 T-Spin 区分粒子/闪屏配置",
+	"statement": "消行庆祝特效的粒子数量、速度、寿命、重力与闪屏强度按消除行数列（1-4）分档配置；T-Spin 使用金色粒子并带金色闪屏；4 行消除的闪屏范围为整棋盘（range -1）。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311636513,
+	"updatedAt": 1788311636513,
+	"createdByTaskId": "business-init",
+	"latestEventId": "9050a0ec-75c9-4e56-a705-69512eba072b",
+	"tags": [],
+	"aliases": [
+		"消行粒子配置",
+		"四行消闪屏全棋盘",
+		"T-Spin 金色粒子"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/render/effect-renderer.js",
+			"symbol": "PARTICLE_CONFIG"
+		},
+		{
+			"type": "symbol",
+			"path": "js/render/effect-renderer.js",
+			"symbol": "FLASH_CONFIG"
+		}
+	]
+}

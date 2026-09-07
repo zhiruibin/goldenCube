@@ -1,0 +1,12 @@
+{
+	"id": "0e771c2b-0cb4-4803-9516-3ab2065f097a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "142c4e8d-e1f3-4514-88fc-96a8d816c791",
+	"operation": "create",
+	"after": "Tapping an already-unlocked free official stage card switches directly to the game scene with mode=stage and stageId equal to the tapped card's stage id, without opening an entry dialog.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"tools/gc-test-stage-select-tap.js"
+	],
+	"createdAt": 1788315405124
+}

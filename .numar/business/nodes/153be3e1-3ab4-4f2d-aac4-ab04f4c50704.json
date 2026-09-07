@@ -1,0 +1,39 @@
+{
+	"id": "153be3e1-3ab4-4f2d-aac4-ab04f4c50704",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage.nav.stack-reset-on-exit",
+	"title": "闯关退出时重置导航栈",
+	"statement": "闯关导航栈顺序为 首页 → 世界地图 → 章内关选 → 对局；结算/失败/暂停退出使用 leaveTo 重置栈，避免叠两层关选。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311439788,
+	"updatedAt": 1788311439788,
+	"createdByTaskId": "business-init",
+	"latestEventId": "1c5a3b66-4e20-4e27-ba93-30e081de6e13",
+	"tags": [],
+	"aliases": [
+		"闯关导航栈",
+		"leaveTo 重置",
+		"避免叠两层关选"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/stage-nav.js"
+		},
+		{
+			"type": "symbol",
+			"symbol": "worldMapStack"
+		},
+		{
+			"type": "symbol",
+			"symbol": "stageSelectStack"
+		},
+		{
+			"type": "symbol",
+			"symbol": "stagePlayStack"
+		}
+	]
+}

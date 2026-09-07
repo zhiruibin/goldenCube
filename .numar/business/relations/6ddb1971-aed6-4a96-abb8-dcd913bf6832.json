@@ -1,0 +1,15 @@
+{
+	"id": "6ddb1971-aed6-4a96-abb8-dcd913bf6832",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "319e5e76-e736-47f4-92b9-930b95611c38",
+	"toNodeId": "b8e56f35-408e-42ec-b07c-94cacf77aac4",
+	"type": "belongsTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"tools/gc-test-world-map-tap.js",
+		"tools/gc-test-stage-nav-stack.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788316348155,
+	"updatedAt": 1788332736140
+}

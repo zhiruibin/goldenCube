@@ -1,0 +1,26 @@
+{
+	"id": "709cd903-898a-4738-a9d1-f686513d02be",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "effects.climax.debris-explosion-design",
+	"title": "高潮特效采用彩色碎片爆炸而非横幅/金雨",
+	"statement": "QUAD/T-Spin 高潮演出以被消方块的彩色碎片爆炸为核心，白闪仅作 0.1s 爆亮，不做大字横幅或金雨；文字提示交给消行飘字避免遮挡棋盘，并规避商标字样。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311636522,
+	"updatedAt": 1788311636522,
+	"createdByTaskId": "business-init",
+	"latestEventId": "b194064b-ce5c-47c0-b391-d7a6c95f8bc3",
+	"tags": [],
+	"aliases": [
+		"高潮彩色碎片爆炸",
+		"不挡棋盘文字提示"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/render/effect-renderer.js"
+		}
+	]
+}

@@ -1,0 +1,15 @@
+{
+	"id": "de215028-e25f-4210-8020-3c5078bd13d7",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "6ecdc77d-1456-4a2d-8cbc-0a862adff0c2",
+	"toNodeId": "c902e3b7-2a19-4766-a644-6bb37a025bbb",
+	"type": "belongsTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"docs/gc-economy-design.md §2 金币线",
+		"docs/gc-economy-design.md"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788312287220,
+	"updatedAt": 1788317490798
+}

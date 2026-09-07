@@ -1,0 +1,12 @@
+{
+	"id": "9956c26a-c111-4636-af9d-e164376ed9b9",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "b8e56f35-408e-42ec-b07c-94cacf77aac4",
+	"operation": "create",
+	"after": "Stage navigation builds the stack home → worldMap → stageSelect before entering game; game result leaves to stageResult on the same stack; returning from stageResult to stageSelect resets the stack to home + worldMap, and subsequent backs return to worldMap then home.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"tools/gc-test-stage-nav-stack.js"
+	],
+	"createdAt": 1788315405074
+}

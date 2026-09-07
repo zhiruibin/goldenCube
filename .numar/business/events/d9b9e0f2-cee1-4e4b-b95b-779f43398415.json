@@ -1,0 +1,12 @@
+{
+	"id": "d9b9e0f2-cee1-4e4b-b95b-779f43398415",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "4e20b16f-ebae-43fb-ba02-16bbca6504f4",
+	"operation": "create",
+	"after": "广场官方精选关卡统一收取 12 金币入场费（playFee=12）。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"data/plaza-official-v1.js"
+	],
+	"createdAt": 1788310807222
+}

@@ -1,0 +1,12 @@
+{
+	"id": "4c2ead11-4fc2-4059-af01-cb09e155ab69",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "6a347ade-a52b-411c-b52f-5bc651b89ab9",
+	"operation": "create",
+	"after": "PieceRenderer reads the equipped block skin id from storage (gc_equipped_block, default 'default') and applies the skin's full feature set: gradient color arrays preserved per piece, glow, texture, transparency (clamped 0..1), and shimmer.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/piece-renderer.js"
+	],
+	"createdAt": 1788311734463
+}

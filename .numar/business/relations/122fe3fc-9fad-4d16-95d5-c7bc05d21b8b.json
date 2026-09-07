@@ -1,0 +1,15 @@
+{
+	"id": "122fe3fc-9fad-4d16-95d5-c7bc05d21b8b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "ef17594a-41d6-417f-820b-f8dd3957309e",
+	"toNodeId": "407f6fff-e296-4ea2-b5f2-ae81034293f1",
+	"type": "belongsTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"openDataContext/index.js '开放数据域不能直接监听触摸事件，滚动由主域捕获后转发'",
+		"openDataContext/index.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788315317125,
+	"updatedAt": 1788322408674
+}

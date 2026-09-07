@@ -1,0 +1,12 @@
+{
+	"id": "9cd61c7a-56a8-46da-877c-c4aed58dad36",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "e81da66e-4ea4-48de-b734-7515664ac213",
+	"operation": "create",
+	"after": "Tapping a locked plaza tile opens a single entry dialog that shows the golden-block unlock cost and a coin play fee; the game is not entered until confirmation, and the same tap gesture cannot open the dialog and confirm the payment in one press.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"tools/gc-test-plaza-wall.js"
+	],
+	"createdAt": 1788315405064
+}

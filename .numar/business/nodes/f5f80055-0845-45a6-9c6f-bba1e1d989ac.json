@@ -1,0 +1,30 @@
+{
+	"id": "f5f80055-0845-45a6-9c6f-bba1e1d989ac",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "replay.meta.play-context-attachment",
+	"title": "回放元数据附加对局上下文",
+	"statement": "回放结算元数据会记录 playContext、stageId、workshopStageId、workshopRows、workshopTitle、challengeId、challengeKind 等来源字段。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316084170,
+	"updatedAt": 1788316084170,
+	"createdByTaskId": "business-init",
+	"latestEventId": "6f409a71-ab2c-484d-bb1f-f31cf4b68b30",
+	"tags": [],
+	"aliases": [
+		"回放上下文元数据"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/play-context.js"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/play-context.js",
+			"symbol": "replayMetaFromGame"
+		}
+	]
+}

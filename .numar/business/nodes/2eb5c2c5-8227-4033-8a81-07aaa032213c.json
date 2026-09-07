@@ -1,0 +1,32 @@
+{
+	"id": "2eb5c2c5-8227-4033-8a81-07aaa032213c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage-fail.free-retry.rewarded-video-gated",
+	"title": "Stage fail free retry via rewarded video",
+	"statement": "When the player fails a stage, a free retry via rewarded video is offered only if a free-retry quota remains (coinManager.getFreeRetryRemaining() > 0) and a rewarded video ad is configured. Completing the video consumes one free retry and re-enters the stage with entryPaid 0; not completing the ad does not restart the stage.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312028763,
+	"updatedAt": 1788312028763,
+	"createdByTaskId": "business-init",
+	"latestEventId": "95976cda-acf8-4f0b-ac71-12cadd8b4767",
+	"tags": [],
+	"aliases": [
+		"广告免费重开",
+		"免费重开奖励视频",
+		"fail free retry ad"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/stage-fail-scene.js",
+			"symbol": "_freeRetryViaAd"
+		},
+		{
+			"type": "file",
+			"path": "js/scenes/stage-fail-scene.js"
+		}
+	]
+}

@@ -1,0 +1,12 @@
+{
+	"id": "1893a127-a677-4ba6-8c47-135cbff883e2",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "f74b0e57-86d8-4bef-8465-861ae431c904",
+	"operation": "create",
+	"after": "WorldMapScene measures the top capsule from wx.getMenuButtonBoundingClientRect when available, otherwise falls back to status bar height or safe-area top and a default of 20.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/world-map-scene.js: _getMetrics() falls back to statusBarHeight/safeTop/20 before trying wx.getMenuButtonBoundingClientRect"
+	],
+	"createdAt": 1788312151877
+}

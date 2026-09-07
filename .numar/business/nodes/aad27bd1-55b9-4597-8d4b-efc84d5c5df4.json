@@ -1,0 +1,31 @@
+{
+	"id": "aad27bd1-55b9-4597-8d4b-efc84d5c5df4",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "game.canvas.window-resize-rescale",
+	"title": "窗口尺寸变化重绘画布",
+	"statement": "监听窗口尺寸变化（wx.onWindowResize）后按新尺寸重设画布物理像素并重新应用 DPR 变换，保持画布满屏。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788310807260,
+	"updatedAt": 1788310807260,
+	"createdByTaskId": "business-init",
+	"latestEventId": "434163cb-83be-4c79-be83-ced849d77321",
+	"tags": [],
+	"aliases": [
+		"画布自适应重设",
+		"窗口变化重设画布"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "game.js"
+		},
+		{
+			"type": "symbol",
+			"path": "game.js",
+			"symbol": "onWindowResize"
+		}
+	]
+}

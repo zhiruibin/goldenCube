@@ -1,0 +1,27 @@
+{
+	"id": "a821599f-44f5-42d4-b1f2-4836b9727d08",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.scene.enter-resets-mode-stage",
+	"title": "排行榜进入时模式重置为闯关",
+	"statement": "RankScene 每次进入时都会把排行榜模式重置为 'stage'（闯关），模式不随视图状态恢复。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311965335,
+	"updatedAt": 1788311965335,
+	"createdByTaskId": "business-init",
+	"latestEventId": "901d6f0a-26e3-4aad-9649-f5c6d882632b",
+	"tags": [],
+	"aliases": [
+		"排行榜模式重置",
+		"rank mode stage"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/rank-scene.js",
+			"symbol": "onEnter"
+		}
+	]
+}

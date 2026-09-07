@@ -1,0 +1,26 @@
+{
+	"id": "ec331dd6-fc6c-45d4-9c0a-2c9afcf60b0f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "workshop.editor.playability-constraints",
+	"title": "工坊编辑器可玩性约束",
+	"statement": "工坊沿用官方硬约束并额外收紧：禁止满行、每垃圾行至少一个空位、顶垃圾行≥6（Boss模板可≥4）、垃圾格数8~80、含垃圾行数3~16、标准7块，防止恶心关污染广场。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316265655,
+	"updatedAt": 1788316265655,
+	"createdByTaskId": "business-init",
+	"latestEventId": "c53f3bc6-7698-43b8-81d8-cfa3001bd38c",
+	"tags": [],
+	"aliases": [
+		"工坊防死关约束",
+		"垃圾格数8-80"
+	],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "docs/gc-workshop-plaza-design.md"
+		}
+	]
+}

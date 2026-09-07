@@ -1,0 +1,14 @@
+{
+	"id": "fe4b2dee-79ca-488b-854b-21050f331427",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "a6067d38-7d7e-4ecc-af78-7ea927e9a2d2",
+	"toNodeId": "537b863a-8254-42d7-8513-7e1bf50c29b8",
+	"type": "belongsTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"tools/gc-test-plaza-wall.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788315405134,
+	"updatedAt": 1788315405134
+}

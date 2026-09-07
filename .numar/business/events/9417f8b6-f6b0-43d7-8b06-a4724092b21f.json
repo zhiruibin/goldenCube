@@ -1,0 +1,12 @@
+{
+	"id": "9417f8b6-f6b0-43d7-8b06-a4724092b21f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "ae79b2c1-07d4-41dd-b32d-1a17225603ae",
+	"operation": "create",
+	"after": "已废弃的成就项仅保留 ID 供旧存档查询奖励，不再出现在成就列表中。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"data/achievements.js"
+	],
+	"createdAt": 1788310807240
+}

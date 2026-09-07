@@ -1,0 +1,15 @@
+{
+	"id": "bf00b6e1-828b-48dc-9794-bf6e268699ff",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "582e1b6a-6f3a-4905-a6a3-eed37583a2d3",
+	"toNodeId": "ad1b641c-1fe3-45c5-81b1-af7f35350766",
+	"type": "dependsOn",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"js/widgets/lucky-draw-overlay.js: overlay imports rollCoinPrize and tracks this._prize for the result phase",
+		"js/widgets/lucky-draw-overlay.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788312151894,
+	"updatedAt": 1788322408725
+}

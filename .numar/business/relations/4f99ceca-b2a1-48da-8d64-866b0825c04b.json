@@ -1,0 +1,15 @@
+{
+	"id": "4f99ceca-b2a1-48da-8d64-866b0825c04b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "526220f6-2cd5-4eef-af0c-9200dad8b7b7",
+	"toNodeId": "083e27f4-c10a-4dc4-bd7b-5dc50cfddb3e",
+	"type": "dependsOn",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"js/scenes/world-map-scene.js: chapter card state relies on unlock data refreshed by syncUnlockedFromProgress in onEnter()",
+		"js/scenes/world-map-scene.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788312151889,
+	"updatedAt": 1788333561499
+}

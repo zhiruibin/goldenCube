@@ -1,0 +1,26 @@
+{
+	"id": "eda61e77-c8a4-49b4-9f6f-4795853fba59",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.global-board.cloud-function-source",
+	"title": "全服榜云端数据源",
+	"statement": "排行榜全服榜通过云函数 rank.getRankList 读取云数据库 rankings，前十名支持回放。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311965339,
+	"updatedAt": 1788311965339,
+	"createdByTaskId": "business-init",
+	"latestEventId": "49e0ef83-f44e-4a2f-936c-545d38dfac06",
+	"tags": [],
+	"aliases": [
+		"全服榜云函数",
+		"rankings 云数据库"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/rank-scene.js"
+		}
+	]
+}

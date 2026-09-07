@@ -1,0 +1,12 @@
+{
+	"id": "eaad072a-78d8-4565-9840-b649dd46f70b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "c63bd32d-9088-4d68-9e2c-6102e49665d0",
+	"operation": "create",
+	"after": "底部迷你方块展示中，点击任一迷你方块会为所有 7 个标准迷你方块添加随机水平速度，触发整体晃动彩蛋。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/mini-tetris-fx.js"
+	],
+	"createdAt": 1788311636537
+}

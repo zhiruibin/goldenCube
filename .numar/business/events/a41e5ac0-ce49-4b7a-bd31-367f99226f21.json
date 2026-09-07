@@ -1,0 +1,12 @@
+{
+	"id": "a41e5ac0-ce49-4b7a-bd31-367f99226f21",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "8067f836-74c3-46fe-92c9-a0b17a38f269",
+	"operation": "create",
+	"after": "十个章节的默认下落间隔逐章降低（第 1/2 章为 1000ms，第 10 章「金方块殿」为 750ms），体现章节难度递进。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"data/stages-v1.js"
+	],
+	"createdAt": 1788310807247
+}

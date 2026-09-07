@@ -1,0 +1,31 @@
+{
+	"id": "1f30e4a0-35dd-4053-8aa1-730936859501",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.puzzle-response.layout-snapshot",
+	"title": "残局应战使用布局快照开局",
+	"statement": "应战残局挑战时，使用挑战者保存的 layoutSnapshot（云端详情可覆盖）和 challengerLines 作为目标行数开局；残局成绩按挑战者/应战者行数显示（如 12行），mode 为 stage 的残局会按 golden-block 关卡配置应用下落间隔。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311855125,
+	"updatedAt": 1788311855125,
+	"createdByTaskId": "business-init",
+	"latestEventId": "edc6b72f-db74-4b2b-a4fe-82c73f52890a",
+	"tags": [],
+	"aliases": [
+		"残局应战开局",
+		"残局布局快照",
+		"按行数显示成绩"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/challenge-scene.js"
+		},
+		{
+			"type": "symbol",
+			"symbol": "startPuzzleRespondGame"
+		}
+	]
+}

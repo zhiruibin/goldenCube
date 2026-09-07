@@ -1,0 +1,12 @@
+{
+	"id": "a83ebeae-25cf-4d7b-b3c7-7da7de8c35c0",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "410aabad-1cd4-4fcc-9493-ec008f1a4114",
+	"operation": "create",
+	"after": "ResultScene 进入时若缺少 challengeId，会立即切换回首页，不展示结算内容。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/result-scene.js"
+	],
+	"createdAt": 1788311965359
+}

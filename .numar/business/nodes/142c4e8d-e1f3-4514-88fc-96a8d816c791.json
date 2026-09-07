@@ -1,0 +1,26 @@
+{
+	"id": "142c4e8d-e1f3-4514-88fc-96a8d816c791",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage-select.entry.unlocked-stage-direct-enter",
+	"title": "Unlocked free stage card enters directly",
+	"statement": "Tapping an already-unlocked free official stage card switches directly to the game scene with mode=stage and stageId equal to the tapped card's stage id, without opening an entry dialog.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315405124,
+	"updatedAt": 1788315405124,
+	"createdByTaskId": "business-init",
+	"latestEventId": "0e771c2b-0cb4-4803-9516-3ab2065f097a",
+	"tags": [],
+	"aliases": [
+		"已解锁免费关直进",
+		"免费关直接进游戏"
+	],
+	"implementationRefs": [
+		{
+			"type": "test",
+			"path": "tools/gc-test-stage-select-tap.js"
+		}
+	]
+}

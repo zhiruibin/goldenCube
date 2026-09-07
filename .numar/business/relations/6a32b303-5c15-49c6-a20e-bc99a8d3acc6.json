@@ -1,0 +1,14 @@
+{
+	"id": "6a32b303-5c15-49c6-a20e-bc99a8d3acc6",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "c521dc4e-d7ed-41cc-af97-bcc2e73e8dcf",
+	"toNodeId": "75d36991-bdb6-4960-97a8-9e1ab31a99ad",
+	"type": "belongsTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"tools/test-stage-engine.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788316348166,
+	"updatedAt": 1788316348166
+}

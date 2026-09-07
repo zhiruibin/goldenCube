@@ -1,0 +1,32 @@
+{
+	"id": "ca17d90d-3dd6-4770-8676-9b703448fdab",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "render.garbage-cell.deterministic-cracks",
+	"title": "垃圾块裂纹按行列种子确定性生成",
+	"statement": "垃圾方块的裂纹图案由 (col, row) 哈希种子确定性生成，同一格子每次渲染的裂纹完全一致；布局预览复用同款绘制。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311636529,
+	"updatedAt": 1788311636529,
+	"createdByTaskId": "business-init",
+	"latestEventId": "b52ce0ec-8c7c-4e40-a38a-ab8b42174427",
+	"tags": [],
+	"aliases": [
+		"垃圾块确定性裂纹",
+		"裂纹种子"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/render/garbage-cell.js",
+			"symbol": "hashSeed"
+		},
+		{
+			"type": "symbol",
+			"path": "js/render/garbage-cell.js",
+			"symbol": "drawGarbageLayoutCell"
+		}
+	]
+}

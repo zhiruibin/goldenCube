@@ -12,6 +12,7 @@ const {
     SUBTITLE,
     MUTED,
 } = require('../theme/arcade-night');
+const { drawThemeBackground } = require('../theme/theme-images');
 const goldenBlock = require('../../utils/golden-block-manager');
 const { coinManager } = require('../../utils/coin-manager');
 const { adManager, isRewardedVideoConfigured } = require('../../utils/ad-manager');
@@ -153,10 +154,11 @@ class StageResultScene {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
         const bottomInset = this._getBottomInset();
-        const bw = Math.min(260, W * 0.7);
-        const bh = 46;
-        const gap = 12;
-        const buttons = [];
+        // 通栏条形钮：命中框与贴图同为 4:1，contain 避免再被拉扁
+        const btnW = Math.min(240, Math.round(W * 0.64));
+        const hPad = (W - btnW) / 2;
+        const bh = Math.round(btnW / 4);
+        const gapY = 10;
         const nextStage = this._stage
             ? goldenBlock.getStage(Number(this._stage.id) + 1)
             : null;
@@ -167,31 +169,41 @@ class StageResultScene {
             && coinManager.getAdBonusRemaining() > 0
             && isRewardedVideoConfigured() === true;
 
+        // 竖排通栏：每行一钮，4:1 条形石砖皮
+        const rows = [];
         if (canDouble) {
-            buttons.push({
-                text: '看广告再领一份金币',
-                color: '#3a7ab0',
+            rows.push({
+                text: '看广告再领金币',
+                color: '#c89840',
+                skin: 'btnBarAmber',
+                labelColor: '#241408',
                 onClick: () => this._claimDouble(),
             });
         }
         if (nextStage && goldenBlock.isChapterUnlocked(
             nextStage.chapterId || Math.floor((nextStage.id - 1) / 10) + 1
         )) {
-            buttons.push({
+            rows.push({
                 text: formatStageEntryButtonLabel('下一关 ' + nextStage.id, nextStage.id),
-                color: '#f0a000',
+                color: '#c9a227',
+                skin: 'btnBarGold',
+                labelColor: '#241408',
                 onClick: () => this._promptEnter(nextStage),
             });
         }
-        buttons.push({
+        rows.push({
             text: formatStageEntryButtonLabel('重玩本关', this._stage ? this._stage.id : 0),
-            color: '#555',
+            color: '#c89840',
+            skin: 'btnBarAmber',
+            labelColor: '#241408',
             onClick: () => this._promptEnter(this._stage),
         });
         if (this._replayKey) {
-            buttons.push({
+            rows.push({
                 text: '回看本局',
-                color: '#7b52ab',
+                color: '#c89840',
+                skin: 'btnBarAmber',
+                labelColor: '#241408',
                 onClick: () => {
                     GameGlobal.game.sceneManager.switchTo('replay', {
                         replayKey: this._replayKey,
@@ -202,30 +214,39 @@ class StageResultScene {
                 },
             });
         }
-        buttons.push({
-            text: '← 返回关卡选择',
-            color: '#333',
+        rows.push({
+            text: '返回关卡',
+            color: '#5a4030',
+            skin: 'btnBarBrown',
+            labelColor: '#fff8ef',
             onClick: () => GameGlobal.game.sceneManager.leaveTo('stageSelect', {
                 stageId: this._params.stageId,
             }, stageSelectStack()),
         });
-        const totalH = buttons.length * bh + (buttons.length - 1) * gap;
-        this._buttonsTopY = H - bottomInset - totalH - 24;
+
+        const totalH = rows.length * bh + Math.max(0, rows.length - 1) * gapY;
+        // 整体上移 30px
+        this._buttonsTopY = H - bottomInset - totalH - 24 - 30;
+
+        this._buttons = [];
         let y = this._buttonsTopY;
-        this._buttons = buttons.map((b) => {
-            const x = W / 2 - bw / 2;
-            const btn = new Button({
-                x,
+        for (let i = 0; i < rows.length; i++) {
+            const b = rows[i];
+            this._buttons.push(new Button({
+                x: hPad,
                 y,
-                w: bw,
+                w: btnW,
                 h: bh,
                 text: b.text,
                 color: b.color,
+                skin: b.skin,
+                skinMode: 'contain',
+                labelColor: b.labelColor,
+                fontScale: 0.88,
                 onClick: b.onClick,
-            });
-            y += bh + gap;
-            return btn;
-        });
+            }));
+            y += bh + gapY;
+        }
     }
 
     _getGoldRewardTotal() {
@@ -252,20 +273,22 @@ class StageResultScene {
         if (!this._result) return null;
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
-        const topInset = this._getTopInset();
+        const topInset = this._getTopInset() - 30;
         const cx = W / 2;
-        let y = topInset + 110;
-        y += 37; // 消行大号后
-        y += 36; // 理论行
-        y += 32; // 用块用时
-        y += 28; // 金币
-        if (this._result.coinDouble) y += 26;
-        if (this._result.luckyCoinBonus > 0) y += 26;
-        const statsBottom = y;
-        const heroTop = statsBottom + 8;
-        const heroBottom = (this._buttonsTopY || H * 0.72) - 36;
-        const heroCy = (heroTop + heroBottom) / 2 - 25;
-        const heroSize = Math.min(120, Math.max(72, (heroBottom - heroTop) * 0.5));
+        // 与 render 信息区行距一致（信息区整体再下移 80px）
+        let y = topInset + 180;
+        y += 28; // 消行
+        y += 22; // 理论
+        y += 22; // 用块用时
+        y += 24; // 金币
+        if (this._result.coinDouble) y += 20;
+        if (this._result.luckyCoinBonus > 0) y += 20;
+        const statsBottom = y + 4;
+        const heroSize = 108;
+        let heroCy = statsBottom + 18 + heroSize * 0.52;
+        const labelReserve = 42;
+        const maxCy = (this._buttonsTopY || H * 0.72) - labelReserve - heroSize * 0.52;
+        if (heroCy > maxCy) heroCy = Math.max(statsBottom + heroSize * 0.4, maxCy);
         return { cx, heroCy, heroSize, statsBottom };
     }
 
@@ -490,7 +513,12 @@ class StageResultScene {
     render(ctx) {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
-        fillNightBackground(ctx, W, H);
+        if (!drawThemeBackground(ctx, 'homeBg', W, H)) {
+            fillNightBackground(ctx, W, H);
+        } else {
+            ctx.fillStyle = 'rgba(10, 7, 4, 0.38)';
+            ctx.fillRect(0, 0, W, H);
+        }
 
         const uiAlpha = this._uiAlpha();
         const goldTotal = this._getGoldRewardTotal();
@@ -516,35 +544,36 @@ class StageResultScene {
             }
         }
 
-        const topInset = this._getTopInset();
+        const topInset = this._getTopInset() - 30;
         if (uiAlpha > 0.01) {
             ctx.save();
             ctx.globalAlpha = uiAlpha;
-            drawBrandTitle(ctx, '过关', W / 2, topInset + 10, 'bold 30px sans-serif');
+            // 信息区整体下移 80px，填补与按钮之间的空白
+            drawBrandTitle(ctx, '过关', W / 2, topInset + 96, 'bold 24px sans-serif');
 
             const stageName = this._stage ? this._stage.name : '';
             ctx.fillStyle = SUBTITLE;
-            ctx.font = '16px sans-serif';
+            ctx.font = '15px sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText('第 ' + (this._stage ? this._stage.id : '?') + ' 关 · ' + stageName, W / 2, topInset + 52);
+            ctx.fillText('第 ' + (this._stage ? this._stage.id : '?') + ' 关 · ' + stageName, W / 2, topInset + 126);
 
             const cx = W / 2;
-            let y = topInset + 110;
+            let y = topInset + 180;
             if (this._result) {
                 const lines = this._result.lines || 0;
                 const theory = this._result.minLines || (this._stage ? this._stage.minLines : 0);
                 const T = this._result.coinThreshold || theory * 2;
                 ctx.fillStyle = ACCENT;
-                ctx.font = 'bold 44px sans-serif';
+                ctx.font = 'bold 30px sans-serif';
                 ctx.fillText(String(lines) + ' 行', cx, y);
-                y += 37;
+                y += 28;
                 ctx.fillStyle = MUTED;
                 ctx.font = '14px sans-serif';
                 ctx.fillText(
                     '理论 ' + theory + ' · 阈值 T=' + T + (lines <= theory ? ' · 满分！' : ''),
                     cx, y
                 );
-                y += 36;
+                y += 22;
 
                 ctx.fillStyle = SUBTITLE;
                 ctx.font = '14px sans-serif';
@@ -552,28 +581,28 @@ class StageResultScene {
                     '用块 ' + (this._result.pieces || 0) + ' · 用时 ' + this._formatTime(this._result.timeMs || 0),
                     cx, y
                 );
-                y += 32;
+                y += 22;
 
                 const coinGained = this._result.coinGained || 0;
                 const coinWant = this._result.coinWant || 0;
                 ctx.fillStyle = ACCENT;
-                ctx.font = 'bold 20px sans-serif';
+                ctx.font = 'bold 17px sans-serif';
                 ctx.fillText(
                     '金币 +' + coinGained + (coinGained < coinWant ? '（日限）' : ''),
                     cx, y
                 );
-                y += 28;
+                y += 24;
                 if (this._result.coinDouble) {
                     ctx.fillStyle = SUBTITLE;
                     ctx.font = '14px sans-serif';
                     ctx.fillText('广告再领 +' + this._result.coinDouble, cx, y);
-                    y += 26;
+                    y += 20;
                 }
                 if (this._result.luckyCoinBonus > 0) {
                     ctx.fillStyle = SUBTITLE;
                     ctx.font = '14px sans-serif';
                     ctx.fillText('幸运摇奖 +' + this._result.luckyCoinBonus, cx, y);
-                    y += 26;
+                    y += 20;
                 }
             }
             ctx.restore();
@@ -593,12 +622,12 @@ class StageResultScene {
                 if (goldTotal > 0) {
                     ctx.fillStyle = ACCENT;
                     ctx.font = 'bold 16px sans-serif';
-                    ctx.fillText('金色方块 +' + goldTotal, pose.cx, cubeBottomY + 20);
+                    ctx.fillText('金色方块 +' + goldTotal, pose.cx, cubeBottomY + 18);
                     const label = this._getGoldRewardLabel();
                     if (label) {
                         ctx.fillStyle = MUTED;
-                        ctx.font = '12px sans-serif';
-                        ctx.fillText(label, pose.cx, cubeBottomY + 42);
+                        ctx.font = '13px sans-serif';
+                        ctx.fillText(label, pose.cx, cubeBottomY + 38);
                     }
                 } else {
                     ctx.fillStyle = MUTED;
@@ -606,7 +635,7 @@ class StageResultScene {
                     const capped = !!(this._result && this._result.isNewBest);
                     ctx.fillText(
                         capped ? '已破纪录，破纪录奖励已达上限' : '本关已通关，未刷新记录',
-                        pose.cx, cubeBottomY + 20
+                        pose.cx, cubeBottomY + 18
                     );
                 }
                 ctx.restore();

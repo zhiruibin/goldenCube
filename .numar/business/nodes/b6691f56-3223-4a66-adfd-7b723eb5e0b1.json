@@ -1,0 +1,28 @@
+{
+	"id": "b6691f56-3223-4a66-adfd-7b723eb5e0b1",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.stage-composite-score-encoding",
+	"title": "排行榜闯关复合键编码",
+	"statement": "排行榜仅接受 stage 模式；上报 clearedCount、linesSum、piecesSum、timeSum 后按 clearedCount 降序、lines/pieces/time 升序编码为单一 score，并设上限：clearedCount≤999、linesSum≤90000、piecesSum≤90000、timeSum≤99999（秒）。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316189029,
+	"updatedAt": 1788316189029,
+	"createdByTaskId": "business-init",
+	"latestEventId": "2fd1e01d-d5c6-4dc1-bfc1-e2521c3b6b81",
+	"tags": [],
+	"aliases": [
+		"闯关复合分",
+		"排行榜分数编码",
+		"分数越大排名越前"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "cloudfunctions/rank/index.js",
+			"symbol": "encodeRankScore"
+		}
+	]
+}

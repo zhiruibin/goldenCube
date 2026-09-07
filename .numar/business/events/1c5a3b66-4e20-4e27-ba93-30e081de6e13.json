@@ -1,0 +1,12 @@
+{
+	"id": "1c5a3b66-4e20-4e27-ba93-30e081de6e13",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "153be3e1-3ab4-4f2d-aac4-ab04f4c50704",
+	"operation": "create",
+	"after": "闯关导航栈顺序为 首页 → 世界地图 → 章内关选 → 对局；结算/失败/暂停退出使用 leaveTo 重置栈，避免叠两层关选。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/stage-nav.js 模块注释"
+	],
+	"createdAt": 1788311439788
+}

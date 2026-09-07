@@ -1,0 +1,12 @@
+{
+	"id": "724cdf4c-7775-45ee-b74b-51b2549ce8e5",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "931b7802-ac43-4a86-b5c3-76402cec6123",
+	"operation": "create",
+	"after": "成就页展示的解锁计数会先按有效成就 ID 过滤，已废弃（deprecated）但被保留的成就 ID 不计入完成度（unlocked/total）。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/achievement-scene.js:render 注释“仅计当前有效成就，不含 deprecated”及 activeIds 过滤"
+	],
+	"createdAt": 1788311855117
+}

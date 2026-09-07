@@ -1,0 +1,26 @@
+{
+	"id": "424880bc-dfb0-48a0-a4c4-4329c95d1b5f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "plaza.wall.scroll-frame.draw-budget",
+	"title": "Plaza wall scroll frame draw budget",
+	"statement": "During scrolling frames the plaza wall only uses fillRect / fillText / a single stroke; per-cell roundRect, gradient, clip, and storage reads are forbidden.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311734483,
+	"updatedAt": 1788311734483,
+	"createdByTaskId": "business-init",
+	"latestEventId": "8b782a72-8b2e-47c3-95f1-824786c30aa9",
+	"tags": [],
+	"aliases": [
+		"滑动帧性能限制",
+		"滚动绘制预算"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/render/plaza-wall-fx.js"
+		}
+	]
+}

@@ -1,0 +1,12 @@
+{
+	"id": "ff99995e-755c-471b-8eec-b882ad810dea",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "ff6411e2-a3b3-48c5-b7ed-0b360e67a787",
+	"operation": "create",
+	"after": "幸运摇奖仅产出金币：三连档 20 金币概率 6%，二连档 10 金币概率 34%，单配档 5 金币概率 60%；不产出金方块。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/lucky-draw-manager.js"
+	],
+	"createdAt": 1788316084106
+}

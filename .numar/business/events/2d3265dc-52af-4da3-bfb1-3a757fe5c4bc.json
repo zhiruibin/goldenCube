@@ -1,0 +1,13 @@
+{
+	"id": "2d3265dc-52af-4da3-bfb1-3a757fe5c4bc",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "a851ec8a-c5e3-4ef4-a7ac-82017fcd5285",
+	"operation": "create",
+	"after": "入场资源不足校验返回原因码 no-gold、no-coins、no-gold-and-coins，分别对应文案「金方块不足」「金币不足」「金方块不足，金币也不足」。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/stage-entry-ui.js:_entryShortage",
+		"utils/stage-entry-ui.js:stageEntryShortageText"
+	],
+	"createdAt": 1788311439785
+}

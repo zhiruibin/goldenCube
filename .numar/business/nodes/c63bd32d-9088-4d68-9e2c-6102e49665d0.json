@@ -1,0 +1,27 @@
+{
+	"id": "c63bd32d-9088-4d68-9e2c-6102e49665d0",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "effects.mini-fx.touch-shake-easter-egg",
+	"title": "点击迷你方块触发全体晃动彩蛋",
+	"statement": "底部迷你方块展示中，点击任一迷你方块会为所有 7 个标准迷你方块添加随机水平速度，触发整体晃动彩蛋。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311636537,
+	"updatedAt": 1788311636537,
+	"createdByTaskId": "business-init",
+	"latestEventId": "eaad072a-78d8-4565-9840-b649dd46f70b",
+	"tags": [],
+	"aliases": [
+		"迷你方块晃动彩蛋",
+		"点击摆动迷你方块"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/render/mini-tetris-fx.js",
+			"symbol": "MiniTetrisFx._onTouch"
+		}
+	]
+}

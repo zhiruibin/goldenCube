@@ -1,0 +1,28 @@
+{
+	"id": "e40587f1-94bb-4b69-b5a5-e42db0fcbcf2",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.workshop-score-encoding",
+	"title": "工坊挑战成绩编码为越大越优的复合分",
+	"statement": "工坊挑战以更少消行、更少块数、更短用时为优；云函数将 lines、pieces、timeMs 编码为一个越大越优的复合 score（1000-L 作为高位、1000-P 作为中位、100000-T 作为低位），以兼容旧的 score 越大越优比较逻辑，并分别设上限：lines≤999、pieces≤999、timeMs 折算后≤99999。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316188913,
+	"updatedAt": 1788316188913,
+	"createdByTaskId": "business-init",
+	"latestEventId": "1dfc2b91-9d21-4037-8aed-dce7258996f2",
+	"tags": [],
+	"aliases": [
+		"工坊挑战成绩编码",
+		"消行越少分越高",
+		"工坊分数越大越好"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "cloudfunctions/challenge/index.js",
+			"symbol": "encodeWorkshopScore"
+		}
+	]
+}

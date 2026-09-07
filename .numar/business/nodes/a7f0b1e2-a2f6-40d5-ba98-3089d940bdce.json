@@ -1,0 +1,28 @@
+{
+	"id": "a7f0b1e2-a2f6-40d5-ba98-3089d940bdce",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.workshop-better-metric",
+	"title": "工坊挑战优劣判定顺序",
+	"statement": "工坊挑战比较两个战绩时按优先级依次判定：消行数少者优，若相同则块数少者优，若仍相同则用时短者优。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316188943,
+	"updatedAt": 1788316188943,
+	"createdByTaskId": "business-init",
+	"latestEventId": "6d53f40d-1fe7-4dd3-a5cf-cec1b320d3c9",
+	"tags": [],
+	"aliases": [
+		"工坊挑战比胜负",
+		"少消行者胜",
+		"挑战成绩判定"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "cloudfunctions/challenge/index.js",
+			"symbol": "workshopIsBetter"
+		}
+	]
+}

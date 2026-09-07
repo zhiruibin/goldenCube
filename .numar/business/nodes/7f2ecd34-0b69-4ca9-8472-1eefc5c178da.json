@@ -1,0 +1,31 @@
+{
+	"id": "7f2ecd34-0b69-4ca9-8472-1eefc5c178da",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "privacy.early-authorization-registration",
+	"title": "隐私授权尽早注册",
+	"statement": "游戏入口尽早注册 wx.onNeedPrivacyAuthorization（自定义隐私弹窗），以满足小游戏隐私授权要求。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788310807258,
+	"updatedAt": 1788310807258,
+	"createdByTaskId": "business-init",
+	"latestEventId": "edaa7f5d-8002-4c78-ab21-df297e50818f",
+	"tags": [],
+	"aliases": [
+		"隐私自定义弹窗",
+		"onNeedPrivacyAuthorization"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "game.js"
+		},
+		{
+			"type": "symbol",
+			"path": "game.js",
+			"symbol": "onStart"
+		}
+	]
+}

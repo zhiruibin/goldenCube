@@ -1,0 +1,14 @@
+{
+	"id": "906400b4-3efc-4f0a-a3f7-516156e751f1",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "61eabd75-ec98-4833-83dc-30ea4fde6691",
+	"toNodeId": "a983a240-ed3b-4d02-96a4-688905d967ef",
+	"type": "belongsTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"js/render/background-effects.js"
+	],
+	"createdByTaskId": "business-relationship-scan",
+	"createdAt": 1788316763512,
+	"updatedAt": 1788316763512
+}

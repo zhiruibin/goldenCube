@@ -1,0 +1,12 @@
+{
+	"id": "49dacab7-50c9-4c93-88d0-0f8530d1b57e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "c189371e-3906-4f67-bef1-ae641be1a303",
+	"operation": "create",
+	"after": "workshop 云函数提供 publishStage/delistStage/listPlaza/getStage/reportPlay/reportClear/bumpChallenge 动作，客户端不直连 workshop_stages 集合，一律 callFunction。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/workshop/README.md"
+	],
+	"createdAt": 1788316265768
+}

@@ -1,0 +1,31 @@
+{
+	"id": "c5de6383-ab8a-48da-a18d-041a2914a1e7",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "ad.passive.never-produces-golden-blocks",
+	"title": "被动广告与激励视频都不产金方块",
+	"statement": "Banner/插屏是打扰型被动广告，不参与金方块产出；激励视频只加速金币产出；未来月卡“清静畅玩”只关闭 Banner+插屏，不关闭自愿激励视频。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312287210,
+	"updatedAt": 1788312287210,
+	"createdByTaskId": "business-init",
+	"latestEventId": "38382bf4-091f-4a14-8e65-302775f2e1c7",
+	"tags": [],
+	"aliases": [
+		"广告只加速",
+		"铁律3",
+		"被动广告不产金方块"
+	],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "docs/gc-ad-banner-interstitial.md"
+		},
+		{
+			"type": "document",
+			"path": "docs/gc-economy-design.md"
+		}
+	]
+}

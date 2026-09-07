@@ -14,6 +14,8 @@ const IconRenderer = require('../render/icon-renderer');
 const { achievementManager } = require('../../utils/achievement-manager');
 const goldenBlock = require('../../utils/golden-block-manager');
 const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
+const { drawThemeBackground, drawThemeImageContain } = require('../theme/theme-images');
+const { fillNightBackground, drawBrandTitle } = require('../theme/arcade-night');
 
 let lastViewState = null;
 
@@ -98,25 +100,15 @@ class RankScene {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
 
-        // 背景
-        ctx.fillStyle = '#0f0f23';
-        ctx.fillRect(0, 0, W, H);
+        // 金矿工坊主题背景
+        if (!drawThemeBackground(ctx, 'mapMineBg', W, H)) {
+            fillNightBackground(ctx, W, H);
+        } else {
+            ctx.fillStyle = 'rgba(12, 8, 4, 0.36)';
+            ctx.fillRect(0, 0, W, H);
+        }
 
-        // 标题（图标 + 文字整体居中，参考设置页布局）
-        const titleText = '排行榜';
-        const titleY = this._topInset() + 16;
-        ctx.font = 'bold 28px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        const titleW = ctx.measureText(titleText).width;
-        const iconSize = 24;
-        const gap = 8;
-        const totalW = iconSize + gap + titleW;
-        const leftX = W / 2 - totalW / 2;
-        ctx.fillStyle = '#ffffff';
-        IconRenderer.draw(ctx, 'trophy', leftX + iconSize / 2, titleY, iconSize, '#ffffff');
-        ctx.fillText(titleText, leftX + iconSize + gap + titleW / 2, titleY);
-
+        drawBrandTitle(ctx, '排行榜', W / 2, this._topInset() + 16, 'bold 28px sans-serif');
 
         // Tab 切换
         this._renderTabs(ctx);
@@ -310,15 +302,16 @@ class RankScene {
             if (hasReplay) {
                 const btnX = right - btnW;
                 const btnY = y + (itemH - btnH) / 2 - 2;
-                ctx.fillStyle = 'rgba(0,198,255,0.25)';
-                this._roundRect(ctx, btnX, btnY, btnW, btnH, 6);
-                ctx.fill();
-                ctx.strokeStyle = 'rgba(0,198,255,0.6)';
-                ctx.lineWidth = 1;
-                this._roundRect(ctx, btnX, btnY, btnW, btnH, 6);
-                ctx.stroke();
-                ctx.fillStyle = '#ffffff';
-                ctx.font = '12px sans-serif';
+                const drawn = drawThemeImageContain(
+                    ctx, 'cardStageGold', btnX + btnW / 2, btnY + btnH / 2, btnW, btnH
+                );
+                if (!drawn.drawn) {
+                    ctx.fillStyle = 'rgba(201,162,39,0.35)';
+                    this._roundRect(ctx, btnX, btnY, btnW, btnH, 6);
+                    ctx.fill();
+                }
+                ctx.fillStyle = '#241408';
+                ctx.font = 'bold 12px sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText('回放', btnX + btnW / 2, btnY + btnH / 2);
@@ -347,15 +340,15 @@ class RankScene {
         const barH = 36;
         const barY = bottom - barH - 6;
 
-        ctx.fillStyle = 'rgba(255, 200, 87, 0.12)';
+        ctx.fillStyle = 'rgba(28, 20, 14, 0.9)';
         this._roundRect(ctx, barX, barY, barW, barH, 8);
         ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 200, 87, 0.35)';
-        ctx.lineWidth = 1;
-        this._roundRect(ctx, barX, barY, barW, barH, 8);
+        this._roundRect(ctx, barX + 0.75, barY + 0.75, barW - 1.5, barH - 1.5, 7);
+        ctx.strokeStyle = 'rgba(201, 162, 39, 0.55)';
+        ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        ctx.fillStyle = '#FFC857';
+        ctx.fillStyle = '#c9a227';
         ctx.font = 'bold 15px sans-serif';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
@@ -384,29 +377,38 @@ class RankScene {
 
     _renderTabs(ctx) {
         const W = GameGlobal.game.width;
-        const tabW = 100;
-        const tabH = 36;
+        const tabW = 110;
+        const tabH = 42;
         const tabY = this._topInset() + 50;
         const gap = 10;
         const startX = W / 2 - tabW - gap / 2;
 
-        // 好友 Tab
-        ctx.fillStyle = this._tab === 'friend' ? '#00c6ff' : 'rgba(255,255,255,0.1)';
-        this._roundRect(ctx, startX, tabY, tabW, tabH, 8);
-        ctx.fill();
-        ctx.fillStyle = this._tab === 'friend' ? '#fff' : 'rgba(255,255,255,0.5)';
-        ctx.font = '14px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('好友排行', startX + tabW / 2, tabY + tabH / 2);
+        const drawTab = (x, label, active) => {
+            const skin = active ? 'cardStageGold' : 'cardStageBrown';
+            const cx = x + tabW / 2;
+            const cy = tabY + tabH / 2;
+            const drawn = drawThemeImageContain(ctx, skin, cx, cy, tabW, tabH);
+            if (!drawn.drawn) {
+                ctx.fillStyle = active ? '#c9a227' : '#5a4030';
+                this._roundRect(ctx, x, tabY, tabW, tabH, 8);
+                ctx.fill();
+            }
+            ctx.fillStyle = active ? '#241408' : '#ffffff';
+            ctx.font = 'bold 14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowColor = 'rgba(0,0,0,0.35)';
+            ctx.shadowBlur = 2;
+            ctx.shadowOffsetY = 1;
+            ctx.fillText(label, cx, cy + 1);
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetY = 0;
+        };
 
-        // 全服 Tab
+        drawTab(startX, '好友排行', this._tab === 'friend');
         const globalX = startX + tabW + gap;
-        ctx.fillStyle = this._tab === 'global' ? '#00c6ff' : 'rgba(255,255,255,0.1)';
-        this._roundRect(ctx, globalX, tabY, tabW, tabH, 8);
-        ctx.fill();
-        ctx.fillStyle = this._tab === 'global' ? '#fff' : 'rgba(255,255,255,0.5)';
-        ctx.fillText('全服排行', globalX + tabW / 2, tabY + tabH / 2);
+        drawTab(globalX, '全服排行', this._tab === 'global');
 
         this._tabAreas = [
             { x: startX, y: tabY, w: tabW, h: tabH, tab: 'friend' },
@@ -430,8 +432,8 @@ class RankScene {
     _renderPeriodSelect(ctx) {
         const W = GameGlobal.game.width;
         const names = [['total', '总榜'], ['week', '周榜'], ['month', '月榜']];
-        const itemW = 68;
-        const itemH = 28;
+        const itemW = 72;
+        const itemH = 34;
         const gap = 8;
         const totalW = names.length * itemW + (names.length - 1) * gap;
         const startX = (W - totalW) / 2;
@@ -440,18 +442,21 @@ class RankScene {
         this._periodAreas = [];
         for (let i = 0; i < names.length; i++) {
             const x = startX + i * (itemW + gap);
-            ctx.fillStyle = this._period === names[i][0] ? 'rgba(0,198,255,0.3)' : 'rgba(255,255,255,0.08)';
-            this._roundRect(ctx, x, y, itemW, itemH, 6);
-            ctx.fill();
-            ctx.strokeStyle = this._period === names[i][0] ? 'rgba(0,198,255,0.6)' : 'rgba(255,255,255,0.15)';
-            ctx.lineWidth = 1;
-            this._roundRect(ctx, x, y, itemW, itemH, 6);
-            ctx.stroke();
-            ctx.fillStyle = this._period === names[i][0] ? '#fff' : 'rgba(255,255,255,0.5)';
-            ctx.font = '12px sans-serif';
+            const active = this._period === names[i][0];
+            const skin = active ? 'cardStageAmber' : 'cardStageBrown';
+            const drawn = drawThemeImageContain(
+                ctx, skin, x + itemW / 2, y + itemH / 2, itemW, itemH
+            );
+            if (!drawn.drawn) {
+                ctx.fillStyle = active ? '#c9a227' : '#5a4030';
+                this._roundRect(ctx, x, y, itemW, itemH, 6);
+                ctx.fill();
+            }
+            ctx.fillStyle = active ? '#241408' : '#ffffff';
+            ctx.font = 'bold 12px sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(names[i][1], x + itemW / 2, y + itemH / 2);
+            ctx.fillText(names[i][1], x + itemW / 2, y + itemH / 2 + 1);
             this._periodAreas.push({ x, y, w: itemW, h: itemH, period: names[i][0] });
         }
     }
@@ -487,15 +492,23 @@ class RankScene {
                 w: btnW, h: btnH,
                 text: '分享战绩',
                 icon: 'share',
-                color: '#e09a30',
+                color: '#c9a227',
+                skin: 'btnBarGold',
+                skinMode: 'stretch',
+                labelColor: '#241408',
+                fontScale: 0.9,
                 onClick: () => this._shareMyRecord(),
             }));
         }
         this._buttons.push(new Button({
             x: W / 2 - btnW / 2, y: H - 80,
             w: btnW, h: btnH,
-            text: '← 返回',
-            color: '#555',
+            text: '返回',
+            color: '#6b4a2e',
+            skin: 'btnBarBrown',
+            skinMode: 'stretch',
+            labelColor: '#fff8ef',
+            fontScale: 0.92,
             onClick: () => GameGlobal.game.sceneManager.back(),
         }));
     }

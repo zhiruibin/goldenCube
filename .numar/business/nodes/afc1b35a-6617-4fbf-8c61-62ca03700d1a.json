@@ -1,0 +1,31 @@
+{
+	"id": "afc1b35a-6617-4fbf-8c61-62ca03700d1a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "skins.block.price-values",
+	"title": "方块皮肤价格档位",
+	"statement": "当前方块皮肤目录价格：马卡龙 300、霓虹 400、渐变 450、木纹 500、水晶 1000、黄金 2000；默认与像素皮肤免费。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788310807254,
+	"updatedAt": 1788310807254,
+	"createdByTaskId": "business-init",
+	"latestEventId": "bdcf3907-0928-49c7-a05d-49d42cc64214",
+	"tags": [],
+	"aliases": [
+		"皮肤价格表",
+		"方块皮肤定价"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "data/skins.js"
+		},
+		{
+			"type": "symbol",
+			"path": "data/skins.js",
+			"symbol": "blockSkins"
+		}
+	]
+}

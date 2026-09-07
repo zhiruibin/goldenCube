@@ -3,15 +3,12 @@
  * 职责：展示当前章 10 关进度、入场费与挑战；未解锁章节可查看但不可进入。
  * 返回世界地图（sceneManager.back()）。不再左右滑翻章。
  */
+const { fillNightBackground } = require('../theme/arcade-night');
 const {
-    fillNightBackground,
-    ACCENT,
-    SUBTITLE,
-    MUTED,
-    TITLE,
-    TITLE_GLOW,
-    AMBIENT_PIECE_COLORS,
-} = require('../theme/arcade-night');
+    drawThemeBackground,
+    drawThemeImageContain,
+    getThemeImage,
+} = require('../theme/theme-images');
 const goldenBlock = require('../../utils/golden-block-manager');
 const { coinManager } = require('../../utils/coin-manager');
 const { Button } = require('../widgets/button');
@@ -22,22 +19,62 @@ const {
     renderEntryDialog,
     renderCenterToast,
 } = require('../../utils/stage-entry-ui');
+
 const COLS = 2;
 const H_PAD = 16;
 const CARD_GAP = 12;
 const CARD_H = 84;
 
-// 背景装饰：缓慢下落的半透明方块
+/** 金矿工坊：章节页文案色（卡片仍用半透明样式） */
+const MINE_TITLE = '#FFE566';
+const MINE_TITLE_SHADOW = 'rgba(40, 24, 10, 0.7)';
+const MINE_SUB = 'rgba(245, 230, 200, 0.84)';
+const MINE_MUTED = 'rgba(230, 210, 180, 0.62)';
+const MINE_ACCENT = '#FFC857';
+/** 卡片三态：已通关 / 已解锁未通关 / 未解锁 */
+const CARD_ACCENT = '#FFC857';
+const CARD_MUTED = 'rgba(255, 245, 230, 0.42)';
+const CARD_NAME = '#ffffff';
+const CARD_STYLES = {
+    cleared: {
+        fill: 'rgba(255, 196, 80, 0.38)',
+        stroke: 'rgba(255, 220, 120, 0.95)',
+        lineWidth: 2,
+        num: '#FFE566',
+        name: '#fff8e8',
+        status: 'rgba(255, 236, 190, 0.88)',
+    },
+    unlocked: {
+        fill: 'rgba(70, 48, 28, 0.62)',
+        stroke: 'rgba(255, 200, 87, 0.55)',
+        lineWidth: 1.5,
+        num: CARD_ACCENT,
+        name: CARD_NAME,
+        status: 'rgba(255, 245, 230, 0.62)',
+    },
+    locked: {
+        fill: 'rgba(18, 14, 12, 0.55)',
+        stroke: 'rgba(255, 255, 255, 0.12)',
+        lineWidth: 1,
+        num: CARD_MUTED,
+        name: CARD_MUTED,
+        status: CARD_MUTED,
+    },
+};
+
+// 背景装饰：缓慢下落的半透明方块（暖土色，贴合矿洞）
 const BG_TETROMINO_SHAPES = [
-    [ [1, 1, 1, 1] ],               // I
-    [ [1, 1], [1, 1] ],             // O
-    [ [0, 1, 0], [1, 1, 1] ],       // T
-    [ [0, 1, 1], [1, 1, 0] ],       // S
-    [ [1, 1, 0], [0, 1, 1] ],       // Z
-    [ [1, 0, 0], [1, 1, 1] ],       // J
-    [ [0, 0, 1], [1, 1, 1] ],       // L
+    [ [1, 1, 1, 1] ],
+    [ [1, 1], [1, 1] ],
+    [ [0, 1, 0], [1, 1, 1] ],
+    [ [0, 1, 1], [1, 1, 0] ],
+    [ [1, 1, 0], [0, 1, 1] ],
+    [ [1, 0, 0], [1, 1, 1] ],
+    [ [0, 0, 1], [1, 1, 1] ],
 ];
-const BG_TETROMINO_COLORS = AMBIENT_PIECE_COLORS;
+const BG_TETROMINO_COLORS = [
+    '#8a6a48', '#c9a050', '#6a5840', '#a87840', '#5a4838', '#d4a060', '#7a6048',
+];
 
 class StageSelectScene {
     constructor() {
@@ -158,10 +195,15 @@ class StageSelectScene {
 
         const stageCount = (this._stages && this._stages.length) ? this._stages.length : 10;
         const rows = Math.ceil(stageCount / COLS);
-        const backBtnH = 48;
-        const backBtnY = H - bottomInset - backBtnH - 32;
-        const footerY = backBtnY - 44;
-        const gridBottom = backBtnY - 48;
+        const backSkin = getThemeImage('mapBtnBack');
+        const skinW = (backSkin.ready && backSkin.img && backSkin.img.width) || 640;
+        const skinH = (backSkin.ready && backSkin.img && backSkin.img.height) || 287;
+        const backAspect = skinW / Math.max(1, skinH);
+        const backBtnW = Math.min(188, Math.round(W * 0.48));
+        const backBtnH = Math.max(44, Math.round(backBtnW / backAspect));
+        const backBtnY = H - bottomInset - backBtnH - 36;
+        const footerY = backBtnY - 22;
+        const gridBottom = backBtnY - 28;
         const availGridH = Math.max(0, gridBottom - gridTop);
 
         let cardGap = CARD_GAP;
@@ -196,6 +238,8 @@ class StageSelectScene {
             cardH,
             cardGap,
             backBtnY,
+            backBtnW,
+            backBtnH,
         };
     }
 
@@ -217,8 +261,9 @@ class StageSelectScene {
                 const x = m.contentLeft + col * (m.cardW + m.cardGap);
                 const y = m.gridTop + row * (m.cardH + m.cardGap);
                 const cleared = !!goldenBlock.getStageBest(stage.id);
-                const btnW = 88;
-                const btnH = 24;
+                // 与 card-stage-amber 约 2:1，等比缩小
+                const btnW = 64;
+                const btnH = 32;
                 const challengeBtn = cleared ? {
                     x: x + m.cardW - btnW - 10,
                     y: y + m.cardH - btnH - 10,
@@ -242,20 +287,20 @@ class StageSelectScene {
     }
 
     _initBackButton() {
-        const W = GameGlobal.game.width;
-        const H = GameGlobal.game.height;
-        const sys = (GameGlobal && GameGlobal.game && GameGlobal.game.systemInfo) || {};
-        const safe = sys.safeArea || {};
-        const bottomInset = (safe.bottom && H > safe.bottom) ? (H - safe.bottom) : 0;
-        const btnW = Math.min(260, W * 0.7);
-        const btnH = 48;
+        const m = this._getLayoutMetrics();
         this._backButton = new Button({
-            x: W / 2 - btnW / 2,
-            y: H - bottomInset - 80,
-            w: btnW,
-            h: btnH,
-            text: '← 返回',
-            color: '#555',
+            x: m.W / 2 - m.backBtnW / 2,
+            y: m.backBtnY,
+            w: m.backBtnW,
+            h: m.backBtnH,
+            text: '返回',
+            color: '#5a4534',
+            skin: 'mapBtnBack',
+            skinMode: 'stretch',
+            layout: 'text',
+            labelColor: '#fff8ec',
+            fontScale: 1.05,
+            letterSpacing: 4,
             onClick: () => GameGlobal.game.sceneManager.back(),
         });
     }
@@ -494,7 +539,7 @@ class StageSelectScene {
             rot: Math.random() * Math.PI * 2,
             rotSpeed: (Math.random() - 0.5) * 0.5,
             // 透明度：0.15~0.35，半透明氛围不遮挡前景
-            alpha: 0.15 + Math.random() * 0.20,
+            alpha: 0.08 + Math.random() * 0.12,
         };
     }
 
@@ -545,9 +590,9 @@ class StageSelectScene {
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
         ctx.font = font || 'bold 28px sans-serif';
-        ctx.fillStyle = TITLE_GLOW;
+        ctx.fillStyle = MINE_TITLE_SHADOW;
         ctx.fillText(text, x + 1, y + 2);
-        ctx.fillStyle = TITLE;
+        ctx.fillStyle = MINE_TITLE;
         ctx.fillText(text, x, y);
     }
 
@@ -572,63 +617,46 @@ class StageSelectScene {
         const best = goldenBlock.getStageBest(stage.id);
         const cleared = !!best;
         const nameY = y + Math.max(42, h - 36);
-        const nameMaxW = w - 24 - (cleared ? 94 : 0);
+        const nameMaxW = w - 24 - (cleared ? 78 : 0);
 
-        if (!chapterUnlocked) {
-            // 章节未解锁：整体灰态，仅提示不可进入
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
-            roundRectPath(ctx, x, y, w, h, 10);
-            ctx.fill();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-            ctx.lineWidth = 1;
-            ctx.stroke();
-
-            // 关卡号
-            ctx.fillStyle = MUTED;
-            ctx.font = 'bold 30px sans-serif';
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'top';
-            ctx.fillText(String(stage.id), x + 12, y + 10);
-
-            // 名称（过长截断）
-            ctx.fillStyle = MUTED;
-            ctx.font = 'bold 14px sans-serif';
-            ctx.fillText(this._truncateText(ctx, stage.name, nameMaxW), x + 12, nameY);
-
-            // 状态行：固定提示章节未解锁
-            ctx.font = '12px sans-serif';
-            ctx.fillStyle = MUTED;
-            ctx.textAlign = 'right';
-            ctx.fillText('🔒 章节未解锁', x + w - 12, y + 12);
-            ctx.textAlign = 'left';
-            return;
+        let styleKey = 'locked';
+        if (chapterUnlocked && unlocked) {
+            styleKey = cleared ? 'cleared' : 'unlocked';
         }
+        const style = CARD_STYLES[styleKey];
 
-        ctx.fillStyle = unlocked ? 'rgba(255, 200, 87, 0.14)' : 'rgba(255, 255, 255, 0.05)';
+        ctx.fillStyle = style.fill;
         roundRectPath(ctx, x, y, w, h, 10);
         ctx.fill();
-        ctx.strokeStyle = unlocked ? 'rgba(255, 200, 87, 0.6)' : 'rgba(255, 255, 255, 0.14)';
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = style.stroke;
+        ctx.lineWidth = style.lineWidth;
         ctx.stroke();
 
-        // 关卡号
-        ctx.fillStyle = unlocked ? ACCENT : MUTED;
+        // 已通关：内侧细高光，和其他状态拉开层次
+        if (styleKey === 'cleared') {
+            ctx.strokeStyle = 'rgba(255, 245, 200, 0.35)';
+            ctx.lineWidth = 1;
+            roundRectPath(ctx, x + 3, y + 3, w - 6, h - 6, 8);
+            ctx.stroke();
+        }
+
+        ctx.fillStyle = style.num;
         ctx.font = 'bold 30px sans-serif';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
         ctx.fillText(String(stage.id), x + 12, y + 10);
 
-        // 名称（过长截断）
-        ctx.fillStyle = unlocked ? '#ffffff' : MUTED;
+        ctx.fillStyle = style.name;
         ctx.font = 'bold 14px sans-serif';
         ctx.fillText(this._truncateText(ctx, stage.name, nameMaxW), x + 12, nameY);
 
-        // 状态行：理论 / 最佳 / 锁定
         ctx.font = '12px sans-serif';
-        ctx.fillStyle = MUTED;
+        ctx.fillStyle = style.status;
         ctx.textAlign = 'right';
         let status;
-        if (!unlocked) {
+        if (!chapterUnlocked) {
+            status = '🔒 章节未解锁';
+        } else if (!unlocked) {
             status = '🔒 解锁 ' + (stage.unlockCost || 0) + ' 块';
         } else if (cleared) {
             status = '最佳 ' + best.lines + ' 行';
@@ -642,19 +670,29 @@ class StageSelectScene {
         ctx.fillText(status, x + w - 12, y + 12);
         ctx.textAlign = 'left';
 
-        // 已通关：右下角「约好友来战」（邀请好友打同一关，非自己再战）
-        if (cleared && card.challengeBtn) {
+        if (chapterUnlocked && cleared && card.challengeBtn) {
             const cb = card.challengeBtn;
             const bx = cb.x + pageX;
             const by = cb.y;
-            ctx.fillStyle = 'rgba(224, 154, 48, 0.9)';
-            roundRectPath(ctx, bx, by, cb.w, cb.h, 6);
-            ctx.fill();
-            ctx.fillStyle = '#ffffff';
+            // amber 宽卡贴图等比 contain，不拉伸变形
+            const drawn = drawThemeImageContain(
+                ctx,
+                'cardStageAmber',
+                bx + cb.w / 2,
+                by + cb.h / 2,
+                cb.w,
+                cb.h
+            );
+            if (!drawn.drawn) {
+                ctx.fillStyle = 'rgba(168, 104, 48, 0.92)';
+                roundRectPath(ctx, bx, by, cb.w, cb.h, 6);
+                ctx.fill();
+            }
+            ctx.fillStyle = '#fff8ec';
             ctx.font = 'bold 11px sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText('约好友来战', bx + cb.w / 2, by + cb.h / 2);
+            ctx.fillText('挑战好友', bx + cb.w / 2, by + cb.h / 2 + 1);
             ctx.textAlign = 'left';
         }
     }
@@ -664,9 +702,12 @@ class StageSelectScene {
         const H = GameGlobal.game.height;
         const m = this._getLayoutMetrics();
 
-        // 满屏夜场街机背景
-        fillNightBackground(ctx, W, H);
-        // 背景装饰：缓慢下落的半透明方块
+        if (!drawThemeBackground(ctx, 'mapMineBg', W, H)) {
+            fillNightBackground(ctx, W, H);
+        } else {
+            ctx.fillStyle = 'rgba(12, 8, 4, 0.28)';
+            ctx.fillRect(0, 0, W, H);
+        }
         this._renderFallingBlocks(ctx);
 
         const chapters = this._chapters;
@@ -688,11 +729,11 @@ class StageSelectScene {
                 'bold 28px sans-serif'
             );
 
-            ctx.fillStyle = unlocked ? SUBTITLE : MUTED;
+            ctx.fillStyle = unlocked ? MINE_SUB : MINE_MUTED;
             ctx.font = '13px sans-serif';
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
-            const introRaw = unlocked ? chap.intro : '🔒 通关上一章全部关卡解锁';
+            const introRaw = unlocked ? chap.intro : '通关上一章全部关卡解锁';
             ctx.fillText(
                 this._truncateText(ctx, introRaw, m.titleMaxW),
                 pageX + m.contentLeft,
@@ -704,12 +745,9 @@ class StageSelectScene {
             }
         }
 
-        // ===== 固定层（不随分页滑动）=====
-
-        // 金方块 / 金币：左上角，与微信胶囊垂直居中对齐
         const balance = goldenBlock.getBalance();
         const coins = coinManager.getCoins();
-        ctx.fillStyle = ACCENT;
+        ctx.fillStyle = MINE_ACCENT;
         ctx.font = 'bold 15px sans-serif';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
@@ -717,20 +755,17 @@ class StageSelectScene {
 
         if (this._backButton) this._backButton.render(ctx);
 
-        // 底部提示（避开 Home Indicator）
-        ctx.fillStyle = MUTED;
+        ctx.fillStyle = MINE_MUTED;
         ctx.font = '12px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('首通 +1 金色方块 · 破纪录再 +1', m.contentCenterX, m.footerY);
         ctx.textAlign = 'left';
 
-        // 入场弹窗
         if (this._entryDialog) {
             renderEntryDialog(ctx, W, H, this._entryDialog);
         }
 
-        // Toast
         if (this._toastT > 0 && this._toast) {
             renderCenterToast(ctx, W, H, this._toast);
         }

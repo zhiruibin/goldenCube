@@ -1,0 +1,31 @@
+{
+	"id": "22cd4108-3266-4734-acc2-65556c04d9ac",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage.mode.standard-piece-set",
+	"title": "闯关模式固定标准 7 块",
+	"statement": "闯关模式固定使用标准 7 种方块并关闭特殊块（special），setMode/initStage 中均强制 setSpecialMode(false)。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315317047,
+	"updatedAt": 1788315317047,
+	"createdByTaskId": "business-init",
+	"latestEventId": "76beb89f-6bdb-4668-ac96-9f202a8307d4",
+	"tags": [],
+	"aliases": [
+		"标准七块",
+		"闯关禁止特殊块"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "tools/gc-stage-engine.py"
+		},
+		{
+			"type": "symbol",
+			"path": "tools/gc-stage-engine.py",
+			"symbol": "initStage"
+		}
+	]
+}

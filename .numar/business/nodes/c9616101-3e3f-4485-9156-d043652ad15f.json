@@ -1,0 +1,27 @@
+{
+	"id": "c9616101-3e3f-4485-9156-d043652ad15f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.friend.canvas.uniform-scaling",
+	"title": "好友榜画布均匀缩放链路",
+	"statement": "开放数据域不修改 sharedCanvas 尺寸（真机不可靠，默认固定为屏幕尺寸），按主域传入的屏幕逻辑宽高与实际画布尺寸之比做均匀缩放绘制，主域按同一比例 1:1 拷贝。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315316994,
+	"updatedAt": 1788315316994,
+	"createdByTaskId": "business-init",
+	"latestEventId": "e0742e2c-9b2e-4778-ae2a-b0ace4a1ce35",
+	"tags": [],
+	"aliases": [
+		"sharedCanvas缩放",
+		"好友榜渲染链路",
+		"1:1拷贝"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "openDataContext/index.js"
+		}
+	]
+}

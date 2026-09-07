@@ -1,0 +1,28 @@
+{
+	"id": "d4ad4411-c351-4d54-85ba-2f83f216b6dc",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.challenger-metric.display-rules",
+	"title": "Challenger metric shows lines for puzzle, score otherwise",
+	"statement": "Challenge list/card challenger metric displays cleared lines for puzzle challenges with a legacy fallback that interprets a challengerScore under 10000 as lines, and displays score for non-puzzle challenges; missing metrics render as '--'.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315981660,
+	"updatedAt": 1788315981660,
+	"createdByTaskId": "business-init",
+	"latestEventId": "ff39b885-8910-4c59-af34-c500b8b67fa9",
+	"tags": [],
+	"aliases": [
+		"挑战成绩展示",
+		"发起方成绩文案",
+		"残局显示行数"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/challenge-ui.js",
+			"symbol": "challengerMetricLabel"
+		}
+	]
+}

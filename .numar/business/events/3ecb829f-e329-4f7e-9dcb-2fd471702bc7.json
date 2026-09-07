@@ -1,0 +1,12 @@
+{
+	"id": "3ecb829f-e329-4f7e-9dcb-2fd471702bc7",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "26d35898-0b93-41de-9800-2b3ed8f20392",
+	"operation": "create",
+	"after": "A challenge is classified as a puzzle when it is a workshop challenge, or a stage challenge carrying layoutSnapshot, challengerLines, or workshop markers; puzzle challenges use line-metric comparison instead of score.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/challenge-ui.js"
+	],
+	"createdAt": 1788315981626
+}

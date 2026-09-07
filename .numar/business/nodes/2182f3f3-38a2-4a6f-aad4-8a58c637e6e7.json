@@ -1,0 +1,26 @@
+{
+	"id": "2182f3f3-38a2-4a6f-aad4-8a58c637e6e7",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "workshop.author-clear-required-for-release",
+	"title": "作者自通为发布前置",
+	"statement": "作者必须使用当前布局快照自通，否则不能提交发布，也不能发起好友挑战；自通凭证是工坊关卡的硬性门禁。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316265641,
+	"updatedAt": 1788316265641,
+	"createdByTaskId": "business-init",
+	"latestEventId": "3e8c055f-d2d8-4346-998c-14e0b0a93cde",
+	"tags": [],
+	"aliases": [
+		"必须自通才能发布",
+		"自通凭证门禁"
+	],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "docs/gc-workshop-plaza-design.md"
+		}
+	]
+}

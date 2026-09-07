@@ -1,0 +1,31 @@
+{
+	"id": "3a14bc17-75b6-42bd-98ed-bedf513f6826",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "tetris.bag-randomizer.seeded-rng",
+	"title": "7-Bag 生成器支持可复现 seed",
+	"statement": "方块生成器 BagRandomizer 接受数值 seed，使用 mulberry32 伪随机数生成同一种子下的同一序列；未传 seed 时使用 Math.random。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311439795,
+	"updatedAt": 1788311439795,
+	"createdByTaskId": "business-init",
+	"latestEventId": "88fbcd34-7563-47b8-a507-10d41108a543",
+	"tags": [],
+	"aliases": [
+		"seed 复现",
+		"mulberry32",
+		"定 seed 出同序列"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"symbol": "BagRandomizer"
+		},
+		{
+			"type": "symbol",
+			"symbol": "mulberry32"
+		}
+	]
+}

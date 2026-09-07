@@ -1,0 +1,12 @@
+{
+	"id": "36810cee-3e2e-4eb8-8be4-ad1c8a25b6fb",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "faea3002-8602-4ade-897d-33caa79886c1",
+	"operation": "create",
+	"after": "Cloud initialization enters local fallback mode when wx.cloud is unavailable or when the runtime AccountInfo AppID is empty; an empty AppID is treated as the common cause of error 41002 and is explicitly guarded before wx.cloud.init.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/cloud-service.js"
+	],
+	"createdAt": 1788315981691
+}

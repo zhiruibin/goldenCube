@@ -1,0 +1,12 @@
+{
+	"id": "c8740a38-e4ef-4c9f-a280-dc08ca5f9637",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "f696c71e-912f-4a36-9719-89c55f2b02dd",
+	"operation": "create",
+	"after": "关卡设计数据声明以正形剪影为主（约 80%）、搭梯型约 20%、负形通道极少（0%）；设计原则强调抬升/凌空与高位搭梯，递进补块优先加顶行/加密度、禁止填死抬升真空。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"data/stages-v1.js"
+	],
+	"createdAt": 1788310807250
+}

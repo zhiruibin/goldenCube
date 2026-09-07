@@ -1,0 +1,27 @@
+{
+	"id": "6ffd404a-1bec-430e-9c0b-18da5d0ef02f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage-select.daily-login-claim-toast",
+	"title": "Stage select triggers daily login reward toast",
+	"statement": "Entering StageSelectScene attempts to claim the daily login reward via coinManager.tryClaimDailyLogin(); if claimed, it shows a toast with the amount (e.g. '每日登录 +20 金币').",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312028782,
+	"updatedAt": 1788312028782,
+	"createdByTaskId": "business-init",
+	"latestEventId": "cb5e3313-c597-40db-86ce-e807ae2bded2",
+	"tags": [],
+	"aliases": [
+		"每日登录提示",
+		"stage select daily login"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/stage-select-scene.js",
+			"symbol": "onEnter"
+		}
+	]
+}

@@ -1,0 +1,27 @@
+{
+	"id": "f74b0e57-86d8-4bef-8465-861ae431c904",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "world-map.capsule-metrics.menu-button-fallback",
+	"title": "World map capsule metrics use WeChat menu button with fallbacks",
+	"statement": "WorldMapScene measures the top capsule from wx.getMenuButtonBoundingClientRect when available, otherwise falls back to status bar height or safe-area top and a default of 20.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312151877,
+	"updatedAt": 1788312151877,
+	"createdByTaskId": "business-init",
+	"latestEventId": "1893a127-a677-4ba6-8c47-135cbff883e2",
+	"tags": [],
+	"aliases": [
+		"胶囊按钮位置",
+		"状态栏兜底"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/world-map-scene.js",
+			"symbol": "_getMetrics"
+		}
+	]
+}

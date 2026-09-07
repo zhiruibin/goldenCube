@@ -1,0 +1,13 @@
+{
+	"id": "38382bf4-091f-4a14-8e65-302775f2e1c7",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "c5de6383-ab8a-48da-a18d-041a2914a1e7",
+	"operation": "create",
+	"after": "Banner/插屏是打扰型被动广告，不参与金方块产出；激励视频只加速金币产出；未来月卡“清静畅玩”只关闭 Banner+插屏，不关闭自愿激励视频。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"docs/gc-ad-banner-interstitial.md §1",
+		"docs/gc-economy-design.md §1 铁律3"
+	],
+	"createdAt": 1788312287210
+}

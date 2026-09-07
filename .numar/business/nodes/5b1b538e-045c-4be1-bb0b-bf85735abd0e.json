@@ -1,0 +1,27 @@
+{
+	"id": "5b1b538e-045c-4be1-bb0b-bf85735abd0e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "home.title-decor.shovel-emoji-vector-fallback",
+	"title": "Shovel icon emoji with vector fallback",
+	"statement": "The title shovel icon prefers the 🪏 emoji; when the glyph is unavailable (measured width too small), it falls back to a vector-drawn shovel.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311734500,
+	"updatedAt": 1788311734500,
+	"createdByTaskId": "business-init",
+	"latestEventId": "9b8e105c-200a-49ba-8121-a3a99d04c813",
+	"tags": [],
+	"aliases": [
+		"铲子图标回退",
+		"🪏 emoji 兜底"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/render/title-decor.js",
+			"symbol": "drawShovelIcon"
+		}
+	]
+}

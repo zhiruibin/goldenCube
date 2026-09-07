@@ -1,0 +1,26 @@
+{
+	"id": "ae79b2c1-07d4-41dd-b32d-1a17225603ae",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "achievement.deprecated-ids-retained",
+	"title": "废弃成就保留 ID",
+	"statement": "已废弃的成就项仅保留 ID 供旧存档查询奖励，不再出现在成就列表中。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788310807240,
+	"updatedAt": 1788310807240,
+	"createdByTaskId": "business-init",
+	"latestEventId": "9417f8b6-f6b0-43d7-8b06-a4724092b21f",
+	"tags": [],
+	"aliases": [
+		"旧成就ID保留",
+		"废弃成就只留ID"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "data/achievements.js"
+		}
+	]
+}

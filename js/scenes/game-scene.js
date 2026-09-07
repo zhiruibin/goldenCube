@@ -11,6 +11,8 @@ const { EffectRenderer } = require('../render/effect-renderer');
 const { BackgroundEffects } = require('../render/background-effects');
 const { DPadButton } = require('../widgets/dpad-button');
 const { Button } = require('../widgets/button');
+const { drawThemeBackground, drawThemeButtonSkin9Slice } = require('../theme/theme-images');
+const { fillNightBackground } = require('../theme/arcade-night');
 const { PIECES, PIECE_COLORS } = require('../../data/pieces');
 const { achievementManager } = require('../../utils/achievement-manager');
 const { coinManager } = require('../../utils/coin-manager');
@@ -184,7 +186,7 @@ class GameScene {
         this._initEngine();
         this._initRenderers();
         this._initUI();
-        this._bgEffects = new BackgroundEffects({ lite: true });
+        this._bgEffects = new BackgroundEffects({ lite: true, skipBase: true });
         this._bgEffects.init();
         this._bgEffects.setEnabled(this._settings.bgEffects);
         this._confettiFx = new ConfettiFx();
@@ -474,9 +476,13 @@ class GameScene {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
 
-        // 先铺深色底（震屏露边时保持深色，不露白）
-        ctx.fillStyle = '#0f0f23';
-        ctx.fillRect(0, 0, W, H);
+        // 金矿工坊对局底；震屏露边时保持暖色深底
+        if (!drawThemeBackground(ctx, 'homeBg', W, H)) {
+            fillNightBackground(ctx, W, H);
+        } else {
+            ctx.fillStyle = 'rgba(10, 7, 4, 0.42)';
+            ctx.fillRect(0, 0, W, H);
+        }
 
         // 高潮特效震屏：整体画面位移（背景特效/棋盘/方块/UI 全部跟随）
         const shake = this._effectRenderer ? this._effectRenderer.getShakeOffset() : null;
@@ -485,7 +491,7 @@ class GameScene {
             ctx.translate(shake.x, shake.y);
         }
 
-        // 背景特效
+        // 背景粒子叠在主题底上（不重铺冷色渐变）
         if (this._bgEffects && this._bgEffects.isEnabled()) {
             this._bgEffects.render(ctx);
         }
@@ -943,7 +949,8 @@ class GameScene {
             y: leftRightY,
             radius: r,
             direction: 'left',
-            color: '#34889c',
+            color: '#4a9e9a',
+            skin: 'btnCircleTeal',
             onAction: () => this._moveLeft(),
         }));
 
@@ -953,7 +960,8 @@ class GameScene {
             y: downY,
             radius: r,
             direction: 'down',
-            color: '#34889c',
+            color: '#4a9e9a',
+            skin: 'btnCircleTeal',
             onAction: () => this._softDrop(),
         }));
 
@@ -963,7 +971,8 @@ class GameScene {
             y: leftRightY,
             radius: r,
             direction: 'right',
-            color: '#34889c',
+            color: '#4a9e9a',
+            skin: 'btnCircleTeal',
             onAction: () => this._moveRight(),
         }));
 
@@ -974,7 +983,8 @@ class GameScene {
             w: btnSize,
             h: btnSize,
             icon: 'hold',
-            color: '#f0a000',
+            color: '#d4a017',
+            skin: 'btnCircleGold',
             radius: btnSize / 2,
             onClick: () => this._hold(),
         }));
@@ -986,7 +996,8 @@ class GameScene {
             w: btnSize,
             h: btnSize,
             icon: 'hardDrop',
-            color: '#ff4466',
+            color: '#d45a6a',
+            skin: 'btnCircleRose',
             radius: btnSize / 2,
             onClick: () => this._hardDrop(),
         }));
@@ -998,19 +1009,21 @@ class GameScene {
             w: btnSize,
             h: btnSize,
             icon: 'rotate',
-            color: '#00c6ff',
+            color: '#3aa0d8',
+            skin: 'btnCircleBlue',
             radius: btnSize / 2,
             onClick: () => this._rotate(),
         }));
 
-        // 暂停按钮（悬浮在棋盘左上角内侧，避开微信胶囊按钮与侧边信息面板）
+        // 暂停：独立圆形石钮
         this._buttons.push(new Button({
             x: this._boardX + 8,
             y: this._boardY + 8,
             w: 40,
             h: 40,
             icon: 'pause',
-            color: '#14506e',
+            color: '#6b5a48',
+            skin: 'btnCircleBrown',
             radius: 20,
             onClick: () => this._togglePause(),
         }));
@@ -1028,28 +1041,32 @@ class GameScene {
             return;
         }
 
-        // 面板背景
+        // 面板背景（暖石半透明，贴合矿洞）
         const panelH = this._cellSize * 20;
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+        ctx.fillStyle = 'rgba(36, 24, 14, 0.58)';
         this._roundRect(ctx, x - 5, y - 5, pw + 10, panelH + 10, 8);
         ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 200, 120, 0.22)';
+        ctx.lineWidth = 1;
+        this._roundRect(ctx, x - 5, y - 5, pw + 10, panelH + 10, 8);
+        ctx.stroke();
 
         let curY = y + 8;
 
         // 分数
-        curY = this._renderInfoItem(ctx, x, curY, pw, '分数', String(this._engine.getScore()), '#00f0f0');
+        curY = this._renderInfoItem(ctx, x, curY, pw, '分数', String(this._engine.getScore()), '#7adce8');
 
         // 等级
-        curY = this._renderInfoItem(ctx, x, curY, pw, '等级', String(this._engine.getLevel()), '#f0a000');
+        curY = this._renderInfoItem(ctx, x, curY, pw, '等级', String(this._engine.getLevel()), '#FFC857');
 
         // 消行
-        curY = this._renderInfoItem(ctx, x, curY, pw, '消行', String(this._engine.getLines()), '#00f000');
+        curY = this._renderInfoItem(ctx, x, curY, pw, '消行', String(this._engine.getLines()), '#8fd98a');
 
         if (this._mode === 'stage') {
             const remaining = this._engine.getGarbageRemaining ? this._engine.getGarbageRemaining() : 0;
             const theory = this._stageInfo ? this._stageInfo.minLines : 0;
-            curY = this._renderInfoItem(ctx, x, curY, pw, '垃圾', `剩 ${remaining} 格`, '#ffcc57', 14);
-            curY = this._renderInfoItem(ctx, x, curY, pw, '消行', `${this._engine.getLines()} / 理论 ${theory}`, '#ff6b6b', 14);
+            curY = this._renderInfoItem(ctx, x, curY, pw, '垃圾', `剩 ${remaining} 格`, '#FFC857', 14);
+            curY = this._renderInfoItem(ctx, x, curY, pw, '消行', `${this._engine.getLines()} / 理论 ${theory}`, '#ff8a7a', 14);
         }
 
         // 挑战局：侧栏展示目标分与还差（不改操作区布局）
@@ -1057,7 +1074,7 @@ class GameScene {
             curY = this._renderChallengeTarget(ctx, x, curY, pw);
         }
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.fillStyle = 'rgba(255, 236, 210, 0.72)';
         ctx.font = 'bold 12px sans-serif';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
@@ -1079,7 +1096,7 @@ class GameScene {
 
         // HOLD 预览
         curY += 12;
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.fillStyle = 'rgba(255, 236, 210, 0.72)';
         ctx.font = 'bold 12px sans-serif';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
@@ -1098,7 +1115,7 @@ class GameScene {
 
     _renderInfoItem(ctx, x, y, pw, label, value, valueColor, valueSize) {
         // 标签
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.fillStyle = 'rgba(255, 236, 210, 0.55)';
         ctx.font = '11px sans-serif';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
@@ -1132,23 +1149,23 @@ class GameScene {
         const target = this._targetScore;
         if (this._isChallengePuzzle()) {
             const lines = this._engine ? this._engine.getLines() : 0;
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+            ctx.fillStyle = 'rgba(255, 236, 210, 0.55)';
             ctx.font = '11px sans-serif';
             ctx.textAlign = 'left';
             ctx.textBaseline = 'top';
             ctx.fillText('目标', x + 8, y);
-            ctx.fillStyle = '#e67e22';
+            ctx.fillStyle = '#FFC857';
             ctx.font = 'bold 16px sans-serif';
             ctx.fillText(String(target) + ' 行', x + 8, y + 14);
             ctx.font = '11px sans-serif';
             if (lines > target) {
-                ctx.fillStyle = '#2ecc71';
+                ctx.fillStyle = '#8fd98a';
                 ctx.fillText('已超越', x + 8, y + 32);
             } else if (lines < target) {
-                ctx.fillStyle = '#ff6b6b';
+                ctx.fillStyle = '#ff8a7a';
                 ctx.fillText('还差 ' + (target - lines) + ' 行', x + 8, y + 32);
             } else {
-                ctx.fillStyle = '#f0a000';
+                ctx.fillStyle = '#FFC857';
                 ctx.fillText('持平', x + 8, y + 32);
             }
             return y + 50;
@@ -1156,22 +1173,22 @@ class GameScene {
         const score = this._engine ? this._engine.getScore() : 0;
         const remain = target - score;
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.fillStyle = 'rgba(255, 236, 210, 0.55)';
         ctx.font = '11px sans-serif';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
         ctx.fillText('目标', x + 8, y);
 
-        ctx.fillStyle = '#e67e22';
+        ctx.fillStyle = '#FFC857';
         ctx.font = 'bold 16px sans-serif';
         ctx.fillText(String(target), x + 8, y + 14);
 
         ctx.font = '11px sans-serif';
         if (remain > 0) {
-            ctx.fillStyle = '#ff6b6b';
+            ctx.fillStyle = '#ff8a7a';
             ctx.fillText('还差 ' + remain, x + 8, y + 32);
         } else {
-            ctx.fillStyle = '#2ecc71';
+            ctx.fillStyle = '#8fd98a';
             ctx.fillText('已超越', x + 8, y + 32);
         }
         return y + 50;
@@ -1213,7 +1230,7 @@ class GameScene {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.72)';
+        ctx.fillStyle = 'rgba(10, 7, 4, 0.62)';
         ctx.fillRect(0, 0, W, H);
 
         const cardW = Math.min(320, W * 0.86);
@@ -1221,21 +1238,21 @@ class GameScene {
         const cardX = (W - cardW) / 2;
         const cardY = H / 2 - cardH / 2 - 20;
 
-        ctx.fillStyle = 'rgba(28, 28, 52, 0.96)';
+        ctx.fillStyle = 'rgba(28, 20, 14, 0.96)';
         this._roundRect(ctx, cardX, cardY, cardW, cardH, 16);
         ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 200, 87, 0.55)';
+        ctx.strokeStyle = 'rgba(31, 155, 152, 0.7)';
         ctx.lineWidth = 1.5;
-        this._roundRect(ctx, cardX, cardY, cardW, cardH, 16);
+        this._roundRect(ctx, cardX + 0.75, cardY + 0.75, cardW - 1.5, cardH - 1.5, 15);
         ctx.stroke();
 
-        ctx.fillStyle = '#FFE082';
+        ctx.fillStyle = '#c9a227';
         ctx.font = 'bold 20px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('闯关说明', W / 2, cardY + 42);
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+        ctx.fillStyle = 'rgba(255, 245, 230, 0.92)';
         ctx.font = '17px sans-serif';
         const bh = 44;
         const btnBottomPad = 24;
@@ -1250,11 +1267,14 @@ class GameScene {
         const bw = Math.min(200, cardW * 0.62);
         const bx = W / 2 - bw / 2;
         this._stageTutorialBtnRect = { x: bx, y: by, w: bw, h: bh };
-        ctx.fillStyle = '#00c6ff';
-        this._roundRect(ctx, bx, by, bw, bh, 12);
-        ctx.fill();
-        ctx.fillStyle = '#ffffff';
+        if (!drawThemeButtonSkin9Slice(ctx, 'cardStageGold', bx, by, bw, bh, 0.22)) {
+            ctx.fillStyle = '#c9a227';
+            this._roundRect(ctx, bx, by, bw, bh, 12);
+            ctx.fill();
+        }
+        ctx.fillStyle = '#241408';
         ctx.font = 'bold 18px sans-serif';
+        ctx.textBaseline = 'middle';
         ctx.fillText('知道了', W / 2, by + bh / 2);
     }
 
@@ -1266,7 +1286,7 @@ class GameScene {
         ctx.fillRect(0, 0, W, H);
 
         // 暂停标题
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = '#FFE566';
         ctx.font = 'bold 34px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -1274,7 +1294,7 @@ class GameScene {
 
         // 对局信息（挑战局附带目标分）
         ctx.font = '16px sans-serif';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+        ctx.fillStyle = 'rgba(255, 236, 210, 0.78)';
         let info = this._engine
             ? `分数: ${this._engine.getScore()}   等级: ${this._engine.getLevel()}   消行: ${this._engine.getLines()}`
             : '';
@@ -1286,33 +1306,37 @@ class GameScene {
         }
         ctx.fillText(info, W / 2, H / 2 - 50);
 
-        // 继续游戏按钮
-        const bw = Math.min(220, W * 0.6);
-        const bh = 46;
+        // 继续游戏 / 返回：用宽卡石板（约 2:1），避免方钮横向拉扁
+        const bw = Math.max(140, Math.min(252, Math.round(W * 0.68)) - 90);
+        const bh = Math.max(44, Math.round(bw * 0.48));
         const bx = W / 2 - bw / 2;
-        const by1 = H / 2;
+        const by1 = H / 2 - 8;
         this._pauseResumeBtnRect = { x: bx, y: by1, w: bw, h: bh };
-        ctx.fillStyle = '#00c6ff';
-        this._roundRect(ctx, bx, by1, bw, bh, 12);
-        ctx.fill();
-        ctx.fillStyle = '#ffffff';
+        if (!drawThemeButtonSkin9Slice(ctx, 'cardStageGold', bx, by1, bw, bh, 0.22)) {
+            ctx.fillStyle = '#c89840';
+            this._roundRect(ctx, bx, by1, bw, bh, 12);
+            ctx.fill();
+        }
+        ctx.fillStyle = '#241408';
         ctx.font = 'bold 18px sans-serif';
-        ctx.fillText('继续游戏', W / 2, by1 + bh / 2);
+        ctx.fillText('继续游戏', W / 2, by1 + bh / 2 + 1);
 
         // 闯关：禁止免费「重新开始」（每局须重新付入场费）
         this._pauseRestartBtnRect = null;
         let nextY = by1 + bh + 14;
 
-        // 返回关卡 / 工坊
+        // 返回关卡 / 工坊 — 棕色宽卡
         this._pauseQuitBtnRect = { x: bx, y: nextY, w: bw, h: bh };
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.14)';
-        this._roundRect(ctx, bx, nextY, bw, bh, 12);
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
-        ctx.lineWidth = 1.5;
-        this._roundRect(ctx, bx, nextY, bw, bh, 12);
-        ctx.stroke();
-        ctx.fillStyle = '#ffffff';
+        if (!drawThemeButtonSkin9Slice(ctx, 'cardStageBrown', bx, nextY, bw, bh, 0.22)) {
+            ctx.fillStyle = 'rgba(60, 42, 28, 0.88)';
+            this._roundRect(ctx, bx, nextY, bw, bh, 12);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255, 200, 120, 0.4)';
+            ctx.lineWidth = 1.5;
+            this._roundRect(ctx, bx, nextY, bw, bh, 12);
+            ctx.stroke();
+        }
+        ctx.fillStyle = '#fff4e0';
         ctx.font = 'bold 18px sans-serif';
         ctx.fillText(
             this._workshop
@@ -1321,7 +1345,7 @@ class GameScene {
                     : '← 返回工坊')
                 : '← 返回关卡',
             W / 2,
-            nextY + bh / 2
+            nextY + bh / 2 + 1
         );
     }
 
@@ -1633,15 +1657,25 @@ class GameScene {
         }
 
         setTimeout(() => {
+            const listParams = Object.assign(
+                {},
+                this._workshopListParams || {}
+            );
+            let origin = listParams.origin;
+            if (!origin && listParams.mainTab === 'plaza') origin = 'plaza';
+            if (!origin) origin = this._authorTrial ? 'workshop' : 'plaza';
+            const stack = origin === 'plaza'
+                ? ['home', 'plaza']
+                : ['home', 'workshop'];
             GameGlobal.game.sceneManager.leaveTo('workshopResult', {
                 workshopStageId: this._workshopStageId,
                 workshopTitle: this._workshopTitle,
                 authorTrial: this._authorTrial,
                 workshopReturnTo: this._workshopReturnTo,
-                workshopListParams: this._workshopListParams,
+                workshopListParams: listParams,
                 result,
                 replayKey,
-            }, ['home', 'workshop']);
+            }, stack);
         }, 700);
     }
 
@@ -1681,9 +1715,72 @@ class GameScene {
             this._entryPaid = 0;
         }
         if (this._authorTrial && this._workshopStageId) {
-            this._leaveWorkshopOrigin({
-                toast: '试玩未通关，可继续改盘',
-            });
+            this._stageSettleLocked = true;
+            const lines = this._engine ? this._engine.getLines() : 0;
+            const pieces = this._pieceCount || 0;
+            const timeMs = Date.now() - this._stageStartTime;
+            const replayKey = this._saveWorkshopReplay({
+                lines,
+                pieces,
+                timeMs,
+                coinGained: 0,
+            }) || '';
+            setTimeout(() => {
+                GameGlobal.game.sceneManager.leaveTo('workshopResult', {
+                    workshopStageId: this._workshopStageId,
+                    workshopTitle: this._workshopTitle,
+                    authorTrial: true,
+                    workshopReturnTo: this._workshopReturnTo,
+                    workshopListParams: this._workshopListParams,
+                    failed: true,
+                    result: {
+                        lines,
+                        pieces,
+                        timeMs,
+                        coinWant: 0,
+                        coinGained: 0,
+                        goldGranted: 0,
+                    },
+                    replayKey,
+                }, ['home', 'workshop']);
+            }, 500);
+            return;
+        }
+        // 广场开打未通关：进结算页（竖排按钮），不直接退回列表
+        if (!this._authorTrial && this._workshopStageId && !this._challengeId) {
+            this._stageSettleLocked = true;
+            const lines = this._engine ? this._engine.getLines() : 0;
+            const pieces = this._pieceCount || 0;
+            const timeMs = Date.now() - this._stageStartTime;
+            const replayKey = this._saveWorkshopReplay({
+                lines,
+                pieces,
+                timeMs,
+                coinGained: 0,
+            }) || '';
+            const listParams = Object.assign(
+                { origin: 'plaza' },
+                this._workshopListParams || {}
+            );
+            setTimeout(() => {
+                GameGlobal.game.sceneManager.leaveTo('workshopResult', {
+                    workshopStageId: this._workshopStageId,
+                    workshopTitle: this._workshopTitle,
+                    authorTrial: false,
+                    workshopReturnTo: this._workshopReturnTo || 'list',
+                    workshopListParams: listParams,
+                    failed: true,
+                    result: {
+                        lines,
+                        pieces,
+                        timeMs,
+                        coinWant: 0,
+                        coinGained: 0,
+                        goldGranted: 0,
+                    },
+                    replayKey,
+                }, ['home', 'plaza']);
+            }, 500);
             return;
         }
         // 应战残局未通关：必须进结算并云端写回，否则会卡在「待我应战」且无结算页

@@ -1,0 +1,17 @@
+{
+	"id": "21e5a2ee-3bab-4159-8fc4-871dc4d71857",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "c5de6383-ab8a-48da-a18d-041a2914a1e7",
+	"toNodeId": "3561d396-1eea-4cf5-9ea6-1bcc4fe0c9df",
+	"type": "constrains",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"docs/gc-ad-banner-interstitial.md §1",
+		"docs/gc-economy-design.md §1 铁律1",
+		"docs/gc-ad-banner-interstitial.md",
+		"docs/gc-economy-design.md"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788312287223,
+	"updatedAt": 1788316637888
+}

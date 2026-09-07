@@ -1,0 +1,28 @@
+{
+	"id": "24d384b0-e0c2-4e9b-9a11-a8c1ce1c1f22",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "coin.stage-clear.daily-cap-300",
+	"title": "Stage-clear coin reward daily cap is 300",
+	"statement": "Coin rewards from stage-clear efficiency settlement are capped at 300 per day (DAILY_LIMIT), tracked by gc_dailyCoinsEarned and kept separate from the ad-double pool.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315981713,
+	"updatedAt": 1788315981713,
+	"createdByTaskId": "business-init",
+	"latestEventId": "89f85aab-6bba-431c-806b-287e0a514e13",
+	"tags": [],
+	"aliases": [
+		"通关日限300",
+		"通关金币日上限",
+		"DAILY_LIMIT 300"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "DAILY_LIMIT"
+		}
+	]
+}

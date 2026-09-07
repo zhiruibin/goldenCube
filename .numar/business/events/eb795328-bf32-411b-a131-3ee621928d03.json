@@ -1,0 +1,12 @@
+{
+	"id": "eb795328-bf32-411b-a131-3ee621928d03",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "4377cf52-c9dc-4a39-8772-168166eeff22",
+	"operation": "create",
+	"after": "Players receive 10 free stage entries per day (gc_dailyFreeEntry); entry fees are part of the coin economy where a failed entry is not refunded.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/coin-manager.js"
+	],
+	"createdAt": 1788315981742
+}

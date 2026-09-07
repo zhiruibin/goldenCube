@@ -1,0 +1,26 @@
+{
+	"id": "ad1b641c-1fe3-45c5-81b1-af7f35350766",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "lucky-draw.prize.coin-roll-manager",
+	"title": "Lucky draw prize is rolled by the coin prize manager",
+	"statement": "LuckyDrawOverlay wires the drawn prize to the rollCoinPrize utility in the lucky-draw manager instead of computing prize values inline.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312151886,
+	"updatedAt": 1788312151886,
+	"createdByTaskId": "business-init",
+	"latestEventId": "a53b6e7e-8ede-4d73-9171-53ca0f6efaf6",
+	"tags": [],
+	"aliases": [
+		"rollCoinPrize",
+		"金币奖励 roll"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/widgets/lucky-draw-overlay.js"
+		}
+	]
+}

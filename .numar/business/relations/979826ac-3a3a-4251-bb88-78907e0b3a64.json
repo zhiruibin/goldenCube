@@ -1,0 +1,15 @@
+{
+	"id": "979826ac-3a3a-4251-bb88-78907e0b3a64",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "b06b58df-ff78-48ff-96a3-f0784603e5e2",
+	"toNodeId": "ec331dd6-fc6c-45d4-9c0a-2c9afcf60b0f",
+	"type": "appliesTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"docs/gc-chapter-stages-design.md",
+		"docs/gc-workshop-plaza-design.md"
+	],
+	"createdByTaskId": "business-relationship-scan",
+	"createdAt": 1788332541228,
+	"updatedAt": 1788332541228
+}

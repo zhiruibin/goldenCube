@@ -1,0 +1,31 @@
+{
+	"id": "71c53680-8a4c-4b46-82a2-d85089fe8d2c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "product.entries.stage-plaza-workshop-challenge",
+	"title": "四产品入口且无模式分入口",
+	"statement": "产品提供四个玩家入口：闯关（官方章节残局 10×10 布局）、关卡广场（官方精选+玩家发布）、工坊（造关/自通/发布）、好友挑战（挂在具体关卡上的残局对决）；不提供经典/限时/马拉松等模式分入口。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312287176,
+	"updatedAt": 1788312287176,
+	"createdByTaskId": "business-init",
+	"latestEventId": "14149cd1-b0e7-4cc1-99d0-ee0755cf43d6",
+	"tags": [],
+	"aliases": [
+		"闯关/广场/工坊/好友挑战",
+		"四入口",
+		"无经典限时马拉松"
+	],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "README.md"
+		},
+		{
+			"type": "document",
+			"path": "docs/gc-no-mode-cleanup-design.md"
+		}
+	]
+}

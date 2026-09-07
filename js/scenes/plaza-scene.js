@@ -10,6 +10,7 @@ const {
     MUTED,
     ACCENT,
 } = require('../theme/arcade-night');
+const { drawThemeBackground } = require('../theme/theme-images');
 const workshop = require('../../utils/workshop-manager');
 const goldenBlock = require('../../utils/golden-block-manager');
 const { coinManager } = require('../../utils/coin-manager');
@@ -220,15 +221,24 @@ class PlazaScene {
         const hintY = metaY + 22;
         const tabY = hintY + 18;
 
-        const sw = (W - side * 2 - gap * 3) / 4;
+        // Tab：按约 2:1 等比框 + contain，避免石砖皮被横向压扁
+        const cellW = (W - side * 2 - gap * 3) / 4;
+        const tabH = 46;
+        const tabW = Math.min(cellW, Math.round(tabH / 0.42));
         PLAZA_SORT.forEach((t, i) => {
+            const active = this._plazaSort === t.id;
+            const cellX = side + i * (cellW + gap);
             this._buttons.push(new Button({
-                x: side + i * (sw + gap),
+                x: cellX + (cellW - tabW) / 2,
                 y: tabY,
-                w: sw,
-                h: 42,
+                w: tabW,
+                h: tabH,
                 text: t.label,
-                color: this._plazaSort === t.id ? '#e09a30' : '#444',
+                color: active ? '#f0a000' : '#5a4534',
+                skin: active ? 'cardStageGold' : 'cardStageBrown',
+                skinMode: 'contain',
+                labelColor: '#ffffff',
+                fontScale: 0.78,
                 onClick: () => {
                     if (this._plazaSort === t.id) return;
                     this._switchPlazaTab(t.id);
@@ -236,22 +246,28 @@ class PlazaScene {
             }));
         });
 
-        const bottomH = 48;
+        // 返回：资源已是 4:1，按钮同比例直接绘制（勿再九宫格二次横向拉）
+        const bottomH = 52;
+        const bottomW = Math.min(W - side * 2, bottomH * 4);
         const bottomY = H - bottomH - 18;
         this._buttons.push(new Button({
-            x: side,
+            x: (W - bottomW) / 2,
             y: bottomY,
-            w: W - side * 2,
+            w: bottomW,
             h: bottomH,
-            text: '← 返回',
-            color: '#555',
+            text: '返回',
+            color: '#6b4a2e',
+            skin: 'btnBarBrown',
+            skinMode: 'stretch',
+            labelColor: '#fff8ef',
+            fontScale: 0.92,
             onClick: () => GameGlobal.game.sceneManager.back(),
         }));
 
         this._titleY = titleY;
         this._metaY = metaY;
         this._hintY = hintY;
-        this._listTop = tabY + 42 + 12;
+        this._listTop = tabY + tabH + 12;
         this._listBottom = bottomY - 12;
         this._plazaItems = this._plazaItems || [];
         this._refreshHud();
@@ -568,7 +584,9 @@ class PlazaScene {
             console.error('[Plaza] render 失败', e);
             const W = GameGlobal.game.width;
             const H = GameGlobal.game.height;
-            fillNightBackground(ctx, W, H);
+            if (!drawThemeBackground(ctx, 'mapMineBg', W, H)) {
+                fillNightBackground(ctx, W, H);
+            }
             ctx.fillStyle = ACCENT;
             ctx.font = 'bold 22px sans-serif';
             ctx.textAlign = 'center';
@@ -580,7 +598,12 @@ class PlazaScene {
     _renderPlaza(ctx) {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
-        fillNightBackground(ctx, W, H);
+        if (!drawThemeBackground(ctx, 'mapMineBg', W, H)) {
+            fillNightBackground(ctx, W, H);
+        } else {
+            ctx.fillStyle = 'rgba(12, 8, 4, 0.32)';
+            ctx.fillRect(0, 0, W, H);
+        }
 
         const top = this._getTopInset();
         const titleY = this._titleY != null ? this._titleY : top + 6;

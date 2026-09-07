@@ -1,0 +1,12 @@
+{
+	"id": "901d6f0a-26e3-4aad-9649-f5c6d882632b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "a821599f-44f5-42d4-b1f2-4836b9727d08",
+	"operation": "create",
+	"after": "RankScene 每次进入时都会把排行榜模式重置为 'stage'（闯关），模式不随视图状态恢复。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/rank-scene.js"
+	],
+	"createdAt": 1788311965335
+}

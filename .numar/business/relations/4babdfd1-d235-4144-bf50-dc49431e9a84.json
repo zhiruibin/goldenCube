@@ -1,0 +1,14 @@
+{
+	"id": "4babdfd1-d235-4144-bf50-dc49431e9a84",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "6a347ade-a52b-411c-b52f-5bc651b89ab9",
+	"toNodeId": "b15df942-716f-4ebe-93b5-49102d05abcb",
+	"type": "dependsOn",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"js/render/piece-renderer.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788311734510,
+	"updatedAt": 1788311734510
+}

@@ -1,0 +1,31 @@
+{
+	"id": "b2b7ef62-7ff1-4735-9ce6-808e39905466",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "economy.golden-block.achievement-gold-lifetime-cap",
+	"title": "成就发金生涯上限",
+	"statement": "成就奖励的金方块累计上限为：总关卡数 ≥100 时上限 15 个，否则上限 8 个。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316083955,
+	"updatedAt": 1788316083955,
+	"createdByTaskId": "business-init",
+	"latestEventId": "9efe482a-1776-4c6e-88a4-ab5e899de24a",
+	"tags": [],
+	"aliases": [
+		"成就发金封顶",
+		"金方块成就上限"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/golden-block-manager.js"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/golden-block-manager.js",
+			"symbol": "getAchievementGoldCap"
+		}
+	]
+}

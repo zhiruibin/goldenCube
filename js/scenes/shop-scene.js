@@ -8,6 +8,8 @@ const { drawCoinHudCentered } = require('../../utils/coin-hud');
 const IconRenderer = require('../render/icon-renderer');
 const { blockSkins, boardSkins, soundPacks, soundPackProfiles } = require('../../data/skins');
 const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
+const { drawThemeBackground, drawThemeImageContain } = require('../theme/theme-images');
+const { fillNightBackground, drawBrandTitle } = require('../theme/arcade-night');
 
 class ShopScene {
     constructor() {
@@ -64,25 +66,16 @@ class ShopScene {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
 
-        // 背景
-        ctx.fillStyle = '#0f0f23';
-        ctx.fillRect(0, 0, W, H);
+        // 金矿工坊主题背景
+        if (!drawThemeBackground(ctx, 'mapMineBg', W, H)) {
+            fillNightBackground(ctx, W, H);
+        } else {
+            ctx.fillStyle = 'rgba(12, 8, 4, 0.36)';
+            ctx.fillRect(0, 0, W, H);
+        }
 
-        // 标题（图标 + 文字整体居中，参考设置页布局）
-        const titleText = '商店';
         const titleY = this._topInset() + 16;
-        ctx.font = 'bold 28px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        const titleW = ctx.measureText(titleText).width;
-        const iconSize = 24;
-        const gap = 8;
-        const totalW = iconSize + gap + titleW;
-        const leftX = W / 2 - totalW / 2;
-        ctx.fillStyle = '#ffffff';
-        IconRenderer.draw(ctx, 'cart', leftX + iconSize / 2, titleY, iconSize, '#ffffff');
-        ctx.fillText(titleText, leftX + iconSize + gap + titleW / 2, titleY);
-
+        drawBrandTitle(ctx, '商店', W / 2, titleY, 'bold 28px sans-serif');
 
         // 金币（Title 下方居中一行，避免与居中标题抢横向空间）
         drawCoinHudCentered(ctx, W, titleY + 30, this._coins);
@@ -105,28 +98,39 @@ class ShopScene {
             { key: 'board', label: '棋盘' },
             { key: 'sound', label: '音效' },
         ];
-        const tabW = 80;
-        const tabH = 32;
+        const tabW = 90;
+        const tabH = 40;
         const tabY = this._topInset() + 71;
-        const gap = 8;
+        const gap = 10;
         const totalW = tabs.length * tabW + (tabs.length - 1) * gap;
         const startX = (W - totalW) / 2;
 
         this._tabAreas = [];
-        ctx.font = '13px sans-serif';
+        ctx.font = 'bold 14px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
         for (let i = 0; i < tabs.length; i++) {
             const x = startX + i * (tabW + gap);
             const active = this._tab === tabs[i].key;
+            const skin = active ? 'cardStageGold' : 'cardStageBrown';
+            const drawn = drawThemeImageContain(
+                ctx, skin, x + tabW / 2, tabY + tabH / 2, tabW, tabH
+            );
+            if (!drawn.drawn) {
+                ctx.fillStyle = active ? '#c9a227' : '#5a4030';
+                this._roundRect(ctx, x, tabY, tabW, tabH, 6);
+                ctx.fill();
+            }
 
-            ctx.fillStyle = active ? '#00c6ff' : 'rgba(255,255,255,0.1)';
-            this._roundRect(ctx, x, tabY, tabW, tabH, 6);
-            ctx.fill();
-
-            ctx.fillStyle = active ? '#fff' : 'rgba(255,255,255,0.5)';
-            ctx.fillText(tabs[i].label, x + tabW / 2, tabY + tabH / 2);
+            ctx.fillStyle = active ? '#241408' : '#ffffff';
+            ctx.shadowColor = 'rgba(0,0,0,0.35)';
+            ctx.shadowBlur = 2;
+            ctx.shadowOffsetY = 1;
+            ctx.fillText(tabs[i].label, x + tabW / 2, tabY + tabH / 2 + 1);
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetY = 0;
 
             this._tabAreas.push({ x, y: tabY, w: tabW, h: tabH, tab: tabs[i].key });
         }
@@ -158,10 +162,14 @@ class ShopScene {
 
             if (y + itemH < startY || y > clipBottom) continue;
 
-            // 卡片背景
-            ctx.fillStyle = 'rgba(255,255,255,0.05)';
+            // 卡片背景（矿洞主题）
+            ctx.fillStyle = 'rgba(28, 20, 14, 0.88)';
             this._roundRect(ctx, listX, y, listW, itemH, 10);
             ctx.fill();
+            this._roundRect(ctx, listX + 0.75, y + 0.75, listW - 1.5, itemH - 1.5, 9);
+            ctx.strokeStyle = 'rgba(31, 155, 152, 0.55)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
 
             // 方块皮肤预览（所见即所得：完整皮肤特性 + 7 种方块色）
             if (this._tab === 'block') {
@@ -197,11 +205,11 @@ class ShopScene {
             if (isEquipped) {
                 rightText = '使用中';
                 rightFont = 'bold 14px sans-serif';
-                rightColor = '#00f000';
+                rightColor = '#8fd36a';
             } else if (isOwned) {
                 rightText = '装备';
                 rightFont = '14px sans-serif';
-                rightColor = '#00c6ff';
+                rightColor = '#c9a227';
             } else if (item.unlockCondition && item.unlockCondition !== 'purchase') {
                 // 条件解锁商品：右侧只显示简短标签，具体条件已由描述体现，避免两段长文案重叠
                 rightText = '条件解锁';
@@ -247,8 +255,12 @@ class ShopScene {
             new Button({
                 x: W / 2 - btnW / 2, y: H - 80,
                 w: btnW, h: btnH,
-                text: '← 返回',
-                color: '#555',
+                text: '返回',
+                color: '#6b4a2e',
+                skin: 'btnBarBrown',
+                skinMode: 'stretch',
+                labelColor: '#fff8ef',
+                fontScale: 0.92,
                 onClick: () => GameGlobal.game.sceneManager.back(),
             }),
         ];

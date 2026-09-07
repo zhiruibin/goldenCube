@@ -1,0 +1,27 @@
+{
+	"id": "57035b98-ae22-4169-9719-cfbd95f5f297",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.internals.play-context-not-mode",
+	"title": "对局上下文使用 playContext 而非模式",
+	"statement": "系统内部用 playContext（stage|plaza|workshop|challenge）、layoutSource（official_stage|official_plaza|ugc）和 challengeKind（stage|workshop|plaza）区分玩法；排行榜 mode:'stage' 是榜分区键，挑战记录的 mode 表示挑战挂在哪类关，都不是经典/限时/马拉松模式。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312287213,
+	"updatedAt": 1788312287213,
+	"createdByTaskId": "business-init",
+	"latestEventId": "5aed78ac-bf24-4bb7-82dc-71e3f7f2d7f9",
+	"tags": [],
+	"aliases": [
+		"playContext",
+		"challengeKind",
+		"榜分区stage"
+	],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "docs/gc-no-mode-cleanup-design.md"
+		}
+	]
+}

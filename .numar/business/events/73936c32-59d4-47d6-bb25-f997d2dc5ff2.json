@@ -1,0 +1,12 @@
+{
+	"id": "73936c32-59d4-47d6-bb25-f997d2dc5ff2",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "db02049d-6a83-4320-8de6-90ba99a5ce36",
+	"operation": "create",
+	"after": "World-map board rows are derived from the number of chapter nodes when the current layout does not already specify rows.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/world-map-scene.js: _buildNodes() falls back to fx.boardRowsForCount(this._nodes.length)"
+	],
+	"createdAt": 1788312151874
+}

@@ -1,0 +1,38 @@
+{
+	"id": "9687bc41-8c1d-4112-8bb9-22c6e9d63b45",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.share-card.image-5x4-500x400",
+	"title": "Challenge share card is 5:4 at 500x400 physical pixels",
+	"statement": "Friend-challenge share cards are rendered on an offscreen canvas at 500x400 physical pixels (5:4 ratio) for the WeChat shareAppMessage imageUrl; the canvas physical size must equal the export region because exporting scaled logical dimensions only captures the top-left corner.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315981593,
+	"updatedAt": 1788315981593,
+	"createdByTaskId": "business-init",
+	"latestEventId": "a882fbe8-6187-4377-a0ad-c3880da48a3e",
+	"tags": [],
+	"aliases": [
+		"分享卡片5:4",
+		"分享卡500×400",
+		"shareAppMessage图片规格",
+		"分享图物理尺寸"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/challenge-share-card.js"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/challenge-share-card.js",
+			"symbol": "CARD_W"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/challenge-share-card.js",
+			"symbol": "CARD_H"
+		}
+	]
+}

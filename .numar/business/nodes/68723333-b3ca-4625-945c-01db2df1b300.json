@@ -1,0 +1,30 @@
+{
+	"id": "68723333-b3ca-4625-945c-01db2df1b300",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "economy.golden-block.balance-storage-key",
+	"title": "金方块余额存储键",
+	"statement": "金方块余额保存在本地存储键 gc_goldenBlocks；读取失败按 0 处理，累加不会低于 0，消费不足时返回失败。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316084000,
+	"updatedAt": 1788316084000,
+	"createdByTaskId": "business-init",
+	"latestEventId": "997e2c2d-2190-4eec-91fa-5bde39099866",
+	"tags": [],
+	"aliases": [
+		"金方块余额"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/golden-block-manager.js"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/golden-block-manager.js",
+			"symbol": "getBalance"
+		}
+	]
+}

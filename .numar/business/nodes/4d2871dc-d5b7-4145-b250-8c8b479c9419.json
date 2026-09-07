@@ -1,0 +1,51 @@
+{
+	"id": "4d2871dc-d5b7-4145-b250-8c8b479c9419",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "navigation.world-map-scene",
+	"title": "World map scene with map/plaza wall background effects",
+	"statement": "New world-map scene renders with world-map-fx and plaza-wall-fx background effects and handles map tap interaction (dedicated tap tests added)",
+	"status": "active",
+	"verificationStatus": "verified",
+	"createdAt": 1788309950438,
+	"updatedAt": 1788309950438,
+	"createdByTaskId": "commit:c562e404c328cdf6d8f75adb938c6fcb06217771",
+	"latestEventId": "92a992f0-0ad4-48f5-9e56-5f7350b484c0",
+	"tags": [],
+	"aliases": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/world-map-scene.js"
+		},
+		{
+			"type": "file",
+			"path": "js/render/world-map-fx.js"
+		},
+		{
+			"type": "file",
+			"path": "js/render/plaza-wall-fx.js"
+		},
+		{
+			"type": "test",
+			"path": "tools/gc-test-world-map-tap.js"
+		},
+		{
+			"type": "test",
+			"path": "tools/gc-test-plaza-wall.js"
+		},
+		{
+			"type": "document",
+			"path": "docs/preview-world-map.html"
+		},
+		{
+			"type": "document",
+			"path": "docs/preview-map-plaza.html"
+		},
+		{
+			"type": "document",
+			"path": "docs/preview-plaza-wall.html"
+		}
+	]
+}

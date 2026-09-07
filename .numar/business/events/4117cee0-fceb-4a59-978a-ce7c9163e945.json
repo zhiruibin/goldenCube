@@ -1,0 +1,12 @@
+{
+	"id": "4117cee0-fceb-4a59-978a-ce7c9163e945",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "e3ff39f1-3e14-45b0-b88d-7bc96ea7c11c",
+	"operation": "create",
+	"after": "广场列表仅官方 Tab 可用本地包即时展示（顺序稳定）；新关/热门/好通关 Tab 依赖云端排序，避免先展示本地数据造成闪烁。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/plaza-scene.js"
+	],
+	"createdAt": 1788311965317
+}

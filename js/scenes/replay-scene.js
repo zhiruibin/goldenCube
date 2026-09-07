@@ -9,6 +9,8 @@ const { PieceRenderer } = require('../render/piece-renderer');// 兼容 ReplayRe
 const { EffectRenderer } = require('../render/effect-renderer');
 const ReplayRecorderModule = require('../../utils/replay-recorder');
 const { BackgroundEffects } = require('../render/background-effects');
+const { drawThemeBackground, drawThemeImageContain, drawThemeButtonSkin } = require('../theme/theme-images');
+const { fillNightBackground } = require('../theme/arcade-night');
 const ReplayRecorder = ReplayRecorderModule.ReplayRecorder || ReplayRecorderModule;
 
 /** 回放输入动作 -> 引擎方法映射（与 ReplayRecorder.record 的 action 命名对齐） */
@@ -112,6 +114,7 @@ class ReplayScene {
                     workshopListParams: this._params.workshopListParams,
                     result: this._params.result,
                     replayKey: this._params.replayKey,
+                    failed: !!this._params.failed,
                 });
             } else if (this._params && this._params.fromChallenge) {
                 GameGlobal.game.sceneManager.leaveTo('challenge', {}, ['home']);
@@ -241,11 +244,15 @@ class ReplayScene {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
 
-        // 深色背景（与对局场景一致，避免露白）
-        if (this._bgEffects && this._bgEffects.isEnabled()) {
-            this._bgEffects.render(ctx);
+        // 金矿工坊主题背景
+        if (!drawThemeBackground(ctx, 'mapMineBg', W, H)) {
+            if (this._bgEffects && this._bgEffects.isEnabled()) {
+                this._bgEffects.render(ctx);
+            } else {
+                fillNightBackground(ctx, W, H);
+            }
         } else {
-            ctx.fillStyle = '#0f0f23';
+            ctx.fillStyle = 'rgba(12, 8, 4, 0.42)';
             ctx.fillRect(0, 0, W, H);
         }
 
@@ -486,9 +493,9 @@ class ReplayScene {
         this._roundRect(ctx, r.x, r.y, r.w, r.h, r.h / 2);
         ctx.fill();
 
-        // 进度条填充
+        // 进度条填充（金矿主题）
         if (progress > 0) {
-            ctx.fillStyle = '#00c6ff';
+            ctx.fillStyle = '#c9a227';
             const fillW = Math.max(r.h, Math.floor(r.w * progress));
             this._roundRect(ctx, r.x, r.y, fillW, r.h, r.h / 2);
             ctx.fill();
@@ -496,31 +503,60 @@ class ReplayScene {
     }
 
     _renderControlButtons(ctx) {
-        this._drawControlButton(ctx, this._backBtnRect, '← 返回', '#3a3a55');
-        this._drawControlButton(ctx, this._speedBtnRect, this._speed + 'x', '#14506e');
+        this._drawControlButton(ctx, this._backBtnRect, '返回', {
+            skin: 'cardStageBrown',
+            labelColor: '#ffffff',
+            stretch: true,
+        });
+        this._drawControlButton(ctx, this._speedBtnRect, this._speed + 'x', {
+            skin: 'btnSquareTeal',
+            labelColor: '#ffffff',
+        });
         this._drawControlButton(
             ctx,
             this._pauseBtnRect,
             this._paused ? '继续' : '暂停',
-            this._paused ? '#2ecc71' : '#f0a000'
+            this._paused
+                ? { skin: 'btnSquareAmber', labelColor: '#241408' }
+                : { skin: 'btnSquareGold', labelColor: '#241408' }
         );
     }
 
-    _drawControlButton(ctx, rect, label, bgColor) {
+    _drawControlButton(ctx, rect, label, style) {
         if (!rect) return;
-        ctx.fillStyle = bgColor;
-        this._roundRect(ctx, rect.x, rect.y, rect.w, rect.h, 12);
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-        ctx.lineWidth = 1;
-        this._roundRect(ctx, rect.x, rect.y, rect.w, rect.h, 12);
-        ctx.stroke();
+        const skin = style && style.skin;
+        const labelColor = (style && style.labelColor) || '#ffffff';
+        const stretch = !!(style && style.stretch);
+        let drawn = false;
+        if (skin) {
+            if (stretch) {
+                drawn = drawThemeButtonSkin(ctx, skin, rect.x, rect.y, rect.w, rect.h);
+            } else {
+                const r = drawThemeImageContain(
+                    ctx, skin,
+                    rect.x + rect.w / 2, rect.y + rect.h / 2,
+                    rect.w, rect.h
+                );
+                drawn = !!(r && r.drawn);
+            }
+        }
+        if (!drawn) {
+            ctx.fillStyle = '#6b4a2e';
+            this._roundRect(ctx, rect.x, rect.y, rect.w, rect.h, 12);
+            ctx.fill();
+        }
 
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = labelColor;
         ctx.font = 'bold 15px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
+        ctx.shadowColor = 'rgba(0,0,0,0.4)';
+        ctx.shadowBlur = 2;
+        ctx.shadowOffsetY = 1;
         ctx.fillText(label, rect.x + rect.w / 2, rect.y + rect.h / 2 + 1);
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
     }
 
     // ==================== 控制逻辑 ====================

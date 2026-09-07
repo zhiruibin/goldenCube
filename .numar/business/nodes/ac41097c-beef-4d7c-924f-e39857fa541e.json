@@ -1,0 +1,27 @@
+{
+	"id": "ac41097c-beef-4d7c-924f-e39857fa541e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage-select.last-chapter-index-saved-on-exit",
+	"title": "Stage select saves last chapter index on exit",
+	"statement": "When leaving StageSelectScene, the current chapter index is saved through goldenBlock.setLastChapterIndex so the player returns to the same chapter next time.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312028791,
+	"updatedAt": 1788312028791,
+	"createdByTaskId": "business-init",
+	"latestEventId": "52d2268b-76ef-4726-a8f5-0c6e751d4d3a",
+	"tags": [],
+	"aliases": [
+		"记住上次章节",
+		"last chapter saved"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/stage-select-scene.js",
+			"symbol": "_saveChapterIndex"
+		}
+	]
+}

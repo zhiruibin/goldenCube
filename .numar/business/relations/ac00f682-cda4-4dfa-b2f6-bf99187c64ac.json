@@ -1,0 +1,15 @@
+{
+	"id": "ac00f682-cda4-4dfa-b2f6-bf99187c64ac",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "3a14bc17-75b6-42bd-98ed-bedf513f6826",
+	"toNodeId": "4b272dc7-6a40-4f5e-8856-0cf9271a00a4",
+	"type": "appliesTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"utils/tetris-engine.js:BagRandomizer constructor seed 参数",
+		"utils/tetris-engine.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788311439826,
+	"updatedAt": 1788314604987
+}

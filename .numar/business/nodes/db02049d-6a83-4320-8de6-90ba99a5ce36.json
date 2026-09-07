@@ -1,0 +1,24 @@
+{
+	"id": "db02049d-6a83-4320-8de6-90ba99a5ce36",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "world-map.rows-from-chapter-count",
+	"title": "World map board row count derives from chapter count",
+	"statement": "World-map board rows are derived from the number of chapter nodes when the current layout does not already specify rows.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312151874,
+	"updatedAt": 1788312151874,
+	"createdByTaskId": "business-init",
+	"latestEventId": "73936c32-59d4-47d6-bb25-f997d2dc5ff2",
+	"tags": [],
+	"aliases": [],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/world-map-scene.js",
+			"symbol": "_buildNodes"
+		}
+	]
+}

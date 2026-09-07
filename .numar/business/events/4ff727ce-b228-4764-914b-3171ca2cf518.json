@@ -1,0 +1,12 @@
+{
+	"id": "4ff727ce-b228-4764-914b-3171ca2cf518",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "f1c309a3-b9de-4952-a067-d06a66c34f06",
+	"operation": "create",
+	"after": "复合键中 clearedCount 最高 999，linesSum 与 piecesSum 最高 90000，timeSum 按秒最高 99999，并需保证低位总和小于 clearedCount 权重。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/rank-score.js"
+	],
+	"createdAt": 1788316084257
+}

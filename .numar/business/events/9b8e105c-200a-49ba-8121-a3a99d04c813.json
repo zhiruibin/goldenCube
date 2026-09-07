@@ -1,0 +1,12 @@
+{
+	"id": "9b8e105c-200a-49ba-8121-a3a99d04c813",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "5b1b538e-045c-4be1-bb0b-bf85735abd0e",
+	"operation": "create",
+	"after": "The title shovel icon prefers the 🪏 emoji; when the glyph is unavailable (measured width too small), it falls back to a vector-drawn shovel.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/title-decor.js"
+	],
+	"createdAt": 1788311734500
+}

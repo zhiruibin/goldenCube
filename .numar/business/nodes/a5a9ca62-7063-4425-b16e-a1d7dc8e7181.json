@@ -1,0 +1,27 @@
+{
+	"id": "a5a9ca62-7063-4425-b16e-a1d7dc8e7181",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "workshop-scene.plaza-main-tab-maps-to-published",
+	"title": "Legacy plaza main tab maps to published tab",
+	"statement": "WorkshopScene maps legacy incoming params where mainTab is 'plaza' to the 'published' mineSub tab.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312028811,
+	"updatedAt": 1788312028811,
+	"createdByTaskId": "business-init",
+	"latestEventId": "5aca4a5e-ed77-4336-81f7-87388dc31a46",
+	"tags": [],
+	"aliases": [
+		"老广场Tab映射已发布",
+		"plaza mainTab alias"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/workshop-scene.js",
+			"symbol": "onEnter"
+		}
+	]
+}

@@ -1,0 +1,12 @@
+{"id":"capability.overview","type":"capability","name":"项目概览与运行时入口","businessKnowledgeKeys":[]}
+{"id":"capability.tetris_core_engine","type":"capability","name":"俄罗斯方块核心引擎","businessKnowledgeKeys":[]}
+{"id":"capability.stage_progression","type":"capability","name":"官方章节闯关与进度","businessKnowledgeKeys":[]}
+{"id":"capability.gameplay_scenes","type":"capability","name":"对局与结算场景","businessKnowledgeKeys":[]}
+{"id":"capability.rendering_effects","type":"capability","name":"渲染与视觉特效","businessKnowledgeKeys":[]}
+{"id":"capability.economy_currency","type":"capability","name":"经济与货币系统","businessKnowledgeKeys":[]}
+{"id":"capability.workshop_plaza","type":"capability","name":"工坊造关与关卡广场","businessKnowledgeKeys":[]}
+{"id":"capability.friend_challenge","type":"capability","name":"好友挑战","businessKnowledgeKeys":[]}
+{"id":"capability.rank_leaderboard","type":"capability","name":"排行榜与开放数据域","businessKnowledgeKeys":[]}
+{"id":"capability.cloud_backend","type":"capability","name":"云开发后端服务","businessKnowledgeKeys":[]}
+{"id":"capability.achievement_reward","type":"capability","name":"成就与奖励系统","businessKnowledgeKeys":[]}
+{"id":"capability.dev_tools","type":"capability","name":"开发与构建工具","businessKnowledgeKeys":[]}

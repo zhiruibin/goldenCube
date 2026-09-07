@@ -1,0 +1,12 @@
+{
+	"id": "997e2c2d-2190-4eec-91fa-5bde39099866",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "68723333-b3ca-4625-945c-01db2df1b300",
+	"operation": "create",
+	"after": "金方块余额保存在本地存储键 gc_goldenBlocks；读取失败按 0 处理，累加不会低于 0，消费不足时返回失败。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/golden-block-manager.js"
+	],
+	"createdAt": 1788316084000
+}

@@ -1,0 +1,12 @@
+{
+	"id": "42400dba-cf76-4383-aa89-3a1148062008",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "36ba1772-5a51-4eba-9df2-0a4494605f10",
+	"operation": "create",
+	"after": "Result block illustration glow is drawn with a canvas radial gradient; the PNG only supplies the block body, avoiding bitmap glow jaggies.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/result-block-image.js"
+	],
+	"createdAt": 1788311734495
+}

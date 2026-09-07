@@ -9,6 +9,7 @@ const {
     SUBTITLE,
     MUTED,
 } = require('../theme/arcade-night');
+const { drawThemeBackground, drawThemeImageContain, drawThemeButtonSkin } = require('../theme/theme-images');
 const workshop = require('../../utils/workshop-manager');
 const goldenBlock = require('../../utils/golden-block-manager');
 const { coinManager } = require('../../utils/coin-manager');
@@ -161,15 +162,24 @@ class WorkshopScene {
         const metaY = titleY + 34;
         const tabY = metaY + 28;
 
-        const sw = (W - side * 2 - gap * 3) / 4;
+        // Tab：与广场一致，约 2:1 + contain
+        const cellW = (W - side * 2 - gap * 3) / 4;
+        const tabH = 46;
+        const tabW = Math.min(cellW, Math.round(tabH / 0.42));
         STATUS_TABS.forEach((t, i) => {
+            const active = this._mineSub === t.id;
+            const cellX = side + i * (cellW + gap);
             this._buttons.push(new Button({
-                x: side + i * (sw + gap),
+                x: cellX + (cellW - tabW) / 2,
                 y: tabY,
-                w: sw,
-                h: 42,
+                w: tabW,
+                h: tabH,
                 text: t.label,
-                color: this._mineSub === t.id ? '#e09a30' : '#444',
+                color: active ? '#f0a000' : '#5a4534',
+                skin: active ? 'cardStageGold' : 'cardStageBrown',
+                skinMode: 'contain',
+                labelColor: '#ffffff',
+                fontScale: 0.72,
                 onClick: () => {
                     this._mineSub = t.id;
                     this._scrollY = 0;
@@ -179,28 +189,41 @@ class WorkshopScene {
             }));
         });
 
-        const bottomH = 48;
+        // 底部三键并排：均约 2:1 contain（返回槽位不够铺 4:1 金条）
+        const bottomH = 52;
         const bottomY = H - bottomH - 18;
-        const backW = 100;
-        const expandW = 88;
-        const createW = W - side * 2 - backW - expandW - gap * 2;
+        const backSlotW = Math.min(110, Math.round(W * 0.26));
+        const expandSlotW = Math.min(110, Math.round(W * 0.26));
+        const createSlotW = Math.max(100, W - side * 2 - backSlotW - expandSlotW - gap * 2);
+        const idealW = Math.round(bottomH / 0.42);
+        const backW = Math.min(backSlotW, idealW);
+        const createW = Math.min(createSlotW, idealW);
+        const expandW = Math.min(expandSlotW, idealW);
 
         this._buttons.push(new Button({
-            x: side,
+            x: side + (backSlotW - backW) / 2,
             y: bottomY,
             w: backW,
             h: bottomH,
-            text: '← 返回',
-            color: '#555',
+            text: '返回',
+            color: '#5a4534',
+            skin: 'cardStageBrown',
+            skinMode: 'contain',
+            labelColor: '#ffffff',
+            fontScale: 0.82,
             onClick: () => GameGlobal.game.sceneManager.back(),
         }));
         this._buttons.push(new Button({
-            x: side + backW + gap,
+            x: side + backSlotW + gap + (createSlotW - createW) / 2,
             y: bottomY,
             w: createW,
             h: bottomH,
             text: '创建关卡',
-            color: '#e09a30',
+            color: '#f0a000',
+            skin: 'cardStageGold',
+            skinMode: 'contain',
+            labelColor: '#241408',
+            fontScale: 0.78,
             onClick: () => this._onCreate(),
         }));
         const cost = workshop.getExpandCost();
@@ -208,18 +231,22 @@ class WorkshopScene {
             ? '已满'
             : ('扩槽' + cost + '金');
         this._buttons.push(new Button({
-            x: side + backW + gap + createW + gap,
+            x: side + backSlotW + gap + createSlotW + gap + (expandSlotW - expandW) / 2,
             y: bottomY,
             w: expandW,
             h: bottomH,
             text: expandLabel,
-            color: cost == null ? '#444' : '#8b5a2b',
+            color: cost == null ? '#5a4534' : '#8a6848',
+            skin: cost == null ? 'cardStageBrown' : 'cardStageAmber',
+            skinMode: 'contain',
+            labelColor: cost == null ? '#ffffff' : '#241408',
+            fontScale: 0.68,
             onClick: () => this._onExpand(),
         }));
 
         this._titleY = titleY;
         this._metaY = metaY;
-        this._listTop = tabY + 42 + 16;
+        this._listTop = tabY + tabH + 16;
         this._listBottom = bottomY - 12;
         this._buildListRects();
     }
@@ -550,7 +577,12 @@ class WorkshopScene {
     render(ctx) {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
-        fillNightBackground(ctx, W, H);
+        if (!drawThemeBackground(ctx, 'mapMineBg', W, H)) {
+            fillNightBackground(ctx, W, H);
+        } else {
+            ctx.fillStyle = 'rgba(12, 8, 4, 0.32)';
+            ctx.fillRect(0, 0, W, H);
+        }
 
         const top = this._getTopInset();
         const titleY = this._titleY != null ? this._titleY : top + 6;
@@ -610,6 +642,10 @@ class WorkshopScene {
         ctx.fillStyle = 'rgba(255,255,255,0.08)';
         this._round(ctx, x, y, w, h, 10);
         ctx.fill();
+        ctx.strokeStyle = '#1f9b98';
+        ctx.lineWidth = 1.5;
+        this._round(ctx, x + 0.75, y + 0.75, w - 1.5, h - 1.5, 9);
+        ctx.stroke();
 
         ctx.fillStyle = '#fff';
         ctx.font = 'bold 15px sans-serif';
@@ -658,6 +694,17 @@ class WorkshopScene {
         }
     }
 
+    _actionSheetSkin(action) {
+        if (action === 'delete' || action === 'delist' || action === 'withdraw' || action === 'cancel') {
+            return { skin: 'btnBarBrown', label: '#ffffff', fallback: '#5a4030' };
+        }
+        if (action === 'trial' || action === 'play' || action === 'submit') {
+            return { skin: 'btnBarGold', label: '#241408', fallback: '#c9a227' };
+        }
+        // edit / rename / challenge 等
+        return { skin: 'btnBarAmber', label: '#241408', fallback: '#c89840' };
+    }
+
     _drawActionSheet(ctx) {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
@@ -673,77 +720,123 @@ class WorkshopScene {
             delist: '下架',
             play: '游玩',
         };
-        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.fillStyle = 'rgba(10, 7, 4, 0.62)';
         ctx.fillRect(0, 0, W, H);
-        const bw = Math.min(280, W * 0.78);
-        const bh = 44;
-        const gap = 10;
-        const n = sheet.actions.length + 1;
-        const panelH = n * (bh + gap) + 24;
+
+        // 与入场弹窗一致：竖排通栏，每钮一行，4:1 条形石砖皮
+        const actions = (sheet && sheet.actions) || [];
+        const bw = Math.min(300, W * 0.82);
+        const sidePad = 20;
+        const btnW = bw - sidePad * 2;
+        const btnH = 40;
+        const btnGap = 12;
+        const topPad = 16;
+        const bottomPad = 16;
+        const btnCount = actions.length + 1; // + 取消
+        const panelH = topPad + btnCount * btnH + (btnCount - 1) * btnGap + bottomPad;
         const px = (W - bw) / 2;
         const py = (H - panelH) / 2;
-        ctx.fillStyle = '#2a2a32';
-        this._round(ctx, px, py, bw, panelH, 12);
+
+        this._round(ctx, px, py, bw, panelH, 14);
+        ctx.fillStyle = 'rgba(28, 20, 14, 0.96)';
         ctx.fill();
+        this._round(ctx, px + 0.75, py + 0.75, bw - 1.5, panelH - 1.5, 13);
+        ctx.strokeStyle = 'rgba(31, 155, 152, 0.7)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
 
         this._sheetRects = [];
-        sheet.actions.forEach((a, i) => {
-            const ry = py + 12 + i * (bh + gap);
-            ctx.fillStyle = a === 'delete' ? '#a04040' : '#3a7ab0';
-            this._round(ctx, px + 12, ry, bw - 24, bh, 8);
-            ctx.fill();
-            ctx.fillStyle = '#fff';
+
+        const drawBarBtn = (action, label, x, y, w, h) => {
+            const meta = this._actionSheetSkin(action);
+            if (!drawThemeButtonSkin(ctx, meta.skin, x, y, w, h)) {
+                ctx.fillStyle = meta.fallback;
+                this._round(ctx, x, y, w, h, 8);
+                ctx.fill();
+            }
+            ctx.fillStyle = meta.label;
             ctx.font = 'bold 15px sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(labels[a] || a, W / 2, ry + bh / 2);
-            this._sheetRects.push({ action: a, x: px + 12, y: ry, w: bw - 24, h: bh });
-        });
-        const cy = py + 12 + sheet.actions.length * (bh + gap);
-        ctx.fillStyle = '#555';
-        this._round(ctx, px + 12, cy, bw - 24, bh, 8);
-        ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.fillText('取消', W / 2, cy + bh / 2);
-        this._sheetRects.push({ action: 'cancel', x: px + 12, y: cy, w: bw - 24, h: bh });
+            ctx.shadowColor = 'rgba(0,0,0,0.35)';
+            ctx.shadowBlur = 2;
+            ctx.shadowOffsetY = 1;
+            ctx.fillText(label, x + w / 2, y + h / 2 + 1);
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetY = 0;
+            this._sheetRects.push({ action, x, y, w, h });
+        };
+
+        let by = py + topPad;
+        for (let i = 0; i < actions.length; i++) {
+            const action = actions[i];
+            drawBarBtn(action, labels[action] || action, px + sidePad, by, btnW, btnH);
+            by += btnH + btnGap;
+        }
+        drawBarBtn('cancel', '取消', px + sidePad, by, btnW, btnH);
     }
 
     _drawConfirm(ctx) {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
         const c = this._confirm;
-        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.fillStyle = 'rgba(10, 7, 4, 0.62)';
         ctx.fillRect(0, 0, W, H);
         const bw = Math.min(300, W * 0.82);
         const bh = 180;
         const px = (W - bw) / 2;
         const py = (H - bh) / 2;
-        ctx.fillStyle = '#2a2a32';
-        this._round(ctx, px, py, bw, bh, 12);
+
+        this._round(ctx, px, py, bw, bh, 14);
+        ctx.fillStyle = 'rgba(28, 20, 14, 0.96)';
         ctx.fill();
-        ctx.fillStyle = '#fff';
+        this._round(ctx, px + 0.75, py + 0.75, bw - 1.5, bh - 1.5, 13);
+        ctx.strokeStyle = 'rgba(31, 155, 152, 0.7)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.fillStyle = '#fff8ef';
         ctx.font = 'bold 17px sans-serif';
         ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         ctx.fillText(c.title, W / 2, py + 36);
-        ctx.fillStyle = SUBTITLE;
+        ctx.fillStyle = 'rgba(255,248,239,0.72)';
         ctx.font = '13px sans-serif';
         const lines = String(c.body || '').split('\n');
         lines.forEach((ln, i) => ctx.fillText(ln, W / 2, py + 70 + i * 20));
+
         const btnW = (bw - 36) / 2;
+        const btnH = 42;
         const by = py + bh - 56;
-        ctx.fillStyle = '#555';
-        this._round(ctx, px + 12, by, btnW, 40, 8);
-        ctx.fill();
-        ctx.fillStyle = '#e09a30';
-        this._round(ctx, px + 24 + btnW, by, btnW, 40, 8);
-        ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 15px sans-serif';
-        ctx.fillText('取消', px + 12 + btnW / 2, by + 20);
-        ctx.fillText('确定', px + 24 + btnW + btnW / 2, by + 20);
+        const cancelX = px + 12;
+        const okX = px + 24 + btnW;
+
+        const drawDlgBtn = (x, y, w, h, skin, label, labelColor) => {
+            const drawn = drawThemeImageContain(ctx, skin, x + w / 2, y + h / 2, w, h);
+            if (!drawn.drawn) {
+                ctx.fillStyle = skin === 'cardStageBrown' ? '#5a4030' : '#c9a227';
+                this._round(ctx, x, y, w, h, 8);
+                ctx.fill();
+            }
+            ctx.fillStyle = labelColor;
+            ctx.font = 'bold 15px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowColor = 'rgba(0,0,0,0.4)';
+            ctx.shadowBlur = 2;
+            ctx.shadowOffsetY = 1;
+            ctx.fillText(label, x + w / 2, y + h / 2 + 1);
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetY = 0;
+        };
+        drawDlgBtn(cancelX, by, btnW, btnH, 'cardStageBrown', '取消', '#ffffff');
+        drawDlgBtn(okX, by, btnW, btnH, 'cardStageGold', '确定', '#241408');
+
         this._confirmRects = {
-            cancel: { x: px + 12, y: by, w: btnW, h: 40 },
-            ok: { x: px + 24 + btnW, y: by, w: btnW, h: 40 },
+            cancel: { x: cancelX, y: by, w: btnW, h: btnH },
+            ok: { x: okX, y: by, w: btnW, h: btnH },
         };
     }
 

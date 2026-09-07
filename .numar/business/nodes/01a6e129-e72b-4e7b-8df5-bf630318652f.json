@@ -1,0 +1,26 @@
+{
+	"id": "01a6e129-e72b-4e7b-8df5-bf630318652f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "settings.profile-request.cancel-on-exit",
+	"title": "设置页退出取消头像请求",
+	"statement": "离开设置场景时会取消未完成的微信头像昵称获取请求。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311965364,
+	"updatedAt": 1788311965364,
+	"createdByTaskId": "business-init",
+	"latestEventId": "d23b56c0-3e28-403d-8734-8da60683b8a3",
+	"tags": [],
+	"aliases": [
+		"退出取消资料请求"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/settings-scene.js",
+			"symbol": "onExit"
+		}
+	]
+}

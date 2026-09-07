@@ -1,0 +1,28 @@
+{
+	"id": "100abfc2-0ef9-41d2-ad52-a463f42d3fce",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.friend.kv-floor-guard",
+	"title": "Friend KV floor prevents overwriting best score",
+	"statement": "A friend KV floor (gc_friend_kv_floor) records the highest composite score already written to friend storage so that a later lower local score cannot overwrite the stored friend KV.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315981701,
+	"updatedAt": 1788315981701,
+	"createdByTaskId": "business-init",
+	"latestEventId": "c1d1e336-17b3-4436-9178-d745b770aacd",
+	"tags": [],
+	"aliases": [
+		"好友KV下限",
+		"好友最高分防覆盖",
+		"gc_friend_kv_floor"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/cloud-service.js",
+			"symbol": "FRIEND_KV_FLOOR_KEY"
+		}
+	]
+}

@@ -7,11 +7,27 @@ const {
     fillNightBackground,
     drawBrandTitle,
     MUTED,
-    SUBTITLE,
 } = require('../theme/arcade-night');
+const { drawThemeBackground, drawThemeImageContain } = require('../theme/theme-images');
 const workshop = require('../../utils/workshop-manager');
 const { drawGarbageLayoutCell } = require('../render/garbage-cell');
-const { drawLayoutBoardTiles } = require('../render/board-tiles');
+const {
+    drawBoardChrome,
+    drawBoardTiles,
+} = require('../render/board-tiles');
+
+/** 编辑器棋盘：矿洞背景下仍能看清空格 */
+const EDITOR_BOARD_STYLE = {
+    background: 'rgba(16, 12, 9, 0.94)',
+    cellLight: '#4a3a2c',
+    cellDark: '#34281e',
+    cellGap: 2,
+    cellInsetBevel: true,
+    borderColor: 'rgba(31, 155, 152, 0.85)',
+    frameGlow: 'rgba(31, 155, 152, 0.28)',
+    frameRadius: 8,
+    framePadding: 5,
+};
 
 class WorkshopEditorScene {
     constructor() {
@@ -123,19 +139,24 @@ class WorkshopEditorScene {
         const toolsY = H - 150;
         const tw = (W - 40) / 4;
         const tools = [
-            { id: 'paint', label: '绘制', color: '#c9a227', toggle: true },
-            { id: 'erase', label: '橡皮', color: '#6eb5d0', toggle: true },
-            { id: 'clear', label: '清空', color: '#a04040', toggle: false },
-            { id: 'mirror', label: '镜像', color: '#3a7ab0', toggle: false },
+            { id: 'paint', label: '绘制', skinOn: 'cardStageGold', skinOff: 'cardStageBrown', labelOn: '#241408', labelOff: '#ffffff', toggle: true },
+            { id: 'erase', label: '橡皮', skinOn: 'cardStageAmber', skinOff: 'cardStageBrown', labelOn: '#241408', labelOff: '#ffffff', toggle: true },
+            { id: 'clear', label: '清空', skinOn: 'cardStageBrown', skinOff: 'cardStageBrown', labelOn: '#ffffff', labelOff: '#ffffff', toggle: false },
+            { id: 'mirror', label: '镜像', skinOn: 'cardStageAmber', skinOff: 'cardStageAmber', labelOn: '#241408', labelOff: '#241408', toggle: false },
         ];
         tools.forEach((t, i) => {
+            const on = t.toggle && this._tool === t.id;
             this._buttons.push(new Button({
                 x: 10 + i * (tw + 6),
                 y: toolsY,
                 w: tw,
                 h: 40,
                 text: t.label,
-                color: t.toggle && this._tool === t.id ? t.color : '#444',
+                color: '#6b4a2e',
+                skin: on ? t.skinOn : t.skinOff,
+                skinMode: 'contain',
+                labelColor: on ? t.labelOn : t.labelOff,
+                fontScale: 0.82,
                 onClick: () => {
                     if (t.id === 'clear') {
                         this._pushUndo();
@@ -161,7 +182,11 @@ class WorkshopEditorScene {
             w: (W - 26) / 2,
             h: 40,
             text: '撤销',
-            color: '#555',
+            color: '#6b4a2e',
+            skin: 'cardStageBrown',
+            skinMode: 'contain',
+            labelColor: '#ffffff',
+            fontScale: 0.88,
             onClick: () => {
                 if (!this._undoStack.length) {
                     this._showToast('没有可撤销');
@@ -177,7 +202,11 @@ class WorkshopEditorScene {
             w: (W - 26) / 2,
             h: 40,
             text: '试玩',
-            color: '#2ecc71',
+            color: '#c9a227',
+            skin: 'cardStageGold',
+            skinMode: 'contain',
+            labelColor: '#241408',
+            fontScale: 0.88,
             onClick: () => this._trial(),
         }));
 
@@ -360,21 +389,51 @@ class WorkshopEditorScene {
     render(ctx) {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
-        fillNightBackground(ctx, W, H);
+        if (!drawThemeBackground(ctx, 'mapMineBg', W, H)) {
+            fillNightBackground(ctx, W, H);
+        } else {
+            ctx.fillStyle = 'rgba(12, 8, 4, 0.4)';
+            ctx.fillRect(0, 0, W, H);
+        }
 
         const titleY = this._titleY != null ? this._titleY : 80;
         const metaY = this._metaY != null ? this._metaY : titleY + 24;
 
-        // 顶栏文字操作（无实心按钮）
-        ctx.textBaseline = 'middle';
-        ctx.font = '15px sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillStyle = 'rgba(255,255,255,0.72)';
-        ctx.fillText('← 返回', 14, titleY);
-
-        ctx.textAlign = 'right';
-        ctx.fillStyle = SUBTITLE;
-        ctx.fillText('保存', W - 14, titleY);
+        // 顶栏：返回 / 保存 石卡小钮
+        const backHit = this._chromeHits.find((h) => h.id === 'back');
+        const saveHit = this._chromeHits.find((h) => h.id === 'save');
+        if (backHit) {
+            const drawn = drawThemeImageContain(
+                ctx, 'cardStageBrown',
+                backHit.x + backHit.w / 2, backHit.y + backHit.h / 2,
+                backHit.w, backHit.h
+            );
+            if (!drawn.drawn) {
+                ctx.fillStyle = '#5a4030';
+                ctx.fillRect(backHit.x, backHit.y, backHit.w, backHit.h);
+            }
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('返回', backHit.x + backHit.w / 2, backHit.y + backHit.h / 2 + 1);
+        }
+        if (saveHit) {
+            const drawn = drawThemeImageContain(
+                ctx, 'cardStageGold',
+                saveHit.x + saveHit.w / 2, saveHit.y + saveHit.h / 2,
+                saveHit.w, saveHit.h
+            );
+            if (!drawn.drawn) {
+                ctx.fillStyle = '#c9a227';
+                ctx.fillRect(saveHit.x, saveHit.y, saveHit.w, saveHit.h);
+            }
+            ctx.fillStyle = '#241408';
+            ctx.font = 'bold 14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('保存', saveHit.x + saveHit.w / 2, saveHit.y + saveHit.h / 2 + 1);
+        }
 
         const name = this._title || '未命名关卡';
         drawBrandTitle(ctx, name, W / 2, titleY, 'bold 20px sans-serif');
@@ -399,9 +458,31 @@ class WorkshopEditorScene {
                 occ[r][c] = line[c] === '#';
             }
         }
-        if (!drawLayoutBoardTiles(ctx, this._boardX, this._boardY, 10, 20, this._cell, occ)) {
-            ctx.fillStyle = 'rgba(0,0,0,0.35)';
-            ctx.fillRect(this._boardX - 2, this._boardY - 2, this._boardW + 4, this._boardH + 4);
+        // 高对比格槽（不跟装备皮肤走，避免在矿洞背景上消失）
+        drawBoardChrome(
+            ctx, this._boardX, this._boardY,
+            this._boardW, this._boardH, this._cell, EDITOR_BOARD_STYLE
+        );
+        drawBoardTiles(
+            ctx, this._boardX, this._boardY,
+            10, 20, this._cell, occ, EDITOR_BOARD_STYLE
+        );
+        // 细网格线再压一层，空格更容易辨认
+        ctx.strokeStyle = 'rgba(255, 232, 200, 0.14)';
+        ctx.lineWidth = 1;
+        for (let c = 1; c < 10; c++) {
+            const x = this._boardX + c * this._cell + 0.5;
+            ctx.beginPath();
+            ctx.moveTo(x, this._boardY);
+            ctx.lineTo(x, this._boardY + this._boardH);
+            ctx.stroke();
+        }
+        for (let r = 1; r < 20; r++) {
+            const y = this._boardY + r * this._cell + 0.5;
+            ctx.beginPath();
+            ctx.moveTo(this._boardX, y);
+            ctx.lineTo(this._boardX + this._boardW, y);
+            ctx.stroke();
         }
         for (let r = 0; r < 20; r++) {
             const line = this._rows[String(r)];
@@ -413,7 +494,8 @@ class WorkshopEditorScene {
                 }
             }
         }
-        ctx.strokeStyle = 'rgba(255,100,100,0.45)';
+        ctx.strokeStyle = 'rgba(255,120,100,0.7)';
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
         ctx.moveTo(this._boardX, this._boardY + 6 * this._cell);
         ctx.lineTo(this._boardX + this._boardW, this._boardY + 6 * this._cell);

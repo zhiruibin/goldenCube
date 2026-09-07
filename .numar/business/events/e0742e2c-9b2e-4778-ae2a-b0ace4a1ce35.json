@@ -1,0 +1,12 @@
+{
+	"id": "e0742e2c-9b2e-4778-ae2a-b0ace4a1ce35",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "c9616101-3e3f-4485-9156-d043652ad15f",
+	"operation": "create",
+	"after": "开放数据域不修改 sharedCanvas 尺寸（真机不可靠，默认固定为屏幕尺寸），按主域传入的屏幕逻辑宽高与实际画布尺寸之比做均匀缩放绘制，主域按同一比例 1:1 拷贝。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"openDataContext/index.js 渲染链路注释"
+	],
+	"createdAt": 1788315316994
+}

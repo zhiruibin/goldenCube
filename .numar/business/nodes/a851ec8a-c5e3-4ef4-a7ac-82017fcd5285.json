@@ -1,0 +1,31 @@
+{
+	"id": "a851ec8a-c5e3-4ef4-a7ac-82017fcd5285",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage.entry.shortage-reason-codes",
+	"title": "闯关入场资源不足原因码与提示文案",
+	"statement": "入场资源不足校验返回原因码 no-gold、no-coins、no-gold-and-coins，分别对应文案「金方块不足」「金币不足」「金方块不足，金币也不足」。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311439785,
+	"updatedAt": 1788311439785,
+	"createdByTaskId": "business-init",
+	"latestEventId": "2d3265dc-52af-4da3-bfb1-3a757fe5c4bc",
+	"tags": [],
+	"aliases": [
+		"no-gold",
+		"no-coins",
+		"no-gold-and-coins"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"symbol": "_entryShortage"
+		},
+		{
+			"type": "symbol",
+			"symbol": "stageEntryShortageText"
+		}
+	]
+}

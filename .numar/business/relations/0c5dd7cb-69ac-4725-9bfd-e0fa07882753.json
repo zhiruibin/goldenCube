@@ -1,0 +1,15 @@
+{
+	"id": "0c5dd7cb-69ac-4725-9bfd-e0fa07882753",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "d6e10723-2cf0-4862-acd3-2574e6e3ae72",
+	"toNodeId": "50b0b9b9-6468-4eb6-a9bc-5a8e3319426a",
+	"type": "appliesTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"utils/stage-entry-ui.js",
+		"tools/gc-test-stage-select-tap.js"
+	],
+	"createdByTaskId": "business-relationship-scan",
+	"createdAt": 1788332541237,
+	"updatedAt": 1788332541237
+}

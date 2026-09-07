@@ -1,0 +1,14 @@
+{
+	"id": "c259956d-6686-4bae-a57b-0c06fd5bfbb4",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "5d5259a4-44fc-4c5b-8302-b5bbb591e6a0",
+	"toNodeId": "a983a240-ed3b-4d02-96a4-688905d967ef",
+	"type": "belongsTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"js/render/confetti-fx.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788311636540,
+	"updatedAt": 1788311636540
+}

@@ -1,0 +1,16 @@
+{
+	"id": "4c0857c8-eb5c-4297-981a-c45794d7706c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "6ecdc77d-1456-4a2d-8cbc-0a862adff0c2",
+	"toNodeId": "b06b58df-ff78-48ff-96a3-f0784603e5e2",
+	"type": "dependsOn",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"docs/gc-chapter-stages-design.md §1.1",
+		"docs/gc-chapter-stages-design.md §1.3",
+		"docs/gc-chapter-stages-design.md"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788312287221,
+	"updatedAt": 1788332541222
+}

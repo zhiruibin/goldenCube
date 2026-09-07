@@ -1,0 +1,14 @@
+{
+	"id": "56a86941-3d8a-41d7-be96-1838a1f080ed",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "a5a9ca62-7063-4425-b16e-a1d7dc8e7181",
+	"toNodeId": "32000dbc-eae3-41dd-be49-819d0cc8323a",
+	"type": "appliesTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"js/scenes/workshop-scene.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788312028819,
+	"updatedAt": 1788312028819
+}

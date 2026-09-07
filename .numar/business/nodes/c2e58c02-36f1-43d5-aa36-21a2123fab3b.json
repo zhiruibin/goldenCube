@@ -1,0 +1,35 @@
+{
+	"id": "c2e58c02-36f1-43d5-aa36-21a2123fab3b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "navigation.stage-nav",
+	"title": "Centralized stage navigation utility",
+	"statement": "Stage navigation orchestration is centralized in utils/stage-nav.js; stage nav stack, stage-select tap, and stage-result tap tests were updated in the same commit",
+	"status": "active",
+	"verificationStatus": "verified",
+	"createdAt": 1788309950438,
+	"updatedAt": 1788309950438,
+	"createdByTaskId": "commit:c562e404c328cdf6d8f75adb938c6fcb06217771",
+	"latestEventId": "bbbad6ef-da05-4432-a203-1f20a6f70b3d",
+	"tags": [],
+	"aliases": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/stage-nav.js"
+		},
+		{
+			"type": "test",
+			"path": "tools/gc-test-stage-nav-stack.js"
+		},
+		{
+			"type": "test",
+			"path": "tools/gc-test-stage-select-tap.js"
+		},
+		{
+			"type": "test",
+			"path": "tools/gc-test-stage-result-tap.js"
+		}
+	]
+}

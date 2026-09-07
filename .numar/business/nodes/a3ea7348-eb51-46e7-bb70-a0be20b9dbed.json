@@ -1,0 +1,26 @@
+{
+	"id": "a3ea7348-eb51-46e7-bb70-a0be20b9dbed",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "workshop.layout-snapshot-invalidation",
+	"title": "布局快照与改盘作废",
+	"statement": "自通、提交审核、好友挑战均绑定当前布局快照 layoutHash；修改任意垃圾格会使状态回 draft，同时清空该关通关纪录与在审稿，审核中不可静默改盘。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316265619,
+	"updatedAt": 1788316265619,
+	"createdByTaskId": "business-init",
+	"latestEventId": "6a53248f-8e92-4db6-a8fd-4cc7de04a2b9",
+	"tags": [],
+	"aliases": [
+		"布局快照绑定",
+		"改盘作废通关凭证"
+	],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "docs/gc-workshop-plaza-design.md"
+		}
+	]
+}

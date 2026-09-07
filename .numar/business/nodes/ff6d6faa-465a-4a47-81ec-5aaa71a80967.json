@@ -1,0 +1,27 @@
+{
+	"id": "ff6d6faa-465a-4a47-81ec-5aaa71a80967",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "workshop-editor.missing-stage-navigates-back",
+	"title": "Workshop editor back-navigates for unknown stage",
+	"statement": "If WorkshopEditorScene is entered with a stageId that has no workshop stage, it immediately navigates back instead of showing an editor.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312028799,
+	"updatedAt": 1788312028799,
+	"createdByTaskId": "business-init",
+	"latestEventId": "15319c4c-e567-4561-b139-1d1aa2806a35",
+	"tags": [],
+	"aliases": [
+		"关卡不存在返回",
+		"missing stage back"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/workshop-editor-scene.js",
+			"symbol": "onEnter"
+		}
+	]
+}

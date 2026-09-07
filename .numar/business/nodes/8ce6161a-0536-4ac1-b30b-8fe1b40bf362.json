@@ -1,0 +1,26 @@
+{
+	"id": "8ce6161a-0536-4ac1-b30b-8fe1b40bf362",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "achievement.workshop-create-own-merged",
+	"title": "工坊创建与保有合并计数",
+	"statement": "工坊成就将「创建 N 关」与「保有 N 关」合并为同一计数，避免两个重复阶梯。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788310807237,
+	"updatedAt": 1788310807237,
+	"createdByTaskId": "business-init",
+	"latestEventId": "7eb7cd97-355e-460b-94a0-074990e28834",
+	"tags": [],
+	"aliases": [
+		"工坊创建保有同计数",
+		"创建与保有合一"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "data/achievements.js"
+		}
+	]
+}

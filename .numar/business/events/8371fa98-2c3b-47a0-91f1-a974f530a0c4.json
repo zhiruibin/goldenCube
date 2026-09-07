@@ -1,0 +1,12 @@
+{
+	"id": "8371fa98-2c3b-47a0-91f1-a974f530a0c4",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "46b1927b-a4af-4627-85f8-c0b1bc678ebf",
+	"operation": "create",
+	"after": "Stage entry dialog titles for official numbered stages are formatted as 第x关·关卡名; stages without a numeric id use only their title.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"tools/gc-test-stage-select-tap.js"
+	],
+	"createdAt": 1788315405103
+}

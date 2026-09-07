@@ -1,0 +1,12 @@
+{
+	"id": "47dfbd4c-0c16-4255-8454-f612134ecccb",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "4f8755b6-591d-4066-adb3-be3190080263",
+	"operation": "create",
+	"after": "Plaza wall card state is derived from cleared and unlocked flags: cleared wins, then unlocked, otherwise locked.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/plaza-wall-fx.js"
+	],
+	"createdAt": 1788311734475
+}

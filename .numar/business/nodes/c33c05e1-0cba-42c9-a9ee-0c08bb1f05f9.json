@@ -1,0 +1,28 @@
+{
+	"id": "c33c05e1-0cba-42c9-a9ee-0c08bb1f05f9",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "shop.storage-keys.owned-and-equipped",
+	"title": "商店拥有与装备缓存键",
+	"statement": "商店场景从本地存储读取金币余额 gc_coins、已拥有道具 gc_ownedItems、已装备的方块/棋盘/音效皮肤 gc_equipped_block / gc_equipped_board / gc_equipped_sound 作为缓存，避免渲染帧内频繁读取存储。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311965369,
+	"updatedAt": 1788311965369,
+	"createdByTaskId": "business-init",
+	"latestEventId": "bd19aa2f-c3ff-44e6-80e8-f6bc72ea5007",
+	"tags": [],
+	"aliases": [
+		"商店存储键",
+		"gc_ownedItems",
+		"gc_equipped"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/shop-scene.js",
+			"symbol": "_refreshCache"
+		}
+	]
+}

@@ -1,0 +1,12 @@
+{
+	"id": "7fdc77dc-68f0-49ab-bf15-039554cb4d54",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "2c904117-4793-4ae3-8654-83028520ecf4",
+	"operation": "create",
+	"after": "驳回后关卡回到已通关并附驳回原因；作者可改盘（变待自通）或原盘重提，重提计入当日提交次数。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"docs/gc-workshop-plaza-design.md"
+	],
+	"createdAt": 1788316265725
+}

@@ -1,0 +1,15 @@
+{
+	"id": "6659c37f-1a53-4b49-be94-2c583aee40ce",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "da6848dd-572c-44fe-940b-a186d224b0ff",
+	"toNodeId": "9453483c-b847-43a8-9cee-86bd15b6cbdf",
+	"type": "belongsTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"openDataContext/index.js lastSubmittedScore/mainDomainSelfScore 校正逻辑",
+		"openDataContext/index.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788315317135,
+	"updatedAt": 1788322657044
+}

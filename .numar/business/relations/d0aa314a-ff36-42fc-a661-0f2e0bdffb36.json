@@ -6,9 +6,10 @@
 	"type": "dependsOn",
 	"verificationStatus": "verified",
 	"evidenceIds": [
-		"js/scenes/replay-scene.js"
+		"js/scenes/replay-scene.js",
+		"utils/tetris-engine.js"
 	],
 	"createdByTaskId": "request_a0a566ce-038c-4fdb-a10c-e14743bfb63b",
 	"createdAt": 1787448590857,
-	"updatedAt": 1787448590857
+	"updatedAt": 1788314605009
 }

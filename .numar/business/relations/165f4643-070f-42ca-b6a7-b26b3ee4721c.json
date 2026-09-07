@@ -1,0 +1,16 @@
+{
+	"id": "165f4643-070f-42ca-b6a7-b26b3ee4721c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "22cd4108-3266-4734-acc2-65556c04d9ac",
+	"toNodeId": "fe4f5b33-2098-4cbb-8ab4-fac1f9f37fbd",
+	"type": "dependsOn",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"tools/gc-stage-engine.py '闯关模式：固定标准 7 块'",
+		"tools/gc-stage-engine.py",
+		"utils/tetris-engine.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788315317141,
+	"updatedAt": 1788332736138
+}

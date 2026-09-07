@@ -1,0 +1,12 @@
+{
+	"id": "c71172c6-fda7-43ae-ab09-e6855ceab493",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "139de146-bd2c-4a8b-aa7e-2d81e106cd3e",
+	"operation": "create",
+	"after": "主榜排序为 clearedCount 降序，再按已通关各关个人最佳 Σ best.lines 升序、Σ best.pieces 升序、Σ best.timeMs 升序；只统计已通关关卡，禁止用生涯累计消行，也不单独用金方块持有量作主排序键。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"docs/gc-economy-design.md §3.1"
+	],
+	"createdAt": 1788312287203
+}

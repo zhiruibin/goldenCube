@@ -1,0 +1,26 @@
+{
+	"id": "d4ca3bb7-21be-4aa1-bbe1-f2c4c9d3fec8",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.response-once-only",
+	"title": "挑战仅可应战一次",
+	"statement": "每条挑战仅可被应战一次，应战后状态由 pending 变为 completed；发起者不能应战自己发起的挑战。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316265746,
+	"updatedAt": 1788316265746,
+	"createdByTaskId": "business-init",
+	"latestEventId": "e763608d-172a-4c15-95ca-2f3616aaa10c",
+	"tags": [],
+	"aliases": [
+		"挑战只能应战一次",
+		"单次应战"
+	],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "cloudfunctions/challenge/README.md"
+		}
+	]
+}

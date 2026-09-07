@@ -1,0 +1,12 @@
+{
+	"id": "9bfcf8a8-4aa5-4707-bc40-0c293f645fa7",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "a0231ece-e7ac-41eb-a2f6-49e68d20546e",
+	"operation": "create",
+	"after": "C 方块（直角块）为 2×2 矩阵，提供 4 个各不相同的旋转状态。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/srs-rotation.js:C_STATES"
+	],
+	"createdAt": 1788311439776
+}

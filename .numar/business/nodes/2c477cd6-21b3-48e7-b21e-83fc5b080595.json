@@ -1,0 +1,26 @@
+{
+	"id": "2c477cd6-21b3-48e7-b21e-83fc5b080595",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "render.garbage-cell.skin-decoupled",
+	"title": "垃圾块渲染与玩家方块皮肤解耦",
+	"statement": "垃圾方块的绘制独立于玩家方块皮肤体系，不随皮肤变化。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311636532,
+	"updatedAt": 1788311636532,
+	"createdByTaskId": "business-init",
+	"latestEventId": "5c4d1b70-0470-450e-9a6d-0d78e2624cdc",
+	"tags": [],
+	"aliases": [
+		"垃圾块独立渲染",
+		"垃圾块不随皮肤"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/render/garbage-cell.js"
+		}
+	]
+}

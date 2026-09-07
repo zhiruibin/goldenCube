@@ -1,0 +1,27 @@
+{
+	"id": "78cf9bc1-c07f-4b32-a182-5320154ecab5",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "settings.toggles.sfx-bgm-vibrate-effects",
+	"title": "设置开关项集合",
+	"statement": "设置场景提供音效、背景音乐、振动反馈、背景特效、底部方块特效五个开关项，并提供 DAS 延迟滑动条。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311965362,
+	"updatedAt": 1788311965362,
+	"createdByTaskId": "business-init",
+	"latestEventId": "c1b64087-ca56-4203-9c7a-7981ab311384",
+	"tags": [],
+	"aliases": [
+		"设置开关",
+		"音效背景音乐振动"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/settings-scene.js",
+			"symbol": "_renderSettings"
+		}
+	]
+}

@@ -1,0 +1,15 @@
+{
+	"id": "298e4759-4fba-4643-b8bd-968a7ae33ad4",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "ff6411e2-a3b3-48c5-b7ed-0b360e67a787",
+	"toNodeId": "ad1b641c-1fe3-45c5-81b1-af7f35350766",
+	"type": "appliesTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"utils/lucky-draw-manager.js",
+		"js/widgets/lucky-draw-overlay.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788316084282,
+	"updatedAt": 1788322408700
+}

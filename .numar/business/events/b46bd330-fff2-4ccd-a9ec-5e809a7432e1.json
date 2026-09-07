@@ -1,0 +1,12 @@
+{
+	"id": "b46bd330-fff2-4ccd-a9ec-5e809a7432e1",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "526220f6-2cd5-4eef-af0c-9200dad8b7b7",
+	"operation": "create",
+	"after": "Each world-map chapter card is classified as locked, cleared, or current based on golden-block progress: locked when the chapter is not unlocked, cleared when every stage in the chapter is cleared, and current otherwise.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/world-map-scene.js: chapterState() checks goldenBlock.isChapterUnlocked and goldenBlock.isCleared for all chapter stages"
+	],
+	"createdAt": 1788312151856
+}

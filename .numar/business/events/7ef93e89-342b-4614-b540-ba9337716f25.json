@@ -1,0 +1,12 @@
+{
+	"id": "7ef93e89-342b-4614-b540-ba9337716f25",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "d09b1bd0-8b7b-4f89-b335-c16116ee5a86",
+	"operation": "create",
+	"after": "解锁费为 0 的关卡默认已解锁；需要消耗金方块的关卡必须记录在 gc_stagesUnlocked 中，解锁时从余额扣除对应 unlockCost。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/golden-block-manager.js"
+	],
+	"createdAt": 1788316084021
+}

@@ -1,0 +1,28 @@
+{
+	"id": "faea3002-8602-4ade-897d-33caa79886c1",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "cloud.init.appid-presence-guard",
+	"title": "Cloud init requires non-empty runtime AppID",
+	"statement": "Cloud initialization enters local fallback mode when wx.cloud is unavailable or when the runtime AccountInfo AppID is empty; an empty AppID is treated as the common cause of error 41002 and is explicitly guarded before wx.cloud.init.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315981691,
+	"updatedAt": 1788315981691,
+	"createdByTaskId": "business-init",
+	"latestEventId": "36810cee-3e2e-4eb8-8be4-ad1c8a25b6fb",
+	"tags": [],
+	"aliases": [
+		"41002 AppID缺失",
+		"云初始化降级",
+		"运行时AppID校验"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/cloud-service.js",
+			"symbol": "init"
+		}
+	]
+}

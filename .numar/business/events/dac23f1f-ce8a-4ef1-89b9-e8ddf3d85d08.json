@@ -1,0 +1,12 @@
+{
+	"id": "dac23f1f-ce8a-4ef1-89b9-e8ddf3d85d08",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "e9229a94-17c5-4a37-9b22-c03d3867369f",
+	"operation": "create",
+	"after": "排行榜上报时只有当 replay 对象存在、含 seed 字段且 inputs 为数组时，才会将回放一并写入记录。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/rank/index.js:submitScore"
+	],
+	"createdAt": 1788316189053
+}

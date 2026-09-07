@@ -1,0 +1,12 @@
+{
+	"id": "61766810-f804-4d1a-a6fa-c12e9b3e927c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "f6b58046-985d-4848-9792-80bffc4490ed",
+	"operation": "create",
+	"after": "每个关卡配置包含 id、chapterId、name、minLines、garbageCount、coinThreshold、dropIntervalMs、kind、unlockCost 与 rows 布局，并可指定 firstPiece 首块；关卡级 dropIntervalMs 可覆盖章节默认值（如第 1 关为 1200ms，而所属章节默认 1000ms）。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"data/stages-v1.js"
+	],
+	"createdAt": 1788310807243
+}

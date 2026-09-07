@@ -1,0 +1,27 @@
+{
+	"id": "ef17594a-41d6-417f-820b-f8dd3957309e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.friend.list.touch-forwarded-from-main-domain",
+	"title": "好友榜触摸由主域转发",
+	"statement": "开放数据域不能直接监听触摸事件，好友榜滚动由主域捕获触摸后经消息转发，开放域据此更新 scrollY。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315317004,
+	"updatedAt": 1788315317004,
+	"createdByTaskId": "business-init",
+	"latestEventId": "543ebfa0-f713-40e5-8847-df4a82cdb566",
+	"tags": [],
+	"aliases": [
+		"主域转发热点",
+		"好友榜滚动转发",
+		"开放域触摸限制"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "openDataContext/index.js"
+		}
+	]
+}

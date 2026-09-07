@@ -1,0 +1,26 @@
+{
+	"id": "7729585d-e2b0-43d7-b0c5-5ab66cdda3a5",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "achievement.reward-gold-vs-coins",
+	"title": "成就奖励货币区分",
+	"statement": "成就定义包含 rewardGold 与 rewardCoins 两条独立奖励线：主线进度类成就发放 rewardGold（如 1-3），广场类成就发放 rewardCoins（如 plaza_clear_1 奖励 15 硬币）。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788310807234,
+	"updatedAt": 1788310807234,
+	"createdByTaskId": "business-init",
+	"latestEventId": "2e126b77-d444-4a3d-bc01-5b9018d8347f",
+	"tags": [],
+	"aliases": [
+		"金币/硬币双奖励线",
+		"进度奖金币广场奖硬币"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "data/achievements.js"
+		}
+	]
+}

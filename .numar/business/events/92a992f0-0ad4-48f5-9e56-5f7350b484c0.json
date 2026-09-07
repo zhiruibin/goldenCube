@@ -1,0 +1,15 @@
+{
+	"id": "92a992f0-0ad4-48f5-9e56-5f7350b484c0",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "4d2871dc-d5b7-4145-b250-8c8b479c9419",
+	"operation": "create",
+	"before": "No world map scene existed; background effects were confined to existing scenes",
+	"after": "New world-map scene renders with world-map-fx and plaza-wall-fx background effects and handles map tap interaction (dedicated tap tests added)",
+	"taskId": "commit:c562e404c328cdf6d8f75adb938c6fcb06217771",
+	"evidenceIds": [
+		"js/scenes/world-map-scene.js",
+		"tools/gc-test-world-map-tap.js",
+		"docs/preview-world-map.html"
+	],
+	"createdAt": 1788309950438
+}

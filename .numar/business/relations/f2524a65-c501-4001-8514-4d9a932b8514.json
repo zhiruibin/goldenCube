@@ -1,0 +1,14 @@
+{
+	"id": "f2524a65-c501-4001-8514-4d9a932b8514",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "a0f596bd-9df0-4611-9db0-688e1de02261",
+	"toNodeId": "607034f6-154d-4a71-911c-cc38b0adc099",
+	"type": "conflictsWith",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"data/skins.js"
+	],
+	"createdByTaskId": "business-relationship-scan",
+	"createdAt": 1788330597994,
+	"updatedAt": 1788330597994
+}

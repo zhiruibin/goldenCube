@@ -1,0 +1,12 @@
+{
+	"id": "fea40da9-497e-4ad6-8113-fecf29f542af",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "e590582c-d261-47c9-80a9-5c6d9962a049",
+	"operation": "create",
+	"after": "Immediate per-line-clear coin payout is deprecated: the line-clear and T-spin bonus tables are empty, and rewardLineClear is a compatibility stub that always returns 0.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/coin-manager.js"
+	],
+	"createdAt": 1788315981818
+}

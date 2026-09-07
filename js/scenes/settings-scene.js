@@ -6,6 +6,8 @@
 const { Button } = require('../widgets/button');
 const { getCachedProfile, tryAutoFetchProfile, requestWechatProfile, cancelWechatProfile, resolveAvatarUrl } = require('../../utils/user-profile');
 const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
+const { drawThemeBackground } = require('../theme/theme-images');
+const { fillNightBackground, drawBrandTitle } = require('../theme/arcade-night');
 
 class SettingsScene {
     constructor() {
@@ -49,24 +51,15 @@ class SettingsScene {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
 
-        // 背景
-        ctx.fillStyle = '#0f0f23';
-        ctx.fillRect(0, 0, W, H);
+        // 金矿工坊主题背景
+        if (!drawThemeBackground(ctx, 'mapMineBg', W, H)) {
+            fillNightBackground(ctx, W, H);
+        } else {
+            ctx.fillStyle = 'rgba(12, 8, 4, 0.36)';
+            ctx.fillRect(0, 0, W, H);
+        }
 
-        // 标题（齿轮图标 + 文字，整体居中）
-        const titleText = '设置';
-        const titleY = this._topInset() + 16;
-        ctx.font = 'bold 28px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        const titleW = ctx.measureText(titleText).width;
-        const gearR = 11;
-        const gap = 8;
-        const totalW = gearR * 2 + gap + titleW;
-        const leftX = W / 2 - totalW / 2;
-        ctx.fillStyle = '#ffffff';
-        this._drawGearIcon(ctx, leftX + gearR, titleY, gearR, '#0f0f23');
-        ctx.fillText(titleText, leftX + gearR * 2 + gap + titleW / 2, titleY);
+        drawBrandTitle(ctx, '设置', W / 2, this._topInset() + 16, 'bold 28px sans-serif');
 
         // 设置项
         this._renderSettings(ctx);
@@ -163,10 +156,14 @@ class SettingsScene {
             const y = startY + i * (itemH + 8) - this._scrollY;
             if (y + itemH < startY || y > viewBottom) continue;
 
-            // 行背景
-            ctx.fillStyle = 'rgba(255,255,255,0.05)';
+            // 行背景（矿洞主题）
+            ctx.fillStyle = 'rgba(28, 20, 14, 0.88)';
             this._roundRect(ctx, listX, y, listW, itemH, 8);
             ctx.fill();
+            this._roundRect(ctx, listX + 0.75, y + 0.75, listW - 1.5, itemH - 1.5, 7);
+            ctx.strokeStyle = 'rgba(31, 155, 152, 0.5)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
 
             // 标签
             if (item.label) {
@@ -246,7 +243,7 @@ class SettingsScene {
                     w: 44, h: 24, key: item.key, type: 'toggle',
                 });
             } else if (item.type === 'select') {
-                ctx.fillStyle = '#00c6ff';
+                ctx.fillStyle = '#c9a227';
                 ctx.font = '14px sans-serif';
                 ctx.textAlign = 'right';
                 ctx.fillText(item.value + ' ▸', listX + listW - 15, y + itemH / 2);
@@ -263,14 +260,14 @@ class SettingsScene {
                 });
             } else if (item.type === 'textLink') {
                 const linkText = item.text || '用户隐私保护指引';
-                ctx.fillStyle = '#5ec8ff';
+                ctx.fillStyle = '#1f9b98';
                 ctx.font = '15px sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(linkText, listX + listW / 2, y + itemH / 2);
                 const textW = ctx.measureText(linkText).width;
                 const linkCx = listX + listW / 2;
-                ctx.strokeStyle = '#5ec8ff';
+                ctx.strokeStyle = '#1f9b98';
                 ctx.lineWidth = 1;
                 ctx.beginPath();
                 ctx.moveTo(linkCx - textW / 2, y + itemH / 2 + 10);
@@ -292,7 +289,7 @@ class SettingsScene {
         const r = h / 2;
 
         // 轨道
-        ctx.fillStyle = value ? '#00c6ff' : 'rgba(255,255,255,0.2)';
+        ctx.fillStyle = value ? '#c9a227' : 'rgba(255,255,255,0.2)';
         this._roundRect(ctx, x, y, w, h, r);
         ctx.fill();
 
@@ -313,7 +310,7 @@ class SettingsScene {
         ctx.fill();
 
         // 已填充部分
-        ctx.fillStyle = '#00c6ff';
+        ctx.fillStyle = '#c9a227';
         this._roundRect(ctx, x, y - 2, w * ratio, 4, 2);
         ctx.fill();
 
@@ -335,15 +332,23 @@ class SettingsScene {
             new Button({
                 x: W / 2 - btnW / 2, y: H - 80,
                 w: btnW, h: btnH,
-                text: '← 返回',
-                color: '#555',
+                text: '返回',
+                color: '#6b4a2e',
+                skin: 'btnBarBrown',
+                skinMode: 'stretch',
+                labelColor: '#fff8ef',
+                fontScale: 0.92,
                 onClick: () => GameGlobal.game.sceneManager.back(),
             }),
             new Button({
                 x: W / 2 - btnW / 2, y: H - 140,
                 w: btnW, h: btnH,
                 text: '恢复默认',
-                color: '#f00000',
+                color: '#6b4a2e',
+                skin: 'btnBarBrown',
+                skinMode: 'stretch',
+                labelColor: '#fff8ef',
+                fontScale: 0.9,
                 onClick: () => this._resetDefaults(),
             }),
         ];

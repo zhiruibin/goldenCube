@@ -1,0 +1,27 @@
+{
+	"id": "039197f0-58ef-416d-b849-05788b38222b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "world-map.board.drag-momentum",
+	"title": "World map board is draggable with vertical velocity tracking",
+	"statement": "The world-map grid board is draggable and keeps drag-related state including vertical velocity and tap suppression after drags.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312151870,
+	"updatedAt": 1788312151870,
+	"createdByTaskId": "business-init",
+	"latestEventId": "0245db37-cc92-494a-8c0c-622536145f8e",
+	"tags": [],
+	"aliases": [
+		"世界地图拖拽",
+		"拖动棋盘"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/world-map-scene.js",
+			"symbol": "WorldMapScene"
+		}
+	]
+}

@@ -1,0 +1,12 @@
+{
+	"id": "cc6a5647-542e-4d08-9c6c-f7bc3bd32eb3",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "9453483c-b847-43a8-9cee-86bd15b6cbdf",
+	"operation": "create",
+	"after": "RankScene 使用全服榜或本地取得的较高本人复合分，在渲染好友榜时校正好友榜中自己的那一行。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/rank-scene.js"
+	],
+	"createdAt": 1788311965342
+}

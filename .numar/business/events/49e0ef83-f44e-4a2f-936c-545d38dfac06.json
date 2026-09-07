@@ -1,0 +1,12 @@
+{
+	"id": "49e0ef83-f44e-4a2f-936c-545d38dfac06",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "eda61e77-c8a4-49b4-9f6f-4795853fba59",
+	"operation": "create",
+	"after": "排行榜全服榜通过云函数 rank.getRankList 读取云数据库 rankings，前十名支持回放。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/rank-scene.js"
+	],
+	"createdAt": 1788311965339
+}

@@ -1,0 +1,28 @@
+{
+	"id": "328a9fee-a9a9-43b5-9f1e-3076a43670e1",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.responder-result.failed-no-metric-comparison",
+	"title": "Failed responder gets fixed failure text",
+	"statement": "When the responder failed to clear the challenge (顶格/中途结束), the result copy is always '未通关，挑战失败' and does not compare the responder's lines or score with the challenger's.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315981641,
+	"updatedAt": 1788315981641,
+	"createdByTaskId": "business-init",
+	"latestEventId": "975c32b1-b046-49c1-87a5-12b1c66046e6",
+	"tags": [],
+	"aliases": [
+		"未通关，挑战失败",
+		"失败不比对成绩",
+		"应战失败文案"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/challenge-ui.js",
+			"symbol": "formatResponderResultText"
+		}
+	]
+}

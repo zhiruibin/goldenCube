@@ -1,0 +1,27 @@
+{
+	"id": "aa4bc9a6-bd96-4869-818d-f49ec484b5b0",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "replay.mode-labels.stage-workshop-plaza-challenge",
+	"title": "回放对局类型标签",
+	"statement": "回放场景顶部信息栏的对局类型中文名仅包含闯关、工坊、广场、挑战四种；不包含经典/限时/马拉松标签。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311965351,
+	"updatedAt": 1788311965351,
+	"createdByTaskId": "business-init",
+	"latestEventId": "7ca29ec2-dc2f-47c3-a8de-b5651c1c104e",
+	"tags": [],
+	"aliases": [
+		"回放模式标签",
+		"对局类型中文名"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/replay-scene.js",
+			"symbol": "MODE_LABELS"
+		}
+	]
+}

@@ -1,0 +1,31 @@
+{
+	"id": "1e792e9a-448a-450c-a0c6-26eeb6bb6d50",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "game.play-context.resolution-priority",
+	"title": "对局上下文解析优先级",
+	"statement": "对局上下文依次按显式 playContext、challengeId、来自广场的 workshop（非作者试玩）、一般 workshop、stageId 解析，缺省为 stage；合法值包括 stage、plaza、workshop、challenge。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316084126,
+	"updatedAt": 1788316084126,
+	"createdByTaskId": "business-init",
+	"latestEventId": "f0a82714-e53a-4c73-a801-6631d34ef5bd",
+	"tags": [],
+	"aliases": [
+		"playContext 解析",
+		"对局上下文"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/play-context.js"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/play-context.js",
+			"symbol": "resolvePlayContext"
+		}
+	]
+}

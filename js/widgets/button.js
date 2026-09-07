@@ -4,6 +4,11 @@
  */
 
 const IconRenderer = require('../render/icon-renderer');
+const {
+    drawThemeButtonSkin,
+    drawThemeButtonSkin9Slice,
+    drawThemeImageContain,
+} = require('../theme/theme-images');
 
 class Button {
     /**
@@ -14,6 +19,7 @@ class Button {
      * @param {number} opts.h - 高度
      * @param {string} opts.text - 按钮文字
      * @param {string} opts.color - 主色调
+     * @param {string} [opts.skin] - 主题砖皮 key（theme-images），如 btnAmber
      * @param {number} [opts.radius] - 圆角半径
      * @param {Function} opts.onClick - 点击回调
      */
@@ -25,6 +31,15 @@ class Button {
         this.text = opts.text || '';
         this.icon = opts.icon || null;
         this.color = opts.color || '#00c6ff';
+        this.skin = opts.skin || null;
+        /** 'stretch' | '9slice' | 'contain'（等比缩放，不拉扁） */
+        this.skinMode = opts.skinMode || 'stretch';
+        /** 'row' | 'iconStack' | 'text' */
+        this.layout = opts.layout || 'row';
+        this.labelColor = opts.labelColor || '#ffffff';
+        this.fontScale = opts.fontScale || 1;
+        /** 字间距（px，字符之间额外空隙） */
+        this.letterSpacing = opts.letterSpacing || 0;
         this.radius = opts.radius || 10;
         this.onClick = opts.onClick || (() => {});
         /** 按下状态 */
@@ -80,22 +95,53 @@ class Button {
         if (this._isCircular()) {
             this._renderCircularBody(ctx);
         } else {
-            ctx.fillStyle = this._pressed
-                ? this._darken(this.color, 0.7)
-                : this.color;
-            this._roundRect(ctx, this.x, this.y, this.w, this.h, this.radius);
-            ctx.fill();
+            let usedSkin = false;
+            if (this.skin) {
+                if (this.skinMode === 'contain') {
+                    const drawn = drawThemeImageContain(
+                        ctx,
+                        this.skin,
+                        this.x + this.w / 2,
+                        this.y + this.h / 2,
+                        this.w,
+                        this.h
+                    );
+                    usedSkin = !!drawn.drawn;
+                } else if (this.skinMode === '9slice') {
+                    usedSkin = drawThemeButtonSkin9Slice(ctx, this.skin, this.x, this.y, this.w, this.h);
+                } else {
+                    usedSkin = drawThemeButtonSkin(ctx, this.skin, this.x, this.y, this.w, this.h);
+                }
+            }
+            if (!usedSkin) {
+                ctx.fillStyle = this._pressed
+                    ? this._darken(this.color, 0.7)
+                    : this.color;
+                this._roundRect(ctx, this.x, this.y, this.w, this.h, this.radius);
+                ctx.fill();
+            }
 
             if (this._pressed) {
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
                 this._roundRect(ctx, this.x, this.y, this.w, this.h, this.radius);
                 ctx.fill();
             }
         }
 
-        // 图标/文字
-        ctx.fillStyle = '#ffffff';
-        if (this.icon === 'hardDrop') {
+        // 图标/文字（砖皮上加轻描边，保证可读）
+        const labelOnSkin = !!this.skin && !this._isCircular();
+        if (labelOnSkin) {
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+            ctx.shadowBlur = 2;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 1;
+        }
+        ctx.fillStyle = this.labelColor || '#ffffff';
+        if (this.layout === 'text' || (!this.icon && this.text)) {
+            this._drawCenteredLabel(ctx);
+        } else if (this.layout === 'iconStack' && IconRenderer.has(this.icon)) {
+            this._drawIconStack(ctx);
+        } else if (this.icon === 'hardDrop') {
             this._drawHardDropIcon(ctx);
         } else if (this.icon === 'rotate') {
             this._drawRotateIcon(ctx);
@@ -108,12 +154,69 @@ class Button {
         } else if (IconRenderer.has(this.icon)) {
             this._drawIconWithText(ctx);
         } else {
-            ctx.font = `bold ${Math.min(16, this.h * 0.38)}px sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(this.text, this.x + this.w / 2, this.y + this.h / 2);
+            this._drawCenteredLabel(ctx);
+        }
+        if (labelOnSkin) {
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
         }
         ctx.restore();
+    }
+
+    _drawCenteredLabel(ctx) {
+        const cx = this.x + this.w / 2;
+        const cy = this.y + this.h / 2;
+        const lines = String(this.text || '').split('\n');
+        const lineCount = Math.max(1, lines.length);
+        const base = Math.min(22, this.h * (lineCount > 1 ? 0.28 : 0.42)) * (this.fontScale || 1);
+        const fontPx = Math.max(13, Math.floor(base));
+        const lineH = fontPx * 1.18;
+        const spacing = Number(this.letterSpacing) || 0;
+        ctx.font = `bold ${fontPx}px sans-serif`;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        const startY = cy - ((lineCount - 1) * lineH) / 2;
+        for (let i = 0; i < lineCount; i++) {
+            const line = lines[i];
+            if (!spacing || line.length <= 1) {
+                ctx.textAlign = 'center';
+                ctx.fillText(line, cx, startY + i * lineH);
+                ctx.textAlign = 'left';
+                continue;
+            }
+            let totalW = 0;
+            const widths = [];
+            for (let c = 0; c < line.length; c++) {
+                const w = ctx.measureText(line[c]).width;
+                widths.push(w);
+                totalW += w;
+            }
+            totalW += spacing * (line.length - 1);
+            let x = cx - totalW / 2;
+            const y = startY + i * lineH;
+            for (let c = 0; c < line.length; c++) {
+                ctx.fillText(line[c], x, y);
+                x += widths[c] + spacing;
+            }
+        }
+    }
+
+    /** 示意图四小钮：图标在上、文字在下 */
+    _drawIconStack(ctx) {
+        const cx = this.x + this.w / 2;
+        const cy = this.y + this.h / 2;
+        const iconSize = Math.min(this.w * 0.34, this.h * 0.34);
+        const fontPx = Math.max(12, Math.min(15, this.h * 0.2));
+        const iconCy = cy - this.h * 0.14;
+        IconRenderer.draw(ctx, this.icon, cx, iconCy, iconSize, this.labelColor || '#ffffff');
+        ctx.font = `bold ${fontPx}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        // 文字紧跟图标下方，图标变小后自然上移
+        const textCy = iconCy + iconSize * 0.55 + fontPx * 0.55 + 2;
+        ctx.fillText(this.text, cx, textCy);
     }
 
     /**
@@ -360,7 +463,7 @@ class Button {
         return this.w === this.h && this.radius >= this.w / 2 - 1;
     }
 
-    /** 立体圆形按钮：渐变 + 顶光 + 投影 */
+    /** 立体圆形按钮：可铺主题圆钮皮，否则渐变色块 */
     _renderCircularBody(ctx) {
         const cx = this.x + this.w / 2;
         const cy = this.y + this.h / 2;
@@ -372,6 +475,20 @@ class Button {
             ctx.beginPath();
             ctx.arc(cx + 0.5, cy + Math.max(2, r * 0.12), r, 0, Math.PI * 2);
             ctx.fill();
+        }
+
+        if (this.skin) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.clip();
+            const ok = drawThemeButtonSkin(ctx, this.skin, this.x, this.y, this.w, this.h);
+            if (pressed) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+                ctx.fillRect(this.x, this.y, this.w, this.h);
+            }
+            ctx.restore();
+            if (ok) return;
         }
 
         let bodyGrad;

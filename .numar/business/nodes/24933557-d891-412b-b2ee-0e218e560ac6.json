@@ -1,0 +1,27 @@
+{
+	"id": "24933557-d891-412b-b2ee-0e218e560ac6",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "render.garbage-cell.ui-color-consistency",
+	"title": "垃圾块主色在盘面与 UI 中保持一致",
+	"statement": "垃圾方块使用统一的 #787880 主色，棋盘内与工具栏/图例等 UI 渲染保持一致。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311636526,
+	"updatedAt": 1788311636526,
+	"createdByTaskId": "business-init",
+	"latestEventId": "6198baf3-7eca-4a0d-914d-c6f156cce3a7",
+	"tags": [],
+	"aliases": [
+		"垃圾块主色",
+		"垃圾块 UI 一致色"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/render/garbage-cell.js",
+			"symbol": "GARBAGE_UI_COLOR"
+		}
+	]
+}

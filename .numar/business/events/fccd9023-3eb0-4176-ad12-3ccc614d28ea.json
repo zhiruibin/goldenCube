@@ -1,0 +1,12 @@
+{
+	"id": "fccd9023-3eb0-4176-ad12-3ccc614d28ea",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "961a4189-4493-4933-91bb-4448e30a0bc7",
+	"operation": "create",
+	"after": "闯关布局分为三种关型：正形剪影（可抬升）、搭梯（主题浮空目标）与廊道（channel）。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"tools/gc-rebuild-stages-v3.js 关型注释"
+	],
+	"createdAt": 1788315316958
+}

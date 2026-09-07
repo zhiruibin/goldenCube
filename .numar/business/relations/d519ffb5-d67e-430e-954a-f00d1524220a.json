@@ -1,0 +1,15 @@
+{
+	"id": "d519ffb5-d67e-430e-954a-f00d1524220a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "582e1b6a-6f3a-4905-a6a3-eed37583a2d3",
+	"toNodeId": "208aade6-e1b5-4392-8e83-bf18f5eb12ba",
+	"type": "dependsOn",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"js/widgets/lucky-draw-overlay.js: start() builds reels and update() advances phase as the same reels settle",
+		"js/widgets/lucky-draw-overlay.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788312151892,
+	"updatedAt": 1788322408747
+}

@@ -1,0 +1,12 @@
+{
+	"id": "8846943e-d378-417b-80f4-def7352853f6",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "db129f6a-ad69-45cd-8e6f-379dbc759b1e",
+	"operation": "create",
+	"after": "工坊/广场的通关奖励只发金币，不发放金方块（0 金方块）。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/workshop-manager.js 模块注释"
+	],
+	"createdAt": 1788311439812
+}

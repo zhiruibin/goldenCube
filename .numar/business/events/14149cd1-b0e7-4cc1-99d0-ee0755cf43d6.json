@@ -1,0 +1,13 @@
+{
+	"id": "14149cd1-b0e7-4cc1-99d0-ee0755cf43d6",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "71c53680-8a4c-4b46-82a2-d85089fe8d2c",
+	"operation": "create",
+	"after": "产品提供四个玩家入口：闯关（官方章节残局 10×10 布局）、关卡广场（官方精选+玩家发布）、工坊（造关/自通/发布）、好友挑战（挂在具体关卡上的残局对决）；不提供经典/限时/马拉松等模式分入口。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"README.md §产品入口",
+		"docs/gc-no-mode-cleanup-design.md §1.1"
+	],
+	"createdAt": 1788312287176
+}

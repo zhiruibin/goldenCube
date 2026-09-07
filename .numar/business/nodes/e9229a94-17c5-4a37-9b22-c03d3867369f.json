@@ -1,0 +1,28 @@
+{
+	"id": "e9229a94-17c5-4a37-9b22-c03d3867369f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.replay.validity-seed-and-inputs",
+	"title": "排行榜回放仅在含种子与输入时保存",
+	"statement": "排行榜上报时只有当 replay 对象存在、含 seed 字段且 inputs 为数组时，才会将回放一并写入记录。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316189053,
+	"updatedAt": 1788316189053,
+	"createdByTaskId": "business-init",
+	"latestEventId": "dac23f1f-ce8a-4ef1-89b9-e8ddf3d85d08",
+	"tags": [],
+	"aliases": [
+		"回放保存条件",
+		"有种子才有回放",
+		"回放有效性校验"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "cloudfunctions/rank/index.js",
+			"symbol": "submitScore"
+		}
+	]
+}

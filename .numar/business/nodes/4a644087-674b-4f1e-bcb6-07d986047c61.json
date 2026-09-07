@@ -1,0 +1,32 @@
+{
+	"id": "4a644087-674b-4f1e-bcb6-07d986047c61",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage.design.thematic-raise-quota",
+	"title": "关卡主题抬升配额",
+	"statement": "章节内每关按主题有离地抬升配额：建筑/车辆偏贴地（raise=0），花田/星象/几何/金殿偏凌空抬升，搭梯关使用主题碎片浮空，前几关保留贴地教学。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315316935,
+	"updatedAt": 1788315316935,
+	"createdByTaskId": "business-init",
+	"latestEventId": "61ed3a48-0d11-4d47-ba36-3578eeb85fde",
+	"tags": [],
+	"aliases": [
+		"主题抬升配额",
+		"离地抬升规则",
+		"正形剪影抬升"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "tools/gc-rebuild-stages-v3.js"
+		},
+		{
+			"type": "symbol",
+			"path": "tools/gc-rebuild-stages-v3.js",
+			"symbol": "thematicRaise"
+		}
+	]
+}

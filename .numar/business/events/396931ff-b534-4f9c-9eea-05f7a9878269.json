@@ -1,0 +1,12 @@
+{
+	"id": "396931ff-b534-4f9c-9eea-05f7a9878269",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "2101cc93-60f8-44b3-bfe4-68037c5d6ddd",
+	"operation": "create",
+	"after": "kind 为 tutorial 的演示关仅首通发放金方块，重玩不计算破纪录奖励。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/golden-block-manager.js"
+	],
+	"createdAt": 1788316084052
+}

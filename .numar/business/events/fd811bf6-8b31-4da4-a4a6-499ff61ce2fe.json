@@ -1,0 +1,12 @@
+{
+	"id": "fd811bf6-8b31-4da4-a4a6-499ff61ce2fe",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "ce8cbfdd-0b3b-46ac-8829-555b0bb35935",
+	"operation": "create",
+	"after": "用户点击同意后，所有等待中的隐私授权 resolve 会被统一以 event:'agree' 触发，并标记为已授权。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/privacy.js"
+	],
+	"createdAt": 1788316084237
+}

@@ -1,0 +1,27 @@
+{
+	"id": "410aabad-1cd4-4fcc-9493-ec008f1a4114",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "result.scene.requires-challenge-id",
+	"title": "应战结算需要挑战 ID",
+	"statement": "ResultScene 进入时若缺少 challengeId，会立即切换回首页，不展示结算内容。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311965359,
+	"updatedAt": 1788311965359,
+	"createdByTaskId": "business-init",
+	"latestEventId": "a83ebeae-25cf-4d7b-b3c7-7da7de8c35c0",
+	"tags": [],
+	"aliases": [
+		"结算需挑战 ID",
+		"应战结算校验"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/result-scene.js",
+			"symbol": "onEnter"
+		}
+	]
+}

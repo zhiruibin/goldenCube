@@ -1,0 +1,31 @@
+{
+	"id": "931b7802-ac43-4a86-b5c3-76402cec6123",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "achievement.scene.completion-excludes-deprecated",
+	"title": "成就完成度不计已废弃成就",
+	"statement": "成就页展示的解锁计数会先按有效成就 ID 过滤，已废弃（deprecated）但被保留的成就 ID 不计入完成度（unlocked/total）。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311855117,
+	"updatedAt": 1788311855117,
+	"createdByTaskId": "business-init",
+	"latestEventId": "724cdf4c-7775-45ee-b74b-51b2549ce8e5",
+	"tags": [],
+	"aliases": [
+		"完成度排除废弃成就",
+		"有效成就计数",
+		"不统计 deprecated 成就"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/achievement-scene.js"
+		},
+		{
+			"type": "symbol",
+			"symbol": "AchievementScene.render"
+		}
+	]
+}

@@ -1,0 +1,12 @@
+{
+	"id": "52d2268b-76ef-4726-a8f5-0c6e751d4d3a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "ac41097c-beef-4d7c-924f-e39857fa541e",
+	"operation": "create",
+	"after": "When leaving StageSelectScene, the current chapter index is saved through goldenBlock.setLastChapterIndex so the player returns to the same chapter next time.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/stage-select-scene.js"
+	],
+	"createdAt": 1788312028791
+}

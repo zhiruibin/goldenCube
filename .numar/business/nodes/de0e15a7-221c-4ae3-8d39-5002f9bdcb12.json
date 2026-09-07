@@ -1,0 +1,31 @@
+{
+	"id": "de0e15a7-221c-4ae3-8d39-5002f9bdcb12",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "workshop.layout.rows-format",
+	"title": "工坊关卡布局的 20×10 字符串格式",
+	"statement": "工坊关卡布局以 20 行字符串表示，每行固定 10 个字符，不足用 '.' 补齐，'.' 表示空格。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311439814,
+	"updatedAt": 1788311439814,
+	"createdByTaskId": "business-init",
+	"latestEventId": "9714ff4a-3abe-4a6e-8ece-bc0b5976f76a",
+	"tags": [],
+	"aliases": [
+		"20 行布局",
+		"每行 10 字符",
+		"点号空格棋盘"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"symbol": "emptyRows"
+		},
+		{
+			"type": "symbol",
+			"symbol": "cloneRows"
+		}
+	]
+}

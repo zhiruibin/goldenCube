@@ -1,0 +1,12 @@
+{
+	"id": "c53f3bc6-7698-43b8-81d8-cfa3001bd38c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "ec331dd6-fc6c-45d4-9c0a-2c9afcf60b0f",
+	"operation": "create",
+	"after": "工坊沿用官方硬约束并额外收紧：禁止满行、每垃圾行至少一个空位、顶垃圾行≥6（Boss模板可≥4）、垃圾格数8~80、含垃圾行数3~16、标准7块，防止恶心关污染广场。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"docs/gc-workshop-plaza-design.md"
+	],
+	"createdAt": 1788316265655
+}

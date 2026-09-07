@@ -1,0 +1,15 @@
+{
+	"id": "1c05818a-f31a-4bdd-99e8-7ea06f07f9e7",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "71c53680-8a4c-4b46-82a2-d85089fe8d2c",
+	"toNodeId": "57035b98-ae22-4169-9719-cfbd95f5f297",
+	"type": "constrains",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"docs/gc-no-mode-cleanup-design.md §1.3",
+		"docs/gc-no-mode-cleanup-design.md"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788312287219,
+	"updatedAt": 1788322565889
+}

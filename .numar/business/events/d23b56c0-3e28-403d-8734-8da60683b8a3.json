@@ -1,0 +1,12 @@
+{
+	"id": "d23b56c0-3e28-403d-8734-8da60683b8a3",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "01a6e129-e72b-4e7b-8df5-bf630318652f",
+	"operation": "create",
+	"after": "离开设置场景时会取消未完成的微信头像昵称获取请求。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/settings-scene.js"
+	],
+	"createdAt": 1788311965364
+}

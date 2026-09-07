@@ -1,0 +1,30 @@
+{
+	"id": "50b0b9b9-6468-4eb6-a9bc-5a8e3319426a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage.entry.locked-stage-confirm-before-unlock",
+	"title": "Locked stage entry requires confirm before unlock",
+	"statement": "Tapping a locked official stage card or the locked next-level button only opens an entry dialog that tells the player it needs 1 golden block to unlock and shows the fee; it does not unlock or enter until confirmed, and the same tap gesture cannot confirm. With no golden blocks the dialog stays open, shows toast 金方块不足, and marks the golden-block row as deficient; with sufficient blocks confirmation unlocks the stage, spends 1 golden block, and enters it.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315405115,
+	"updatedAt": 1788315405115,
+	"createdByTaskId": "business-init",
+	"latestEventId": "e8bdfb97-b754-41f7-9afb-83ac405f8ed2",
+	"tags": [],
+	"aliases": [
+		"未解锁关卡确认扣费",
+		"金方块不足提示"
+	],
+	"implementationRefs": [
+		{
+			"type": "test",
+			"path": "tools/gc-test-stage-select-tap.js"
+		},
+		{
+			"type": "test",
+			"path": "tools/gc-test-stage-result-tap.js"
+		}
+	]
+}

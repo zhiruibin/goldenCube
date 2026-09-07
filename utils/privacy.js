@@ -126,24 +126,24 @@ function renderPrivacyDialog(ctx, W, H) {
     const p = L.panel;
 
     ctx.save();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.58)';
+    ctx.fillStyle = 'rgba(10, 7, 4, 0.62)';
     ctx.fillRect(0, 0, W, H);
 
-    ctx.fillStyle = 'rgba(28, 32, 52, 0.98)';
+    ctx.fillStyle = 'rgba(28, 20, 14, 0.96)';
     _roundRectPath(ctx, p.x, p.y, p.w, p.h, 14);
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
-    ctx.lineWidth = 1;
-    _roundRectPath(ctx, p.x, p.y, p.w, p.h, 14);
+    ctx.strokeStyle = 'rgba(31, 155, 152, 0.7)';
+    ctx.lineWidth = 1.5;
+    _roundRectPath(ctx, p.x + 0.75, p.y + 0.75, p.w - 1.5, p.h - 1.5, 13);
     ctx.stroke();
 
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#fff8ef';
     ctx.font = 'bold 18px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('用户隐私保护提示', p.x + p.w / 2, p.y + 36);
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.72)';
+    ctx.fillStyle = 'rgba(255, 248, 239, 0.72)';
     ctx.font = '14px sans-serif';
     const lines = [
         '为展示好友排行榜、玩家昵称头像，',
@@ -164,12 +164,12 @@ function renderPrivacyDialog(ctx, W, H) {
     L.link.x = p.x + (p.w - linkW) / 2;
     L.link.text = linkText;
 
-    ctx.fillStyle = '#4da3ff';
+    ctx.fillStyle = '#1f9b98';
     ctx.fillText(linkText, p.x + p.w / 2, L.link.cy);
     // 下划线
     const ux = p.x + p.w / 2 - tw / 2;
     const uy = L.link.cy + 10;
-    ctx.strokeStyle = '#4da3ff';
+    ctx.strokeStyle = '#1f9b98';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(ux, uy);
@@ -178,19 +178,19 @@ function renderPrivacyDialog(ctx, W, H) {
 
     // 拒绝
     const d = L.disagree;
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
-    _roundRectPath(ctx, d.x, d.y, d.w, d.h, d.h / 2);
+    ctx.fillStyle = 'rgba(90, 64, 48, 0.9)';
+    _roundRectPath(ctx, d.x, d.y, d.w, d.h, 8);
     ctx.fill();
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
+    ctx.fillStyle = '#ffffff';
     ctx.font = '16px sans-serif';
     ctx.fillText('拒绝', d.x + d.w / 2, d.y + d.h / 2);
 
     // 同意
     const a = L.agree;
-    ctx.fillStyle = 'rgba(0, 198, 255, 0.42)';
-    _roundRectPath(ctx, a.x, a.y, a.w, a.h, a.h / 2);
+    ctx.fillStyle = '#c9a227';
+    _roundRectPath(ctx, a.x, a.y, a.w, a.h, 8);
     ctx.fill();
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#241408';
     ctx.font = 'bold 16px sans-serif';
     ctx.fillText('同意', a.x + a.w / 2, a.y + a.h / 2);
 

@@ -1,0 +1,12 @@
+{
+	"id": "25d64ff4-4f5e-4c17-98a8-01b880e674ca",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "5bd95775-706a-4167-bf60-2d000a1e2d28",
+	"operation": "create",
+	"after": "WorldMapScene saves its current vertical scroll origin back into the entry params on exit and restores a clamped numeric origin on re-entry.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/world-map-scene.js: onExit() writes this._originY into params; onEnter() restores it via _clampOrigin"
+	],
+	"createdAt": 1788312151867
+}

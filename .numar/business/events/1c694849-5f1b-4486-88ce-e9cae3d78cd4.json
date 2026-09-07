@@ -1,0 +1,12 @@
+{
+	"id": "1c694849-5f1b-4486-88ce-e9cae3d78cd4",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "ab95f6c0-a99c-4178-8c8e-49381adff8c7",
+	"operation": "create",
+	"after": "金方块获得方式：首通 +1；破纪录每关 +1 且每关封顶 2 次（不含首通）；章节全通每章 +1；全通全部关卡里程碑 +10。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/golden-block-manager.js header comment"
+	],
+	"createdAt": 1788316083975
+}

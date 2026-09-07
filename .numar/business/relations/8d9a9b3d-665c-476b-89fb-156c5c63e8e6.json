@@ -6,9 +6,10 @@
 	"type": "dependsOn",
 	"verificationStatus": "candidate",
 	"evidenceIds": [
-		"cloudfunctions/rank/README.md"
+		"cloudfunctions/rank/README.md",
+		"cloudfunctions/rank/index.js"
 	],
 	"createdByTaskId": "business-init",
 	"createdAt": 1787230425332,
-	"updatedAt": 1787230425332
+	"updatedAt": 1788314604973
 }

@@ -1,0 +1,12 @@
+{
+	"id": "78c94961-cd2a-4892-b1c3-f17a566f547d",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "9eda1c65-f2da-4c56-a675-415dedb22814",
+	"operation": "create",
+	"after": "AudioManager 的 ensureBgmPlaying 会在 BGM 已标记播放但 AudioContext 仍处于 suspended 状态时重新启动/触发 BGM，避免假开播。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/audio-manager.js"
+	],
+	"createdAt": 1788316348106
+}

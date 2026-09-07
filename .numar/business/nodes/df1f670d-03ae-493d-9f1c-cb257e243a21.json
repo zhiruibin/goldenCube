@@ -1,0 +1,32 @@
+{
+	"id": "df1f670d-03ae-493d-9f1c-cb257e243a21",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "plaza.list-sort-tabs",
+	"title": "关卡广场排序 Tab",
+	"statement": "PlazaScene 关卡广场提供四种关卡列表排序 Tab：官方、新关、热门、好通关。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311965308,
+	"updatedAt": 1788311965308,
+	"createdByTaskId": "business-init",
+	"latestEventId": "8700d687-fc49-41e2-9441-00a9e9c0eec1",
+	"tags": [],
+	"aliases": [
+		"广场排序",
+		"官方新关热门好通关",
+		"plaza 排序 tab"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/plaza-scene.js"
+		},
+		{
+			"type": "symbol",
+			"path": "js/scenes/plaza-scene.js",
+			"symbol": "PLAZA_SORT"
+		}
+	]
+}

@@ -1,0 +1,12 @@
+{
+	"id": "3e8c055f-d2d8-4346-998c-14e0b0a93cde",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "2182f3f3-38a2-4a6f-aad4-8a58c637e6e7",
+	"operation": "create",
+	"after": "作者必须使用当前布局快照自通，否则不能提交发布，也不能发起好友挑战；自通凭证是工坊关卡的硬性门禁。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"docs/gc-workshop-plaza-design.md"
+	],
+	"createdAt": 1788316265641
+}

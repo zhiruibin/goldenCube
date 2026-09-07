@@ -1,0 +1,15 @@
+{
+	"id": "b855191a-2bb2-4772-ae1d-0a75556e6867",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "c00ebda1-fdb4-47e5-a365-073ab6563489",
+	"toNodeId": "8db56cbb-357f-412e-85d3-fa37e088e993",
+	"type": "belongsTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"js/scenes/game-scene.js:STAGE_TUTORIAL_SEEN_KEY 注释“首次闯关：垃圾布局完成后提示通关目标（仅展示一次）”",
+		"js/scenes/game-scene.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788311855147,
+	"updatedAt": 1788332541234
+}

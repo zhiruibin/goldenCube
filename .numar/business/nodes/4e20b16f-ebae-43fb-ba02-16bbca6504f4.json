@@ -1,0 +1,26 @@
+{
+	"id": "4e20b16f-ebae-43fb-ba02-16bbca6504f4",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "plaza.play-fee-12",
+	"title": "广场官方关卡入场费",
+	"statement": "广场官方精选关卡统一收取 12 金币入场费（playFee=12）。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788310807222,
+	"updatedAt": 1788310807222,
+	"createdByTaskId": "business-init",
+	"latestEventId": "d9b9e0f2-cee1-4e4b-b95b-779f43398415",
+	"tags": [],
+	"aliases": [
+		"官方关卡入场费",
+		"入场费12金币"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "data/plaza-official-v1.js"
+		}
+	]
+}

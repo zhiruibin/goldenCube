@@ -1,0 +1,12 @@
+{
+	"id": "53b107e1-a719-4c57-90da-7af281dce8f7",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "8366f4de-4b49-4d22-8993-7a2a788d19d5",
+	"operation": "create",
+	"after": "工坊模式的所有产出路径（通关、发布、热度、作者分成、订阅/广告）一律不发放金方块；广场通关只奖励金币，工坊自成独立经济闭环。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"docs/gc-workshop-plaza-design.md"
+	],
+	"createdAt": 1788316265597
+}

@@ -1,0 +1,26 @@
+{
+	"id": "fee56798-3e50-44b8-917d-44d8d8952318",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage-result.buttons-and-back-target",
+	"title": "Stage result buttons and back target",
+	"statement": "Stage result exposes exactly three buttons in order next level, replay current, back; tapping empty space does not switch scenes; the back button goes to stageSelect carrying the current stageId and stack home + worldMap.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315405097,
+	"updatedAt": 1788315405097,
+	"createdByTaskId": "business-init",
+	"latestEventId": "9f870d8d-f7ac-4641-aa23-d00b939a9cf0",
+	"tags": [],
+	"aliases": [
+		"结算三按钮",
+		"返回关卡选择"
+	],
+	"implementationRefs": [
+		{
+			"type": "test",
+			"path": "tools/gc-test-stage-result-tap.js"
+		}
+	]
+}

@@ -1,0 +1,32 @@
+{
+	"id": "cfbc5b22-a193-41dc-8efd-8acc8b3d0a47",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage.mode.garbage-inert-collapse",
+	"title": "闯关模式垃圾块原位不塌缩",
+	"statement": "闯关模式消行只移除满行：玩家块按列塌缩，垃圾块保持在原位（方案 B），由 _clearFullRowsStage 处理。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315317025,
+	"updatedAt": 1788315317025,
+	"createdByTaskId": "business-init",
+	"latestEventId": "aedaf10c-377a-46fe-8d55-ab00bf918872",
+	"tags": [],
+	"aliases": [
+		"方案B塌缩",
+		"垃圾块保持原位",
+		"闯关消行规则"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "tools/gc-stage-engine.py"
+		},
+		{
+			"type": "symbol",
+			"path": "tools/gc-stage-engine.py",
+			"symbol": "_clearFullRowsStage"
+		}
+	]
+}

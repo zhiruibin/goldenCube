@@ -1,0 +1,27 @@
+{
+	"id": "e3ff39f1-3e14-45b0-b88d-7bc96ea7c11c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "plaza.local-preview-official-only",
+	"title": "仅官方 Tab 使用本地预览",
+	"statement": "广场列表仅官方 Tab 可用本地包即时展示（顺序稳定）；新关/热门/好通关 Tab 依赖云端排序，避免先展示本地数据造成闪烁。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311965317,
+	"updatedAt": 1788311965317,
+	"createdByTaskId": "business-init",
+	"latestEventId": "4117cee0-fceb-4a59-978a-ce7c9163e945",
+	"tags": [],
+	"aliases": [
+		"官方本地包预览",
+		"广场本地预览"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/plaza-scene.js",
+			"symbol": "_useLocalPlazaPreview"
+		}
+	]
+}

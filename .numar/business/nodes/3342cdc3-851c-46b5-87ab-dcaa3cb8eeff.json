@@ -1,0 +1,31 @@
+{
+	"id": "3342cdc3-851c-46b5-87ab-dcaa3cb8eeff",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "home.pending-challenge-reminder.once-per-session",
+	"title": "待应战提醒每次会话最多一次",
+	"statement": "首页对待应战挑战的提醒在单次会话内最多提示一次（模块级标志 _pendingRemindedSession），避免反复 toast。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311855132,
+	"updatedAt": 1788311855132,
+	"createdByTaskId": "business-init",
+	"latestEventId": "40e87146-e160-49ec-be77-b898f17dfc7a",
+	"tags": [],
+	"aliases": [
+		"待应战提醒",
+		"会话内只提醒一次",
+		"避免反复 toast"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/home-scene.js"
+		},
+		{
+			"type": "symbol",
+			"symbol": "_pendingRemindedSession"
+		}
+	]
+}

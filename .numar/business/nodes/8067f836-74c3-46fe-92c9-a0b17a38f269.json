@@ -1,0 +1,31 @@
+{
+	"id": "8067f836-74c3-46fe-92c9-a0b17a38f269",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage.chapter-speed-progression",
+	"title": "章节下落速度递进",
+	"statement": "十个章节的默认下落间隔逐章降低（第 1/2 章为 1000ms，第 10 章「金方块殿」为 750ms），体现章节难度递进。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788310807247,
+	"updatedAt": 1788310807247,
+	"createdByTaskId": "business-init",
+	"latestEventId": "a41e5ac0-ce49-4b7a-bd31-367f99226f21",
+	"tags": [],
+	"aliases": [
+		"章节速度曲线",
+		"章节下落间隔递进"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "data/stages-v1.js"
+		},
+		{
+			"type": "symbol",
+			"path": "data/stages-v1.js",
+			"symbol": "chapters"
+		}
+	]
+}

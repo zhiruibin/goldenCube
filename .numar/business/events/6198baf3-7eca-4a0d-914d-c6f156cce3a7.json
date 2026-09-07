@@ -1,0 +1,12 @@
+{
+	"id": "6198baf3-7eca-4a0d-914d-c6f156cce3a7",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "24933557-d891-412b-b2ee-0e218e560ac6",
+	"operation": "create",
+	"after": "垃圾方块使用统一的 #787880 主色，棋盘内与工具栏/图例等 UI 渲染保持一致。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/garbage-cell.js"
+	],
+	"createdAt": 1788311636526
+}

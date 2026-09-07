@@ -1,0 +1,14 @@
+{
+	"id": "ed1e8150-d4e1-4607-9c69-a72786b9ad0d",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "00637fd5-409c-4b59-a54c-ffbf4f486ea8",
+	"toNodeId": "4f8755b6-591d-4066-adb3-be3190080263",
+	"type": "dependsOn",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"js/render/plaza-wall-fx.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788311734512,
+	"updatedAt": 1788311734512
+}

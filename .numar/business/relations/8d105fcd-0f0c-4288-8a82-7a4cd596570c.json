@@ -6,9 +6,10 @@
 	"type": "transitionsTo",
 	"verificationStatus": "verified",
 	"evidenceIds": [
-		"js/scenes/stage-select-scene.js: 返回按钮调用 sceneManager.back() 回到首页"
+		"js/scenes/stage-select-scene.js: 返回按钮调用 sceneManager.back() 回到首页",
+		"js/scenes/stage-select-scene.js"
 	],
 	"createdByTaskId": "request_a2195155-87f9-4ebf-a6ab-ad3a57c0989e",
 	"createdAt": 1787809299314,
-	"updatedAt": 1787809299314
+	"updatedAt": 1788314317730
 }

@@ -9,12 +9,12 @@ const IconRenderer = require('../render/icon-renderer');
 const PENDING_CHALLENGES_KEY = require('./challenge-scene').PENDING_CHALLENGES_KEY;
 const {
     AMBIENT_PIECE_COLORS,
-    ACCENT,
     SUBTITLE,
     MUTED,
     fillNightBackground,
     drawBrandTitle,
 } = require('../theme/arcade-night');
+const { drawThemeBackground } = require('../theme/theme-images');
 const challengeUi = require('../../utils/challenge-ui');
 const challengeShareCard = require('../../utils/challenge-share-card');
 
@@ -171,8 +171,13 @@ class ResultScene {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
 
-        // 夜场街机背景（与首页一致，分享截图更友好）
-        fillNightBackground(ctx, W, H);
+        // 金矿工坊主题背景
+        if (!drawThemeBackground(ctx, 'homeBg', W, H)) {
+            fillNightBackground(ctx, W, H);
+        } else {
+            ctx.fillStyle = 'rgba(10, 7, 4, 0.42)';
+            ctx.fillRect(0, 0, W, H);
+        }
 
         // 背景装饰：缓慢下落的半透明方块
         this._renderFallingBlocks(ctx);
@@ -193,18 +198,18 @@ class ResultScene {
         const panelH = PANEL_H;
         const panelX = (W - panelW) / 2;
 
-        // 面板背景
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+        // 面板背景（矿洞主题）
+        ctx.fillStyle = 'rgba(28, 20, 14, 0.9)';
         this._roundRect(ctx, panelX, panelY, panelW, panelH, 12);
         ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-        ctx.lineWidth = 1;
-        this._roundRect(ctx, panelX, panelY, panelW, panelH, 12);
+        this._roundRect(ctx, panelX + 0.75, panelY + 0.75, panelW - 1.5, panelH - 1.5, 11);
+        ctx.strokeStyle = 'rgba(31, 155, 152, 0.65)';
+        ctx.lineWidth = 1.5;
         ctx.stroke();
 
         // 主成绩
         const lines = this._params.lines || 0;
-        ctx.fillStyle = ACCENT;
+        ctx.fillStyle = '#c9a227';
         ctx.font = 'bold 48px sans-serif';
         ctx.fillText(String(lines), W / 2, panelY + 60);
 
@@ -217,9 +222,9 @@ class ResultScene {
         ctx.textAlign = 'center';
 
         const showCoinLine = (this._coinEarned || 0) > 0 || (this._todayCoinEarned || 0) > 0;
-        ctx.fillStyle = '#00f000';
+        ctx.fillStyle = '#8fd36a';
         ctx.fillText(`块数 ${this._params.pieces || 0}`, W / 2 - 70, infoY);
-        ctx.fillStyle = '#5ec8d4';
+        ctx.fillStyle = '#1f9b98';
         const sec = Math.max(0, Math.floor((this._params.timeMs || 0) / 1000));
         ctx.fillText(`用时 ${sec}s`, W / 2 + 70, infoY);
         const coinLineY = panelY + panelH - 16;
@@ -285,6 +290,10 @@ class ResultScene {
                 text: item.text,
                 icon: item.icon,
                 color: item.color,
+                skin: item.skin,
+                skinMode: item.skinMode || 'stretch',
+                labelColor: item.labelColor || '#241408',
+                fontScale: item.fontScale || 0.9,
                 onClick: item.onClick,
             }));
         };
@@ -292,26 +301,38 @@ class ResultScene {
         pushBtn({
             text: '回击对方',
             icon: 'share',
-            color: '#e09a30',
+            color: '#c9a227',
+            skin: 'btnBarGold',
+            skinMode: 'stretch',
+            labelColor: '#241408',
             onClick: () => this._share(this._challengeOpponent),
         });
         pushBtn({
             text: '闯关',
             icon: 'brick',
-            color: '#3aa8d8',
+            color: '#c9a227',
+            skin: 'cardStageGold',
+            skinMode: 'stretch',
+            labelColor: '#241408',
             onClick: () => GameGlobal.game.sceneManager.leaveTo('worldMap', {}, ['home']),
         });
         pushBtn({
             text: '关卡广场',
             icon: 'puzzle',
             color: '#c9a227',
+            skin: 'cardStageAmber',
+            skinMode: 'stretch',
+            labelColor: '#241408',
             onClick: () => GameGlobal.game.sceneManager.leaveTo('plaza', {}, ['home']),
         });
         if (layout.showReplay) {
             pushBtn({
                 text: '回看本局',
                 icon: 'play',
-                color: '#a000f0',
+                color: '#6b4a2e',
+                skin: 'cardStageBrown',
+                skinMode: 'stretch',
+                labelColor: '#ffffff',
                 onClick: () => GameGlobal.game.sceneManager.switchTo(
                     'replay',
                     Object.assign({}, this._params, {
@@ -322,8 +343,11 @@ class ResultScene {
             });
         }
         pushBtn({
-            text: '← 返回',
-            color: '#555',
+            text: '返回',
+            color: '#6b4a2e',
+            skin: 'btnBarBrown',
+            skinMode: 'stretch',
+            labelColor: '#fff8ef',
             onClick: () => GameGlobal.game.sceneManager.leaveTo('challenge', {}, ['home']),
         });
     }
@@ -557,12 +581,12 @@ class ResultScene {
                 text = challengeUi.formatResponderResultText(this._challengeResult);
                 if (this._challengeResult && this._challengeResult.result === 'responder_win') {
                     icon = 'trophy';
-                    color = '#00f0f0';
+                    color = '#c9a227';
                 } else if (this._challengeResult && this._challengeResult.result === 'challenger_win') {
                     icon = 'warning';
                     color = '#ff6b6b';
                 } else {
-                    color = '#f0a000';
+                    color = '#c9a227';
                 }
                 break;
             }
@@ -589,10 +613,10 @@ class ResultScene {
             const rx = W / 2 - rw / 2;
             const ry = y + 16;
             this._challengeRetryRect = { x: rx, y: ry, w: rw, h: rh };
-            ctx.fillStyle = 'rgba(0, 198, 255, 0.18)';
+            ctx.fillStyle = 'rgba(201, 162, 39, 0.22)';
             this._roundRect(ctx, rx, ry, rw, rh, rh / 2);
             ctx.fill();
-            ctx.fillStyle = '#00c6ff';
+            ctx.fillStyle = '#c9a227';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(retryText, W / 2, ry + rh / 2);

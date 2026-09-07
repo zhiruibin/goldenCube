@@ -1,0 +1,15 @@
+{
+	"id": "a1a03e2c-a22c-4a3c-8f47-839cc0d42a83",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "9995321f-9f02-497c-b069-f95108d768c7",
+	"toNodeId": "f5385a55-b5f8-4def-9af4-14ecbc72e754",
+	"type": "appliesTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"cloudfunctions/workshop/index.js:SUBMIT_DAILY_MAX",
+		"cloudfunctions/workshop/index.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788316189172,
+	"updatedAt": 1788333241199
+}

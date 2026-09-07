@@ -1,0 +1,12 @@
+{
+	"id": "cb5e3313-c597-40db-86ce-e807ae2bded2",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "6ffd404a-1bec-430e-9c0b-18da5d0ef02f",
+	"operation": "create",
+	"after": "Entering StageSelectScene attempts to claim the daily login reward via coinManager.tryClaimDailyLogin(); if claimed, it shows a toast with the amount (e.g. '每日登录 +20 金币').",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/stage-select-scene.js"
+	],
+	"createdAt": 1788312028782
+}

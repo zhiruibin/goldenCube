@@ -1,0 +1,12 @@
+{
+	"id": "8700d687-fc49-41e2-9441-00a9e9c0eec1",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "df1f670d-03ae-493d-9f1c-cb257e243a21",
+	"operation": "create",
+	"after": "PlazaScene 关卡广场提供四种关卡列表排序 Tab：官方、新关、热门、好通关。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/plaza-scene.js"
+	],
+	"createdAt": 1788311965308
+}

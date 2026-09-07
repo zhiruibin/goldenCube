@@ -1,0 +1,30 @@
+{
+	"id": "19451078-4f03-460c-a978-1fa94b789f32",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "workshop.stage-metrics-and-plaza-sort",
+	"title": "广场统计与排序维度",
+	"statement": "广场单关统计开打数、通关数、挑战数、热度与通关率，支持按 new / heat / clearRate 排序。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316265785,
+	"updatedAt": 1788316265785,
+	"createdByTaskId": "business-init",
+	"latestEventId": "dd3ec903-d45a-4d7e-b399-a919538fb7f6",
+	"tags": [],
+	"aliases": [
+		"广场排序维度",
+		"通关率热度统计"
+	],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "cloudfunctions/workshop/README.md"
+		},
+		{
+			"type": "document",
+			"path": "docs/gc-workshop-plaza-design.md"
+		}
+	]
+}

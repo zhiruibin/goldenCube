@@ -1,0 +1,18 @@
+{
+	"id": "4d543009-6b47-48cd-bfcc-5fce3360982e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "8f9d1812-5abf-44a1-9521-a895c70ec93e",
+	"toNodeId": "51ccd366-e92f-441b-a6cb-9d2376712481",
+	"type": "dependsOn",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"js/scenes/home-scene.js:_ensureHomeBgm 仅当 audio.isInitialized() 时播放 BGM",
+		"js/scenes/home-scene.js:_ensureHomeBgm",
+		"js/scenes/home-scene.js",
+		"utils/audio-manager.js",
+		"game.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788311855148,
+	"updatedAt": 1788322329147
+}

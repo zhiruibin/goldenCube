@@ -1,0 +1,40 @@
+{
+	"id": "f5385a55-b5f8-4def-9af4-14ecbc72e754",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "workshop.daily-limits-and-rewards",
+	"title": "工坊每日上限与奖励常量",
+	"statement": "工坊每日提交上限 3 个、免费开打 8 局、通关奖励金币 120、作者分享奖励金币 80。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311439810,
+	"updatedAt": 1788311439810,
+	"createdByTaskId": "business-init",
+	"latestEventId": "44ecaf32-9a80-46e8-8fb9-bc6d4829a33e",
+	"tags": [],
+	"aliases": [
+		"每日提交 3",
+		"免费开打 8",
+		"通关金币 120",
+		"分享金币 80"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"symbol": "SUBMIT_DAILY_MAX"
+		},
+		{
+			"type": "symbol",
+			"symbol": "FREE_PLAY_DAILY"
+		},
+		{
+			"type": "symbol",
+			"symbol": "WORKSHOP_CLEAR_DAILY"
+		},
+		{
+			"type": "symbol",
+			"symbol": "AUTHOR_SHARE_DAILY"
+		}
+	]
+}

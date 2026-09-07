@@ -1,0 +1,14 @@
+{
+	"id": "3a429c61-f432-4f85-a601-28aca1bab9c7",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "a15707d6-d6f5-45d8-ae90-c89437474cec",
+	"toNodeId": "9ef27cd2-6fec-4120-acb3-bfb8fcd936a4",
+	"type": "appliesTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"cloudfunctions/challenge/index.js:cancelChallenge"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788316189208,
+	"updatedAt": 1788316189208
+}

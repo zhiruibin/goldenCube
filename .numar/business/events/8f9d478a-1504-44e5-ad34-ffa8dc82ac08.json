@@ -1,0 +1,12 @@
+{
+	"id": "8f9d478a-1504-44e5-ad34-ffa8dc82ac08",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "436bd02e-e949-4919-941a-0f5a20c387a7",
+	"operation": "create",
+	"after": "「广场通关」成就计数把官方精选关卡视为广场关卡的子集，首通任意广场关卡（含官方精选）即可达成 plaza_clear_1；官方精选 N 关不再单列成就。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"data/achievements.js"
+	],
+	"createdAt": 1788310807227
+}

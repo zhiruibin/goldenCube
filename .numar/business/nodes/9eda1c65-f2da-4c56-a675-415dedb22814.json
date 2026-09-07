@@ -1,0 +1,28 @@
+{
+	"id": "9eda1c65-f2da-4c56-a675-415dedb22814",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "audio.bgm.ensure-playing-guard",
+	"title": "BGM 假开播防护",
+	"statement": "AudioManager 的 ensureBgmPlaying 会在 BGM 已标记播放但 AudioContext 仍处于 suspended 状态时重新启动/触发 BGM，避免假开播。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316348106,
+	"updatedAt": 1788316348106,
+	"createdByTaskId": "business-init",
+	"latestEventId": "78c94961-cd2a-4892-b1c3-f17a566f547d",
+	"tags": [],
+	"aliases": [
+		"BGM 防假开播",
+		"确保背景音乐真正在响",
+		"BGM resume guard"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/audio-manager.js",
+			"symbol": "ensureBgmPlaying"
+		}
+	]
+}

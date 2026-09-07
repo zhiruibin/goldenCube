@@ -1,0 +1,12 @@
+{
+	"id": "be73b54e-3051-4e91-96d4-fcd09430f45b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "d8199e9c-8d62-4ff6-8791-2be3e64af351",
+	"operation": "create",
+	"after": "PlazaScene 按排序 Tab 缓存关卡列表于内存，仅当有缓存时快速展示；离开场景时会清空这些 Tab 缓存。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/plaza-scene.js"
+	],
+	"createdAt": 1788311965323
+}

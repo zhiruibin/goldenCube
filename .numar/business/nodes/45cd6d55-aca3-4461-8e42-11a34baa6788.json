@@ -1,0 +1,26 @@
+{
+	"id": "45cd6d55-aca3-4461-8e42-11a34baa6788",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage-select.render.balance-row-aligned-with-menu-capsule",
+	"title": "Stage select balance row aligns with menu capsule",
+	"statement": "Stage select renders the golden-block/coin balance row left-aligned at contentLeft and vertically centered with the menu capsule, while the chapter title sits below it.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315405084,
+	"updatedAt": 1788315405084,
+	"createdByTaskId": "business-init",
+	"latestEventId": "7130d43d-0de7-4534-849d-361309f36fa0",
+	"tags": [],
+	"aliases": [
+		"余额与胶囊垂直居中",
+		"顶栏余额对齐"
+	],
+	"implementationRefs": [
+		{
+			"type": "test",
+			"path": "tools/gc-test-stage-render.js"
+		}
+	]
+}

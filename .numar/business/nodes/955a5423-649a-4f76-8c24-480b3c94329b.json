@@ -1,0 +1,27 @@
+{
+	"id": "955a5423-649a-4f76-8c24-480b3c94329b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "render.icons.vector-canvas-only",
+	"title": "UI 图标统一矢量 Canvas 绘制不依赖位图",
+	"statement": "所有 UI 图标用 Canvas 路径原语（moveTo/lineTo/arc/bezierCurveTo/quadraticCurveTo/rect）绘制，不依赖任何 PNG/图片资源，保证不同机型与分辨率下渲染结果 100% 一致；图标以 (x, y) 为中心、size 为外接正方形边长绘制。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311636535,
+	"updatedAt": 1788311636535,
+	"createdByTaskId": "business-init",
+	"latestEventId": "f0f1c123-da07-4155-adba-b5a586b54517",
+	"tags": [],
+	"aliases": [
+		"矢量图标库",
+		"纯 Canvas 图标",
+		"图标位图无关"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/render/icon-renderer.js"
+		}
+	]
+}

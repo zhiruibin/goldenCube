@@ -1,0 +1,12 @@
+{
+	"id": "e763608d-172a-4c15-95ca-2f3616aaa10c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "d4ca3bb7-21be-4aa1-bbe1-f2c4c9d3fec8",
+	"operation": "create",
+	"after": "每条挑战仅可被应战一次，应战后状态由 pending 变为 completed；发起者不能应战自己发起的挑战。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/challenge/README.md"
+	],
+	"createdAt": 1788316265746
+}

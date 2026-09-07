@@ -1,0 +1,13 @@
+{
+	"id": "9714ff4a-3abe-4a6e-8ece-bc0b5976f76a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "de0e15a7-221c-4ae3-8d39-5002f9bdcb12",
+	"operation": "create",
+	"after": "工坊关卡布局以 20 行字符串表示，每行固定 10 个字符，不足用 '.' 补齐，'.' 表示空格。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/workshop-manager.js:emptyRows",
+		"utils/workshop-manager.js:cloneRows"
+	],
+	"createdAt": 1788311439814
+}

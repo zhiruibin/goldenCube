@@ -1,0 +1,12 @@
+{
+	"id": "79f8d57b-1ada-4738-b755-0d4a5ce9a194",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "75d36991-bdb6-4960-97a8-9e1ab31a99ad",
+	"operation": "create",
+	"after": "关卡数据唯一来源是 data/stages-v1.json；微信运行时不能直接 require .json，因此工具生成 data/stages-v1.js 模块副本，禁止手改，改数据需编辑 JSON 后重新生成。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"tools/gc-sync-stages-js.py 文件头注释"
+	],
+	"createdAt": 1788315317080
+}

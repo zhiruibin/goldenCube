@@ -1,0 +1,12 @@
+{
+	"id": "7926d808-37c5-499d-901c-f2f7470b1191",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "319e5e76-e736-47f4-92b9-930b95611c38",
+	"operation": "create",
+	"after": "在世界地图上点按某章节点（垃圾块或主题名区域）会切换到 stageSelect 场景并携带等于该节点 id 的 chapterId；点按空白处不切换场景。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"tools/gc-test-world-map-tap.js"
+	],
+	"createdAt": 1788316348029
+}

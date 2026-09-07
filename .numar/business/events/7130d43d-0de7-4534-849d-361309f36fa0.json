@@ -1,0 +1,12 @@
+{
+	"id": "7130d43d-0de7-4534-849d-361309f36fa0",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "45cd6d55-aca3-4461-8e42-11a34baa6788",
+	"operation": "create",
+	"after": "Stage select renders the golden-block/coin balance row left-aligned at contentLeft and vertically centered with the menu capsule, while the chapter title sits below it.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"tools/gc-test-stage-render.js"
+	],
+	"createdAt": 1788315405084
+}

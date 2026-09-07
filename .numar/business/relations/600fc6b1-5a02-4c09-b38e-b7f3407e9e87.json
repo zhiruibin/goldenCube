@@ -1,0 +1,15 @@
+{
+	"id": "600fc6b1-5a02-4c09-b38e-b7f3407e9e87",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "233f6b51-65fe-43b5-b46f-1a789a515589",
+	"toNodeId": "39f67d35-c98b-449d-9a00-f5a4ca19d6b5",
+	"type": "appliesTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"tools/gc-prefix-storage.py BARE_KEYS 包含 'coins'",
+		"tools/gc-prefix-storage.py"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788315317096,
+	"updatedAt": 1788317344446
+}

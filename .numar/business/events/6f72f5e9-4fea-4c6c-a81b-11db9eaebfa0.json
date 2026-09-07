@@ -1,0 +1,12 @@
+{
+	"id": "6f72f5e9-4fea-4c6c-a81b-11db9eaebfa0",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "7f135d34-70da-4fb0-8d33-743ee5035f01",
+	"operation": "create",
+	"after": "回放数据缺失或无效时，ReplayScene 提示“回放数据不可用”，并根据来源参数回退到排行榜、闯关结算或闯关失败场景。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/replay-scene.js"
+	],
+	"createdAt": 1788311965356
+}

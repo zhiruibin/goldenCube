@@ -1,0 +1,13 @@
+{
+	"id": "77b1d680-6739-4c37-91a3-451907f31b80",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "f7a4c6d4-dc23-4a3c-af68-6a97aff59764",
+	"operation": "create",
+	"after": "广场解锁需 1 金方块；工坊挑战费用常量 CHALLENGE_FEE 为 10 金币。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/workshop-manager.js:PLAZA_UNLOCK_GOLD",
+		"utils/workshop-manager.js:CHALLENGE_FEE"
+	],
+	"createdAt": 1788311439821
+}

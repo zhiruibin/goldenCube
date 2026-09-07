@@ -1,0 +1,12 @@
+{
+	"id": "9050a0ec-75c9-4e56-a705-69512eba072b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "f7be3a36-20df-4181-a585-27c18aa521f9",
+	"operation": "create",
+	"after": "消行庆祝特效的粒子数量、速度、寿命、重力与闪屏强度按消除行数列（1-4）分档配置；T-Spin 使用金色粒子并带金色闪屏；4 行消除的闪屏范围为整棋盘（range -1）。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/effect-renderer.js"
+	],
+	"createdAt": 1788311636513
+}

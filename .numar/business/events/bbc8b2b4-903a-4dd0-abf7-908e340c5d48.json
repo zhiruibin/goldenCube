@@ -1,0 +1,12 @@
+{
+	"id": "bbc8b2b4-903a-4dd0-abf7-908e340c5d48",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "32000dbc-eae3-41dd-be49-819d0cc8323a",
+	"operation": "create",
+	"after": "工坊/广场关卡状态包括 draft、cleared、reviewing、published、rejected、delisted。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/workshop-manager.js:STATUS"
+	],
+	"createdAt": 1788311439808
+}

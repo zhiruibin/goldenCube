@@ -45,6 +45,8 @@ function BackgroundEffects(opts) {
   /** @type {Array} 可同时存在多条流星 */
   this._meteors = [];
   this._meteorTimer = 1.5 + Math.random() * 1.5;
+  /** 为 true 时不画底渐变（由场景铺主题背景，只叠粒子） */
+  this._skipBase = !!(opts && opts.skipBase);
 }
 
 BackgroundEffects.prototype.init = function () {
@@ -172,16 +174,22 @@ BackgroundEffects.prototype.trigger = function (type) {
   }
 };
 
+BackgroundEffects.prototype.setSkipBase = function (skip) {
+  this._skipBase = !!skip;
+};
+
 BackgroundEffects.prototype.render = function (ctx) {
   if (!this._enabled) {
     return;
   }
 
-  if (this._gradientCanvas !== null) {
-    ctx.drawImage(this._gradientCanvas, 0, 0);
-  } else {
-    ctx.fillStyle = '#12182c';
-    ctx.fillRect(0, 0, this._width, this._height);
+  if (!this._skipBase) {
+    if (this._gradientCanvas !== null) {
+      ctx.drawImage(this._gradientCanvas, 0, 0);
+    } else {
+      ctx.fillStyle = '#12182c';
+      ctx.fillRect(0, 0, this._width, this._height);
+    }
   }
 
   for (let i = 0; i < this._particles.length; i++) {

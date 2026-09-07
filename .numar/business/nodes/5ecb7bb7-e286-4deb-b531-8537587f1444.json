@@ -1,0 +1,30 @@
+{
+	"id": "5ecb7bb7-e286-4deb-b531-8537587f1444",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "game.params.normalize-forces-engine-mode-stage",
+	"title": "开局参数规范化固定引擎模式为闯关",
+	"statement": "normalizeGameParams 会补全 playContext，并在挑战场景设置 challengeKind/challengeMode，同时把底层引擎 mode 固定为 stage。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316084144,
+	"updatedAt": 1788316084144,
+	"createdByTaskId": "business-init",
+	"latestEventId": "f79ba76c-e6b9-4a08-9d66-3b51ab536428",
+	"tags": [],
+	"aliases": [
+		"引擎模式固定 stage"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/play-context.js"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/play-context.js",
+			"symbol": "normalizeGameParams"
+		}
+	]
+}

@@ -1,0 +1,12 @@
+{
+	"id": "22a5fbbe-21f7-414d-8a1c-6ff184d5f616",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "fde2e136-32a3-4d16-8d62-1b0ee7d0f5d4",
+	"operation": "create",
+	"after": "Players receive 3 free retries per day after failing a stage (gc_dailyFreeRetry), tracked separately from free entries.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/coin-manager.js"
+	],
+	"createdAt": 1788315981758
+}

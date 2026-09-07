@@ -1,0 +1,33 @@
+{
+	"id": "ca55aecd-5bef-49fa-877c-56e64c3a0606",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "coin.workshop-clear.daily-cap-120",
+	"title": "Workshop/plaza clear coins use independent daily cap 120",
+	"statement": "Workshop and plaza stage clears draw from an independent daily coin pool capped at 120 (gc_workshopDailyCoins) and do not produce golden blocks.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315981834,
+	"updatedAt": 1788315981834,
+	"createdByTaskId": "business-init",
+	"latestEventId": "6542f586-0d27-47cd-8695-9bb63f2bf26c",
+	"tags": [],
+	"aliases": [
+		"工坊广场通关日池120",
+		"工坊通关不发金块",
+		"gc_workshopDailyCoins"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "WORKSHOP_CLEAR_DAILY"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "WORKSHOP_DAILY_KEY"
+		}
+	]
+}

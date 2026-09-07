@@ -1,0 +1,34 @@
+{
+	"id": "dca3dd68-6261-4b92-bdf1-c374b475a576",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "user.profile.auth-skip-reset-on-success",
+	"title": "授权成功后清除稍后再说标记",
+	"statement": "用户在首页授权层点「稍后再说」后不再首启强提示（设置页仍可授权）；授权成功后清除该标记，便于换号等场景再次引导。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311439803,
+	"updatedAt": 1788311439803,
+	"createdByTaskId": "business-init",
+	"latestEventId": "c6f2ea5d-6136-460d-8270-6e723a37a6b2",
+	"tags": [],
+	"aliases": [
+		"稍后再说标记",
+		"授权成功清除跳过标记"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"symbol": "markProfileAuthSkipped"
+		},
+		{
+			"type": "symbol",
+			"symbol": "clearProfileAuthSkipped"
+		},
+		{
+			"type": "symbol",
+			"symbol": "shouldPromptProfileAuth"
+		}
+	]
+}

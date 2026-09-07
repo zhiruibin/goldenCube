@@ -1,0 +1,12 @@
+{
+	"id": "d70cf720-8f56-427f-a9f3-4e59717b1784",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "51a49d20-9b1a-463b-8229-99b4fc38436f",
+	"operation": "create",
+	"after": "战局回放播放支持 1x/2x/4x 三档倍速，并循环切换（1x -> 2x -> 4x -> 1x）。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/replay-scene.js"
+	],
+	"createdAt": 1788311965348
+}

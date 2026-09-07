@@ -1,0 +1,12 @@
+{
+	"id": "71f70c50-9d23-43ea-8767-b45b546c886b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "05d9f653-8169-48b6-aeca-5aa0c92c1e29",
+	"operation": "create",
+	"after": "World map projections are drawn with ellipse path fills instead of shadowBlur to keep drawing cost low.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/world-map-fx.js"
+	],
+	"createdAt": 1788311734508
+}

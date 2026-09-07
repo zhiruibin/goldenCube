@@ -1,0 +1,27 @@
+{
+	"id": "a8d9b753-5bd9-4a83-a485-97d0927eaa32",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "shop.scene.default-tab-block",
+	"title": "商店默认方块皮肤 Tab",
+	"statement": "进入商店场景时始终默认停留在方块皮肤 Tab，并重置滚动位置。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311965366,
+	"updatedAt": 1788311965366,
+	"createdByTaskId": "business-init",
+	"latestEventId": "c3522834-cc94-4b5a-9592-a143d2218b40",
+	"tags": [],
+	"aliases": [
+		"商店默认方块页",
+		"商店初始 tab"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/shop-scene.js",
+			"symbol": "onEnter"
+		}
+	]
+}

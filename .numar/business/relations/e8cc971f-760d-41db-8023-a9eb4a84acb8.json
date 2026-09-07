@@ -1,0 +1,14 @@
+{
+	"id": "e8cc971f-760d-41db-8023-a9eb4a84acb8",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "a3ea7348-eb51-46e7-bb70-a0be20b9dbed",
+	"toNodeId": "2182f3f3-38a2-4a6f-aad4-8a58c637e6e7",
+	"type": "constrains",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"docs/gc-workshop-plaza-design.md"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788316265806,
+	"updatedAt": 1788316265806
+}

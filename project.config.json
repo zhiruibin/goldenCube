@@ -13,6 +13,26 @@
       {
         "value": "tools",
         "type": "folder"
+      },
+      {
+        "value": "docs",
+        "type": "folder"
+      },
+      {
+        "value": ".vscode",
+        "type": "folder"
+      },
+      {
+        "value": "README.md",
+        "type": "file"
+      },
+      {
+        "value": "data/stages-v1.json",
+        "type": "file"
+      },
+      {
+        "value": "data/plaza-official-v1.json",
+        "type": "file"
       }
     ],
     "include": []

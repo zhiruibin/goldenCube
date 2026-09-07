@@ -1,0 +1,12 @@
+{
+	"id": "a9e4669d-46cb-4532-b871-f00644ea58e7",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "c38c6e7e-e6d7-43a7-b86c-93d0c085d2ef",
+	"operation": "create",
+	"after": "工坊发布关卡时布局必须通过校验：rows 必须为对象且每行恰好 10 个字符，仅允许 '.' 或 '#'；任一行不得全部填满；垃圾格总数须在 8 到 80 之间；含垃圾的行数须在 3 到 16 之间；最顶部垃圾行不得早于第 6 行。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/workshop/index.js:validateLayout"
+	],
+	"createdAt": 1788316188962
+}

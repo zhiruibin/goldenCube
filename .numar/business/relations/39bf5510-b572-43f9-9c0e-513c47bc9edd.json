@@ -1,0 +1,15 @@
+{
+	"id": "39bf5510-b572-43f9-9c0e-513c47bc9edd",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "f696c71e-912f-4a36-9719-89c55f2b02dd",
+	"toNodeId": "961a4189-4493-4933-91bb-4448e30a0bc7",
+	"type": "dependsOn",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"tools/gc-rebuild-stages-v3.js '关型：silhouette 正形剪影（可抬升）/ ladder 主题浮空目标 / channel 廊道'",
+		"tools/gc-rebuild-stages-v3.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788315317144,
+	"updatedAt": 1788331059271
+}

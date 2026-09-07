@@ -1,0 +1,26 @@
+{
+	"id": "75d36991-bdb6-4960-97a8-9e1ab31a99ad",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage.data.json-single-source",
+	"title": "关卡数据单一来源 JSON",
+	"statement": "关卡数据唯一来源是 data/stages-v1.json；微信运行时不能直接 require .json，因此工具生成 data/stages-v1.js 模块副本，禁止手改，改数据需编辑 JSON 后重新生成。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315317080,
+	"updatedAt": 1788315317080,
+	"createdByTaskId": "business-init",
+	"latestEventId": "79f8d57b-1ada-4738-b755-0d4a5ce9a194",
+	"tags": [],
+	"aliases": [
+		"stages-v1.json单一来源",
+		"关卡配置生成"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "tools/gc-sync-stages-js.py"
+		}
+	]
+}

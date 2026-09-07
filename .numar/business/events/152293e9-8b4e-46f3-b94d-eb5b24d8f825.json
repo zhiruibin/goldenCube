@@ -1,0 +1,12 @@
+{
+	"id": "152293e9-8b4e-46f3-b94d-eb5b24d8f825",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "c521dc4e-d7ed-41cc-af97-bcc2e73e8dcf",
+	"operation": "create",
+	"after": "闯关数据校验要求每个 stage 的首垃圾行号至少为 4，即顶部至少要保留 4 行空档。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"tools/test-stage-engine.js"
+	],
+	"createdAt": 1788316348058
+}

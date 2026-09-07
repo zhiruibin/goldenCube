@@ -1,0 +1,30 @@
+{
+	"id": "9dffbdfa-416d-426f-a5d7-41fbc6f8d261",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "workshop.daily-counter-storage-format",
+	"title": "工坊每日计数存储格式",
+	"statement": "工坊每日计数以 { date: 'YYYY-MM-DD', count } 形式存储，日期变化时计数按 0 处理。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311439816,
+	"updatedAt": 1788311439816,
+	"createdByTaskId": "business-init",
+	"latestEventId": "1e792130-1ff0-4c27-9b83-de58b9dc408f",
+	"tags": [],
+	"aliases": [
+		"每日计数",
+		"跨日归零"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"symbol": "_dailyCount"
+		},
+		{
+			"type": "symbol",
+			"symbol": "_bumpDaily"
+		}
+	]
+}

@@ -1,0 +1,30 @@
+{
+	"id": "f39c3c49-647b-4523-ba5f-fad3d85697dc",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "workshop.author-share-daily-cap",
+	"title": "作者金币分成与日上限",
+	"statement": "已发布关被游玩/被通关会更新统计与热度，并给作者金币分成；分成设有日上限，且不产金方块。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316265683,
+	"updatedAt": 1788316265683,
+	"createdByTaskId": "business-init",
+	"latestEventId": "e2f63261-4457-4c70-8293-468d7db0c03c",
+	"tags": [],
+	"aliases": [
+		"作者分成日上限",
+		"被玩通关作者收益"
+	],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "docs/gc-workshop-plaza-design.md"
+		},
+		{
+			"type": "document",
+			"path": "cloudfunctions/workshop/README.md"
+		}
+	]
+}

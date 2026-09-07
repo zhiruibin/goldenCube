@@ -1,0 +1,27 @@
+{
+	"id": "083e27f4-c10a-4dc4-bd7b-5dc50cfddb3e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "world-map.unlock-sync-on-enter",
+	"title": "World map syncs chapter unlock status from progress on enter",
+	"statement": "When the world-map scene is entered, golden-block unlock status is synchronized from saved progress before board layout.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312151862,
+	"updatedAt": 1788312151862,
+	"createdByTaskId": "business-init",
+	"latestEventId": "4459db5c-97ba-4d19-b5c5-cd71c0292f70",
+	"tags": [],
+	"aliases": [
+		"进入世界地图同步解锁",
+		"syncUnlockedFromProgress"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/world-map-scene.js",
+			"symbol": "onEnter"
+		}
+	]
+}

@@ -1,0 +1,12 @@
+{
+	"id": "fae2236d-073c-406f-9504-a09f3c664652",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "8e6dfc02-c5dc-4295-8e6e-2b4cd85cc4b8",
+	"operation": "create",
+	"after": "工坊关卡布局按行号排序后拼接为字符串，使用 FNV-1a 哈希生成十六进制指纹，用于标识唯一布局。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/workshop/index.js:layoutHash"
+	],
+	"createdAt": 1788316188984
+}

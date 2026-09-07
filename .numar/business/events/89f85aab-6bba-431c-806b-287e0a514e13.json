@@ -1,0 +1,12 @@
+{
+	"id": "89f85aab-6bba-431c-806b-287e0a514e13",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "24d384b0-e0c2-4e9b-9a11-a8c1ce1c1f22",
+	"operation": "create",
+	"after": "Coin rewards from stage-clear efficiency settlement are capped at 300 per day (DAILY_LIMIT), tracked by gc_dailyCoinsEarned and kept separate from the ad-double pool.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/coin-manager.js"
+	],
+	"createdAt": 1788315981713
+}

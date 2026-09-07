@@ -1,0 +1,31 @@
+{
+	"id": "e23b32d9-4f41-42d5-8419-46dd1fd8a08f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "replay.recording.input-timeline-format",
+	"title": "回放录制数据结构",
+	"statement": "回放录制器按相对时间记录每个输入动作，结束时生成 version 1、seed、mode、durationMs（最后一条输入时间）、inputs 列表与 meta 组成的回放数据，并支持本地读写。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316084270,
+	"updatedAt": 1788316084270,
+	"createdByTaskId": "business-init",
+	"latestEventId": "fd4fff02-4e3b-4dc6-8325-d4a153e9e59c",
+	"tags": [],
+	"aliases": [
+		"回放录制数据结构",
+		"回放输入列表"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/replay-recorder.js"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/replay-recorder.js",
+			"symbol": "ReplayRecorder"
+		}
+	]
+}

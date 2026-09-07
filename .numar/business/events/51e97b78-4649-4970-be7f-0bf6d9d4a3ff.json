@@ -1,0 +1,12 @@
+{
+	"id": "51e97b78-4649-4970-be7f-0bf6d9d4a3ff",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "53861a46-3b95-41eb-89ed-51a687e86e6a",
+	"operation": "create",
+	"after": "第一章始终解锁；后续章节需要前一章所有关卡均已完成（isCleared）后才解锁。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/golden-block-manager.js"
+	],
+	"createdAt": 1788316084034
+}

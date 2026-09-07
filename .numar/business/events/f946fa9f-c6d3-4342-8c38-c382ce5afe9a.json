@@ -1,0 +1,12 @@
+{
+	"id": "f946fa9f-c6d3-4342-8c38-c382ce5afe9a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "a69321b4-3a2c-4a17-8a75-2de090dfaace",
+	"operation": "create",
+	"after": "StageSelectScene syncs chapter unlock state from progress and resolves the initial chapter index from chapterIndex, chapterId, or stageId parameters via goldenBlock.resolveInitialChapterIndex.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/stage-select-scene.js"
+	],
+	"createdAt": 1788312028787
+}

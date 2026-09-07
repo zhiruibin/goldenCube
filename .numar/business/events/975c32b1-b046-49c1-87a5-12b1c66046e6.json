@@ -1,0 +1,12 @@
+{
+	"id": "975c32b1-b046-49c1-87a5-12b1c66046e6",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "328a9fee-a9a9-43b5-9f1e-3076a43670e1",
+	"operation": "create",
+	"after": "When the responder failed to clear the challenge (顶格/中途结束), the result copy is always '未通关，挑战失败' and does not compare the responder's lines or score with the challenger's.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/challenge-ui.js"
+	],
+	"createdAt": 1788315981641
+}

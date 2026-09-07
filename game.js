@@ -160,6 +160,11 @@ function onStart() {
         const { preloadResultBlockImages } = require('./js/render/result-block-image');
         preloadResultBlockImages();
     } catch (e) { /* ignore */ }
+    // 预加载金矿工坊主题贴图（首页背景 / 砖按钮）
+    try {
+        const { preloadThemeImages } = require('./js/theme/theme-images');
+        preloadThemeImages();
+    } catch (e) { /* ignore */ }
     // 冷启动：进入首页 Hub（闯关/排行/成就/商店/设置入口）；若带挑战分享卡再按身份分流
     let launchQuery = null;
     try {

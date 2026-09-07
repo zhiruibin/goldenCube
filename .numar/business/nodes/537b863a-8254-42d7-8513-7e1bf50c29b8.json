@@ -1,0 +1,32 @@
+{
+	"id": "537b863a-8254-42d7-8513-7e1bf50c29b8",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "plaza.wall.fixed-mosaic-layout",
+	"title": "Plaza wall fixed mosaic template layout",
+	"statement": "Plaza wall cards are laid out by repeating a fixed 8-slot mosaic template per band, scaled by inner width relative to reference width 358.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311734479,
+	"updatedAt": 1788311734479,
+	"createdByTaskId": "business-init",
+	"latestEventId": "a30ba1f9-b0f6-4646-8e18-1a0da29f0b7a",
+	"tags": [],
+	"aliases": [
+		"拼墙模板",
+		"八槽模板布局"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/render/plaza-wall-fx.js",
+			"symbol": "layoutWall"
+		},
+		{
+			"type": "symbol",
+			"path": "js/render/plaza-wall-fx.js",
+			"symbol": "PATTERN"
+		}
+	]
+}

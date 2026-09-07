@@ -1,0 +1,31 @@
+{
+	"id": "7208cad0-6c22-42ad-b614-d139d7cc4730",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage.mode.no-line-clear-level-up",
+	"title": "闯关模式跳过消行升级",
+	"statement": "闯关模式下 _checkLevelUp 跳过基于消行的等级提升，关卡难度不受消行驱动。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315317055,
+	"updatedAt": 1788315317055,
+	"createdByTaskId": "business-init",
+	"latestEventId": "37a7ea33-b86d-4b8c-8997-70087940e6b5",
+	"tags": [],
+	"aliases": [
+		"消行不升级",
+		"闯关等级规则"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "tools/gc-stage-engine.py"
+		},
+		{
+			"type": "symbol",
+			"path": "tools/gc-stage-engine.py",
+			"symbol": "_checkLevelUp"
+		}
+	]
+}

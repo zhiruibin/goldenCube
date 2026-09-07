@@ -1,0 +1,31 @@
+{
+	"id": "8f9d1812-5abf-44a1-9521-a895c70ec93e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "home.bgm.resume-only-after-audio-init",
+	"title": "首页 BGM 仅在音频初始化后恢复",
+	"statement": "首页只在音频管理器已初始化（需先有用户触摸）且 BGM 设置未关闭（gc_setting_bgm !== false）时尝试恢复播放 BGM。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311855138,
+	"updatedAt": 1788311855138,
+	"createdByTaskId": "business-init",
+	"latestEventId": "f5dcefab-7284-4b8d-aa45-e9ca87089279",
+	"tags": [],
+	"aliases": [
+		"回首页恢复 BGM",
+		"音频初始化后播放",
+		"用户触摸后恢复 BGM"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/home-scene.js"
+		},
+		{
+			"type": "symbol",
+			"symbol": "HomeScene._ensureHomeBgm"
+		}
+	]
+}

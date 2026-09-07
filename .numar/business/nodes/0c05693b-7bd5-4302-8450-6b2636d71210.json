@@ -1,0 +1,31 @@
+{
+	"id": "0c05693b-7bd5-4302-8450-6b2636d71210",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "lucky-draw.record-break.daily-per-stage",
+	"title": "破纪录摇奖按关每日一次",
+	"statement": "非首通破个人纪录的幸运摇奖按关卡每日最多领取 1 次，存储键为 gc_luckyRecord_<stageId>_<yyyy-MM-dd>。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316084069,
+	"updatedAt": 1788316084069,
+	"createdByTaskId": "business-init",
+	"latestEventId": "e6ca0874-f79a-419a-a602-e2ed3b62f4e4",
+	"tags": [],
+	"aliases": [
+		"破纪录每日摇奖",
+		"幸运摇奖频控"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/lucky-draw-manager.js"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/lucky-draw-manager.js",
+			"symbol": "canClaimRecordBreak"
+		}
+	]
+}

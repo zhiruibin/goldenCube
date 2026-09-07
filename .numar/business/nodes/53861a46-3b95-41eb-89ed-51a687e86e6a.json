@@ -1,0 +1,31 @@
+{
+	"id": "53861a46-3b95-41eb-89ed-51a687e86e6a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage.chapter.unlock-requires-previous-cleared",
+	"title": "章节解锁依赖上一章全清",
+	"statement": "第一章始终解锁；后续章节需要前一章所有关卡均已完成（isCleared）后才解锁。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316084034,
+	"updatedAt": 1788316084034,
+	"createdByTaskId": "business-init",
+	"latestEventId": "51e97b78-4649-4970-be7f-0bf6d9d4a3ff",
+	"tags": [],
+	"aliases": [
+		"章节解锁条件",
+		"前一章全通"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/golden-block-manager.js"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/golden-block-manager.js",
+			"symbol": "isChapterUnlocked"
+		}
+	]
+}

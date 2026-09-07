@@ -1,0 +1,12 @@
+{
+	"id": "44eb9857-f47f-468b-ab54-bbd22dcec3bc",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "ecddd2ee-a767-4f25-8c89-bf8d6948c226",
+	"operation": "create",
+	"after": "工坊初始免费 3 个槽位，上限 10 个；第 4-10 槽扩容金价为 2/3/5/8/12/18/25 金方块。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/workshop-manager.js:SLOT_EXPAND_COST"
+	],
+	"createdAt": 1788311439805
+}

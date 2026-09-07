@@ -1,26 +1,26 @@
 /**
- * WorldMapScene - 闯关世界层
- * 可拖的格槽棋盘，十章垃圾块散落其上；点块进入该章 2×5 关卡卡。
+ * WorldMapScene - 闯关世界层（效果图贴图还原）
  */
 
-const {
-    fillNightBackground,
-    ACCENT,
-    TITLE,
-    TITLE_GLOW,
-} = require('../theme/arcade-night');
 const goldenBlock = require('../../utils/golden-block-manager');
 const { coinManager } = require('../../utils/coin-manager');
 const { Button } = require('../widgets/button');
 const { WORLD_MAP, STAGE_SELECT } = require('../../utils/stage-nav');
 const fx = require('../render/world-map-fx');
 const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
+const {
+    drawThemeTiledBackground,
+    drawThemeImageContain,
+    getThemeImage,
+} = require('../theme/theme-images');
+const IconRenderer = require('../render/icon-renderer');
+const { renderCenterToast } = require('../../utils/stage-entry-ui');
 
 function chapterState(ch) {
     if (!goldenBlock.isChapterUnlocked(ch.id)) return 'locked';
     const stages = goldenBlock.getStagesByChapter(ch.id);
     if (stages.length && stages.every((s) => goldenBlock.isCleared(s.id))) return 'cleared';
-    return 'current';
+    return 'unlocked';
 }
 
 class WorldMapScene {
@@ -28,6 +28,7 @@ class WorldMapScene {
         this._params = null;
         this._nodes = [];
         this._decors = [];
+        this._pathCells = [];
         this._layout = null;
         this._originY = 0;
         this._vel = 0;
@@ -35,10 +36,14 @@ class WorldMapScene {
         this._suppressTap = false;
         this._backButton = null;
         this._metrics = null;
+        this._toast = '';
+        this._toastT = 0;
     }
 
     onEnter(params) {
         this._params = params || {};
+        this._toast = '';
+        this._toastT = 0;
         if (typeof goldenBlock.syncUnlockedFromProgress === 'function') {
             goldenBlock.syncUnlockedFromProgress();
         }
@@ -74,20 +79,26 @@ class WorldMapScene {
 
     _buildNodes() {
         const chapters = goldenBlock.getChapters() || [];
+        const progressIdx = typeof goldenBlock.getProgressChapterIndex === 'function'
+            ? goldenBlock.getProgressChapterIndex()
+            : 0;
         this._nodes = chapters.map((ch, i) => {
             const pos = fx.layoutChapterNode(i, this._layout ? this._layout.bottomPad : 0);
             return {
                 id: ch.id,
                 name: ch.name,
+                index: i,
                 col: pos.col,
                 row: pos.row,
                 state: chapterState(ch),
+                isProgress: i === progressIdx,
             };
         });
         const rowCount = this._layout
             ? this._layout.rows
             : fx.boardRowsForCount(this._nodes.length);
         this._decors = fx.buildDecors(this._nodes, rowCount);
+        this._pathCells = fx.buildPathCells(this._nodes);
     }
 
     _getMetrics() {
@@ -105,33 +116,35 @@ class WorldMapScene {
                 capsuleTop = rect.top;
                 capsuleBottom = rect.bottom;
             }
-        } catch (e) { /* 非微信环境忽略 */ }
-        const balanceY = capsuleTop + (capsuleBottom - capsuleTop) / 2;
-        const headerTop = Math.max(statusBarHeight, safeTop, capsuleBottom) + 8;
+        } catch (e) { /* ignore */ }
+        const headerTop = Math.max(statusBarHeight, safeTop, capsuleBottom) + 4;
         const bottomInset = (safe.bottom && H > safe.bottom) ? (H - safe.bottom) : 0;
-        const backH = 48;
-        const backY = H - bottomInset - 80;
-        const contentBottom = backY - 10;
-        const boardBottom = H;
-        const titleSize = 22;
-        const subSize = 13;
-        const titleY = headerTop + 12;
-        const subtitleY = titleY + titleSize / 2 + 10 + subSize / 2;
-        const boardTop = subtitleY + subSize / 2 + 8;
+        // 返回钮按贴图比例，避免横向拉扁变形
+        const backSkin = getThemeImage('mapBtnBack');
+        const skinW = (backSkin.ready && backSkin.img && backSkin.img.width) || 640;
+        const skinH = (backSkin.ready && backSkin.img && backSkin.img.height) || 287;
+        const backAspect = skinW / Math.max(1, skinH);
+        const backW = Math.min(188, Math.round(W * 0.48));
+        const backH = Math.max(44, Math.round(backW / backAspect));
+        const backY = H - bottomInset - backH - 36;
+        const contentBottom = backY - 8;
+        const plaqueMaxH = Math.min(H * 0.1, 72);
+        const titleY = headerTop + plaqueMaxH * 0.48;
+        const balanceY = headerTop + plaqueMaxH + 18;
+        const boardTop = balanceY + 26;
         return {
             W,
             H,
             balanceY,
             headerTop,
             titleY,
-            subtitleY,
-            titleSize,
-            subSize,
+            plaqueMaxH,
             boardTop,
-            boardBottom,
+            boardBottom: H,
             contentBottom,
             visH: H,
             backY,
+            backW,
             backH,
             bottomInset,
         };
@@ -148,14 +161,19 @@ class WorldMapScene {
 
     _initBackButton() {
         const m = this._metrics || this._getMetrics();
-        const btnW = Math.min(260, m.W * 0.7);
         this._backButton = new Button({
-            x: m.W / 2 - btnW / 2,
+            x: m.W / 2 - m.backW / 2,
             y: m.backY,
-            w: btnW,
+            w: m.backW,
             h: m.backH,
-            text: '← 返回',
-            color: '#555',
+            text: '返回',
+            color: '#5a4534',
+            skin: 'mapBtnBack',
+            skinMode: 'stretch',
+            layout: 'text',
+            labelColor: '#fff8ec',
+            fontScale: 1.05,
+            letterSpacing: 4,
             onClick: () => GameGlobal.game.sceneManager.back(),
         });
     }
@@ -247,11 +265,26 @@ class WorldMapScene {
     }
 
     _openChapter(chapterId) {
+        if (!goldenBlock.isChapterUnlocked(chapterId)) {
+            this._showToast('通关上一章全部关卡后解锁');
+            return;
+        }
         this._persistOrigin();
         GameGlobal.game.sceneManager.switchTo(STAGE_SELECT, { chapterId });
     }
 
+    _showToast(msg) {
+        this._toast = msg || '';
+        this._toastT = 1.6;
+        this._requestRender();
+    }
+
     update(dt) {
+        if (this._toastT > 0) {
+            this._toastT -= dt;
+            if (this._toastT < 0) this._toastT = 0;
+            this._requestRender();
+        }
         if (this._drag || !this._layout) return;
         if (Math.abs(this._vel) < 12) {
             this._vel = 0;
@@ -265,6 +298,80 @@ class WorldMapScene {
         this._persistOrigin();
     }
 
+    _fillWarmFallback(ctx, W, H) {
+        try {
+            const g = ctx.createLinearGradient(0, 0, 0, H);
+            if (g && g.addColorStop) {
+                g.addColorStop(0, '#3a2a1c');
+                g.addColorStop(0.45, '#2a1e14');
+                g.addColorStop(1, '#1a120c');
+                ctx.fillStyle = g;
+                ctx.fillRect(0, 0, W, H);
+                return;
+            }
+        } catch (e) { /* ignore */ }
+        ctx.fillStyle = '#2a1e14';
+        ctx.fillRect(0, 0, W, H);
+    }
+
+    /**
+     * 矿坑氛围底：纵向无缝平铺，与章节层同向滚动。
+     */
+    _drawScrollingGround(ctx, W, H, originY) {
+        const entry = getThemeImage('mapMineBg');
+        if (entry.ready && entry.img) {
+            const img = entry.img;
+            const scale = Math.max(W / (img.width || 1), 1);
+            const dw = Math.ceil((img.width || W) * scale);
+            // 多画 2px 重叠，避免平铺接缝露底
+            const dh = Math.ceil((img.height || H) * scale);
+            const dx = (W - dw) / 2;
+            const period = Math.max(1, dh - 2);
+            const scroll = (((originY % period) + period) % period);
+            let y0 = scroll - period;
+            while (y0 < H) {
+                ctx.drawImage(img, dx, y0, dw, dh);
+                y0 += period;
+            }
+            ctx.fillStyle = 'rgba(12, 8, 5, 0.18)';
+            ctx.fillRect(0, 0, W, H);
+            return;
+        }
+        const tile = Math.round(Math.min(W, H) * 0.38);
+        const period = Math.max(1, tile - 1);
+        const offset = ((originY % period) + period) % period;
+        if (!drawThemeTiledBackground(ctx, 'mapGroundTile', 0, offset - period, W, H + period * 2, tile)) {
+            this._fillWarmFallback(ctx, W, H);
+        } else {
+            ctx.fillStyle = 'rgba(18, 12, 8, 0.28)';
+            ctx.fillRect(0, 0, W, H);
+        }
+    }
+
+    _drawResourcePill(ctx, x, y, w, h, icon, text) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(36, 24, 14, 0.86)';
+        ctx.strokeStyle = 'rgba(140, 105, 60, 0.55)';
+        ctx.lineWidth = 1.2;
+        const r = h / 2;
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.arc(x + w - r, y + h / 2, r, -Math.PI / 2, Math.PI / 2);
+        ctx.lineTo(x + r, y + h);
+        ctx.arc(x + r, y + h / 2, r, Math.PI / 2, -Math.PI / 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        IconRenderer.draw(ctx, icon, x + 14, y + h / 2, 14, '#FFC857');
+        ctx.fillStyle = '#f5e6c8';
+        ctx.font = 'bold 13px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, x + 26, y + h / 2 + 0.5);
+        ctx.restore();
+    }
+
     render(ctx) {
         try {
             this._renderMap(ctx);
@@ -272,8 +379,8 @@ class WorldMapScene {
             console.error('[WorldMap] render 失败', e);
             const W = GameGlobal.game.width;
             const H = GameGlobal.game.height;
-            fillNightBackground(ctx, W, H);
-            ctx.fillStyle = TITLE;
+            this._fillWarmFallback(ctx, W, H);
+            ctx.fillStyle = '#FFC857';
             ctx.font = 'bold 22px sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
@@ -286,12 +393,13 @@ class WorldMapScene {
         const m = this._metrics || this._getMetrics();
         const W = m.W;
         const H = m.H;
-        fillNightBackground(ctx, W, H);
+        const originY = this._originY;
+
+        this._drawScrollingGround(ctx, W, H, originY);
         if (!this._layout) return;
 
-        const originY = this._originY;
         const range = fx.visibleRowRange(this._layout, originY, m.H);
-        fx.drawTiles(ctx, this._layout, originY, range.visTop, range.visBot);
+        fx.drawPath(ctx, this._layout, this._pathCells, originY, range.visTop, range.visBot);
         fx.drawDecors(ctx, this._layout, this._decors, originY, range.visTop, range.visBot);
 
         const order = this._nodes.slice().sort((a, b) => b.row - a.row);
@@ -301,43 +409,62 @@ class WorldMapScene {
             fx.drawCube(ctx, this._layout, node, originY, Date.now());
         }
 
+        // 顶区压暗，保证标题可读
         const fadeH = m.boardTop + 8;
         try {
             const g = ctx.createLinearGradient(0, 0, 0, fadeH);
             if (g && g.addColorStop) {
-                g.addColorStop(0, 'rgba(18, 24, 44, 0.92)');
-                g.addColorStop(1, 'rgba(18, 24, 44, 0)');
+                g.addColorStop(0, 'rgba(22, 14, 8, 0.72)');
+                g.addColorStop(0.6, 'rgba(22, 14, 8, 0.28)');
+                g.addColorStop(1, 'rgba(22, 14, 8, 0)');
                 ctx.fillStyle = g;
                 ctx.fillRect(0, 0, W, fadeH);
             }
         } catch (e) { /* ignore */ }
 
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-        ctx.font = 'bold ' + m.titleSize + 'px sans-serif';
-        ctx.fillStyle = TITLE_GLOW;
-        ctx.fillText('闯关地图', 16 + 1, m.titleY + 2);
-        ctx.fillStyle = TITLE;
-        ctx.fillText('闯关地图', 16, m.titleY);
+        // 效果图标题牌（字已烧在图上）
+        const plaque = drawThemeImageContain(
+            ctx,
+            'mapTitlePlaque',
+            W / 2,
+            m.titleY,
+            Math.min(W * 0.78, 300),
+            m.plaqueMaxH
+        );
+        if (!plaque.drawn) {
+            ctx.save();
+            ctx.font = 'bold 20px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#FFC857';
+            ctx.fillText('闯关地图', W / 2, m.titleY);
+            ctx.restore();
+        }
 
         const balance = goldenBlock.getBalance();
         const coins = coinManager.getCoins();
-        ctx.fillStyle = ACCENT;
-        ctx.font = 'bold 14px sans-serif';
-        ctx.fillText('◆ ' + balance + '  ·  币 ' + coins, 16, m.balanceY);
-
-        ctx.fillStyle = ACCENT;
-        ctx.font = 'bold ' + m.subSize + 'px sans-serif';
-        ctx.fillText('上拖查看更多主题', 16, m.subtitleY);
+        const pillH = 26;
+        const pillY = m.balanceY - pillH / 2;
+        const leftText = String(balance);
+        const rightText = String(coins);
+        const leftW = Math.max(88, 36 + leftText.length * 9);
+        const rightW = Math.max(88, 36 + rightText.length * 9);
+        this._drawResourcePill(ctx, 16, pillY, leftW, pillH, 'brick', leftText);
+        this._drawResourcePill(ctx, 16 + leftW + 10, pillY, rightW, pillH, 'coin', rightText);
 
         if (this._backButton) this._backButton.render(ctx);
 
-        ctx.fillStyle = ACCENT;
-        ctx.font = 'bold 15px sans-serif';
+        ctx.save();
+        ctx.fillStyle = 'rgba(245, 230, 200, 0.72)';
+        ctx.font = 'bold 13px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('点击主题块进入该章', W / 2, m.backY - 18);
-        ctx.textAlign = 'left';
+        ctx.fillText('↑  上拖查看更多主题', W / 2, m.backY + m.backH + 16);
+        ctx.restore();
+
+        if (this._toastT > 0 && this._toast) {
+            renderCenterToast(ctx, W, H, this._toast);
+        }
     }
 }
 

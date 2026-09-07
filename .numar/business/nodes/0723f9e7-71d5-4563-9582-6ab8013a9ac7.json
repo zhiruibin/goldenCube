@@ -1,0 +1,26 @@
+{
+	"id": "0723f9e7-71d5-4563-9582-6ab8013a9ac7",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "tetris.special-score-multiplier-values",
+	"title": "特殊方块消行计分倍率表",
+	"statement": "触发消行的方块为特殊/新方块时按其类型倍率加成：C/X/K/W/N 为 1.5，D 为 2.0，P/M/Q/A 为 1.2，R 为 1.0；T/R 为标准锚点，无加成。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311439798,
+	"updatedAt": 1788311439798,
+	"createdByTaskId": "business-init",
+	"latestEventId": "b6c30f2d-2565-4468-bae3-aa55d330ee1b",
+	"tags": [],
+	"aliases": [
+		"特殊方块倍率",
+		"SPECIAL_SCORE_MULTIPLIERS"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"symbol": "SPECIAL_SCORE_MULTIPLIERS"
+		}
+	]
+}

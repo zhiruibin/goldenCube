@@ -1,0 +1,13 @@
+{
+	"id": "29c43dbc-5abe-422b-95ac-1fc3a69eebd0",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "a41ab3c0-c981-4a75-9b93-099d3e639f6d",
+	"operation": "create",
+	"after": "章节通关类成就设三档：「任意 1 章」「累计 5 章」「10 章全部通关」（prog_chapter_any_1 / prog_chapter_any_5 / prog_chapter_all），与主线共 10 章对应。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"data/achievements.js",
+		"data/stages-v1.js"
+	],
+	"createdAt": 1788310807231
+}

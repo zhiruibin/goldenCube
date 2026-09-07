@@ -1,0 +1,28 @@
+{
+	"id": "61eabd75-ec98-4833-83dc-30ea4fde6691",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "background-effects.particle-tiers",
+	"title": "背景特效粒子数按机型档位分档",
+	"statement": "背景星空粒子数按系统 benchmarkLevel 分档：非轻量模式在 level≥3 时 32 粒、level=2 时 16 粒、更低时 8 粒；轻量模式在 level≥3 时 10 粒、更低时 6 粒。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316189075,
+	"updatedAt": 1788316189075,
+	"createdByTaskId": "business-init",
+	"latestEventId": "3eedb3af-2f65-41ee-9129-d58589ab0b63",
+	"tags": [],
+	"aliases": [
+		"粒子数分档",
+		"低端机降级粒子",
+		"特效粒子上限"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/render/background-effects.js",
+			"symbol": "BackgroundEffects"
+		}
+	]
+}

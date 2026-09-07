@@ -1,0 +1,12 @@
+{
+	"id": "0245db37-cc92-494a-8c0c-622536145f8e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "039197f0-58ef-416d-b849-05788b38222b",
+	"operation": "create",
+	"after": "The world-map grid board is draggable and keeps drag-related state including vertical velocity and tap suppression after drags.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/world-map-scene.js: constructor and onEnter() reset _vel, _drag, and _suppressTap for the draggable board"
+	],
+	"createdAt": 1788312151870
+}

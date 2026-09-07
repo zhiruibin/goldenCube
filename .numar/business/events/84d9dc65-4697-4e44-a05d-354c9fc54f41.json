@@ -1,0 +1,12 @@
+{
+	"id": "84d9dc65-4697-4e44-a05d-354c9fc54f41",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "ebdc4808-8883-485f-8d76-4d25c6f4f33f",
+	"operation": "create",
+	"after": "工坊/广场使用本地存储键：gc_workshop_stages、gc_workshop_slotCap、gc_workshop_plazaUnlocked、gc_workshop_plazaCleared、gc_workshop_submitDaily、gc_workshop_freePlayDaily、gc_workshop_authorShareDaily、gc_workshop_plazaCache。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/workshop-manager.js:KEYS"
+	],
+	"createdAt": 1788311439819
+}

@@ -1,0 +1,27 @@
+{
+	"id": "d8199e9c-8d62-4ff6-8791-2be3e64af351",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "plaza.tab-cache.memory-only",
+	"title": "广场 Tab 内存缓存",
+	"statement": "PlazaScene 按排序 Tab 缓存关卡列表于内存，仅当有缓存时快速展示；离开场景时会清空这些 Tab 缓存。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311965323,
+	"updatedAt": 1788311965323,
+	"createdByTaskId": "business-init",
+	"latestEventId": "be73b54e-3051-4e91-96d4-fcd09430f45b",
+	"tags": [],
+	"aliases": [
+		"plazaTabCache",
+		"广场 tab 缓存"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/plaza-scene.js",
+			"symbol": "_plazaTabCache"
+		}
+	]
+}

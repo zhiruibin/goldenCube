@@ -1,0 +1,12 @@
+{
+	"id": "9f870d8d-f7ac-4641-aa23-d00b939a9cf0",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "fee56798-3e50-44b8-917d-44d8d8952318",
+	"operation": "create",
+	"after": "Stage result exposes exactly three buttons in order next level, replay current, back; tapping empty space does not switch scenes; the back button goes to stageSelect carrying the current stageId and stack home + worldMap.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"tools/gc-test-stage-result-tap.js"
+	],
+	"createdAt": 1788315405097
+}

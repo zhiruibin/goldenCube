@@ -1,0 +1,26 @@
+{
+	"id": "46b1927b-a4af-4627-85f8-c0b1bc678ebf",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage.entry.dialog-title-format",
+	"title": "Stage entry dialog title format",
+	"statement": "Stage entry dialog titles for official numbered stages are formatted as 第x关·关卡名; stages without a numeric id use only their title.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315405103,
+	"updatedAt": 1788315405103,
+	"createdByTaskId": "business-init",
+	"latestEventId": "8371fa98-2c3b-47a0-91f1-a974f530a0c4",
+	"tags": [],
+	"aliases": [
+		"闯关弹窗标题",
+		"第x关·关卡名"
+	],
+	"implementationRefs": [
+		{
+			"type": "test",
+			"path": "tools/gc-test-stage-select-tap.js"
+		}
+	]
+}

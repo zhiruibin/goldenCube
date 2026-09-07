@@ -1,0 +1,26 @@
+{
+	"id": "db129f6a-ad69-45cd-8e6f-379dbc759b1e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "workshop.plaza.clear-reward-coins-only",
+	"title": "广场通关只发金币不发金方块",
+	"statement": "工坊/广场的通关奖励只发金币，不发放金方块（0 金方块）。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311439812,
+	"updatedAt": 1788311439812,
+	"createdByTaskId": "business-init",
+	"latestEventId": "8846943e-d378-417b-80f4-def7352853f6",
+	"tags": [],
+	"aliases": [
+		"通关 0 金方块",
+		"广场只发金币"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/workshop-manager.js"
+		}
+	]
+}

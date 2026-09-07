@@ -5,6 +5,7 @@
 const { PIECES, PIECE_COLORS } = require('../../data/pieces');
 const { ConfettiFx } = require('../render/confetti-fx');
 const { rollCoinPrize } = require('../../utils/lucky-draw-manager');
+const { drawThemeButtonSkin } = require('../theme/theme-images');
 
 const SYMBOLS = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
 
@@ -374,17 +375,23 @@ class LuckyDrawOverlay {
         const bx = W / 2 - bw / 2;
         const by = cy - bh / 2;
 
-        ctx.fillStyle = '#f0a000';
-        this._roundRect(ctx, bx, by, bw, bh, 12);
-        ctx.fill();
-        ctx.strokeStyle = '#ffd700';
-        ctx.lineWidth = 1.5;
-        this._roundRect(ctx, bx, by, bw, bh, 12);
-        ctx.stroke();
+        if (!drawThemeButtonSkin(ctx, 'btnBarGold', bx, by, bw, bh)) {
+            ctx.fillStyle = '#c9a227';
+            this._roundRect(ctx, bx, by, bw, bh, 12);
+            ctx.fill();
+        }
 
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = '#241408';
         ctx.font = 'bold 18px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = 'rgba(0,0,0,0.35)';
+        ctx.shadowBlur = 2;
+        ctx.shadowOffsetY = 1;
         ctx.fillText(label, W / 2, cy);
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
         return { x: bx, y: by, w: bw, h: bh };
     }
 

@@ -1,0 +1,12 @@
+{
+	"id": "f917bffc-f081-422a-aa2d-c8a7fb257625",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "53973a02-13c6-4258-bc98-6ef4f41b4170",
+	"operation": "create",
+	"after": "背景特效在 lite 模式下不生成或更新流星，只有非轻量模式才播发流星。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/background-effects.js:update"
+	],
+	"createdAt": 1788316189098
+}

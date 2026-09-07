@@ -1,0 +1,12 @@
+{
+	"id": "f5dcefab-7284-4b8d-aa45-e9ca87089279",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "8f9d1812-5abf-44a1-9521-a895c70ec93e",
+	"operation": "create",
+	"after": "首页只在音频管理器已初始化（需先有用户触摸）且 BGM 设置未关闭（gc_setting_bgm !== false）时尝试恢复播放 BGM。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/home-scene.js:_ensureHomeBgm 注释“仅在 AudioContext 已初始化时尝试（需先有用户触摸）”"
+	],
+	"createdAt": 1788311855138
+}

@@ -1,0 +1,14 @@
+{
+	"id": "bbbad6ef-da05-4432-a203-1f20a6f70b3d",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "c2e58c02-36f1-43d5-aa36-21a2123fab3b",
+	"operation": "create",
+	"before": "Stage navigation behavior lived inside scenes and was exercised through independently maintained scene tap tests",
+	"after": "Stage navigation orchestration is centralized in utils/stage-nav.js; stage nav stack, stage-select tap, and stage-result tap tests were updated in the same commit",
+	"taskId": "commit:c562e404c328cdf6d8f75adb938c6fcb06217771",
+	"evidenceIds": [
+		"utils/stage-nav.js",
+		"tools/gc-test-stage-nav-stack.js"
+	],
+	"createdAt": 1788309950438
+}

@@ -1,0 +1,12 @@
+{
+	"id": "27b0e1b4-f5a8-442c-9946-cf61c10c6a41",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "233f6b51-65fe-43b5-b46f-1a789a515589",
+	"operation": "create",
+	"after": "所有运行时本地存储键统一加 gc_ 前缀，与 tetris-mini 数据隔离；脚本只处理运行时 JS（跳过云函数/工具/资源）且幂等，不会二次替换已加前缀的键。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"tools/gc-prefix-storage.py 文件头与 BARE_KEYS/PREFIX_KEYS"
+	],
+	"createdAt": 1788315316984
+}

@@ -1,0 +1,26 @@
+{
+	"id": "14216c19-360e-4a36-b7e3-b76971f5a0c4",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "ad.incentivized-interstitial.load-then-show",
+	"title": "激励视频与插屏先加载后展示",
+	"statement": "AdManager 对激励视频和插屏广告统一采用先 load() 再 show() 的展示流程，以提高展示成功率。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316348130,
+	"updatedAt": 1788316348130,
+	"createdByTaskId": "business-init",
+	"latestEventId": "56f182f2-6c91-4c2e-bea1-5c3fd814bf3c",
+	"tags": [],
+	"aliases": [
+		"广告先加载后展示",
+		"激励视频/插屏 load-then-show"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/ad-manager.js"
+		}
+	]
+}

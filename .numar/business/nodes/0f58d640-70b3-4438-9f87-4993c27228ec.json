@@ -1,0 +1,27 @@
+{
+	"id": "0f58d640-70b3-4438-9f87-4993c27228ec",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "workshop-result.author-trial-default-return-to-draft",
+	"title": "Workshop author trial result returns to draft tab",
+	"statement": "When WorkshopResultScene is opened from an author trial, the default return list context is origin 'workshop' with mineSub 'draft' (the author's draft tab).",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312028802,
+	"updatedAt": 1788312028802,
+	"createdByTaskId": "business-init",
+	"latestEventId": "49d393ff-45bb-4416-84f0-c279a97378c2",
+	"tags": [],
+	"aliases": [
+		"作者试玩返回草稿",
+		"author trial return draft"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/workshop-result-scene.js",
+			"symbol": "onEnter"
+		}
+	]
+}

@@ -1,0 +1,12 @@
+{
+	"id": "fd4fff02-4e3b-4dc6-8325-d4a153e9e59c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "e23b32d9-4f41-42d5-8419-46dd1fd8a08f",
+	"operation": "create",
+	"after": "回放录制器按相对时间记录每个输入动作，结束时生成 version 1、seed、mode、durationMs（最后一条输入时间）、inputs 列表与 meta 组成的回放数据，并支持本地读写。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/replay-recorder.js"
+	],
+	"createdAt": 1788316084270
+}

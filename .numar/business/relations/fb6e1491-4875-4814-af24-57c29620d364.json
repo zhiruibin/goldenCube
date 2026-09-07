@@ -1,0 +1,15 @@
+{
+	"id": "fb6e1491-4875-4814-af24-57c29620d364",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "1f30e4a0-35dd-4053-8aa1-730936859501",
+	"toNodeId": "26d35898-0b93-41de-9800-2b3ed8f20392",
+	"type": "dependsOn",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"js/scenes/challenge-scene.js",
+		"utils/challenge-ui.js"
+	],
+	"createdByTaskId": "business-relationship-scan",
+	"createdAt": 1788316964599,
+	"updatedAt": 1788316964599
+}

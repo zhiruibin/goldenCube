@@ -1,0 +1,15 @@
+{
+	"id": "b5c21818-fa2a-4c0d-b4fa-7d93a0f47660",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "1e792e9a-448a-450c-a0c6-26eeb6bb6d50",
+	"toNodeId": "57035b98-ae22-4169-9719-cfbd95f5f297",
+	"type": "appliesTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"utils/play-context.js",
+		"docs/gc-no-mode-cleanup-design.md"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788316084287,
+	"updatedAt": 1788322329161
+}

@@ -1,0 +1,12 @@
+{
+	"id": "d680e5ec-cdcd-4228-8723-9030b8243956",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "16188691-02d5-40a9-b04b-65576d67b30b",
+	"operation": "create",
+	"after": "广场官方精选 P0 共 30 关，按系列生成（冷兵器/花瓣/叶子），每关用剪影行定义并放置在 10 列棋盘，系列内以 seriesId/seriesIndex 标识。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"tools/build-plaza-official-p0.js 文件头与 DEFS"
+	],
+	"createdAt": 1788315316975
+}

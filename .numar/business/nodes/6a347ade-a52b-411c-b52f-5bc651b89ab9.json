@@ -1,0 +1,31 @@
+{
+	"id": "6a347ade-a52b-411c-b52f-5bc651b89ab9",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "skins.equipped-block.renderer-feature-set",
+	"title": "Equipped block skin renderer feature set",
+	"statement": "PieceRenderer reads the equipped block skin id from storage (gc_equipped_block, default 'default') and applies the skin's full feature set: gradient color arrays preserved per piece, glow, texture, transparency (clamped 0..1), and shimmer.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311734463,
+	"updatedAt": 1788311734463,
+	"createdByTaskId": "business-init",
+	"latestEventId": "4c2ead11-4fc2-4059-af01-cb09e155ab69",
+	"tags": [],
+	"aliases": [
+		"方块皮肤渲染特性",
+		"渐变/发光/纹理/透明度/闪耀"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/render/piece-renderer.js"
+		},
+		{
+			"type": "symbol",
+			"path": "js/render/piece-renderer.js",
+			"symbol": "PieceRenderer._applySkin"
+		}
+	]
+}

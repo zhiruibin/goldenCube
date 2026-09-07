@@ -1,0 +1,28 @@
+{
+	"id": "a43057f8-c8c5-453e-a5d3-5a5d5470518c",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "achievement.challenge-results.keep-latest-20-judge-10",
+	"title": "挑战/应战结果窗口：最多保留 20 条、判定取末 10 条",
+	"statement": "成就系统在本地最多保留最近 20 条挑战/应战结果记录，双十等社交成就的判定只取末尾 10 条。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316348082,
+	"updatedAt": 1788316348082,
+	"createdByTaskId": "business-init",
+	"latestEventId": "d284c9f1-abed-4a4a-bd89-d171929308ea",
+	"tags": [],
+	"aliases": [
+		"挑战结果保留 20 条",
+		"双十判定取最近 10 局",
+		"challenge results window"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/achievement-manager.js",
+			"symbol": "CHALLENGE_RESULTS_MAX"
+		}
+	]
+}

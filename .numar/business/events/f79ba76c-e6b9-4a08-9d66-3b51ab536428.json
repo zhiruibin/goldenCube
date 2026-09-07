@@ -1,0 +1,12 @@
+{
+	"id": "f79ba76c-e6b9-4a08-9d66-3b51ab536428",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "5ecb7bb7-e286-4deb-b531-8537587f1444",
+	"operation": "create",
+	"after": "normalizeGameParams 会补全 playContext，并在挑战场景设置 challengeKind/challengeMode，同时把底层引擎 mode 固定为 stage。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/play-context.js"
+	],
+	"createdAt": 1788316084144
+}

@@ -4,6 +4,8 @@
  * 用于左/右/下三个方向键
  */
 
+const { drawThemeButtonSkin } = require('../theme/theme-images');
+
 class DPadButton {
     /**
      * @param {Object} opts
@@ -12,6 +14,7 @@ class DPadButton {
      * @param {number} opts.radius - 按钮半径
      * @param {string} opts.text - 箭头符号（如 '◀' '▶' '▼'）
      * @param {string} opts.color - 高亮主色调
+     * @param {string} [opts.skin] - 主题圆钮皮 key
      * @param {Function} opts.onAction - 触发回调
      */
     constructor(opts) {
@@ -20,6 +23,7 @@ class DPadButton {
         this.radius = opts.radius || 28;
         this.direction = opts.direction || 'down';
         this.color = opts.color || '#00c6ff';
+        this.skin = opts.skin || null;
         this.onAction = opts.onAction || (() => {});
         // 触摸状态
         this._activeTouchId = -1;
@@ -134,64 +138,88 @@ class DPadButton {
             ctx.fill();
         }
 
-        let bodyGrad;
-        try {
-            bodyGrad = ctx.createLinearGradient(cx, cy - r, cx, cy + r);
+        let usedSkin = false;
+        if (this.skin) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.clip();
+            usedSkin = drawThemeButtonSkin(
+                ctx,
+                this.skin,
+                cx - r,
+                cy - r,
+                r * 2,
+                r * 2
+            );
             if (this._pressed) {
-                bodyGrad.addColorStop(0, this._darken(this.color, 0.62));
-                bodyGrad.addColorStop(0.5, this._darken(this.color, 0.48));
-                bodyGrad.addColorStop(1, this._darken(this.color, 0.35));
-            } else {
-                bodyGrad.addColorStop(0, this._lighten(this.color, 1.18));
-                bodyGrad.addColorStop(0.45, this.color);
-                bodyGrad.addColorStop(1, this._darken(this.color, 0.72));
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+                ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
             }
-        } catch (e) {
-            bodyGrad = null;
+            ctx.restore();
         }
-        ctx.fillStyle = bodyGrad || (this._pressed ? this._darken(this.color, 0.55) : this.color);
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.fill();
 
-        ctx.beginPath();
-        ctx.arc(cx, cy, r - 0.5, 0, Math.PI * 2);
-        ctx.clip();
-        let gloss;
-        try {
-            gloss = ctx.createLinearGradient(cx, cy - r, cx, cy + r * 0.4);
-            gloss.addColorStop(0, this._pressed ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)');
-            gloss.addColorStop(0.42, 'rgba(255,255,255,0.05)');
-            gloss.addColorStop(1, 'rgba(255,255,255,0)');
-        } catch (e) {
-            gloss = null;
+        if (!usedSkin) {
+            let bodyGrad;
+            try {
+                bodyGrad = ctx.createLinearGradient(cx, cy - r, cx, cy + r);
+                if (this._pressed) {
+                    bodyGrad.addColorStop(0, this._darken(this.color, 0.62));
+                    bodyGrad.addColorStop(0.5, this._darken(this.color, 0.48));
+                    bodyGrad.addColorStop(1, this._darken(this.color, 0.35));
+                } else {
+                    bodyGrad.addColorStop(0, this._lighten(this.color, 1.18));
+                    bodyGrad.addColorStop(0.45, this.color);
+                    bodyGrad.addColorStop(1, this._darken(this.color, 0.72));
+                }
+            } catch (e) {
+                bodyGrad = null;
+            }
+            ctx.fillStyle = bodyGrad || (this._pressed ? this._darken(this.color, 0.55) : this.color);
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(cx, cy, r - 0.5, 0, Math.PI * 2);
+            ctx.clip();
+            let gloss;
+            try {
+                gloss = ctx.createLinearGradient(cx, cy - r, cx, cy + r * 0.4);
+                gloss.addColorStop(0, this._pressed ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)');
+                gloss.addColorStop(0.42, 'rgba(255,255,255,0.05)');
+                gloss.addColorStop(1, 'rgba(255,255,255,0)');
+            } catch (e) {
+                gloss = null;
+            }
+            if (gloss) {
+                ctx.fillStyle = gloss;
+                ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+            }
+            if (this._pressed) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                ctx.fillRect(cx - r, cy, r * 2, r);
+            }
+            ctx.restore();
+
+            ctx.strokeStyle = this._pressed
+                ? this._lighten(this.color, 1.12)
+                : 'rgba(255, 255, 255, 0.28)';
+            ctx.lineWidth = this._pressed ? 2 : 1.25;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r - 0.5, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r - 1.5, Math.PI * 0.12, Math.PI * 0.88);
+            ctx.stroke();
         }
-        if (gloss) {
-            ctx.fillStyle = gloss;
-            ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
-        }
-        if (this._pressed) {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-            ctx.fillRect(cx - r, cy, r * 2, r);
-        }
-        ctx.restore();
 
-        ctx.strokeStyle = this._pressed
-            ? this._lighten(this.color, 1.12)
-            : 'rgba(255, 255, 255, 0.28)';
-        ctx.lineWidth = this._pressed ? 2 : 1.25;
-        ctx.beginPath();
-        ctx.arc(cx, cy, r - 0.5, 0, Math.PI * 2);
-        ctx.stroke();
-
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(cx, cy, r - 1.5, Math.PI * 0.12, Math.PI * 0.88);
-        ctx.stroke();
-
-        const alpha = this._pressed ? Math.min(0.95 + pulseAlpha, 1) : 0.82;
-        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+        const alpha = this._pressed ? Math.min(0.95 + pulseAlpha, 1) : 0.92;
+        ctx.fillStyle = `rgba(255, 248, 236, ${alpha})`;
         const s = r * 0.45;
         ctx.beginPath();
         if (this.direction === 'left') {
@@ -209,6 +237,7 @@ class DPadButton {
         }
         ctx.closePath();
         ctx.fill();
+        ctx.restore();
     }
 
     /**

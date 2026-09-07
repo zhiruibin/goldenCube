@@ -1,0 +1,27 @@
+{
+	"id": "139de146-bd2c-4a8b-aa7e-2d81e106cd3e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.stage-leaderboard.composite-key",
+	"title": "闯关主榜复合键排序",
+	"statement": "主榜排序为 clearedCount 降序，再按已通关各关个人最佳 Σ best.lines 升序、Σ best.pieces 升序、Σ best.timeMs 升序；只统计已通关关卡，禁止用生涯累计消行，也不单独用金方块持有量作主排序键。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312287203,
+	"updatedAt": 1788312287203,
+	"createdByTaskId": "business-init",
+	"latestEventId": "c71172c6-fda7-43ae-ab09-e6855ceab493",
+	"tags": [],
+	"aliases": [
+		"闯关榜",
+		"复合键排序",
+		"clearedCount优先"
+	],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "docs/gc-economy-design.md"
+		}
+	]
+}

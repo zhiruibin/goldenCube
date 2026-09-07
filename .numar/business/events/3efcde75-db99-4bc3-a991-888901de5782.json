@@ -1,0 +1,13 @@
+{
+	"id": "3efcde75-db99-4bc3-a991-888901de5782",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "c902e3b7-2a19-4766-a644-6bb37a025bbb",
+	"operation": "create",
+	"after": "金币（gc_coins）是消费货币；产出含通关效率结算 20–100（日限 300）、广告翻倍（日限 300）、每日福利广告 +30、每日登录 +20；消耗含闯关入场券（第 1 章 5 / 第 2 章 10 / 第 3 章 15、前 3 关免费、失败退还 50%）、皮肤商店（200–2000）与终局小额沉淀。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"docs/gc-economy-design.md §1 铁律2",
+		"docs/gc-economy-design.md §2 金币线"
+	],
+	"createdAt": 1788312287200
+}

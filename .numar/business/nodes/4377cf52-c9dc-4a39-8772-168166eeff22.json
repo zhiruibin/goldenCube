@@ -1,0 +1,33 @@
+{
+	"id": "4377cf52-c9dc-4a39-8772-168166eeff22",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage.entry.free-daily-quota-10",
+	"title": "Players get 10 free stage entries per day",
+	"statement": "Players receive 10 free stage entries per day (gc_dailyFreeEntry); entry fees are part of the coin economy where a failed entry is not refunded.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315981742,
+	"updatedAt": 1788315981742,
+	"createdByTaskId": "business-init",
+	"latestEventId": "eb795328-bf32-411b-a131-3ee621928d03",
+	"tags": [],
+	"aliases": [
+		"每日免费入场10次",
+		"免费入场10次",
+		"gc_dailyFreeEntry"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "FREE_ENTRY_DAILY"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "FREE_ENTRY_KEY"
+		}
+	]
+}

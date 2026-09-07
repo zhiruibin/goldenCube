@@ -1,0 +1,12 @@
+{
+	"id": "f0e88ab3-bff7-4ac6-ba9e-c9940ce0d745",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "486a4620-f519-4470-8e49-14f8f0e957e3",
+	"operation": "create",
+	"after": "实验室 R 方块（光棱）的 4 个旋转状态使用与 I 方块相同的 4×4 矩阵。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/srs-rotation.js:R_STATES"
+	],
+	"createdAt": 1788311439770
+}

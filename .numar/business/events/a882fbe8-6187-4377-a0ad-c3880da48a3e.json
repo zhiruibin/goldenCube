@@ -1,0 +1,12 @@
+{
+	"id": "a882fbe8-6187-4377-a0ad-c3880da48a3e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "9687bc41-8c1d-4112-8bb9-22c6e9d63b45",
+	"operation": "create",
+	"after": "Friend-challenge share cards are rendered on an offscreen canvas at 500x400 physical pixels (5:4 ratio) for the WeChat shareAppMessage imageUrl; the canvas physical size must equal the export region because exporting scaled logical dimensions only captures the top-left corner.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/challenge-share-card.js"
+	],
+	"createdAt": 1788315981593
+}

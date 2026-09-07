@@ -1,0 +1,12 @@
+{
+	"id": "0c9d8c47-1763-4803-bf7f-106e205ddb91",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "a7e15470-806d-4353-896a-c0f13e0fbe46",
+	"operation": "create",
+	"after": "Result page block illustrations load per-kind PNG assets (assets/images/block-fail.png, block-record.png, block-clear.png); if wx.createImage is unavailable the entry is marked failed.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/result-block-image.js"
+	],
+	"createdAt": 1788311734492
+}

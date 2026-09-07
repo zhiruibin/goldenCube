@@ -1,0 +1,12 @@
+{
+	"id": "1bc16dca-e0a6-4823-bace-7baebc237bf2",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "c3949b51-a70f-4150-bd52-05acc31b9952",
+	"operation": "create",
+	"after": "InputManager 的 DAS/ARR 连发状态默认关闭（enabled=false），初始 DAS 延迟为 170ms、ARR 重复间隔为 50ms。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/runtime/input-manager.js:constructor _das { enabled:false, delay:170, repeat:50 }"
+	],
+	"createdAt": 1788311855107
+}

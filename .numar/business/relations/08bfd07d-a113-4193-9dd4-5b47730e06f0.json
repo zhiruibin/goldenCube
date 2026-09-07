@@ -7,9 +7,10 @@
 	"verificationStatus": "candidate",
 	"evidenceIds": [
 		"utils/audio-manager.js _loadEquippedPack",
-		"utils/audio-manager.js"
+		"utils/audio-manager.js",
+		"utils/audio-manager.js:_loadEquippedPack"
 	],
 	"createdByTaskId": "business-init",
 	"createdAt": 1787227659805,
-	"updatedAt": 1787229438141
+	"updatedAt": 1788313782314
 }

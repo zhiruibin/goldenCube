@@ -1,12 +1,12 @@
 /**
- * 结算页方块插画：加载 /assets/images/block-*.png
+ * 结算页方块插画：复用闯关地图三态立方体贴图
  * PNG 只负责主体；光晕用 canvas 径向渐变绘制，避免位图光晕锯齿。
  */
 
 const BLOCK_PATHS = {
-    fail: 'assets/images/block-fail.png',
-    record: 'assets/images/block-record.png',
-    clear: 'assets/images/block-clear.png',
+    fail: 'assets/images/theme/map-cube-locked.png',
+    record: 'assets/images/theme/map-cube-cleared.png',
+    clear: 'assets/images/theme/map-cube-unlocked.png',
 };
 
 const GLOW = {

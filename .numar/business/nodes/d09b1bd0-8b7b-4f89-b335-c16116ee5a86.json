@@ -1,0 +1,31 @@
+{
+	"id": "d09b1bd0-8b7b-4f89-b335-c16116ee5a86",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "economy.golden-block.stage-unlock-purchase",
+	"title": "关卡金方块解锁规则",
+	"statement": "解锁费为 0 的关卡默认已解锁；需要消耗金方块的关卡必须记录在 gc_stagesUnlocked 中，解锁时从余额扣除对应 unlockCost。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316084021,
+	"updatedAt": 1788316084021,
+	"createdByTaskId": "business-init",
+	"latestEventId": "7ef93e89-342b-4614-b540-ba9337716f25",
+	"tags": [],
+	"aliases": [
+		"金色方块解锁关卡",
+		"关卡解锁支付"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/golden-block-manager.js"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/golden-block-manager.js",
+			"symbol": "unlockStage"
+		}
+	]
+}

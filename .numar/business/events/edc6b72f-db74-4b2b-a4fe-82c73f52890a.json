@@ -1,0 +1,12 @@
+{
+	"id": "edc6b72f-db74-4b2b-a4fe-82c73f52890a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "1f30e4a0-35dd-4053-8aa1-730936859501",
+	"operation": "create",
+	"after": "应战残局挑战时，使用挑战者保存的 layoutSnapshot（云端详情可覆盖）和 challengerLines 作为目标行数开局；残局成绩按挑战者/应战者行数显示（如 12行），mode 为 stage 的残局会按 golden-block 关卡配置应用下落间隔。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/challenge-scene.js:startPuzzleRespondGame 使用 layoutSnapshot/challengerLines，_scoreLabel 对残局显示行数"
+	],
+	"createdAt": 1788311855125
+}

@@ -1,0 +1,12 @@
+{
+	"id": "02bb8f5d-866d-4862-af4f-45dc2cf1a2da",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "a141b8f3-f9b7-4179-96f0-4a06f119b114",
+	"operation": "create",
+	"after": "隐私弹窗中的指引链接文案默认使用《用户隐私保护指引》，并会确保文案带书名号；名称可由 getPrivacySetting 返回的 privacyContractName 刷新。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/privacy.js"
+	],
+	"createdAt": 1788316084189
+}

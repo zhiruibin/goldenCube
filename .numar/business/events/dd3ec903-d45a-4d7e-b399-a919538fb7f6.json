@@ -1,0 +1,13 @@
+{
+	"id": "dd3ec903-d45a-4d7e-b399-a919538fb7f6",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "19451078-4f03-460c-a978-1fa94b789f32",
+	"operation": "create",
+	"after": "广场单关统计开打数、通关数、挑战数、热度与通关率，支持按 new / heat / clearRate 排序。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"cloudfunctions/workshop/README.md",
+		"docs/gc-workshop-plaza-design.md"
+	],
+	"createdAt": 1788316265785
+}

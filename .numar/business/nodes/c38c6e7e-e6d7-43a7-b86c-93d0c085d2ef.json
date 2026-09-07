@@ -1,0 +1,28 @@
+{
+	"id": "c38c6e7e-e6d7-43a7-b86c-93d0c085d2ef",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "workshop.layout-validation-rules",
+	"title": "工坊关卡布局校验规则",
+	"statement": "工坊发布关卡时布局必须通过校验：rows 必须为对象且每行恰好 10 个字符，仅允许 '.' 或 '#'；任一行不得全部填满；垃圾格总数须在 8 到 80 之间；含垃圾的行数须在 3 到 16 之间；最顶部垃圾行不得早于第 6 行。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316188962,
+	"updatedAt": 1788316188962,
+	"createdByTaskId": "business-init",
+	"latestEventId": "a9e4669d-46cb-4532-b871-f00644ea58e7",
+	"tags": [],
+	"aliases": [
+		"关卡布局校验",
+		"布局垃圾数范围",
+		"发布关卡校验"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "cloudfunctions/workshop/index.js",
+			"symbol": "validateLayout"
+		}
+	]
+}

@@ -1,0 +1,27 @@
+{
+	"id": "d1af5110-b3c3-4e30-ac5d-814e46ecfd6a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage-result.reveal.skip-param",
+	"title": "Stage result reveal skippable for test/replay",
+	"statement": "StageResultScene reveal animation can be skipped by passing skipReveal=true; this is intended for tests and replay viewing.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312028777,
+	"updatedAt": 1788312028777,
+	"createdByTaskId": "business-init",
+	"latestEventId": "caa0e4d5-4c52-434f-b3e6-c20d06676207",
+	"tags": [],
+	"aliases": [
+		"跳过揭示",
+		"skip reveal"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/stage-result-scene.js",
+			"symbol": "onEnter"
+		}
+	]
+}

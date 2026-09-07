@@ -1,0 +1,27 @@
+{
+	"id": "d183810c-8f40-4ea6-8a6f-4a0fa2dae1bb",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "world-map.chapter-node.alternating-columns",
+	"title": "World map chapter nodes alternate columns",
+	"statement": "World map chapter nodes alternate between left and right preset column arrays by index parity, with row increasing by index, forming a zigzag path.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311734503,
+	"updatedAt": 1788311734503,
+	"createdByTaskId": "business-init",
+	"latestEventId": "781d367a-9967-4ed5-aa1a-78d480dd1e38",
+	"tags": [],
+	"aliases": [
+		"世界地图章节排布",
+		"章节蛇形布局"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/render/world-map-fx.js",
+			"symbol": "layoutChapterNode"
+		}
+	]
+}

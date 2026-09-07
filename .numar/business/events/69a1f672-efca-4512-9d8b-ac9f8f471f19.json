@@ -1,0 +1,13 @@
+{
+	"id": "69a1f672-efca-4512-9d8b-ac9f8f471f19",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "3561d396-1eea-4cf5-9ea6-1bcc4fe0c9df",
+	"operation": "create",
+	"after": "金方块（gc_goldenBlocks）只用于解锁关卡，是纯进度货币；产出来自首通、破纪录、章节全通、里程碑、成就、首次上榜等，广告永不产出金方块；周榜名次奖只发金币，避免金方块周更通胀。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"docs/gc-economy-design.md §1 铁律1",
+		"docs/gc-economy-design.md §2 金方块线"
+	],
+	"createdAt": 1788312287196
+}

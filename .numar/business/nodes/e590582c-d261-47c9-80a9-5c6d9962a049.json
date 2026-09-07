@@ -1,0 +1,33 @@
+{
+	"id": "e590582c-d261-47c9-80a9-5c6d9962a049",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "coin.line-clear-immediate-reward.deprecated",
+	"title": "Line-clear immediate coin rewards are deprecated",
+	"statement": "Immediate per-line-clear coin payout is deprecated: the line-clear and T-spin bonus tables are empty, and rewardLineClear is a compatibility stub that always returns 0.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315981818,
+	"updatedAt": 1788315981818,
+	"createdByTaskId": "business-init",
+	"latestEventId": "fea40da9-497e-4ad6-8113-fecf29f542af",
+	"tags": [],
+	"aliases": [
+		"消行发币已废弃",
+		"rewardLineClear恒0",
+		"旧消行表废弃"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "LINE_CLEAR_REWARDS"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "T_SPIN_BONUS"
+		}
+	]
+}

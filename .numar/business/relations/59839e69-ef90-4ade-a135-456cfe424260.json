@@ -1,0 +1,14 @@
+{
+	"id": "59839e69-ef90-4ade-a135-456cfe424260",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "f5f80055-0845-45a6-9c6f-bba1e1d989ac",
+	"toNodeId": "8eff5332-f7b2-4a3e-9196-245b1b1f5a5e",
+	"type": "appliesTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"utils/play-context.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788316084291,
+	"updatedAt": 1788316084291
+}

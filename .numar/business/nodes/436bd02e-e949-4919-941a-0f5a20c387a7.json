@@ -1,0 +1,31 @@
+{
+	"id": "436bd02e-e949-4919-941a-0f5a20c387a7",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "achievement.plaza-clear-includes-official",
+	"title": "广场通关成就含官方精选",
+	"statement": "「广场通关」成就计数把官方精选关卡视为广场关卡的子集，首通任意广场关卡（含官方精选）即可达成 plaza_clear_1；官方精选 N 关不再单列成就。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788310807227,
+	"updatedAt": 1788310807227,
+	"createdByTaskId": "business-init",
+	"latestEventId": "8f9d478a-1504-44e5-ad34-ffa8dc82ac08",
+	"tags": [],
+	"aliases": [
+		"官方精选并入广场通关数",
+		"首通含官方精选"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "data/achievements.js"
+		},
+		{
+			"type": "symbol",
+			"path": "data/achievements.js",
+			"symbol": "plaza_clear_1"
+		}
+	]
+}

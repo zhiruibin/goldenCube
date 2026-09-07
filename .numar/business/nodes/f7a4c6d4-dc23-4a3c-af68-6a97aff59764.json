@@ -1,0 +1,31 @@
+{
+	"id": "f7a4c6d4-dc23-4a3c-af68-6a97aff59764",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "workshop.plaza.unlock-and-play-fee",
+	"title": "广场解锁与挑战费用常量",
+	"statement": "广场解锁需 1 金方块；工坊挑战费用常量 CHALLENGE_FEE 为 10 金币。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311439821,
+	"updatedAt": 1788311439821,
+	"createdByTaskId": "business-init",
+	"latestEventId": "77b1d680-6739-4c37-91a3-451907f31b80",
+	"tags": [],
+	"aliases": [
+		"金解锁",
+		"币开打",
+		"挑战费用 10"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"symbol": "PLAZA_UNLOCK_GOLD"
+		},
+		{
+			"type": "symbol",
+			"symbol": "CHALLENGE_FEE"
+		}
+	]
+}

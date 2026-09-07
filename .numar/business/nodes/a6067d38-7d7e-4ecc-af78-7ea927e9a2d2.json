@@ -1,0 +1,26 @@
+{
+	"id": "a6067d38-7d7e-4ecc-af78-7ea927e9a2d2",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "plaza.wall.layout-sort-template-first-largest",
+	"title": "Plaza wall sort template first card largest",
+	"statement": "The plaza mosaic wall assigns the first card in the current sort order the largest panel, stacks the two right-hand small tiles vertically, and applyScroll only changes y positions.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315405048,
+	"updatedAt": 1788315405048,
+	"createdByTaskId": "business-init",
+	"latestEventId": "63035e09-77fc-426d-963a-5ad80c743389",
+	"tags": [],
+	"aliases": [
+		"排序套模板",
+		"第一张占最大格"
+	],
+	"implementationRefs": [
+		{
+			"type": "test",
+			"path": "tools/gc-test-plaza-wall.js"
+		}
+	]
+}

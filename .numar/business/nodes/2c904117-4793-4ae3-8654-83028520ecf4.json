@@ -1,0 +1,26 @@
+{
+	"id": "2c904117-4793-4ae3-8654-83028520ecf4",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "workshop.rejected-return-to-cleared",
+	"title": "驳回回已通关并可重提",
+	"statement": "驳回后关卡回到已通关并附驳回原因；作者可改盘（变待自通）或原盘重提，重提计入当日提交次数。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316265725,
+	"updatedAt": 1788316265725,
+	"createdByTaskId": "business-init",
+	"latestEventId": "7fdc77dc-68f0-49ab-bf15-039554cb4d54",
+	"tags": [],
+	"aliases": [
+		"驳回回已通关",
+		"重提耗当日提交次数"
+	],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "docs/gc-workshop-plaza-design.md"
+		}
+	]
+}

@@ -1,0 +1,27 @@
+{
+	"id": "05d9f653-8169-48b6-aeca-5aa0c92c1e29",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "world-map.shadow.ellipse-fill-no-shadowblur",
+	"title": "World map shadows use ellipse fill, not shadowBlur",
+	"statement": "World map projections are drawn with ellipse path fills instead of shadowBlur to keep drawing cost low.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311734508,
+	"updatedAt": 1788311734508,
+	"createdByTaskId": "business-init",
+	"latestEventId": "71f70c50-9d23-43ea-8767-b45b546c886b",
+	"tags": [],
+	"aliases": [
+		"椭圆投影",
+		"不用 shadowBlur"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/render/world-map-fx.js",
+			"symbol": "fillEllipse"
+		}
+	]
+}

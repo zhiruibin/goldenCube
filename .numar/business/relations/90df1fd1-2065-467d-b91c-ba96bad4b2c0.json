@@ -1,0 +1,15 @@
+{
+	"id": "90df1fd1-2065-467d-b91c-ba96bad4b2c0",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "dca3dd68-6261-4b92-bdf1-c374b475a576",
+	"toNodeId": "12be3970-2087-4723-8fa9-a4be6c248bfa",
+	"type": "dependsOn",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"utils/user-profile.js:shouldPromptProfileAuth",
+		"utils/user-profile.js:clearProfileAuthSkipped"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788311439829,
+	"updatedAt": 1788311439829
+}

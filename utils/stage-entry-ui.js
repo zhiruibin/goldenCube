@@ -4,13 +4,14 @@
 const { SUBTITLE } = require('../js/theme/arcade-night');
 const { roundRectPath } = require('../js/render/board-tiles');
 const { drawGoldenCubeBadge } = require('../js/render/title-decor');
+const { drawThemeButtonSkin } = require('../js/theme/theme-images');
 const { coinManager } = require('./coin-manager');
 const goldenBlock = require('./golden-block-manager');
 const { adManager, isRewardedVideoConfigured } = require('./ad-manager');
 
-const DIALOG_MASK = 'rgba(0, 0, 0, 0.75)';
+const DIALOG_MASK = 'rgba(10, 7, 4, 0.62)';
 const LACK_RED = '#ff5c5c';
-const GOLD_BORDER = 'rgba(255, 200, 87, 0.88)';
+const TEAL_BORDER = 'rgba(31, 155, 152, 0.7)';
 const COST_ICON = 16;
 const COST_ICON_GAP = 6;
 
@@ -26,13 +27,13 @@ function hitRect(x, y, rect) {
 }
 
 function fillGoldBorderedPanel(ctx, x, y, w, h, r) {
-    const rad = r == null ? 12 : r;
-    ctx.fillStyle = '#2a2a32';
+    const rad = r == null ? 14 : r;
     roundRectPath(ctx, x, y, w, h, rad);
+    ctx.fillStyle = 'rgba(28, 20, 14, 0.96)';
     ctx.fill();
-    ctx.strokeStyle = GOLD_BORDER;
-    ctx.lineWidth = 1.6;
-    roundRectPath(ctx, x, y, w, h, rad);
+    roundRectPath(ctx, x + 0.75, y + 0.75, w - 1.5, h - 1.5, Math.max(1, rad - 1));
+    ctx.strokeStyle = TEAL_BORDER;
+    ctx.lineWidth = 1.5;
     ctx.stroke();
     ctx.lineWidth = 1;
 }
@@ -347,7 +348,7 @@ function renderEntryDialog(ctx, W, H, dialog) {
 
     fillGoldBorderedPanel(ctx, px, py, bw, bh, 12);
 
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = '#fff8ef';
     ctx.font = 'bold 17px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -377,7 +378,7 @@ function renderEntryDialog(ctx, W, H, dialog) {
     const btnW = bw - 40;
     let by = py + btnBlockTop;
     d.payRect = { x: px + 20, y: by, w: btnW, h: btnH };
-    _fillEntryBtn(ctx, d.payRect, '#e09a30', '支付开打', '#fff');
+    _fillEntryBtn(ctx, d.payRect, 'primary', '支付开打');
     by += btnH + btnGap;
 
     if (showAd) {
@@ -385,33 +386,59 @@ function renderEntryDialog(ctx, W, H, dialog) {
         _fillEntryBtn(
             ctx,
             d.adRect,
-            d.freeLeft > 0 ? '#3a7ab0' : '#444',
-            '看广告免费（余' + d.freeLeft + '）',
-            '#fff'
+            d.freeLeft > 0 ? 'ad' : 'disabled',
+            '看广告免费（余' + d.freeLeft + '）'
         );
         by += btnH + btnGap;
     }
     if (showChallenge) {
         d.challengeRect = { x: px + 20, y: by, w: btnW, h: btnH };
-        _fillEntryBtn(ctx, d.challengeRect, '#00c6ff', '约好友来战', '#062028');
+        _fillEntryBtn(ctx, d.challengeRect, 'challenge', '约好友来战');
         by += btnH + btnGap;
     }
 
     d.cancelRect = { x: px + 20, y: by, w: btnW, h: btnH };
-    _fillEntryBtn(ctx, d.cancelRect, '#555', '取消', '#fff');
+    _fillEntryBtn(ctx, d.cancelRect, 'cancel', '取消');
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
 }
 
-function _fillEntryBtn(ctx, rect, fill, text, textColor) {
-    ctx.fillStyle = fill;
-    roundRectPath(ctx, rect.x, rect.y, rect.w, rect.h, 8);
-    ctx.fill();
-    ctx.fillStyle = textColor || '#fff';
+function _fillEntryBtn(ctx, rect, kind, text) {
+    // 通栏统一用 4:1 条形石砖皮（金 / 琥珀 / 棕），避免方卡横向拉扁
+    let skin = 'btnBarGold';
+    let labelColor = '#241408';
+    let fallback = '#c9a227';
+    if (kind === 'cancel' || kind === 'disabled') {
+        skin = 'btnBarBrown';
+        labelColor = kind === 'disabled' ? 'rgba(255,255,255,0.45)' : '#ffffff';
+        fallback = kind === 'disabled' ? '#444' : '#5a4030';
+    } else if (kind === 'challenge') {
+        skin = 'btnBarAmber';
+        labelColor = '#241408';
+        fallback = '#c89840';
+    } else if (kind === 'ad') {
+        skin = 'btnBarGold';
+        labelColor = '#241408';
+        fallback = '#c9a227';
+    }
+
+    const drawn = drawThemeButtonSkin(ctx, skin, rect.x, rect.y, rect.w, rect.h);
+    if (!drawn) {
+        ctx.fillStyle = fallback;
+        roundRectPath(ctx, rect.x, rect.y, rect.w, rect.h, 8);
+        ctx.fill();
+    }
+    ctx.fillStyle = labelColor;
     ctx.font = 'bold 15px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(text, rect.x + rect.w / 2, rect.y + rect.h / 2);
+    ctx.shadowColor = 'rgba(0,0,0,0.35)';
+    ctx.shadowBlur = 2;
+    ctx.shadowOffsetY = 1;
+    ctx.fillText(text, rect.x + rect.w / 2, rect.y + rect.h / 2 + 1);
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
 }
 
 function renderLockedEntryDialog(ctx, W, H, dialog) {

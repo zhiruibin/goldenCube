@@ -1,0 +1,27 @@
+{
+	"id": "c902e3b7-2a19-4766-a644-6bb37a025bbb",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "economy.coins.sources-and-spends",
+	"title": "金币产出与消耗正循环",
+	"statement": "金币（gc_coins）是消费货币；产出含通关效率结算 20–100（日限 300）、广告翻倍（日限 300）、每日福利广告 +30、每日登录 +20；消耗含闯关入场券（第 1 章 5 / 第 2 章 10 / 第 3 章 15、前 3 关免费、失败退还 50%）、皮肤商店（200–2000）与终局小额沉淀。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312287200,
+	"updatedAt": 1788312287200,
+	"createdByTaskId": "business-init",
+	"latestEventId": "3efcde75-db99-4bc3-a991-888901de5782",
+	"tags": [],
+	"aliases": [
+		"金币正循环",
+		"入场券费用",
+		"铁律2"
+	],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "docs/gc-economy-design.md"
+		}
+	]
+}

@@ -1,0 +1,31 @@
+{
+	"id": "8db56cbb-357f-412e-85d3-fa37e088e993",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage.first-stage-tutorial",
+	"title": "首个教学关卡",
+	"statement": "主线第 1 关为教学关（kind=tutorial），首块固定为 O 方块（firstPiece='O'），解锁费用为 0，最低消行 1 行、金币门槛 2。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788310807245,
+	"updatedAt": 1788310807245,
+	"createdByTaskId": "business-init",
+	"latestEventId": "c4d2f3aa-393c-48fc-ba3f-c309e688f279",
+	"tags": [],
+	"aliases": [
+		"教学关O首块",
+		"入门关免费"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "data/stages-v1.js"
+		},
+		{
+			"type": "symbol",
+			"path": "data/stages-v1.js",
+			"symbol": "stages[0]"
+		}
+	]
+}

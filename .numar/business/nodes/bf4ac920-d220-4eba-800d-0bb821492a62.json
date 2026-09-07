@@ -1,0 +1,28 @@
+{
+	"id": "bf4ac920-d220-4eba-800d-0bb821492a62",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "cloud.workshop-collection-name",
+	"title": "Workshop collection is workshop_stages",
+	"statement": "The cloud database collection for workshop/plaza stages is named 'workshop_stages', configured centrally in cloud-config alongside the rank and challenge collection names.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315981675,
+	"updatedAt": 1788315981675,
+	"createdByTaskId": "business-init",
+	"latestEventId": "4df9412d-1380-41bd-8e36-80887b26f60e",
+	"tags": [],
+	"aliases": [
+		"工坊集合名",
+		"workshop_stages",
+		"工坊广场集合"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/cloud-config.js",
+			"symbol": "WORKSHOP_COLLECTION"
+		}
+	]
+}

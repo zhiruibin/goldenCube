@@ -1,0 +1,13 @@
+{
+	"id": "1e792130-1ff0-4c27-9b83-de58b9dc408f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "9dffbdfa-416d-426f-a5d7-41fbc6f8d261",
+	"operation": "create",
+	"after": "工坊每日计数以 { date: 'YYYY-MM-DD', count } 形式存储，日期变化时计数按 0 处理。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/workshop-manager.js:_dailyCount",
+		"utils/workshop-manager.js:_bumpDaily"
+	],
+	"createdAt": 1788311439816
+}

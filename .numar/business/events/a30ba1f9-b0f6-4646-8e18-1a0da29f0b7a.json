@@ -1,0 +1,12 @@
+{
+	"id": "a30ba1f9-b0f6-4646-8e18-1a0da29f0b7a",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "537b863a-8254-42d7-8513-7e1bf50c29b8",
+	"operation": "create",
+	"after": "Plaza wall cards are laid out by repeating a fixed 8-slot mosaic template per band, scaled by inner width relative to reference width 358.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/plaza-wall-fx.js"
+	],
+	"createdAt": 1788311734479
+}

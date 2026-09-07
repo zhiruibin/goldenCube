@@ -1,0 +1,12 @@
+{
+	"id": "56149621-b6c3-4c89-a003-793af2c509ea",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "c9d31872-6b72-43e4-97b3-e20c146c0b72",
+	"operation": "create",
+	"after": "In stage mode, after GameScene integration enters the stage, the board keeps the stage garbage layout (garbageCount consistent) and the engine state is playing, rather than having the garbage cleared or the first piece landing triggering an immediate over.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"tools/gc-test-game-scene-stage.js"
+	],
+	"createdAt": 1788315405032
+}

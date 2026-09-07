@@ -1,0 +1,14 @@
+{
+	"id": "aa7c0d5a-5a7e-4b21-ba62-4d0262177bb1",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "9e787ff8-2894-49e2-a6f2-160579e50e3e",
+	"toNodeId": "a983a240-ed3b-4d02-96a4-688905d967ef",
+	"type": "dependsOn",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"js/render/mini-tetris-fx.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788311636543,
+	"updatedAt": 1788311636543
+}

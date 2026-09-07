@@ -1,0 +1,12 @@
+{
+	"id": "49d393ff-45bb-4416-84f0-c279a97378c2",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "0f58d640-70b3-4438-9f87-4993c27228ec",
+	"operation": "create",
+	"after": "When WorkshopResultScene is opened from an author trial, the default return list context is origin 'workshop' with mineSub 'draft' (the author's draft tab).",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/workshop-result-scene.js"
+	],
+	"createdAt": 1788312028802
+}

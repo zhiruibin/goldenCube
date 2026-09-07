@@ -1,0 +1,15 @@
+{
+	"id": "2ad448bd-8305-4e62-95b7-ceeaa3e188cc",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "1f27208d-69d5-4d93-801f-4186b3e0bb2b",
+	"toNodeId": "d466ca20-3181-4983-811c-cdc49fdebd8d",
+	"type": "appliesTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"js/scenes/challenge-scene.js:PENDING_EXPIRY_MS 定义本地待应战超时判定",
+		"js/scenes/challenge-scene.js:PENDING_EXPIRY_MS"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788311855146,
+	"updatedAt": 1788313891511
+}

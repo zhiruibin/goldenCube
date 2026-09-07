@@ -1,0 +1,12 @@
+{
+	"id": "5efe86dc-6e83-47c6-b53e-b55cd359104d",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "9918bb71-f90d-467d-a392-f15d953eb58a",
+	"operation": "create",
+	"after": "章内第 k+1 关不比第 k 关容易：先比 minLines 非降，相同再比 garbageCount 非降；章间入门 minLines、章均 minLines、Boss minLines 均非降；下落间隔按章递减（1000→750ms），同章内保持不变。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"docs/gc-chapter-stages-design.md §1.2"
+	],
+	"createdAt": 1788312287188
+}

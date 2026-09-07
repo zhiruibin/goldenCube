@@ -1,0 +1,12 @@
+{
+	"id": "5c4d1b70-0470-450e-9a6d-0d78e2624cdc",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "2c477cd6-21b3-48e7-b21e-83fc5b080595",
+	"operation": "create",
+	"after": "垃圾方块的绘制独立于玩家方块皮肤体系，不随皮肤变化。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/garbage-cell.js"
+	],
+	"createdAt": 1788311636532
+}

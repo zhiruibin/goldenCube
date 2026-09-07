@@ -1,0 +1,27 @@
+{
+	"id": "b06b58df-ff78-48ff-96a3-f0784603e5e2",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "stage.layout.fixed-10x20-constraints",
+	"title": "残局布局硬约束",
+	"statement": "关卡布局固定在 10 列 × 20 行；禁止满行垃圾；有垃圾的行至少保留 1 个空位；顶部留空要求普通贴地剪影顶垃圾行 ≥5–6、抬升/ladder/Boss ≥4；固定布局必须用标准 7 块可解；minLines 为含垃圾行数，garbageCount 为垃圾格数。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312287183,
+	"updatedAt": 1788312287183,
+	"createdByTaskId": "business-init",
+	"latestEventId": "678ce8dd-aa8f-4447-b1ed-c9e4d80ee4f1",
+	"tags": [],
+	"aliases": [
+		"摆关硬约束",
+		"10x20布局",
+		"minLines口径"
+	],
+	"implementationRefs": [
+		{
+			"type": "document",
+			"path": "docs/gc-chapter-stages-design.md"
+		}
+	]
+}

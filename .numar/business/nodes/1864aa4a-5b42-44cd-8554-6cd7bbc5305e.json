@@ -1,0 +1,27 @@
+{
+	"id": "1864aa4a-5b42-44cd-8554-6cd7bbc5305e",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "plaza.wall.silhouette.cache-on-stage",
+	"title": "Plaza card silhouette cached per stage",
+	"statement": "Plaza card board silhouette (visible row range and occupied cells) is computed once and memoized on the stage object (stage._sil).",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311734486,
+	"updatedAt": 1788311734486,
+	"createdByTaskId": "business-init",
+	"latestEventId": "df65029c-291a-4fbf-b2ae-5a24dfc94402",
+	"tags": [],
+	"aliases": [
+		"盘面剪影缓存",
+		"关卡剪影"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/render/plaza-wall-fx.js",
+			"symbol": "ensureSil"
+		}
+	]
+}

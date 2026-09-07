@@ -1,0 +1,31 @@
+{
+	"id": "1f27208d-69d5-4d93-801f-4186b3e0bb2b",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.local-pending.expiry-7-days",
+	"title": "本地待应战 7 天过期",
+	"statement": "本地待应战列表（gc_pending_challenges）中超过 7 天的挑战被视为失效，与云函数挑战过期时间保持一致，用于清理过期待应战。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311855121,
+	"updatedAt": 1788311855121,
+	"createdByTaskId": "business-init",
+	"latestEventId": "6a21129e-67c4-4212-b656-c60d61f0d813",
+	"tags": [],
+	"aliases": [
+		"待应战 7 天失效",
+		"本地待应战过期",
+		"清理过期待应战"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/scenes/challenge-scene.js"
+		},
+		{
+			"type": "symbol",
+			"symbol": "PENDING_EXPIRY_MS"
+		}
+	]
+}

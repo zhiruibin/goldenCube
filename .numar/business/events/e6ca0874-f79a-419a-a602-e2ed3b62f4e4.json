@@ -1,0 +1,12 @@
+{
+	"id": "e6ca0874-f79a-419a-a602-e2ed3b62f4e4",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "0c05693b-7bd5-4302-8450-6b2636d71210",
+	"operation": "create",
+	"after": "非首通破个人纪录的幸运摇奖按关卡每日最多领取 1 次，存储键为 gc_luckyRecord_<stageId>_<yyyy-MM-dd>。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"utils/lucky-draw-manager.js"
+	],
+	"createdAt": 1788316084069
+}

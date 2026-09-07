@@ -1,0 +1,12 @@
+{
+	"id": "63035e09-77fc-426d-963a-5ad80c743389",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "a6067d38-7d7e-4ecc-af78-7ea927e9a2d2",
+	"operation": "create",
+	"after": "The plaza mosaic wall assigns the first card in the current sort order the largest panel, stacks the two right-hand small tiles vertically, and applyScroll only changes y positions.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"tools/gc-test-plaza-wall.js"
+	],
+	"createdAt": 1788315405048
+}

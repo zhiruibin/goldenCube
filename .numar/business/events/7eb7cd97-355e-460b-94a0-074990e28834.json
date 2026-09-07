@@ -1,0 +1,12 @@
+{
+	"id": "7eb7cd97-355e-460b-94a0-074990e28834",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "8ce6161a-0536-4ac1-b30b-8fe1b40bf362",
+	"operation": "create",
+	"after": "工坊成就将「创建 N 关」与「保有 N 关」合并为同一计数，避免两个重复阶梯。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"data/achievements.js"
+	],
+	"createdAt": 1788310807237
+}

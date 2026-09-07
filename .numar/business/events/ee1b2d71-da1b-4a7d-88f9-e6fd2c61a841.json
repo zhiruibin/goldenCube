@@ -1,0 +1,12 @@
+{
+	"id": "ee1b2d71-da1b-4a7d-88f9-e6fd2c61a841",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "580b340e-370b-4b39-b04f-2e4b5d619d96",
+	"operation": "create",
+	"after": "首页进入后延迟 1800ms 才展示底部 Banner，底栏槽位高度为 72px。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/home-scene.js:HOME_BANNER_DELAY_MS=1800,HOME_FOOTER_SLOT_H=72"
+	],
+	"createdAt": 1788311855135
+}

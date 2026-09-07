@@ -1,0 +1,30 @@
+{
+	"id": "ce8cbfdd-0b3b-46ac-8829-555b0bb35935",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "privacy.consent.resolve-queue-on-agree",
+	"title": "同意后统一 resolve 授权队列",
+	"statement": "用户点击同意后，所有等待中的隐私授权 resolve 会被统一以 event:'agree' 触发，并标记为已授权。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316084237,
+	"updatedAt": 1788316084237,
+	"createdByTaskId": "business-init",
+	"latestEventId": "fd811bf6-8b31-4da4-a4a6-499ff61ce2fe",
+	"tags": [],
+	"aliases": [
+		"隐私授权队列"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "utils/privacy.js"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/privacy.js",
+			"symbol": "_flushResolves"
+		}
+	]
+}

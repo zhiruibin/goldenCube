@@ -1,0 +1,32 @@
+{
+	"id": "5bd95775-706a-4167-bf60-2d000a1e2d28",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "world-map.scroll-origin.persisted-on-exit",
+	"title": "World map preserves scroll origin across scene exit/entry",
+	"statement": "WorldMapScene saves its current vertical scroll origin back into the entry params on exit and restores a clamped numeric origin on re-entry.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312151867,
+	"updatedAt": 1788312151867,
+	"createdByTaskId": "business-init",
+	"latestEventId": "25d64ff4-4f5e-4c17-98a8-01b880e674ca",
+	"tags": [],
+	"aliases": [
+		"世界地图滚动位置保持",
+		"保留 originY"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/world-map-scene.js",
+			"symbol": "onEnter"
+		},
+		{
+			"type": "symbol",
+			"path": "js/scenes/world-map-scene.js",
+			"symbol": "onExit"
+		}
+	]
+}

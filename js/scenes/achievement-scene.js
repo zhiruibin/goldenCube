@@ -9,6 +9,8 @@ const { achievementManager } = require('../../utils/achievement-manager');
 const { drawCoinHudCentered } = require('../../utils/coin-hud');
 const IconRenderer = require('../render/icon-renderer');
 const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
+const { drawThemeBackground, drawThemeImageContain } = require('../theme/theme-images');
+const { fillNightBackground, drawBrandTitle } = require('../theme/arcade-night');
 
 const CATEGORY_ORDER = ['progress', 'plaza', 'workshop', 'social'];
 
@@ -60,33 +62,25 @@ class AchievementScene {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
 
-        ctx.fillStyle = '#0f0f23';
-        ctx.fillRect(0, 0, W, H);
+        if (!drawThemeBackground(ctx, 'mapMineBg', W, H)) {
+            fillNightBackground(ctx, W, H);
+        } else {
+            ctx.fillStyle = 'rgba(12, 8, 4, 0.36)';
+            ctx.fillRect(0, 0, W, H);
+        }
 
-        // 标题（图标 + 文字整体居中，参考设置页布局）
-        const titleText = '成就';
         const titleY = this._topInset() + 16;
-        ctx.font = 'bold 28px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        const titleW = ctx.measureText(titleText).width;
-        const iconSize = 24;
-        const gap = 8;
-        const totalW = iconSize + gap + titleW;
-        const leftX = W / 2 - totalW / 2;
-        ctx.fillStyle = '#ffffff';
-        IconRenderer.draw(ctx, 'trophy', leftX + iconSize / 2, titleY, iconSize, '#ffffff');
-        ctx.fillText(titleText, leftX + iconSize + gap + titleW / 2, titleY);
-
+        drawBrandTitle(ctx, '成就', W / 2, titleY, 'bold 28px sans-serif');
 
         // 完成度（仅计当前有效成就，不含 deprecated）
         const activeIds = new Set(getAllAchievements().map((a) => a.id));
         const unlockedCount = achievementManager.getUnlocked().filter((id) => activeIds.has(id)).length;
         const total = getAllAchievements().length;
         ctx.font = '12px sans-serif';
-        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.fillStyle = 'rgba(255,248,239,0.55)';
         ctx.textAlign = 'left';
-        ctx.fillText(`${unlockedCount}/${total}`, 20, this._topInset() + 16);
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${unlockedCount}/${total}`, 20, titleY);
 
         // 金币（Title 下方居中一行，避免与居中标题抢横向空间）
         drawCoinHudCentered(ctx, W, titleY + 30, wx.getStorageSync('gc_coins') || 0);
@@ -101,15 +95,15 @@ class AchievementScene {
     _renderTabs(ctx) {
         const W = GameGlobal.game.width;
         const n = CATEGORY_ORDER.length;
-        const gap = 5;
-        const tabH = 30;
-        const tabW = Math.min(72, Math.floor((W - 24 - gap * (n - 1)) / n));
-        const tabY = this._topInset() + 68;
+        const gap = 6;
+        const tabH = 36;
+        const tabW = Math.min(78, Math.floor((W - 24 - gap * (n - 1)) / n));
+        const tabY = this._topInset() + 72;
         const totalW = n * tabW + (n - 1) * gap;
         const startX = (W - totalW) / 2;
 
         this._tabAreas = [];
-        ctx.font = '12px sans-serif';
+        ctx.font = 'bold 12px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
@@ -117,11 +111,23 @@ class AchievementScene {
             const key = CATEGORY_ORDER[i];
             const x = startX + i * (tabW + gap);
             const active = this._category === key;
-            ctx.fillStyle = active ? '#00c6ff' : 'rgba(255,255,255,0.1)';
-            this._roundRect(ctx, x, tabY, tabW, tabH, 6);
-            ctx.fill();
-            ctx.fillStyle = active ? '#ffffff' : 'rgba(255,255,255,0.5)';
-            ctx.fillText(categoryNames[key] || key, x + tabW / 2, tabY + tabH / 2);
+            const skin = active ? 'cardStageGold' : 'cardStageBrown';
+            const drawn = drawThemeImageContain(
+                ctx, skin, x + tabW / 2, tabY + tabH / 2, tabW, tabH
+            );
+            if (!drawn.drawn) {
+                ctx.fillStyle = active ? '#c9a227' : '#5a4030';
+                this._roundRect(ctx, x, tabY, tabW, tabH, 6);
+                ctx.fill();
+            }
+            ctx.fillStyle = active ? '#241408' : '#ffffff';
+            ctx.shadowColor = 'rgba(0,0,0,0.35)';
+            ctx.shadowBlur = 2;
+            ctx.shadowOffsetY = 1;
+            ctx.fillText(categoryNames[key] || key, x + tabW / 2, tabY + tabH / 2 + 1);
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetY = 0;
             this._tabAreas.push({ x, y: tabY, w: tabW, h: tabH, key });
         }
     }
@@ -129,8 +135,8 @@ class AchievementScene {
     _renderList(ctx) {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
-        const startY = this._topInset() + 114;
-        const itemH = 62;
+        const startY = this._topInset() + 118;
+        const itemH = 64;
         const listW = Math.min(340, W * 0.88);
         const listX = (W - listW) / 2;
         const unlocked = achievementManager.getUnlocked();
@@ -147,14 +153,18 @@ class AchievementScene {
 
         for (let i = 0; i < this._list.length; i++) {
             const a = this._list[i];
-            const y = startY + i * (itemH + 6) - this._scrollY;
+            const y = startY + i * (itemH + 8) - this._scrollY;
             if (y + itemH < startY || y > viewBottom) continue;
 
             const isUnlocked = unlocked.indexOf(a.id) >= 0;
 
-            ctx.fillStyle = isUnlocked ? 'rgba(0,200,255,0.10)' : 'rgba(255,255,255,0.05)';
-            this._roundRect(ctx, listX, y, listW, itemH, 8);
+            ctx.fillStyle = isUnlocked ? 'rgba(201,162,39,0.16)' : 'rgba(28,20,14,0.88)';
+            this._roundRect(ctx, listX, y, listW, itemH, 10);
             ctx.fill();
+            this._roundRect(ctx, listX + 0.75, y + 0.75, listW - 1.5, itemH - 1.5, 9);
+            ctx.strokeStyle = isUnlocked ? 'rgba(201,162,39,0.55)' : 'rgba(31,155,152,0.55)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
 
             // 图标
             ctx.font = '24px sans-serif';
@@ -167,12 +177,12 @@ class AchievementScene {
             ctx.font = 'bold 14px sans-serif';
             ctx.textAlign = 'left';
             ctx.textBaseline = 'top';
-            ctx.fillStyle = isUnlocked ? '#00f0f0' : 'rgba(255,255,255,0.75)';
+            ctx.fillStyle = isUnlocked ? '#c9a227' : 'rgba(255,248,239,0.82)';
             ctx.fillText(a.name, listX + 56, y + 10);
 
             // 描述
             ctx.font = '11px sans-serif';
-            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.fillStyle = 'rgba(255,255,255,0.45)';
             ctx.fillText(a.desc, listX + 56, y + 30);
 
             // 奖励：金方块优先，其次金币；双零仅点亮徽章
@@ -201,7 +211,7 @@ class AchievementScene {
             }
 
             if (isUnlocked) {
-                ctx.fillStyle = '#00f000';
+                ctx.fillStyle = '#8fd36a';
                 ctx.font = '12px sans-serif';
                 ctx.textAlign = 'right';
                 ctx.fillText('已完成', listX + listW - 12, y + 8);
@@ -227,8 +237,12 @@ class AchievementScene {
             new Button({
                 x: W / 2 - btnW / 2, y: H - 80,
                 w: btnW, h: btnH,
-                text: '← 返回',
-                color: '#555',
+                text: '返回',
+                color: '#6b4a2e',
+                skin: 'btnBarBrown',
+                skinMode: 'stretch',
+                labelColor: '#fff8ef',
+                fontScale: 0.92,
                 onClick: () => GameGlobal.game.sceneManager.back(),
             }),
         ];
@@ -260,9 +274,9 @@ class AchievementScene {
     /** 计算当前分类列表的最大可滚动距离 */
     _getMaxScroll() {
         const H = GameGlobal.game.height;
-        const startY = this._topInset() + 114;
-        const itemH = 62;
-        const gap = 6;
+        const startY = this._topInset() + 118;
+        const itemH = 64;
+        const gap = 8;
         const count = this._list.length;
         const contentBottom = startY + count * (itemH + gap) - gap;
         const viewBottom = H - 90;

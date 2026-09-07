@@ -1,0 +1,12 @@
+{
+	"id": "d6adb5a2-5569-4c80-9100-226bd4f1cf00",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "f9555c71-940f-4d4a-90da-7f2c629b481a",
+	"operation": "create",
+	"after": "StageResultScene reveals the golden block with a rise animation: 1.1 seconds when gold reward total is greater than 0, otherwise 0.85 seconds; UI fades in after reveal progress 0.52 and buttons become available 0.28 seconds after the reveal completes.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/stage-result-scene.js"
+	],
+	"createdAt": 1788312028771
+}

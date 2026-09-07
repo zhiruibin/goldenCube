@@ -6,9 +6,10 @@
 	"type": "dependsOn",
 	"verificationStatus": "candidate",
 	"evidenceIds": [
-		"data/skins.js"
+		"data/skins.js",
+		"utils/coin-manager.js"
 	],
 	"createdByTaskId": "business-init",
 	"createdAt": 1787227474984,
-	"updatedAt": 1787227474984
+	"updatedAt": 1788314837303
 }

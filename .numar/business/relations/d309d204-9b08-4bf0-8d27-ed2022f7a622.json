@@ -1,0 +1,17 @@
+{
+	"id": "d309d204-9b08-4bf0-8d27-ed2022f7a622",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "139de146-bd2c-4a8b-aa7e-2d81e106cd3e",
+	"toNodeId": "71c53680-8a4c-4b46-82a2-d85089fe8d2c",
+	"type": "appliesTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"docs/gc-economy-design.md §3.1",
+		"docs/gc-no-mode-cleanup-design.md §2.3",
+		"docs/gc-economy-design.md",
+		"docs/gc-no-mode-cleanup-design.md"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788312287224,
+	"updatedAt": 1788322565914
+}

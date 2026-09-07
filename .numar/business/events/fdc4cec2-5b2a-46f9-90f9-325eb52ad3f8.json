@@ -1,0 +1,12 @@
+{
+	"id": "fdc4cec2-5b2a-46f9-90f9-325eb52ad3f8",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "9b957953-75ba-4a8a-b855-e50ee07117b1",
+	"operation": "create",
+	"after": "Ghost piece preview cells are rendered with 0.18 alpha fill and a 2px 0.65 alpha outline using the equipped skin color.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/piece-renderer.js"
+	],
+	"createdAt": 1788311734470
+}

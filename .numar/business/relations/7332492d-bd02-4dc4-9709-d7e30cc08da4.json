@@ -1,0 +1,14 @@
+{
+	"id": "7332492d-bd02-4dc4-9709-d7e30cc08da4",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "e23b32d9-4f41-42d5-8419-46dd1fd8a08f",
+	"toNodeId": "8eff5332-f7b2-4a3e-9196-245b1b1f5a5e",
+	"type": "appliesTo",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"utils/replay-recorder.js"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788316084313,
+	"updatedAt": 1788316084313
+}

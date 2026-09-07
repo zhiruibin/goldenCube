@@ -1,0 +1,12 @@
+{
+	"id": "2f4d6dc6-9f5b-46be-9dfe-7d960550fc3f",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "cf2ee940-e367-46c5-852d-02c213baf9a6",
+	"operation": "create",
+	"after": "QUAD/T-Spin 高潮演出的碎片粒子总数硬上限为 110，作为低端机性能防线。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/effect-renderer.js"
+	],
+	"createdAt": 1788311636518
+}

@@ -1,0 +1,31 @@
+{
+	"id": "263723a2-20ae-46d4-868d-ad3c41aa0d27",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "launch.immersive-fullscreen-ui",
+	"title": "全屏沉浸 UI",
+	"statement": "游戏启动时隐藏「回到首页」圆形胶囊按钮（基础库 2.16+）并把「···」菜单胶囊设为白色以融入深色背景，低版本/模拟器忽略失败。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788310807256,
+	"updatedAt": 1788310807256,
+	"createdByTaskId": "business-init",
+	"latestEventId": "153c9c65-f47e-4de5-999b-23a340404486",
+	"tags": [],
+	"aliases": [
+		"隐藏回到首页胶囊",
+		"白色菜单胶囊"
+	],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "game.js"
+		},
+		{
+			"type": "symbol",
+			"path": "game.js",
+			"symbol": "onStart"
+		}
+	]
+}

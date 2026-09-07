@@ -1,0 +1,28 @@
+{
+	"id": "526220f6-2cd5-4eef-af0c-9200dad8b7b7",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "world-map.chapter-card-state.locked-cleared-current",
+	"title": "World map chapter card state derives from unlock/clear progress",
+	"statement": "Each world-map chapter card is classified as locked, cleared, or current based on golden-block progress: locked when the chapter is not unlocked, cleared when every stage in the chapter is cleared, and current otherwise.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788312151856,
+	"updatedAt": 1788312151856,
+	"createdByTaskId": "business-init",
+	"latestEventId": "b46bd330-fff2-4ccd-a9ec-5e809a7432e1",
+	"tags": [],
+	"aliases": [
+		"章节卡片状态",
+		"章节 locked/cleared/current",
+		"世界地图章节状态"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/world-map-scene.js",
+			"symbol": "chapterState"
+		}
+	]
+}

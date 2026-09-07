@@ -1,0 +1,12 @@
+{
+	"id": "5aca4a5e-ed77-4336-81f7-87388dc31a46",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "a5a9ca62-7063-4425-b16e-a1d7dc8e7181",
+	"operation": "create",
+	"after": "WorkshopScene maps legacy incoming params where mainTab is 'plaza' to the 'published' mineSub tab.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/workshop-scene.js"
+	],
+	"createdAt": 1788312028811
+}

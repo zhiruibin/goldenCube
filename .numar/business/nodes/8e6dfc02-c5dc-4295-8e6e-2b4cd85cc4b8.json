@@ -1,0 +1,28 @@
+{
+	"id": "8e6dfc02-c5dc-4295-8e6e-2b4cd85cc4b8",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "workshop.layout-hash",
+	"title": "工坊布局 FNV-1a 哈希指纹",
+	"statement": "工坊关卡布局按行号排序后拼接为字符串，使用 FNV-1a 哈希生成十六进制指纹，用于标识唯一布局。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788316188984,
+	"updatedAt": 1788316188984,
+	"createdByTaskId": "business-init",
+	"latestEventId": "fae2236d-073c-406f-9504-a09f3c664652",
+	"tags": [],
+	"aliases": [
+		"布局哈希",
+		"关卡指纹",
+		"布局去重"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "cloudfunctions/workshop/index.js",
+			"symbol": "layoutHash"
+		}
+	]
+}

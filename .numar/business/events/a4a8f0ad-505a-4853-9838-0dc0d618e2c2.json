@@ -1,0 +1,12 @@
+{
+	"id": "a4a8f0ad-505a-4853-9838-0dc0d618e2c2",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "cc8afa81-fdec-4f58-b746-5f3d28dd783f",
+	"operation": "create",
+	"after": "Home title decorations (shovel, golden cube) are positioned at measured character centers using the same font and baseline as the title, so they align with the gaps between characters.",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/render/title-decor.js"
+	],
+	"createdAt": 1788311734498
+}

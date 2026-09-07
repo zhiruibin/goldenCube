@@ -1,0 +1,32 @@
+{
+	"id": "f9322876-c3ae-4c24-952b-cb5429c7b251",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "coin.daily-welfare-reward.amount-30",
+	"title": "Daily welfare ad reward is 30 coins",
+	"statement": "The daily welfare ad reward grants 30 coins (DAILY_WELFARE_REWARD), tracked with the once-per-day gc_dailyWelfareClaimed key.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315981725,
+	"updatedAt": 1788315981725,
+	"createdByTaskId": "business-init",
+	"latestEventId": "fb57a558-9a7e-4dc1-9f3f-71ebaf2653c1",
+	"tags": [],
+	"aliases": [
+		"每日福利广告+30",
+		"福利奖励30金币"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "DAILY_WELFARE_REWARD"
+		},
+		{
+			"type": "symbol",
+			"path": "utils/coin-manager.js",
+			"symbol": "WELFARE_KEY"
+		}
+	]
+}

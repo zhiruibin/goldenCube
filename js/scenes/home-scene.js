@@ -8,13 +8,11 @@ const { coinManager, DAILY_WELFARE_REWARD } = require('../../utils/coin-manager'
 const { getPendingChallengeCount } = require('./challenge-scene');
 const { adManager, isRewardedVideoConfigured, isBannerConfigured } = require('../../utils/ad-manager');
 const {
-    AMBIENT_PIECE_COLORS,
-    SUBTITLE,
     MUTED,
     fillNightBackground,
     drawBrandTitle,
 } = require('../theme/arcade-night');
-const { drawHomeTitleDecorations } = require('../render/title-decor');
+const { drawThemeBackground, drawThemeImageContain } = require('../theme/theme-images');
 const { MiniTetrisFx } = require('../render/mini-tetris-fx');
 const { FRAME_INTERVAL } = require('../runtime/frame-budget');
 
@@ -23,17 +21,17 @@ const HOME_FOOTER_SLOT_H = 72;
 /** 进入首页后延迟展示 Banner（毫秒） */
 const HOME_BANNER_DELAY_MS = 1800;
 
-// 首页背景装饰：缓慢下落的半透明方块（七种俄罗斯方块形状）
+// 首页背景装饰已关闭（概念图无下落方块）；保留形状表供日后复用
 const BG_TETROMINO_SHAPES = [
-    [ [1, 1, 1, 1] ],               // I
-    [ [1, 1], [1, 1] ],             // O
-    [ [0, 1, 0], [1, 1, 1] ],       // T
-    [ [0, 1, 1], [1, 1, 0] ],       // S
-    [ [1, 1, 0], [0, 1, 1] ],       // Z
-    [ [1, 0, 0], [1, 1, 1] ],       // J
-    [ [0, 0, 1], [1, 1, 1] ],       // L
+    [ [1, 1, 1, 1] ],
+    [ [1, 1], [1, 1] ],
+    [ [0, 1, 0], [1, 1, 1] ],
+    [ [0, 1, 1], [1, 1, 0] ],
+    [ [1, 1, 0], [0, 1, 1] ],
+    [ [1, 0, 0], [1, 1, 1] ],
+    [ [0, 0, 1], [1, 1, 1] ],
 ];
-const BG_TETROMINO_COLORS = AMBIENT_PIECE_COLORS;
+const BG_TETROMINO_COLORS = ['#5ec8d4', '#e8c84a', '#b07cd4', '#5cbc6a', '#e07070', '#5a8fd4', '#e8a040'];
 
 /** 本会话是否已提醒过待应战（避免反复 toast） */
 let _pendingRemindedSession = false;
@@ -57,7 +55,7 @@ class HomeScene {
     onEnter(params) {
         this._params = params;
         this._animTime = 0;
-        this._initFallingBlocks();
+        this._fallingBlocks = [];
         this._initUI();
         this._claimDailyLogin();
         this._maybeRemindPending();
@@ -100,7 +98,6 @@ class HomeScene {
     }
     update(dt) {
         this._animTime += dt;
-        this._updateFallingBlocks(dt);
         if (this._miniFx) this._miniFx.update(dt);
     }
 
@@ -108,25 +105,39 @@ class HomeScene {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
 
-        // 夜场街机背景（暖夜，非冷赛博）
-        fillNightBackground(ctx, W, H);
+        // 概念图矿洞底；未就绪回退夜场渐变
+        if (!drawThemeBackground(ctx, 'homeBg', W, H)) {
+            fillNightBackground(ctx, W, H);
+        } else {
+            // 轻压暗，突出前景 UI
+            ctx.fillStyle = 'rgba(8, 6, 4, 0.22)';
+            ctx.fillRect(0, 0, W, H);
+        }
 
-        // 背景装饰：缓慢下落的半透明方块
-        this._renderFallingBlocks(ctx);
+        // 标题牌（整体下移 50px，给顶区留呼吸）
+        const titleCy = H * 0.14 + 50 + Math.sin(this._animTime * 2) * 3;
+        const plaque = drawThemeImageContain(
+            ctx,
+            'titlePlaque',
+            W / 2,
+            titleCy,
+            Math.min(W * 0.86, 340),
+            Math.min(H * 0.2, 150)
+        );
+        let subtitleY;
+        if (plaque.drawn) {
+            subtitleY = plaque.y + plaque.h + 10;
+        } else {
+            drawBrandTitle(ctx, '挖个方块', W / 2, titleCy, 'bold 48px sans-serif');
+            subtitleY = titleCy + 42;
+        }
 
-        const titleY = H * 0.15 + Math.sin(this._animTime * 2) * 5;
-        const titleFont = 'bold 48px sans-serif';
-        drawBrandTitle(ctx, '挖个方块', W / 2, titleY, titleFont);
-        drawHomeTitleDecorations(ctx, '挖个方块', W / 2, titleY, titleFont, this._animTime);
-
-        // 副标题：玩（闯关/广场）+ 造（工坊）
-        ctx.fillStyle = SUBTITLE;
-        ctx.font = '16px sans-serif';
+        ctx.fillStyle = 'rgba(255, 245, 230, 0.82)';
+        ctx.font = '14px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('官方闯关 · 广场开打 · 工坊造关', W / 2, titleY + 40);
+        ctx.fillText('官方闯关 · 广场开打 · 工坊造关', W / 2, subtitleY);
 
-        // 按钮
         for (const btn of this._buttons) {
             btn.render(ctx);
         }
@@ -135,7 +146,7 @@ class HomeScene {
             this._miniFx.render(ctx);
         }
 
-        // 底部：隐私指引（纯文字 + 下划线）+ 版本号
+        // 底部：隐私指引 + 版本号
         const privacyY = H - 66;
         ctx.fillStyle = MUTED;
         ctx.font = '12px sans-serif';
@@ -156,59 +167,92 @@ class HomeScene {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
         const centerX = W / 2;
-        const btnW = Math.min(280, W * 0.74);
-        const gap = 16;
-        const primaryH = 56;
-        const smallW = (btnW - gap) / 2;
-        const smallH = 44;
+        // 2×2 主钮 + 更宽的底栏小方钮行
+        const gap = 10;
+        const iconGap = 12;
+        const gridY = H * 0.29 + 50;
+        const gridMaxW = Math.min(248, W * 0.64);
+        // 底栏可比主钮网格更宽
+        const iconRowW = Math.min(W * 0.9, Math.max(gridMaxW * 1.28, gridMaxW + 56));
+        const iconSizeGuess = Math.floor((iconRowW - iconGap * 3) / 4);
+        const maxCell = Math.floor((H - gridY - iconSizeGuess - gap * 3 - 100) / 2);
+        const cell = Math.max(100, Math.min((gridMaxW - gap) / 2, maxCell));
+        const btnW = cell * 2 + gap;
+        const left = centerX - btnW / 2;
+        const iconSize = Math.max(58, Math.min(72, Math.floor((iconRowW - iconGap * 3) / 4)));
+        const iconRowLeft = centerX - (iconSize * 4 + iconGap * 3) / 2;
 
         this._buttons = [];
 
-        // 主双入口：闯关 | 关卡广场（玩）；工坊整宽下沉（造）
-        const primaryY = H * 0.28;
-        const halfW = (btnW - gap) / 2;
-        this._buttons.push(new Button({
-            x: centerX - btnW / 2,
-            y: primaryY,
-            w: halfW,
-            h: primaryH,
-            text: '闯关',
-            icon: 'brick',
-            color: '#e09a30',
-            onClick: () => {
-                try {
-                    GameGlobal.game.sceneManager.switchTo('worldMap');
-                } catch (e) {
-                    console.error('[Home] 进入世界地图失败', e);
-                    GameGlobal.game.sceneManager.switchTo('stageSelect');
-                }
+        const pendingCount = getPendingChallengeCount();
+
+        const bigBtns = [
+            {
+                col: 0,
+                row: 0,
+                text: '闯关',
+                fontScale: 1,
+                color: '#d87a28',
+                skin: 'btnSquareAmber',
+                onClick: () => {
+                    try {
+                        GameGlobal.game.sceneManager.switchTo('worldMap');
+                    } catch (e) {
+                        console.error('[Home] 进入世界地图失败', e);
+                        GameGlobal.game.sceneManager.switchTo('stageSelect');
+                    }
+                },
             },
-        }));
-        this._buttons.push(new Button({
-            x: centerX - btnW / 2 + halfW + gap,
-            y: primaryY,
-            w: halfW,
-            h: primaryH,
-            text: '关卡广场',
-            icon: 'puzzle',
-            color: '#c9a227',
-            onClick: () => GameGlobal.game.sceneManager.switchTo('plaza'),
-        }));
+            {
+                col: 1,
+                row: 0,
+                text: '关卡\n广场',
+                fontScale: 1,
+                color: '#c9a227',
+                skin: 'btnSquareGold',
+                onClick: () => GameGlobal.game.sceneManager.switchTo('plaza'),
+            },
+            {
+                col: 0,
+                row: 1,
+                text: '工坊',
+                fontScale: 1,
+                color: '#8b5a2b',
+                skin: 'btnSquareBrown',
+                onClick: () => GameGlobal.game.sceneManager.switchTo('workshop'),
+            },
+            {
+                col: 1,
+                row: 1,
+                text: pendingCount > 0 ? ('挑战\n(' + pendingCount + ')') : '好友\n挑战',
+                fontScale: 1,
+                color: pendingCount > 0 ? '#33d6ff' : '#1aa8a0',
+                skin: 'btnSquareTeal',
+                onClick: () => GameGlobal.game.sceneManager.switchTo('challenge', {
+                    tab: pendingCount > 0 ? 'incoming' : 'sent',
+                }),
+            },
+        ];
 
-        const workshopY = primaryY + primaryH + gap;
-        this._buttons.push(new Button({
-            x: centerX - btnW / 2,
-            y: workshopY,
-            w: btnW,
-            h: smallH,
-            text: '工坊 · 造关',
-            icon: 'construction',
-            color: '#8b5a2b',
-            onClick: () => GameGlobal.game.sceneManager.switchTo('workshop'),
-        }));
+        for (let i = 0; i < bigBtns.length; i++) {
+            const item = bigBtns[i];
+            this._buttons.push(new Button({
+                x: left + item.col * (cell + gap),
+                y: gridY + item.row * (cell + gap),
+                w: cell,
+                h: cell,
+                text: item.text,
+                layout: 'text',
+                fontScale: item.fontScale,
+                letterSpacing: 2,
+                labelColor: '#fff6e8',
+                color: item.color,
+                skin: item.skin,
+                onClick: item.onClick,
+            }));
+        }
 
-        // 功能入口 2x2 网格（排行/成就/商店/设置）
-        const footerY = workshopY + smallH + gap;
+        const iconY = gridY + cell * 2 + gap * 2 + 4;
         const footerBtns = [
             { text: '排行', target: 'rank', icon: 'trophy' },
             { text: '成就', target: 'achievement', icon: 'medal' },
@@ -217,19 +261,19 @@ class HomeScene {
         ];
         for (let i = 0; i < footerBtns.length; i++) {
             const item = footerBtns[i];
-            const row = Math.floor(i / 2);
-            const col = i % 2;
             this._buttons.push(new Button({
-                x: centerX - btnW / 2 + col * (smallW + gap),
-                y: footerY + row * (smallH + gap),
-                w: smallW,
-                h: smallH,
+                x: iconRowLeft + i * (iconSize + iconGap),
+                y: iconY,
+                w: iconSize,
+                h: iconSize,
                 text: item.text,
                 icon: item.icon,
-                color: '#555',
+                layout: 'iconStack',
+                labelColor: '#fff6e8',
+                color: '#6b4a2e',
+                skin: 'btnIconBrown',
                 onClick: () => {
                     if (item.target === 'rank') {
-                        // 在点击手势内触发隐私授权，再进排行（好友榜依赖朋友关系声明）
                         const { ensurePrivacyAuthorize, showPrivacyFailTip } = require('../../utils/privacy');
                         ensurePrivacyAuthorize().then((ok) => {
                             if (!ok) {
@@ -245,40 +289,24 @@ class HomeScene {
             }));
         }
 
-        // 好友挑战入口（整宽按钮；有待应战时显示数量并默认进「待我应战」）
-        const challengeY = footerY + (smallH + gap) * 2 + 10;
-        const pendingCount = getPendingChallengeCount();
-        const challengeLabel = pendingCount > 0
-            ? ('好友挑战 (' + pendingCount + ')')
-            : '好友挑战';
-        this._buttons.push(new Button({
-            x: centerX - btnW / 2,
-            y: challengeY,
-            w: btnW,
-            h: primaryH,
-            text: challengeLabel,
-            icon: 'handshake',
-            color: pendingCount > 0 ? '#33d6ff' : '#00c6ff',
-            onClick: () => GameGlobal.game.sceneManager.switchTo('challenge', {
-                tab: pendingCount > 0 ? 'incoming' : 'sent',
-            }),
-        }));
-
-        // 每日福利广告 D（+30，日 1 次）—— 未配置激励视频时整项隐藏
         if (isRewardedVideoConfigured() === true) {
-            const welfareY = challengeY + primaryH + gap;
+            const welfareY = iconY + iconSize + gap;
             const welfareClaimed = coinManager.isDailyWelfareClaimed();
             const welfareText = welfareClaimed
                 ? '今日福利已领'
                 : ('每日福利 +' + DAILY_WELFARE_REWARD);
+            const welfareW = iconSize * 4 + iconGap * 3;
             this._buttons.push(new Button({
-                x: centerX - btnW / 2,
+                x: iconRowLeft,
                 y: welfareY,
-                w: btnW,
-                h: smallH,
+                w: welfareW,
+                h: 44,
                 text: welfareText,
-                icon: 'gift',
-                color: welfareClaimed ? '#444' : '#3a7ab0',
+                layout: 'text',
+                labelColor: '#fff6e8',
+                color: welfareClaimed ? '#555' : '#6b4a2e',
+                skin: 'btnIconBrown',
+                skinMode: '9slice',
                 onClick: () => this._claimDailyWelfare(),
             }));
         }
@@ -438,8 +466,8 @@ class HomeScene {
             // 旋转角度（缓慢旋转）
             rot: Math.random() * Math.PI * 2,
             rotSpeed: (Math.random() - 0.5) * 0.5,
-            // 透明度：0.15~0.35，半透明氛围不遮挡前景
-            alpha: 0.15 + Math.random() * 0.20,
+            // 透明度：主题底图较满，装饰再淡一点
+            alpha: 0.08 + Math.random() * 0.12,
         };
     }
 

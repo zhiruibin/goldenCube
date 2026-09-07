@@ -1,0 +1,12 @@
+{
+	"id": "047f335d-902b-4c9d-b3a4-320940be0249",
+	"projectId": "tetris-mini-6c4a5d75",
+	"businessNodeId": "421b6352-8a41-4720-b134-6c5e6e09d177",
+	"operation": "create",
+	"after": "PlazaScene 退出时保存当前排序、滚动位置与焦点关卡 ID；重新进入时可恢复这些状态。",
+	"taskId": "business-init",
+	"evidenceIds": [
+		"js/scenes/plaza-scene.js"
+	],
+	"createdAt": 1788311965328
+}

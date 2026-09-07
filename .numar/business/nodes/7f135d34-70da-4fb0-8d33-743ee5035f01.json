@@ -1,0 +1,27 @@
+{
+	"id": "7f135d34-70da-4fb0-8d33-743ee5035f01",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "replay.invalid-data.fallback-navigation",
+	"title": "回放数据不可用时的回退导航",
+	"statement": "回放数据缺失或无效时，ReplayScene 提示“回放数据不可用”，并根据来源参数回退到排行榜、闯关结算或闯关失败场景。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311965356,
+	"updatedAt": 1788311965356,
+	"createdByTaskId": "business-init",
+	"latestEventId": "6f72f5e9-4fea-4c6c-a81b-11db9eaebfa0",
+	"tags": [],
+	"aliases": [
+		"回放数据不可用",
+		"回放回退"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/replay-scene.js",
+			"symbol": "onEnter"
+		}
+	]
+}

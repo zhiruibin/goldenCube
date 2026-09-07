@@ -1,0 +1,23 @@
+{
+	"id": "b78f7719-461f-480d-acbd-d6e726149977",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "runtime.frame-budget",
+	"title": "Shared frame-budget runtime",
+	"statement": "New js/runtime/frame-budget.js introduces a shared per-frame budgeting utility; a broad set of scenes was touched in the same commit, consistent with wide integration (exact integration semantics not visible in the bounded patch)",
+	"status": "active",
+	"verificationStatus": "verified",
+	"createdAt": 1788309950438,
+	"updatedAt": 1788309950438,
+	"createdByTaskId": "commit:c562e404c328cdf6d8f75adb938c6fcb06217771",
+	"latestEventId": "9f2ba336-e8fa-449e-b2fe-6496224aa75a",
+	"tags": [],
+	"aliases": [],
+	"implementationRefs": [
+		{
+			"type": "file",
+			"path": "js/runtime/frame-budget.js"
+		}
+	]
+}

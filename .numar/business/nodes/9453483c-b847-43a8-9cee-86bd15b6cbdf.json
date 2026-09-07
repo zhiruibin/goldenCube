@@ -1,0 +1,27 @@
+{
+	"id": "9453483c-b847-43a8-9cee-86bd15b6cbdf",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "rank.best-score-calibrates-friend-row",
+	"title": "全服/本地最高分校准好友榜本人行",
+	"statement": "RankScene 使用全服榜或本地取得的较高本人复合分，在渲染好友榜时校正好友榜中自己的那一行。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311965342,
+	"updatedAt": 1788311965342,
+	"createdByTaskId": "business-init",
+	"latestEventId": "cc6a5647-542e-4d08-9c6c-f7bc3bd32eb3",
+	"tags": [],
+	"aliases": [
+		"好友榜本人行校准",
+		"friendBestScore"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/rank-scene.js",
+			"symbol": "_friendBestScore"
+		}
+	]
+}

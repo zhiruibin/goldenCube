@@ -1,0 +1,28 @@
+{
+	"id": "f5b8ea8f-6ef4-48a9-871f-c808b2b51eb2",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "challenge.puzzle.fewer-lines-win",
+	"title": "Puzzle challenges decide winner by fewer cleared lines",
+	"statement": "In puzzle (残局) challenges the challenger metric is cleared lines, and the responder wins by clearing fewer lines than the challenger; responder-facing copy explicitly says '残局比谁消行更少' when the challenger wins.",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788315981608,
+	"updatedAt": 1788315981608,
+	"createdByTaskId": "business-init",
+	"latestEventId": "a4b1c085-c5e6-4e4e-9a11-c7a600cdc8f1",
+	"tags": [],
+	"aliases": [
+		"残局比谁消行更少",
+		"残局胜者消行少",
+		"挑战行数比拼"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "utils/challenge-ui.js",
+			"symbol": "formatResponderResultText"
+		}
+	]
+}

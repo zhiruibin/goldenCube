@@ -1,6 +1,6 @@
 /**
  * StageFailScene - 闯关失败结算
- * 展示本局成绩；支持广告免费重开 / 付费重玩 / 回看 / 返回关选。
+ * 展示本局成绩；支持广告免费重开 / 付费重玩 / 回看 / 分享 / 返回关选。
  */
 
 const {
@@ -10,9 +10,12 @@ const {
     SUBTITLE,
     MUTED,
 } = require('../theme/arcade-night');
+const { drawThemeBackground } = require('../theme/theme-images');
 const goldenBlock = require('../../utils/golden-block-manager');
 const { coinManager } = require('../../utils/coin-manager');
 const { adManager, isRewardedVideoConfigured } = require('../../utils/ad-manager');
+const { achievementManager } = require('../../utils/achievement-manager');
+const stageFailShareCard = require('../../utils/stage-fail-share-card');
 const { Button } = require('../widgets/button');
 const { stageSelectStack } = require('../../utils/stage-nav');
 const {
@@ -38,6 +41,7 @@ class StageFailScene {
         this._entryDialog = null;
         this._toast = '';
         this._toastUntil = 0;
+        this._shareBusy = false;
     }
 
     onEnter(params) {
@@ -46,6 +50,7 @@ class StageFailScene {
         this._entryDialog = null;
         this._toast = '';
         this._toastUntil = 0;
+        this._shareBusy = false;
         this._stage = goldenBlock.getStage(this._params.stageId);
         this._result = this._params.result || null;
         this._replayKey = this._params.replayKey || '';
@@ -91,6 +96,44 @@ class StageFailScene {
             .catch(() => { /* 未看完不重开 */ });
     }
 
+    /** 分享本局失败战绩（专用紧凑分享卡，避免截屏顶空白） */
+    _shareFail() {
+        if (this._shareBusy) return;
+        this._shareBusy = true;
+        const stageId = this._stage ? this._stage.id : (this._params.stageId || '?');
+        const stageName = this._stage ? this._stage.name : '';
+        const title = stageName
+            ? `挖个方块第 ${stageId} 关「${stageName}」没过，你来挑战一下？`
+            : `挖个方块第 ${stageId} 关没过，你来挑战一下？`;
+        const result = this._result || {};
+        stageFailShareCard.shareWithCard({
+            title,
+            cardOpts: {
+                stageId,
+                stageName,
+                lines: result.lines,
+                minLines: result.minLines || (this._stage ? this._stage.minLines : 0),
+                pieces: result.pieces,
+                timeMs: result.timeMs,
+            },
+            success: () => {
+                try {
+                    achievementManager.reportShare();
+                    achievementManager.reportInvite();
+                } catch (e) { /* ignore */ }
+            },
+            fail: () => {
+                this._showToast('分享暂不可用');
+            },
+        }).then(() => {
+            this._shareBusy = false;
+        }).catch(() => {
+            this._shareBusy = false;
+            this._showToast('分享暂不可用');
+        });
+        setTimeout(() => { this._shareBusy = false; }, 1200);
+    }
+
     _getBottomInset() {
         const H = GameGlobal.game.height;
         const safeArea = (GameGlobal.game.systemInfo || {}).safeArea || {};
@@ -101,65 +144,91 @@ class StageFailScene {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
         const bottomInset = this._getBottomInset();
-        const bw = Math.min(260, W * 0.7);
-        const bh = 46;
-        const gap = 12;
-        const buttons = [];
+        // 通栏条形钮：命中框与贴图同为 4:1，contain 避免再被拉扁
+        const btnW = Math.min(240, Math.round(W * 0.64));
+        const hPad = (W - btnW) / 2;
+        const bh = Math.round(btnW / 4);
+        const gapY = 10;
 
+        const rows = [];
         const canFreeRetry = coinManager.getFreeRetryRemaining() > 0
             && isRewardedVideoConfigured() === true;
         if (canFreeRetry) {
             const left = coinManager.getFreeRetryRemaining();
-            buttons.push({
-                text: '看广告免费重开（剩 ' + left + ' 次）',
-                color: '#3a7ab0',
+            rows.push({
+                text: '广告免费重开（剩' + left + '）',
+                color: '#c89840',
+                skin: 'btnBarAmber',
+                labelColor: '#241408',
                 onClick: () => this._freeRetryViaAd(),
             });
         }
-        buttons.push({
+
+        rows.push({
             text: formatStageEntryButtonLabel('重玩本关', this._stage ? this._stage.id : 0),
-            color: '#f0a000',
+            color: '#c9a227',
+            skin: 'btnBarGold',
+            labelColor: '#241408',
             onClick: () => this._promptEnter(this._stage),
         });
-        if (this._replayKey) {
-            buttons.push({
-                text: '回看本局',
-                color: '#7b52ab',
-                onClick: () => {
-                    GameGlobal.game.sceneManager.switchTo('replay', {
-                        replayKey: this._replayKey,
-                        fromStageFail: true,
-                        stageId: this._params.stageId,
-                        result: this._result,
-                    });
-                },
-            });
-        }
-        buttons.push({
-            text: '← 返回关卡选择',
-            color: '#333',
+        rows.push({
+            text: '回看本局',
+            color: '#c89840',
+            skin: 'btnBarAmber',
+            labelColor: '#241408',
+            onClick: () => {
+                if (!this._replayKey) {
+                    this._showToast('暂无可回看');
+                    return;
+                }
+                GameGlobal.game.sceneManager.switchTo('replay', {
+                    replayKey: this._replayKey,
+                    fromStageFail: true,
+                    stageId: this._params.stageId,
+                    result: this._result,
+                });
+            },
+        });
+        rows.push({
+            text: '分享',
+            color: '#c89840',
+            skin: 'btnBarAmber',
+            labelColor: '#241408',
+            onClick: () => this._shareFail(),
+        });
+        rows.push({
+            text: '返回关卡',
+            color: '#5a4030',
+            skin: 'btnBarBrown',
+            labelColor: '#fff8ef',
             onClick: () => GameGlobal.game.sceneManager.leaveTo('stageSelect', {
                 stageId: this._params.stageId,
             }, stageSelectStack()),
         });
 
-        const totalH = buttons.length * bh + (buttons.length - 1) * gap;
-        this._buttonsTopY = H - bottomInset - totalH - 24;
+        const totalH = rows.length * bh + Math.max(0, rows.length - 1) * gapY;
+        // 整体上移 30px
+        this._buttonsTopY = H - bottomInset - totalH - 24 - 30;
+
+        this._buttons = [];
         let y = this._buttonsTopY;
-        this._buttons = buttons.map((b) => {
-            const x = W / 2 - bw / 2;
-            const btn = new Button({
-                x,
+        for (let i = 0; i < rows.length; i++) {
+            const b = rows[i];
+            this._buttons.push(new Button({
+                x: hPad,
                 y,
-                w: bw,
+                w: btnW,
                 h: bh,
                 text: b.text,
                 color: b.color,
+                skin: b.skin,
+                skinMode: 'contain',
+                labelColor: b.labelColor,
+                fontScale: 0.88,
                 onClick: b.onClick,
-            });
-            y += bh + gap;
-            return btn;
-        });
+            }));
+            y += bh + gapY;
+        }
     }
 
     handleTap(x, y) {
@@ -215,30 +284,36 @@ class StageFailScene {
     render(ctx) {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
-        fillNightBackground(ctx, W, H);
+        if (!drawThemeBackground(ctx, 'homeBg', W, H)) {
+            fillNightBackground(ctx, W, H);
+        } else {
+            ctx.fillStyle = 'rgba(10, 7, 4, 0.42)';
+            ctx.fillRect(0, 0, W, H);
+        }
 
-        const topInset = this._getTopInset();
-        drawBrandTitle(ctx, '未过关', W / 2, topInset + 10, 'bold 30px sans-serif');
+        const topInset = this._getTopInset() - 30;
+        // 与通关成功页同源：字号 + 信息区位置 + 英雄位紧贴成绩
+        drawBrandTitle(ctx, '未过关', W / 2, topInset + 96, 'bold 24px sans-serif');
 
         const stageName = this._stage ? this._stage.name : '';
         ctx.fillStyle = SUBTITLE;
-        ctx.font = '16px sans-serif';
+        ctx.font = '15px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('第 ' + (this._stage ? this._stage.id : '?') + ' 关 · ' + stageName, W / 2, topInset + 52);
+        ctx.fillText('第 ' + (this._stage ? this._stage.id : '?') + ' 关 · ' + stageName, W / 2, topInset + 126);
 
         const cx = W / 2;
-        let y = topInset + 108;
+        let y = topInset + 180;
         if (this._result) {
             const lines = this._result.lines || 0;
             const minLines = this._result.minLines || (this._stage ? this._stage.minLines : 0);
-            ctx.fillStyle = '#e74c3c';
-            ctx.font = 'bold 44px sans-serif';
+            ctx.fillStyle = '#ff8a7a';
+            ctx.font = 'bold 30px sans-serif';
             ctx.fillText(String(lines) + ' 行', cx, y);
-            y += 32;
+            y += 28;
             ctx.fillStyle = MUTED;
             ctx.font = '14px sans-serif';
             ctx.fillText('需消 ' + minLines + ' 行垃圾方可过关', cx, y);
-            y += 36;
+            y += 22;
 
             ctx.fillStyle = SUBTITLE;
             ctx.font = '14px sans-serif';
@@ -246,22 +321,22 @@ class StageFailScene {
                 '用块 ' + (this._result.pieces || 0) + ' · 用时 ' + this._formatTime(this._result.timeMs || 0),
                 cx, y
             );
-            y += 32;
+            y += 22;
 
             const statsBottom = y + 4;
-            const heroTop = statsBottom + 8;
-            const heroBottom = (this._buttonsTopY || H * 0.72) - 36;
-            const heroCy = (heroTop + heroBottom) / 2 - 25;
-            const heroSize = Math.min(120, Math.max(72, (heroBottom - heroTop) * 0.5));
+            const heroSize = 108;
+            let heroCy = statsBottom + 18 + heroSize * 0.52;
+            const labelReserve = 42;
+            const maxCy = (this._buttonsTopY || H * 0.72) - labelReserve - heroSize * 0.52;
+            if (heroCy > maxCy) heroCy = Math.max(statsBottom + heroSize * 0.4, maxCy);
             this._drawGrayBlockHero(ctx, cx, heroCy, heroSize);
 
-            // 插画含光晕，按实际绘制边长估算底边
             const cubeBottomY = heroCy + heroSize * 1.35 * 0.48;
             ctx.fillStyle = MUTED;
             ctx.font = '14px sans-serif';
             const reasonText = this._result.reason === 'topOut' ? '方块堆满，本局结束'
                 : '未达过关条件';
-            ctx.fillText(reasonText, cx, cubeBottomY + 20);
+            ctx.fillText(reasonText, cx, cubeBottomY + 18);
         }
 
         ctx.textAlign = 'left';

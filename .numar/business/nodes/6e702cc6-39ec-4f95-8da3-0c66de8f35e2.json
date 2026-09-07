@@ -1,0 +1,27 @@
+{
+	"id": "6e702cc6-39ec-4f95-8da3-0c66de8f35e2",
+	"projectId": "tetris-mini-6c4a5d75",
+	"rootId": "tetris-mini-6c4a5d75",
+	"type": "rule",
+	"key": "replay.action-map.engine-methods",
+	"title": "回放输入动作映射",
+	"statement": "回放输入动作与引擎方法一一映射：left/right/rotateCW/rotateCCW/softDrop/hardDrop/hold 对应相应引擎方法，动作命名与 ReplayRecorder.record 对齐。",
+	"status": "active",
+	"verificationStatus": "candidate",
+	"createdAt": 1788311965354,
+	"updatedAt": 1788311965354,
+	"createdByTaskId": "business-init",
+	"latestEventId": "c9874b92-592c-4d76-8e97-2c2c01ac6492",
+	"tags": [],
+	"aliases": [
+		"回放 action 映射",
+		"ACTION_MAP"
+	],
+	"implementationRefs": [
+		{
+			"type": "symbol",
+			"path": "js/scenes/replay-scene.js",
+			"symbol": "ACTION_MAP"
+		}
+	]
+}

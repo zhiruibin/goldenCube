@@ -1,0 +1,14 @@
+{
+	"id": "fc8b70b7-a0f8-458c-b448-386f0ad954d0",
+	"projectId": "tetris-mini-6c4a5d75",
+	"fromNodeId": "3a14bc17-75b6-42bd-98ed-bedf513f6826",
+	"toNodeId": "fe4f5b33-2098-4cbb-8ab4-fac1f9f37fbd",
+	"type": "dependsOn",
+	"verificationStatus": "candidate",
+	"evidenceIds": [
+		"utils/tetris-engine.js:BagRandomizer"
+	],
+	"createdByTaskId": "business-init",
+	"createdAt": 1788311439825,
+	"updatedAt": 1788311439825
+}
