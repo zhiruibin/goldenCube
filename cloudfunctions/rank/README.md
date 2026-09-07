@@ -47,9 +47,14 @@
 | `detail` | object/null | 游戏详情（消行、T-Spin 等） |
 | `nickname` | string | 昵称（可为空，前端显示默认名） |
 | `avatarUrl` | string | 头像 URL（可为空） |
-| `updatedAt` | number | 更新时间戳 |
+| `updatedAt` | number | 最近写入时间（含资料回写，**不**作为周/月榜依据） |
+| `achievedAt` | number | 破纪录时间；周/月榜按此字段过滤 |
 
-**写入策略**：每个用户每个模式仅保留一条记录；仅当本次分数高于历史最高分时才更新，避免刷库。
+**写入策略**：每个用户每个模式仅保留一条记录；仅当本次分数高于历史最高分时才更新分数与 `achievedAt`；仅改昵称/头像时不得刷新 `achievedAt`。
+
+**索引建议（周/月榜）**：`mode` + `achievedAt` + `score`；总榜同分排序：`mode` + `score` + `updatedAt`。
+
+**旧数据**：缺 `achievedAt` 的记录会在下次 `submitScore`（含纯资料回写）时用历史 `updatedAt`/`createdAt` 回填，不会写成当前时间。
 
 ## 三、云函数 API
 
@@ -86,7 +91,7 @@
 ```
 
 - `type`: `all`（全服）| `friend`（好友，需 `friendOpenIds`）
-- `period`: `total`（总榜）| `week`（周榜，本周一 00:00 起）| `month`（月榜，本月 1 日起）
+- `period`: `total`（总榜）| `week`（周榜，本周一 00:00 起按 `achievedAt`）| `month`（月榜，本月 1 日起按 `achievedAt`）
 - 返回：`{ success, list, total, page, pageSize, myRank, myScore }`
 
 ### 3. `getMyRank` 查询我的排名
@@ -106,6 +111,7 @@
 ## 五、常见问题
 
 - **调用云函数报 `env not found`**：`CLOUD_ENV` 填错或未开通对应环境，检查 `utils/cloud-config.js`。
-- **查询为空但已提交分数**：确认集合权限允许读取，或确认提交的 `mode` 与查询的 `mode` 一致。
+- **查询为空但已提交分数**：确认集合权限允许读取，或确认提交的 `mode` 与查询的 `mode` 一致；周/月榜需记录已有 `achievedAt` 且落在本周期内。
+- **周/月榜被改昵称刷进来**：属旧 bug，须部署含 `achievedAt` 的本云函数，并建索引 `mode + achievedAt + score`。
 - **真机好友榜为空**：好友榜需要双方都玩过且授权「好友关系」，且需在开放数据域中确认 `openDataContext/` 已正确配置（`game.json` 的 `openDataContext` 字段）。
 - **本地开发者工具无好友数据**：开发者工具不支持 `wx.getFriendCloudStorage` 返回真实好友，属正常现象，真机预览可见。

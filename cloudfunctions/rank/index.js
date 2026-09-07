@@ -5,7 +5,8 @@
 //   3. getMyRank  - 查询当前用户排名
 //   4. getReplay  - 回放（兼容旧数据；闯关主榜通常无回放）
 //
-// 部署：上传后确认集合 rankings；建议对 mode + score 建组合索引
+// 周/月榜按 achievedAt（破纪录时间）过滤；资料回写只更新 updatedAt，不得刷新 achievedAt。
+// 部署：上传后确认集合 rankings；建议索引 mode + achievedAt + score
 
 const cloud = require('wx-server-sdk');
 
@@ -62,6 +63,7 @@ exports.main = async (event, context) => {
 
 /**
  * 提交闯关复合键
+ * 仅破纪录时写入分数与 achievedAt；未破纪录可更新昵称头像，但不得改动 achievedAt。
  * @param {string} openid
  * @param {object} data
  */
@@ -125,6 +127,7 @@ async function submitScore(openid, data) {
             nickname: profile.nickname || (prev && prev.nickname) || '',
             avatarUrl: profile.avatarUrl || (prev && prev.avatarUrl) || '',
             replay: replayField,
+            achievedAt: now,
             updatedAt: now,
         };
         try {
@@ -141,7 +144,22 @@ async function submitScore(openid, data) {
             const patch = { updatedAt: now };
             if (profile.nickname) patch.nickname = profile.nickname;
             if (profile.avatarUrl) patch.avatarUrl = profile.avatarUrl;
+            // 旧数据补 achievedAt：用历史时间，绝不写成 now
+            if (!prev.achievedAt) {
+                const legacy = Number(prev.updatedAt) || Number(prev.createdAt) || 0;
+                if (legacy > 0) patch.achievedAt = legacy;
+            }
             await coll.doc(prev._id).update({ data: patch });
+        } catch (e) {
+            // ignore
+        }
+    } else if (prev && prev._id && !prev.achievedAt) {
+        // 纯上报未破纪录且无资料：顺带补齐旧字段，便于周/月榜查询
+        try {
+            const legacy = Number(prev.updatedAt) || Number(prev.createdAt) || 0;
+            if (legacy > 0) {
+                await coll.doc(prev._id).update({ data: { achievedAt: legacy } });
+            }
         } catch (e) {
             // ignore
         }
@@ -180,8 +198,9 @@ async function getRankList(openid, data) {
     const coll = db.collection(COLLECTION);
     const where = { mode };
 
+    // 周/月榜按破纪录时间 achievedAt（旧数据由 submit 回填）
     if (period !== 'total') {
-        where.updatedAt = _.gte(periodStart(period));
+        where.achievedAt = _.gte(periodStart(period));
     }
 
     if (type === 'friend') {
@@ -202,11 +221,16 @@ async function getRankList(openid, data) {
         total = 0;
     }
 
+    // 周/月榜按 achievedAt 同分排序；总榜暂按 updatedAt，避免旧数据缺 achievedAt 被索引排除
     let list = [];
     try {
-        const res = await query
-            .orderBy('score', 'desc')
-            .orderBy('updatedAt', 'asc')
+        let ranked = query.orderBy('score', 'desc');
+        if (period !== 'total') {
+            ranked = ranked.orderBy('achievedAt', 'asc');
+        } else {
+            ranked = ranked.orderBy('updatedAt', 'asc');
+        }
+        const res = await ranked
             .skip((page - 1) * pageSize)
             .limit(pageSize)
             .get();
@@ -222,7 +246,8 @@ async function getRankList(openid, data) {
             linesSum: item.linesSum || 0,
             piecesSum: item.piecesSum || 0,
             timeSum: item.timeSum || 0,
-            updatedAt: item.updatedAt || 0,
+            updatedAt: item.achievedAt || item.updatedAt || 0,
+            achievedAt: item.achievedAt || item.updatedAt || 0,
             hasReplay: !!(item.replay && item.replay.seed != null),
         }));
     } catch (e) {
@@ -235,7 +260,7 @@ async function getRankList(openid, data) {
     try {
         const myWhere = { openid, mode };
         if (period !== 'total') {
-            myWhere.updatedAt = _.gte(periodStart(period));
+            myWhere.achievedAt = _.gte(periodStart(period));
         }
         const my = await coll.where(myWhere).orderBy('score', 'desc').limit(1).get();
         if (my.data && my.data[0]) {
@@ -245,7 +270,7 @@ async function getRankList(openid, data) {
                 : decodeClearedCount(myScore);
             const betterWhere = { mode, score: _.gt(myScore) };
             if (period !== 'total') {
-                betterWhere.updatedAt = _.gte(periodStart(period));
+                betterWhere.achievedAt = _.gte(periodStart(period));
             }
             if (type === 'friend') {
                 const friendOpenIds = Array.isArray(data.friendOpenIds) ? data.friendOpenIds.slice(0, 50) : [];
