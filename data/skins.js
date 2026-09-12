@@ -16,32 +16,36 @@ const blockSkins = [
     name: '经典',
     price: 0,
     unlockCondition: 'default',
-    description: '经典街机配色',
+    description: '柔和玻璃积木质感',
     colors: {
-      I: '#00f0f0',
-      O: '#f0f000',
-      T: '#a000f0',
-      S: '#00f000',
-      Z: '#f00000',
-      J: '#0000f0',
-      L: '#f0a000'
-    }
+      I: ['#61d0df', '#32a9c1'],
+      O: ['#ffe276', '#e8b93d'],
+      T: ['#b38ae1', '#8257bd'],
+      S: ['#73c58d', '#3c9e67'],
+      Z: ['#f17b79', '#d84e52'],
+      J: ['#7198d3', '#4774b5'],
+      L: ['#f2b969', '#d88a38']
+    },
+    gradient: true,
+    softGlass: true
   },
   {
     id: 'neon',
     name: '霓虹',
     price: 400,
     unlockCondition: 'purchase',
-    description: '赛博朋克霓虹发光（可选风格）',
+    description: '经典玻璃积木的霓虹发光版',
     colors: {
-      I: '#00ffff',
-      O: '#ffff00',
-      T: '#ff00ff',
-      S: '#00ff66',
-      Z: '#ff0044',
-      J: '#4400ff',
-      L: '#ff8800'
+      I: ['#61d0df', '#32a9c1'],
+      O: ['#ffe276', '#e8b93d'],
+      T: ['#b38ae1', '#8257bd'],
+      S: ['#73c58d', '#3c9e67'],
+      Z: ['#f17b79', '#d84e52'],
+      J: ['#7198d3', '#4774b5'],
+      L: ['#f2b969', '#d88a38']
     },
+    gradient: true,
+    softGlass: true,
     glow: true
   },
   {
@@ -156,19 +160,11 @@ const boardSkins = [
     name: '经典',
     price: 0,
     unlockCondition: 'default',
-    description: '格槽铺砖 · 圆角盘面',
+    description: '夜场街机深色棋盘',
     style: {
-      background: '#0c101c',
-      gridMode: 'tiles',
-      cellLight: '#1a2236',
-      cellDark: '#141b2c',
-      cellGap: 2,
-      cellInsetBevel: true,
-      borderColor: '#2a3550',
-      frameRadius: 10,
-      frameGlow: 'rgba(88, 118, 188, 0.16)',
-      framePadding: 4,
+      background: '#161d30',
       gridColor: 'rgba(255, 245, 230, 0.16)',
+      borderColor: '#243050',
       gridLineWidth: 1
     }
   },
@@ -233,12 +229,12 @@ const boardSkins = [
     name: '极简',
     price: 0,
     unlockCondition: 'games_50',
-    description: '累计对局50场解锁',
+    description: '深灰磨砂，干净低干扰',
     style: {
-      background: '#ffffff',
-      gridColor: 'rgba(0, 0, 0, 0.18)',
-      borderColor: '#e0e0e0',
-      gridLineWidth: 1
+      background: '#10151e',
+      gridColor: 'rgba(190, 208, 225, 0.09)',
+      borderColor: 'rgba(210, 224, 238, 0.28)',
+      gridLineWidth: 0.5
     }
   },
   {

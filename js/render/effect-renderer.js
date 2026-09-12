@@ -105,6 +105,8 @@ class EffectRenderer {
         // 闪屏
         this._addFlash(count, isTetris, isTSpin, lineIndices, boardX, boardY, cellSize);
 
+        this.addElectricBurst(lineIndices, boardX, boardY, cellSize, count >= 4);
+
         // 粒子
         for (let i = 0; i < lineIndices.length; i++) {
             const row = lineIndices[i];
@@ -112,6 +114,40 @@ class EffectRenderer {
             this._addRowParticles(row, boardX, boardY, cellSize, count, isTSpin, rowColors);
             this._addGarbageDebris(row, boardX, boardY, cellSize, rowColors);
         }
+    }
+
+    /** 添加横贯棋盘的金色电弧；四消使用更强、更长的余辉。 */
+    addElectricBurst(lineIndices, boardX, boardY, cellSize, strong) {
+        const bolts = [];
+        const strandCount = strong ? 2 : 3;
+        for (const row of lineIndices) {
+            const cy = boardY + (row + 0.5) * cellSize;
+            for (let strand = 0; strand < strandCount; strand++) {
+                const points = [];
+                const segments = 14;
+                for (let i = 0; i <= segments; i++) {
+                    const edge = i === 0 || i === segments;
+                    points.push({
+                        x: boardX - cellSize * 0.35 + (cellSize * 10.7) * (i / segments),
+                        y: cy + (edge ? 0 : (Math.random() - 0.5) * cellSize * (strand === 0 ? 0.62 : 1.05)),
+                    });
+                }
+                bolts.push({ points, strand });
+            }
+        }
+        this._effects.push({
+            type: 'clearBurst',
+            rows: lineIndices.slice(),
+            boardX,
+            boardY,
+            cellSize,
+            bolts,
+            strength: strong ? 4 : Math.min(3, Math.max(1, lineIndices.length)),
+            strong: !!strong,
+            time: 0,
+            duration: strong ? 0.68 : 0.34 + lineIndices.length * 0.04,
+            done: false,
+        });
     }
 
     /** 消行时：被清除的垃圾格额外喷少量灰色碎屑 */
@@ -329,6 +365,8 @@ class EffectRenderer {
                 life: cfg.life * (0.8 + Math.random() * 0.4),
                 maxLife: cfg.life,
                 gravity: cfg.gravity,
+                rot: Math.random() * Math.PI * 2,
+                spin: (Math.random() - 0.5) * 12,
             });
         }
         this._effects.push({
@@ -530,6 +568,7 @@ class EffectRenderer {
                     p.y += p.vy * dt;
                     p.vy += (p.gravity || 0) * dt;
                     p.life -= dt;
+                    p.rot += (p.spin || 0) * dt;
                 }
             } else if (e.type === 'flash') {
                 // 闪屏无需额外更新
@@ -587,6 +626,9 @@ class EffectRenderer {
                     break;
                 case 'particles':
                     this._renderParticles(ctx, e);
+                    break;
+                case 'clearBurst':
+                    this._renderClearBurst(ctx, e);
                     break;
                 case 'ripple':
                     this._renderRipple(ctx, e);
@@ -665,13 +707,62 @@ class EffectRenderer {
     _renderParticles(ctx, e) {
         for (const p of e.particles) {
             if (p.life <= 0) continue;
-            ctx.globalAlpha = Math.max(0, Math.min(1, p.life / p.maxLife));
+            const alpha = Math.max(0, Math.min(1, p.life / p.maxLife));
+            ctx.save();
+            ctx.globalAlpha = alpha;
             ctx.fillStyle = p.color || e.color;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rot || 0);
+            ctx.fillRect(-p.size, -p.size, p.size * 2, p.size * 2);
+            ctx.restore();
         }
         ctx.globalAlpha = 1;
+    }
+
+    _renderClearBurst(ctx, e) {
+        const p = Math.min(1, e.time / e.duration);
+        const appear = Math.min(1, p * 10);
+        const fade = appear * Math.pow(1 - p, 0.7);
+        const flicker = 0.82 + Math.sin(e.time * 105) * 0.18;
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        for (const bolt of e.bolts || []) {
+            const points = bolt.points || [];
+            if (points.length < 2) continue;
+            ctx.globalAlpha = fade * flicker * (bolt.strand === 0 ? 0.95 : 0.58);
+            ctx.strokeStyle = '#FFB300';
+            ctx.shadowColor = '#FFD740';
+            ctx.shadowBlur = bolt.strand === 0 ? e.cellSize * (e.strong ? 0.72 : 0.85) : 0;
+            ctx.lineWidth = bolt.strand === 0 ? (e.strong ? 6.2 : 4.5) : (e.strong ? 2.9 : 2.2);
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+            ctx.stroke();
+
+            ctx.globalAlpha = fade * (bolt.strand === 0 ? 1 : 0.72);
+            ctx.strokeStyle = bolt.strand === 0 ? '#FFFDE7' : '#FFE082';
+            ctx.shadowBlur = 0;
+            ctx.lineWidth = bolt.strand === 0 ? (e.strong ? 2.2 : 1.6) : (e.strong ? 1.2 : 0.9);
+            ctx.stroke();
+
+            if (bolt.strand === 0) {
+                ctx.globalAlpha = fade * 0.65;
+                ctx.strokeStyle = '#FFD54F';
+                ctx.lineWidth = 1;
+                for (let i = 3; i < points.length - 2; i += 4) {
+                    const a = points[i];
+                    const dir = i % 2 === 0 ? -1 : 1;
+                    ctx.beginPath();
+                    ctx.moveTo(a.x, a.y);
+                    ctx.lineTo(a.x + e.cellSize * 0.35, a.y + dir * e.cellSize * 0.75);
+                    ctx.lineTo(a.x + e.cellSize * 0.7, a.y + dir * e.cellSize * 0.45);
+                    ctx.stroke();
+                }
+            }
+        }
+        ctx.restore();
     }
 
     /**

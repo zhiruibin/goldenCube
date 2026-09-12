@@ -9,6 +9,7 @@ const IconRenderer = require('../render/icon-renderer');
 const { blockSkins, boardSkins, soundPacks, soundPackProfiles } = require('../../data/skins');
 const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
 const { drawThemeBackground, drawThemeImageContain } = require('../theme/theme-images');
+const { layoutTabRow } = require('../widgets/tab-layout');
 const { fillNightBackground, drawBrandTitle } = require('../theme/arcade-night');
 
 class ShopScene {
@@ -98,12 +99,10 @@ class ShopScene {
             { key: 'board', label: '棋盘' },
             { key: 'sound', label: '音效' },
         ];
-        const tabW = 90;
-        const tabH = 40;
+        const layout = layoutTabRow(W, tabs.length, { gap: 0, side: 12, height: 40, maxWidth: 90 });
+        const tabW = layout.width;
+        const tabH = layout.height;
         const tabY = this._topInset() + 71;
-        const gap = 10;
-        const totalW = tabs.length * tabW + (tabs.length - 1) * gap;
-        const startX = (W - totalW) / 2;
 
         this._tabAreas = [];
         ctx.font = 'bold 14px sans-serif';
@@ -111,7 +110,7 @@ class ShopScene {
         ctx.textBaseline = 'middle';
 
         for (let i = 0; i < tabs.length; i++) {
-            const x = startX + i * (tabW + gap);
+            const x = layout.xAt(i);
             const active = this._tab === tabs[i].key;
             const skin = active ? 'cardStageGold' : 'cardStageBrown';
             const drawn = drawThemeImageContain(
@@ -293,6 +292,7 @@ class ShopScene {
         const gap = 3;
         const glow = !!item.glow;
         const shimmer = !!item.shimmer;
+        const softGlass = !!item.softGlass;
         const texture = item.texture || null;
         const transparency = (typeof item.transparency === 'number' && item.transparency >= 0 && item.transparency <= 1)
             ? item.transparency : 1;
@@ -310,18 +310,22 @@ class ShopScene {
             }
 
             // 主体填充：渐变或纯色
+            let faceStyle = color;
             if (gradColors && gradColors.length >= 2) {
                 let grad = null;
                 try {
-                    grad = ctx.createLinearGradient(cx, cy, cx + cell, cy + cell);
+                    grad = softGlass
+                        ? ctx.createLinearGradient(0, cy, 0, cy + cell)
+                        : ctx.createLinearGradient(cx, cy, cx + cell, cy + cell);
                     grad.addColorStop(0, gradColors[0]);
                     grad.addColorStop(1, gradColors[1]);
                 } catch (e) {
                     grad = null;
                 }
-                ctx.fillStyle = grad || color;
+                faceStyle = grad || color;
+                ctx.fillStyle = faceStyle;
             } else {
-                ctx.fillStyle = color;
+                ctx.fillStyle = faceStyle;
             }
 
             // 发光效果（霓虹）
@@ -342,14 +346,22 @@ class ShopScene {
             }
 
             // 高光（左上）
-            ctx.fillStyle = 'rgba(255,255,255,0.25)';
-            ctx.fillRect(cx, cy, cell, 2);
-            ctx.fillRect(cx, cy, 2, cell);
+            ctx.fillStyle = softGlass ? 'rgba(255,255,255,0.24)' : 'rgba(255,255,255,0.25)';
+            const lightW = softGlass ? 1 : 2;
+            ctx.fillRect(cx, cy, cell, lightW);
+            ctx.fillRect(cx, cy, lightW, cell);
 
             // 阴影（右下）
             ctx.fillStyle = 'rgba(0,0,0,0.35)';
-            ctx.fillRect(cx, cy + cell - 2, cell, 2);
-            ctx.fillRect(cx + cell - 2, cy, 2, cell);
+            const shadeW = softGlass ? 1 : 2;
+            ctx.fillRect(cx, cy + cell - shadeW, cell, shadeW);
+            ctx.fillRect(cx + cell - shadeW, cy, shadeW, cell);
+
+            if (softGlass) {
+                ctx.strokeStyle = 'rgba(28,17,38,0.48)';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(cx + 0.5, cy + 0.5, cell - 1, cell - 1);
+            }
 
             // 闪耀光泽（黄金 shimmer）
             if (shimmer) {

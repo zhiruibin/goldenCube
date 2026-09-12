@@ -74,6 +74,8 @@ class StageResultScene {
         this._buttonDelayT = 0;
         this._confettiTriggered = false;
         this._dirt = [];
+        this._shareImageUrl = '';
+        this._shareCardActive = false;
     }
 
     onEnter(params) {
@@ -86,6 +88,8 @@ class StageResultScene {
         this._stage = goldenBlock.getStage(this._params.stageId);
         this._result = this._params.result || null;
         this._replayKey = this._params.replayKey || '';
+        this._shareCardActive = true;
+        this._prepareShareCard();
         preloadResultBlockImages();
         this._buildButtons();
 
@@ -120,6 +124,26 @@ class StageResultScene {
             this._confettiFx = null;
         }
         this._dirt = [];
+        this._shareImageUrl = '';
+        this._shareCardActive = false;
+    }
+
+    _prepareShareCard() {
+        const stage = this._stage || {};
+        const result = this._result || {};
+        try {
+            const shareCard = require('../../utils/stage-result-share-card');
+            shareCard.generate({
+                stageId: stage.id != null ? stage.id : this._params.stageId,
+                stageName: stage.name || '',
+                lines: result.lines,
+                pieces: result.pieces,
+                timeMs: result.timeMs,
+            }).then((imageUrl) => {
+                // 场景离开后不再回写，避免旧异步结果污染复用状态。
+                if (this._shareCardActive && imageUrl) this._shareImageUrl = imageUrl;
+            }).catch(() => { /* 自动回退微信截图 */ });
+        } catch (e) { /* 低版本自动回退 */ }
     }
 
     _getTopInset() {

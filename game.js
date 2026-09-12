@@ -103,6 +103,14 @@ function onStart() {
     // 全局音频管理器（延迟到首次用户交互时 init，满足自动播放策略）
     GameGlobal.game.audioManager = new AudioManager();
 
+    // 开通右上角「···」中的好友分享与朋友圈分享，并按当前页面生成文案。
+    try {
+        const { initShareMenu } = require('./utils/share-menu');
+        initShareMenu();
+    } catch (e) {
+        console.warn('[Game] 分享菜单初始化失败', e);
+    }
+
     // 隐私：尽早注册 onNeedPrivacyAuthorization（自定义弹窗 + resolve agree）
     try {
         const { initPrivacy } = require('./utils/privacy');

@@ -5,7 +5,7 @@
  * 能力：
  *   - init()              ：初始化云开发（wx.cloud.init），失败时进入本地降级模式
  *   - submitScore()       ：上报本局分数（云函数全服榜 + 开放数据域好友榜）
- *   - getRankList()       ：查询全服排行榜（周/月/总榜，分页）
+ *   - getRankList()       ：查询全服 Top 20 生涯榜
  *   - getMyRank()         ：查询我的最高分与排名
  *   - renderFriendRank()  ：请求开放数据域渲染好友榜到 sharedCanvas
  *   - sendFriendTouch()   ：把主域触摸事件转发给开放数据域（好友榜滚动）
@@ -36,9 +36,9 @@ const { encodeRankScore } = require('./rank-score');
 /** 好友 KV 已写入的最高复合分（禁止用更低的本地分覆盖） */
 const FRIEND_KV_FLOOR_KEY = 'gc_friend_kv_floor';
 
-/** 本地缓存键（按 模式_周期 维度缓存最近一次全服榜结果） */
-function cacheKey(mode, period) {
-    return 'gc_rank_cache_' + mode + '_' + period;
+/** 本地缓存键（唯一生涯总榜） */
+function cacheKey(mode) {
+    return 'gc_rank_cache_' + mode + '_total';
 }
 
 class CloudService {
@@ -220,15 +220,14 @@ class CloudService {
 
     /**
      * 查询全服排行榜
-     * @param {object} opts { mode, period, page, pageSize }
+     * @param {object} opts { mode }
      * @returns {Promise<{success:boolean, list:Array, total:number, myRank:number|null, myScore:number|null, offline:boolean, fromCache:boolean}>}
      */
     async getRankList(opts) {
         const mode = GAME_MODES.indexOf(opts && opts.mode) >= 0 ? opts.mode : 'stage';
-        const period = (opts && opts.period) || 'total';
-        const page = Math.max(1, Math.floor(Number(opts && opts.page) || 1));
-        const pageSize = Math.min(50, Math.max(1, Math.floor(Number(opts && opts.pageSize) || 20)));
-        const key = cacheKey(mode, period);
+        const page = 1;
+        const pageSize = 20;
+        const key = cacheKey(mode);
 
         if (!this.isAvailable()) {
             const cached = this._readCache(key);
@@ -243,7 +242,7 @@ class CloudService {
                 name: 'rank',
                 data: {
                     action: 'getRankList',
-                    data: { mode, type: 'all', period, page, pageSize },
+                    data: { mode, type: 'all' },
                 },
             });
             const r = (res && res.result) || {};

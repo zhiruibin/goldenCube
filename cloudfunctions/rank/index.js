@@ -1,12 +1,9 @@
 // 排行榜云函数（挖个方块 · 闯关复合键）
 // 职责：
 //   1. submitScore - 上报复合键（clearedCount DESC → lines/pieces/time ASC），编码为 score 降序
-//   2. getRankList - 分页查询（全服/好友 × 周/月/总榜）
+//   2. getRankList - 查询全服 Top 20 生涯榜
 //   3. getMyRank  - 查询当前用户排名
 //   4. getReplay  - 回放（兼容旧数据；闯关主榜通常无回放）
-//
-// 周/月榜按 achievedAt（破纪录时间）过滤；资料回写只更新 updatedAt，不得刷新 achievedAt。
-// 部署：上传后确认集合 rankings；建议索引 mode + achievedAt + score
 
 const cloud = require('wx-server-sdk');
 
@@ -17,8 +14,7 @@ const _ = db.command;
 
 const COLLECTION = 'rankings';
 const ALLOWED_MODES = ['stage'];
-const ALLOWED_PERIODS = ['week', 'month', 'total'];
-const MAX_PAGE_SIZE = 50;
+const TOP_LIMIT = 20;
 
 const CLEARED_MUL = 1e10;
 const LINES_MUL = 1e5;
@@ -41,6 +37,17 @@ function encodeRankScore(sums) {
 
 function decodeClearedCount(score) {
     return Math.floor(Math.max(0, Number(score) || 0) / CLEARED_MUL);
+}
+
+function isBetterSums(a, b) {
+    if (!b) return true;
+    const oldCleared = typeof b.clearedCount === 'number' ? b.clearedCount : decodeClearedCount(b.score || 0);
+    if (a.clearedCount !== oldCleared) return a.clearedCount > oldCleared;
+    // 旧数据可能只有 score；无法还原效率时继续使用兼容分。
+    if (typeof b.linesSum !== 'number') return encodeRankScore(a) > (b.score || 0);
+    if (a.linesSum !== b.linesSum) return a.linesSum < b.linesSum;
+    if (a.piecesSum !== b.piecesSum) return a.piecesSum < b.piecesSum;
+    return a.timeSum < b.timeSum;
 }
 
 exports.main = async (event, context) => {
@@ -100,7 +107,7 @@ async function submitScore(openid, data) {
         prev = null;
     }
 
-    const isNewRecord = !prev || score > (prev.score || 0);
+    const isNewRecord = isBetterSums(sums, prev);
 
     if (isNewRecord) {
         let replayField = null;
@@ -144,7 +151,7 @@ async function submitScore(openid, data) {
             const patch = { updatedAt: now };
             if (profile.nickname) patch.nickname = profile.nickname;
             if (profile.avatarUrl) patch.avatarUrl = profile.avatarUrl;
-            // 旧数据补 achievedAt：用历史时间，绝不写成 now
+            // 旧数据补 achievedAt：用历史时间，保留同分先后顺序
             if (!prev.achievedAt) {
                 const legacy = Number(prev.updatedAt) || Number(prev.createdAt) || 0;
                 if (legacy > 0) patch.achievedAt = legacy;
@@ -154,7 +161,7 @@ async function submitScore(openid, data) {
             // ignore
         }
     } else if (prev && prev._id && !prev.achievedAt) {
-        // 纯上报未破纪录且无资料：顺带补齐旧字段，便于周/月榜查询
+        // 纯上报未破纪录且无资料：顺带补齐旧字段
         try {
             const legacy = Number(prev.updatedAt) || Number(prev.createdAt) || 0;
             if (legacy > 0) {
@@ -167,9 +174,8 @@ async function submitScore(openid, data) {
 
     let rank = null;
     try {
-        const myScore = isNewRecord ? score : (prev.score || 0);
-        const better = await coll.where({ mode, score: _.gt(myScore) }).count();
-        rank = better.total + 1;
+        const mine = isNewRecord ? sums : prev;
+        rank = await countBetter(coll, { mode }, mine) + 1;
     } catch (e) {
         rank = null;
     }
@@ -187,9 +193,8 @@ async function submitScore(openid, data) {
 async function getRankList(openid, data) {
     const mode = data.mode || 'stage';
     const type = data.type === 'friend' ? 'friend' : 'all';
-    const period = ALLOWED_PERIODS.indexOf(data.period) >= 0 ? data.period : 'total';
-    const page = Math.max(1, Math.floor(Number(data.page) || 1));
-    const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, Math.floor(Number(data.pageSize) || 20)));
+    const page = 1;
+    const pageSize = TOP_LIMIT;
 
     if (ALLOWED_MODES.indexOf(mode) < 0) {
         return { success: false, errMsg: 'invalid mode' };
@@ -197,11 +202,6 @@ async function getRankList(openid, data) {
 
     const coll = db.collection(COLLECTION);
     const where = { mode };
-
-    // 周/月榜按破纪录时间 achievedAt（旧数据由 submit 回填）
-    if (period !== 'total') {
-        where.achievedAt = _.gte(periodStart(period));
-    }
 
     if (type === 'friend') {
         const friendOpenIds = Array.isArray(data.friendOpenIds) ? data.friendOpenIds.slice(0, 50) : [];
@@ -221,17 +221,16 @@ async function getRankList(openid, data) {
         total = 0;
     }
 
-    // 周/月榜按 achievedAt 同分排序；总榜暂按 updatedAt，避免旧数据缺 achievedAt 被索引排除
+    // 全服榜直接按独立字段做严格字典序，不再依赖有精度折损的复合数值。
     let list = [];
     try {
-        let ranked = query.orderBy('score', 'desc');
-        if (period !== 'total') {
-            ranked = ranked.orderBy('achievedAt', 'asc');
-        } else {
-            ranked = ranked.orderBy('updatedAt', 'asc');
-        }
+        const ranked = query
+            .orderBy('clearedCount', 'desc')
+            .orderBy('linesSum', 'asc')
+            .orderBy('piecesSum', 'asc')
+            .orderBy('timeSum', 'asc')
+            .orderBy('achievedAt', 'asc');
         const res = await ranked
-            .skip((page - 1) * pageSize)
             .limit(pageSize)
             .get();
         list = (res.data || []).map((item) => ({
@@ -259,27 +258,20 @@ async function getRankList(openid, data) {
     let myCleared = null;
     try {
         const myWhere = { openid, mode };
-        if (period !== 'total') {
-            myWhere.achievedAt = _.gte(periodStart(period));
-        }
         const my = await coll.where(myWhere).orderBy('score', 'desc').limit(1).get();
         if (my.data && my.data[0]) {
             myScore = my.data[0].score || 0;
             myCleared = typeof my.data[0].clearedCount === 'number'
                 ? my.data[0].clearedCount
                 : decodeClearedCount(myScore);
-            const betterWhere = { mode, score: _.gt(myScore) };
-            if (period !== 'total') {
-                betterWhere.achievedAt = _.gte(periodStart(period));
-            }
+            const rankScope = { mode };
             if (type === 'friend') {
                 const friendOpenIds = Array.isArray(data.friendOpenIds) ? data.friendOpenIds.slice(0, 50) : [];
                 if (friendOpenIds.length > 0) {
-                    betterWhere.openid = _.in(friendOpenIds);
+                    rankScope.openid = _.in(friendOpenIds);
                 }
             }
-            const better = await coll.where(betterWhere).count();
-            myRank = better.total + 1;
+            myRank = await countBetter(coll, rankScope, my.data[0]) + 1;
         }
     } catch (e) {
         // ignore
@@ -297,6 +289,26 @@ async function getRankList(openid, data) {
     };
 }
 
+async function countBetter(coll, scope, mine) {
+    const parts = [
+        Object.assign({}, scope, { clearedCount: _.gt(mine.clearedCount || 0) }),
+        Object.assign({}, scope, { clearedCount: mine.clearedCount || 0, linesSum: _.lt(mine.linesSum || 0) }),
+        Object.assign({}, scope, { clearedCount: mine.clearedCount || 0, linesSum: mine.linesSum || 0, piecesSum: _.lt(mine.piecesSum || 0) }),
+        Object.assign({}, scope, {
+            clearedCount: mine.clearedCount || 0,
+            linesSum: mine.linesSum || 0,
+            piecesSum: mine.piecesSum || 0,
+            timeSum: _.lt(mine.timeSum || 0),
+        }),
+    ];
+    let total = 0;
+    for (const where of parts) {
+        const result = await coll.where(where).count();
+        total += result.total || 0;
+    }
+    return total;
+}
+
 async function getMyRank(openid, data) {
     const mode = data.mode || 'stage';
     if (ALLOWED_MODES.indexOf(mode) < 0) {
@@ -310,10 +322,9 @@ async function getMyRank(openid, data) {
             return { success: true, myRank: null, myScore: null, hasRecord: false };
         }
         const myScore = my.data[0].score || 0;
-        const better = await coll.where({ mode, score: _.gt(myScore) }).count();
         return {
             success: true,
-            myRank: better.total + 1,
+            myRank: await countBetter(coll, { mode }, my.data[0]) + 1,
             myScore,
             clearedCount: typeof my.data[0].clearedCount === 'number'
                 ? my.data[0].clearedCount
@@ -342,15 +353,6 @@ async function getReplay(openid, data) {
     }
 
     return { success: false, errMsg: 'replay not found' };
-}
-
-function periodStart(period) {
-    const now = new Date();
-    if (period === 'week') {
-        const day = now.getDay() || 7;
-        return new Date(now.getFullYear(), now.getMonth(), now.getDate() - day + 1).getTime();
-    }
-    return new Date(now.getFullYear(), now.getMonth(), 1).getTime();
 }
 
 function defaultName(openid) {

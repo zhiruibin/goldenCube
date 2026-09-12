@@ -9,6 +9,8 @@ const goldenBlock = require('./golden-block-manager');
 
 const STAT_KEYS = {
     shareCount: 'gc_stat_share_count',
+    friendShareCount: 'gc_stat_friend_share_count',
+    timelineShareCount: 'gc_stat_timeline_share_count',
     inviteCount: 'gc_stat_invite_count',
     challengeCreateCount: 'gc_stat_challenge_create',
     challengeRespondCount: 'gc_stat_challenge_respond',
@@ -48,7 +50,12 @@ class AchievementManager {
 
     getStat(key) {
         try {
-            return wx.getStorageSync(STAT_KEYS[key]) || 0;
+            const value = wx.getStorageSync(STAT_KEYS[key]);
+            // 老版本只有 shareCount；首次升级时把它视为好友分享进度，避免已分享用户丢失成就。
+            if (key === 'friendShareCount' && (value === '' || value == null)) {
+                return wx.getStorageSync(STAT_KEYS.shareCount) || 0;
+            }
+            return value || 0;
         } catch (e) {
             return 0;
         }
@@ -78,8 +85,18 @@ class AchievementManager {
     reportTSpin() { return []; }
     reportUseAllPieces() { return []; }
 
+    reportFriendShare() {
+        this.addStat('friendShareCount', 1);
+        return this.checkAll();
+    }
+
+    /** 兼容现有页面内的 wx.shareAppMessage 调用。 */
     reportShare() {
-        this.addStat('shareCount', 1);
+        return this.reportFriendShare();
+    }
+
+    reportTimelineShare() {
+        this.addStat('timelineShareCount', 1);
         return this.checkAll();
     }
 
@@ -326,7 +343,10 @@ class AchievementManager {
             case 'unlock_count':
                 return this._countUnlockedStages() >= (c.count || 0);
             case 'share':
-                return this.getStat('shareCount') >= (c.count || 1);
+            case 'friend_share':
+                return this.getStat('friendShareCount') >= (c.count || 1);
+            case 'timeline_share':
+                return this.getStat('timelineShareCount') >= (c.count || 1);
             case 'invite_friend':
                 return this.getStat('inviteCount') >= (c.count || 1);
             case 'challenge_create':
@@ -403,7 +423,10 @@ class AchievementManager {
             case 'unlock_count':
                 return { current: this._countUnlockedStages(), target: c.count || 0 };
             case 'share':
-                return { current: this.getStat('shareCount'), target: c.count || 1 };
+            case 'friend_share':
+                return { current: this.getStat('friendShareCount'), target: c.count || 1 };
+            case 'timeline_share':
+                return { current: this.getStat('timelineShareCount'), target: c.count || 1 };
             case 'invite_friend':
                 return { current: this.getStat('inviteCount'), target: c.count || 1 };
             case 'challenge_create':

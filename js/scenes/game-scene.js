@@ -510,6 +510,7 @@ class GameScene {
 
         // 渲染棋盘
         if (this._boardRenderer) {
+            this._renderBoardCabinet(ctx);
             const board = (this._engine.getVisibleBoardForRender && this._engine.getVisibleBoardForRender())
                 || this._engine.getVisibleBoard();
             this._boardRenderer.render(ctx, board);
@@ -594,11 +595,11 @@ class GameScene {
         const safeArea = sys.safeArea || {};
         const bottomSafe = (safeArea.bottom && H > safeArea.bottom) ? (H - safeArea.bottom) : 0;
 
-        // 侧边信息面板固定宽度
-        this._panelWidth = Math.min(90, Math.floor(W * 0.22));
+        // 侧边信息面板收窄，为棋盘金色机台外框留出独立呼吸空间
+        this._panelWidth = Math.min(84, Math.floor(W * 0.20));
 
-        // 方向键按钮半径
-        this._dirBtnRadius = Math.min(28, Math.floor(W * 0.07));
+        // 方向键/操作钮：直径约为屏宽 15%，最大 60px（旧值约 14%、最大 56px）
+        this._dirBtnRadius = Math.min(30, Math.floor(W * 0.075));
         this._controlBottomPadding = 30 + bottomSafe;
         const controlGap = 20;          // 棋盘与控制区（第一行按钮）之间的间距
         const rowGap = 56;              // 第一行按钮与第二行按钮之间的纵向间距
@@ -619,7 +620,8 @@ class GameScene {
         // 两行按钮高度：第一行半径 + 行间距 + 第二行半径
         const dirAreaH = this._dirBtnRadius + rowGap + this._dirBtnRadius;
         const leftMargin = 15;
-        const panelGap = 10;
+        // 棋盘机台向外扩 6px，面板向外扩 3px；12px 逻辑间距可保证两者不重叠
+        const panelGap = 12;
 
         // 棋盘可用高度 = 屏幕高 - 顶部边距 - 棋盘与按钮间距 - 控制区高度 - 底部padding
         const availH = H - topMargin - controlGap - dirAreaH - this._controlBottomPadding;
@@ -948,7 +950,8 @@ class GameScene {
         // ---- 统一按钮参数 ----
         const r = this._dirBtnRadius;       // 方向键半径
         const btnSize = r * 2;              // 按钮直径 = 方向键直径
-        const margin = 20;                  // 左右边距
+        // 放大按钮后同步收窄左右边距，保证窄屏六钮仍有正间距、不发生重叠
+        const margin = Math.max(8, Math.floor(W * 0.025));
         // ---- 横向等间距计算 ----
         const gap = (W - 2 * margin - 6 * btnSize) / 5;
         // ---- 六个按钮的 Y 坐标 ----
@@ -1035,21 +1038,66 @@ class GameScene {
             onClick: () => this._rotate(),
         }));
 
-        // 暂停：独立圆形石钮
+        // 暂停：放在右侧信息栏底部空白区（与棋盘底边保留 10px）
+        const pauseSize = 40;
+        const sidePanelH = this._cellSize * 20;
         this._buttons.push(new Button({
-            x: this._boardX + 8,
-            y: this._boardY + 8,
-            w: 40,
-            h: 40,
+            x: this._sideX + (this._panelWidth - pauseSize) / 2,
+            y: this._boardY + sidePanelH - pauseSize - 10,
+            w: pauseSize,
+            h: pauseSize,
             icon: 'pause',
             color: '#6b5a48',
             skin: 'btnCircleBrown',
-            radius: 20,
+            radius: pauseSize / 2,
             onClick: () => this._togglePause(),
         }));
     }
 
     // ==================== 侧边信息渲染 ====================
+
+    /** 棋盘外层街机机台：与商品棋盘内部样式分离。 */
+    _renderBoardCabinet(ctx) {
+        const x = this._boardX;
+        const y = this._boardY;
+        const w = this._cellSize * 10;
+        const h = this._cellSize * 20;
+        const bezel = 6;
+
+        ctx.save();
+        ctx.fillStyle = 'rgba(0,0,0,0.42)';
+        this._roundRect(ctx, x - bezel + 2, y - bezel + 5, w + bezel * 2, h + bezel * 2, 8);
+        ctx.fill();
+
+        let bezelGradient = null;
+        try {
+            bezelGradient = ctx.createLinearGradient(x - bezel, y - bezel, x + w + bezel, y + h + bezel);
+            bezelGradient.addColorStop(0, '#38213f');
+            bezelGradient.addColorStop(0.5, '#1d1429');
+            bezelGradient.addColorStop(1, '#120d1d');
+        } catch (e) { bezelGradient = null; }
+        ctx.fillStyle = bezelGradient || '#24182d';
+        this._roundRect(ctx, x - bezel, y - bezel, w + bezel * 2, h + bezel * 2, 8);
+        ctx.fill();
+        ctx.shadowColor = 'rgba(255,190,45,0.30)';
+        ctx.shadowBlur = 7;
+        ctx.strokeStyle = 'rgba(255,217,90,0.68)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        ctx.fillStyle = '#b88732';
+        const rivets = [
+            [x - 3, y - 3], [x + w + 3, y - 3],
+            [x - 3, y + h + 3], [x + w + 3, y + h + 3],
+        ];
+        for (const p of rivets) {
+            ctx.beginPath();
+            ctx.arc(p[0], p[1], 1.4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
 
     _renderSideInfo(ctx) {
         const W = GameGlobal.game.width;
@@ -1064,11 +1112,11 @@ class GameScene {
         // 面板背景（暖石半透明，贴合矿洞）
         const panelH = this._cellSize * 20;
         ctx.fillStyle = 'rgba(36, 24, 14, 0.58)';
-        this._roundRect(ctx, x - 5, y - 5, pw + 10, panelH + 10, 8);
+        this._roundRect(ctx, x - 3, y - 5, pw + 6, panelH + 10, 8);
         ctx.fill();
         ctx.strokeStyle = 'rgba(255, 200, 120, 0.22)';
         ctx.lineWidth = 1;
-        this._roundRect(ctx, x - 5, y - 5, pw + 10, panelH + 10, 8);
+        this._roundRect(ctx, x - 3, y - 5, pw + 6, panelH + 10, 8);
         ctx.stroke();
 
         let curY = y + 8;

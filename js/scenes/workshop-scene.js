@@ -19,6 +19,7 @@ const { drawGarbageLayoutCell } = require('../render/garbage-cell');
 const { drawLayoutBoardTiles } = require('../render/board-tiles');
 const { adManager, isRewardedVideoConfigured } = require('../../utils/ad-manager');
 const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
+const { layoutTabRow } = require('../widgets/tab-layout');
 
 const STATUS_TABS = [
     { id: 'draft', label: '待自通', status: workshop.STATUS.draft },
@@ -163,14 +164,13 @@ class WorkshopScene {
         const tabY = metaY + 28;
 
         // Tab：与广场一致，约 2:1 + contain
-        const cellW = (W - side * 2 - gap * 3) / 4;
+        const tabs = layoutTabRow(W, STATUS_TABS.length, { gap: 0, side, height: 46 });
+        const tabW = tabs.width;
         const tabH = 46;
-        const tabW = Math.min(cellW, Math.round(tabH / 0.42));
         STATUS_TABS.forEach((t, i) => {
             const active = this._mineSub === t.id;
-            const cellX = side + i * (cellW + gap);
             this._buttons.push(new Button({
-                x: cellX + (cellW - tabW) / 2,
+                x: tabs.xAt(i),
                 y: tabY,
                 w: tabW,
                 h: tabH,
@@ -189,32 +189,39 @@ class WorkshopScene {
             }));
         });
 
-        // 底部三键并排：均约 2:1 contain（返回槽位不够铺 4:1 金条）
+        // 底部三键连续排列：创建/扩槽保持原可见尺寸，返回扩宽填满左侧空间
         const bottomH = 52;
         const bottomY = H - bottomH - 18;
         const backSlotW = Math.min(110, Math.round(W * 0.26));
         const expandSlotW = Math.min(110, Math.round(W * 0.26));
         const createSlotW = Math.max(100, W - side * 2 - backSlotW - expandSlotW - gap * 2);
         const idealW = Math.round(bottomH / 0.42);
-        const backW = Math.min(backSlotW, idealW);
-        const createW = Math.min(createSlotW, idealW);
-        const expandW = Math.min(expandSlotW, idealW);
+        const cardVisibleMaxW = bottomH * 2;
+        const createW = Math.min(createSlotW, idealW, cardVisibleMaxW);
+        const expandW = Math.min(expandSlotW, idealW, cardVisibleMaxW);
+        const createExpandGap = 5;
+        const backCreateGap = 10;
+        const expandX = W - side - expandW;
+        const createX = expandX - createExpandGap - createW;
+        const backX = side;
+        const backW = createX - backCreateGap - backX;
+        const backH = bottomH - 6;
 
         this._buttons.push(new Button({
-            x: side + (backSlotW - backW) / 2,
-            y: bottomY,
+            x: backX,
+            y: bottomY + (bottomH - backH) / 2,
             w: backW,
-            h: bottomH,
+            h: backH,
             text: '返回',
-            color: '#5a4534',
-            skin: 'cardStageBrown',
-            skinMode: 'contain',
-            labelColor: '#ffffff',
-            fontScale: 0.82,
+            color: '#6b4a2e',
+            skin: 'btnBarBrown',
+            skinMode: 'stretch',
+            labelColor: '#fff8ef',
+            fontScale: 0.92,
             onClick: () => GameGlobal.game.sceneManager.back(),
         }));
         this._buttons.push(new Button({
-            x: side + backSlotW + gap + (createSlotW - createW) / 2,
+            x: createX,
             y: bottomY,
             w: createW,
             h: bottomH,
@@ -231,7 +238,7 @@ class WorkshopScene {
             ? '已满'
             : ('扩槽' + cost + '金');
         this._buttons.push(new Button({
-            x: side + backSlotW + gap + createSlotW + gap + (expandSlotW - expandW) / 2,
+            x: expandX,
             y: bottomY,
             w: expandW,
             h: bottomH,

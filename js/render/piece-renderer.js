@@ -42,6 +42,7 @@ class PieceRenderer {
         }
         this._glow = !!skin.glow;
         this._shimmer = !!skin.shimmer;
+        this._softGlass = !!skin.softGlass;
         this._texture = skin.texture || null;
         this._transparency = (typeof skin.transparency === 'number' && skin.transparency >= 0 && skin.transparency <= 1)
             ? skin.transparency : 1;
@@ -141,18 +142,22 @@ class PieceRenderer {
         }
 
         // 主体填充：渐变或纯色
+        let faceStyle = color;
         if (gradColors && gradColors.length >= 2) {
             let grad;
             try {
-                grad = ctx.createLinearGradient(x, y, x + size, y + size);
+                grad = this._softGlass
+                    ? ctx.createLinearGradient(0, y, 0, y + size)
+                    : ctx.createLinearGradient(x, y, x + size, y + size);
                 grad.addColorStop(0, gradColors[0]);
                 grad.addColorStop(1, gradColors[1]);
             } catch (e) {
                 grad = null;
             }
-            ctx.fillStyle = grad || color;
+            faceStyle = grad || color;
+            ctx.fillStyle = faceStyle;
         } else {
-            ctx.fillStyle = color;
+            ctx.fillStyle = faceStyle;
         }
 
         // 发光效果（霓虹）
@@ -174,14 +179,22 @@ class PieceRenderer {
         }
 
         // 高光（左上）
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-        ctx.fillRect(x + inset, y + inset, w, 2);
-        ctx.fillRect(x + inset, y + inset, 2, w);
+        ctx.fillStyle = this._softGlass ? 'rgba(255, 255, 255, 0.24)' : 'rgba(255, 255, 255, 0.25)';
+        const lightW = this._softGlass ? 1 : 2;
+        ctx.fillRect(x + inset, y + inset, w, lightW);
+        ctx.fillRect(x + inset, y + inset, lightW, w);
 
         // 阴影（右下）
         ctx.fillStyle = shadow;
-        ctx.fillRect(x + inset, y + size - inset - 2, w, 2);
-        ctx.fillRect(x + size - inset - 2, y + inset, 2, w);
+        const shadeW = this._softGlass ? 1 : 2;
+        ctx.fillRect(x + inset, y + size - inset - shadeW, w, shadeW);
+        ctx.fillRect(x + size - inset - shadeW, y + inset, shadeW, w);
+
+        if (this._softGlass) {
+            ctx.strokeStyle = 'rgba(28, 17, 38, 0.48)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x + inset + 0.5, y + inset + 0.5, w - 1, w - 1);
+        }
 
         // 闪耀光泽（黄金 shimmer）
         if (this._shimmer) {

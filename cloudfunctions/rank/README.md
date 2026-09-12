@@ -17,7 +17,7 @@
    - 等待部署完成（首次部署会自动安装 `wx-server-sdk`）。
 
 4. **创建数据库集合**
-   - 在云开发控制台 →「数据库」→ 新建集合，集合名必须为 `rankings`。
+   - 新建 `rankings`：生涯总榜，兼容旧数据。
    - 权限设置选择「所有用户可读，仅创建者可读写」。
      - 说明：全服排行榜需要所有玩家都能读到他人记录，因此不能选「仅创建者可读写」；
      - 云函数使用管理端权限读写，不受集合权限限制，因此安全性由云函数保证。
@@ -47,12 +47,15 @@
 | `detail` | object/null | 游戏详情（消行、T-Spin 等） |
 | `nickname` | string | 昵称（可为空，前端显示默认名） |
 | `avatarUrl` | string | 头像 URL（可为空） |
-| `updatedAt` | number | 最近写入时间（含资料回写，**不**作为周/月榜依据） |
-| `achievedAt` | number | 破纪录时间；周/月榜按此字段过滤 |
+| `updatedAt` | number | 最近写入时间（含资料回写） |
+| `achievedAt` | number | 当前生涯最佳的达成时间，用于完全同分时稳定排序 |
 
 **写入策略**：每个用户每个模式仅保留一条记录；仅当本次分数高于历史最高分时才更新分数与 `achievedAt`；仅改昵称/头像时不得刷新 `achievedAt`。
 
-**索引建议（周/月榜）**：`mode` + `achievedAt` + `score`；总榜同分排序：`mode` + `score` + `updatedAt`。
+**索引（必须）**：
+
+- `rankings`：`mode` + `clearedCount DESC` + `linesSum ASC` + `piecesSum ASC` + `timeSum ASC` + `achievedAt ASC`
+为了计算精确的「我的名次」，还需以 `mode` 开头，依次追加 `clearedCount`、`linesSum`、`piecesSum`、`timeSum` 建立计数索引。
 
 **旧数据**：缺 `achievedAt` 的记录会在下次 `submitScore`（含纯资料回写）时用历史 `updatedAt`/`createdAt` 回填，不会写成当前时间。
 
@@ -82,16 +85,13 @@
   "action": "getRankList",
   "data": {
     "mode": "stage",
-    "type": "all",
-    "period": "total",
-    "page": 1,
-    "pageSize": 20
+    "type": "all"
   }
 }
 ```
 
 - `type`: `all`（全服）| `friend`（好友，需 `friendOpenIds`）
-- `period`: `total`（总榜）| `week`（周榜，本周一 00:00 起按 `achievedAt`）| `month`（月榜，本月 1 日起按 `achievedAt`）
+- 全服榜固定只返回生涯 Top 20，不分页、不设周榜/月榜。
 - 返回：`{ success, list, total, page, pageSize, myRank, myScore }`
 
 ### 3. `getMyRank` 查询我的排名
@@ -111,7 +111,6 @@
 ## 五、常见问题
 
 - **调用云函数报 `env not found`**：`CLOUD_ENV` 填错或未开通对应环境，检查 `utils/cloud-config.js`。
-- **查询为空但已提交分数**：确认集合权限允许读取，或确认提交的 `mode` 与查询的 `mode` 一致；周/月榜需记录已有 `achievedAt` 且落在本周期内。
-- **周/月榜被改昵称刷进来**：属旧 bug，须部署含 `achievedAt` 的本云函数，并建索引 `mode + achievedAt + score`。
+- **查询为空但已提交分数**：确认 `rankings` 集合和上述复合索引已创建。
 - **真机好友榜为空**：好友榜需要双方都玩过且授权「好友关系」，且需在开放数据域中确认 `openDataContext/` 已正确配置（`game.json` 的 `openDataContext` 字段）。
 - **本地开发者工具无好友数据**：开发者工具不支持 `wx.getFriendCloudStorage` 返回真实好友，属正常现象，真机预览可见。

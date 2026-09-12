@@ -108,6 +108,7 @@ class BoardRenderer {
         }
         const skin = boardSkins.find((s) => s.id === skinId) || boardSkins[0];
         this._skin = skin;
+        this._isDefaultBoard = !skin || skin.id === 'default';
         const style = skin.style || {};
         this._bg = style.background || '#161d30';
         this._grid = style.gridColor || 'rgba(255, 255, 255, 0.04)';
@@ -149,6 +150,7 @@ class BoardRenderer {
         }
         this._blockGlow = !!skin.glow;
         this._blockShimmer = !!skin.shimmer;
+        this._blockSoftGlass = !!skin.softGlass;
         this._blockTexture = skin.texture || null;
         this._blockTransparency = (typeof skin.transparency === 'number' && skin.transparency >= 0 && skin.transparency <= 1)
             ? skin.transparency : 1;
@@ -304,7 +306,46 @@ class BoardRenderer {
         const bw = cs * this.cols;
         const bh = cs * this.rows;
 
-        if (this._gridMode === 'tiles' && this._tileStyle) {
+        if (this._isDefaultBoard) {
+            let glass = null;
+            try {
+                glass = ctx.createRadialGradient(
+                    x + bw * 0.48, y + bh * 0.42, cs,
+                    x + bw * 0.48, y + bh * 0.42, bh * 0.66
+                );
+                glass.addColorStop(0, '#172238');
+                glass.addColorStop(0.58, '#0d1424');
+                glass.addColorStop(1, '#060912');
+            } catch (e) { glass = null; }
+            ctx.fillStyle = glass || '#0d1424';
+            ctx.fillRect(x, y, bw, bh);
+
+            ctx.save();
+            ctx.globalAlpha = 0.055;
+            ctx.fillStyle = '#7fdfff';
+            for (let sy = y + 2; sy < y + bh; sy += 5) ctx.fillRect(x, sy, bw, 1);
+            ctx.restore();
+
+            const gridLineWidth = Math.max(1, this._gridLineWidth || 1);
+            for (let r = 0; r <= this.rows; r++) {
+                ctx.strokeStyle = r > 0 && r < this.rows && r % 5 === 0
+                    ? 'rgba(126,214,255,0.13)' : this._grid;
+                ctx.lineWidth = gridLineWidth;
+                ctx.beginPath();
+                ctx.moveTo(x, y + r * cs);
+                ctx.lineTo(x + bw, y + r * cs);
+                ctx.stroke();
+            }
+            for (let c = 0; c <= this.cols; c++) {
+                ctx.strokeStyle = c > 0 && c < this.cols && c % 5 === 0
+                    ? 'rgba(255,211,92,0.12)' : this._grid;
+                ctx.lineWidth = gridLineWidth;
+                ctx.beginPath();
+                ctx.moveTo(x + c * cs, y);
+                ctx.lineTo(x + c * cs, y + bh);
+                ctx.stroke();
+            }
+        } else if (this._gridMode === 'tiles' && this._tileStyle) {
             const layer = this._ensureTileLayer(bw, bh, cs);
             if (layer) {
                 ctx.drawImage(
@@ -358,7 +399,7 @@ class BoardRenderer {
             }
         }
 
-        if (this._gridMode !== 'tiles') {
+        if (!this._isDefaultBoard && this._gridMode !== 'tiles') {
             ctx.strokeStyle = this._border;
             ctx.lineWidth = 2;
             ctx.strokeRect(x - 1, y - 1, bw + 2, bh + 2);
@@ -565,18 +606,22 @@ class BoardRenderer {
         }
 
         // 主体填充：渐变或纯色
+        let faceStyle = color;
         if (gradColors && gradColors.length >= 2) {
             let grad;
             try {
-                grad = ctx.createLinearGradient(x, y, x + size, y + size);
+                grad = this._blockSoftGlass
+                    ? ctx.createLinearGradient(0, y, 0, y + size)
+                    : ctx.createLinearGradient(x, y, x + size, y + size);
                 grad.addColorStop(0, gradColors[0]);
                 grad.addColorStop(1, gradColors[1]);
             } catch (e) {
                 grad = null;
             }
-            ctx.fillStyle = grad || color;
+            faceStyle = grad || color;
+            ctx.fillStyle = faceStyle;
         } else {
-            ctx.fillStyle = color;
+            ctx.fillStyle = faceStyle;
         }
 
         // 发光效果（霓虹）
@@ -598,14 +643,22 @@ class BoardRenderer {
         }
 
         // 高光（左上）
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-        ctx.fillRect(x + inset, y + inset, w, 2);
-        ctx.fillRect(x + inset, y + inset, 2, w);
+        ctx.fillStyle = this._blockSoftGlass ? 'rgba(255, 255, 255, 0.24)' : 'rgba(255, 255, 255, 0.2)';
+        const lightW = this._blockSoftGlass ? 1 : 2;
+        ctx.fillRect(x + inset, y + inset, w, lightW);
+        ctx.fillRect(x + inset, y + inset, lightW, w);
 
         // 阴影（右下）
         ctx.fillStyle = shadow;
-        ctx.fillRect(x + inset, y + size - inset - 2, w, 2);
-        ctx.fillRect(x + size - inset - 2, y + inset, 2, w);
+        const shadeW = this._blockSoftGlass ? 1 : 2;
+        ctx.fillRect(x + inset, y + size - inset - shadeW, w, shadeW);
+        ctx.fillRect(x + size - inset - shadeW, y + inset, shadeW, w);
+
+        if (this._blockSoftGlass) {
+            ctx.strokeStyle = 'rgba(28, 17, 38, 0.48)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x + inset + 0.5, y + inset + 0.5, w - 1, w - 1);
+        }
 
         // 闪耀光泽（黄金 shimmer）
         if (this._blockShimmer) {

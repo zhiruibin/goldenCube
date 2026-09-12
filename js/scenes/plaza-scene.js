@@ -24,6 +24,7 @@ const plazaWall = require('../render/plaza-wall-fx');
 const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
 const endless = require('../../utils/endless-manager');
 const { roundRectPath } = require('../render/board-tiles');
+const { layoutTabRow } = require('../widgets/tab-layout');
 
 const PLAZA_SORT = [
     { id: 'official', label: '官方' },
@@ -221,7 +222,7 @@ class PlazaScene {
         const H = GameGlobal.game.height;
         const top = this._getTopInset();
         const side = 14;
-        const gap = 10;
+        const gap = 0;
         this._buttons = [];
 
         const titleY = top + 6;
@@ -230,14 +231,13 @@ class PlazaScene {
         const tabY = hintY + 18;
 
         // Tab：按约 2:1 等比框 + contain，避免石砖皮被横向压扁
-        const cellW = (W - side * 2 - gap * 3) / 4;
+        const tabs = layoutTabRow(W, PLAZA_SORT.length, { gap, side, height: 46 });
+        const tabW = tabs.width;
         const tabH = 46;
-        const tabW = Math.min(cellW, Math.round(tabH / 0.42));
         PLAZA_SORT.forEach((t, i) => {
             const active = this._plazaSort === t.id;
-            const cellX = side + i * (cellW + gap);
             this._buttons.push(new Button({
-                x: cellX + (cellW - tabW) / 2,
+                x: tabs.xAt(i),
                 y: tabY,
                 w: tabW,
                 h: tabH,

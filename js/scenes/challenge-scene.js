@@ -8,6 +8,7 @@ const challengeUi = require('../../utils/challenge-ui');
 const challengeShareCard = require('../../utils/challenge-share-card');
 const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
 const { drawThemeBackground, drawThemeImageContain, drawThemeButtonSkin } = require('../theme/theme-images');
+const { layoutTabRow } = require('../widgets/tab-layout');
 const { fillNightBackground, drawBrandTitle } = require('../theme/arcade-night');
 
 const PENDING_CHALLENGES_KEY = 'gc_pending_challenges';
@@ -243,14 +244,13 @@ class ChallengeScene {
 
     this._renderTabs(ctx);
     this._renderList(ctx);
-    this._renderBottomBar(ctx);
-
-    for (const btn of this._buttons) {
-      btn.render(ctx);
-    }
-
     if (this._sheetOpen) {
       this._renderSheet(ctx);
+    } else {
+      this._renderBottomBar(ctx);
+      for (const btn of this._buttons) {
+        btn.render(ctx);
+      }
     }
 
     this._renderToast(ctx);
@@ -263,13 +263,13 @@ class ChallengeScene {
       { tab: 'incoming', label: '待我应战' },
       { tab: 'completed', label: '已完成' }
     ];
-    const gap = 8;
-    const tabH = 42;
-    const tabW = Math.min(110, Math.floor((W - 32 - gap * 2) / 3));
+    const layout = layoutTabRow(W, tabs.length, { gap: 0, side: 16, height: 42, maxWidth: 110 });
+    const tabH = layout.height;
+    const tabW = layout.width;
     const tabY = this._topInset() + 52;
-    const totalW = tabW * 3 + gap * 2;
-    let x = (W - totalW) / 2;
-    for (const t of tabs) {
+    for (let i = 0; i < tabs.length; i++) {
+      const t = tabs[i];
+      const x = layout.xAt(i);
       const selected = this._tab === t.tab;
       const skin = selected ? 'cardStageGold' : 'cardStageBrown';
       const cx = x + tabW / 2;
@@ -292,7 +292,6 @@ class ChallengeScene {
       ctx.shadowBlur = 0;
       ctx.shadowOffsetY = 0;
       this._tabAreas.push({ x, y: tabY, w: tabW, h: tabH, tab: t.tab });
-      x += tabW + gap;
     }
   }
 
@@ -325,7 +324,7 @@ class ChallengeScene {
 
   _renderSheet(ctx) {
     this._modeAreas = [];
-    const sheetH = 220;
+    const sheetH = 202;
     const sheetY = H - sheetH;
     this._sheetY = sheetY;
     ctx.fillStyle = 'rgba(10, 7, 4, 0.62)';
@@ -346,8 +345,8 @@ class ChallengeScene {
     ctx.fillText('发起新挑战', W / 2, sheetY + 24);
 
     // 右上角关闭
-    const closeSize = 30;
-    const closeCx = W - 28;
+    const closeSize = 28;
+    const closeCx = W - 26;
     const closeCy = sheetY + 24;
     const closeDrawn = drawThemeImageContain(ctx, 'btnCircleRose', closeCx, closeCy, closeSize, closeSize);
     if (!closeDrawn.drawn) {
@@ -364,36 +363,33 @@ class ChallengeScene {
       h: closeSize + 8,
     };
 
-    const gridW = Math.min(300, W * 0.8);
-    const gap = 12;
+    const gridW = Math.min(300, W - 36);
+    const gap = 10;
     const cardW = gridW;
-    const cardH = 54;
+    const cardH = 58;
     const x0 = (W - gridW) / 2;
-    const y0 = sheetY + 56;
+    const y0 = sheetY + 52;
     const modes = [
-      { mode: 'stageSelect', label: '闯关选关发起', hint: '在已通关关卡上点「挑战」', skin: 'cardStageAmber' },
-      { mode: 'plaza', label: '去关卡广场', hint: '在已通关的广场关点「约好友来战」', skin: 'cardStageGold' },
+      { mode: 'stageSelect', label: '闯关选关发起', hint: '通关后，在关卡结算页发起挑战', skin: 'btnBarAmber' },
+      { mode: 'plaza', label: '去关卡广场', hint: '通关后，邀请好友挑战同一关', skin: 'btnBarGold' },
     ];
     for (let i = 0; i < modes.length; i++) {
       const m = modes[i];
       const x = x0;
       const y = y0 + i * (cardH + gap);
-      const cx = x + cardW / 2;
-      const cy = y + cardH / 2;
-      const drawn = drawThemeImageContain(ctx, m.skin, cx, cy, cardW, cardH);
-      if (!drawn.drawn) {
+      if (!drawThemeButtonSkin(ctx, m.skin, x, y, cardW, cardH)) {
         ctx.fillStyle = '#c9a227';
         this._roundRect(ctx, x, y, cardW, cardH, 10);
         ctx.fill();
       }
       ctx.fillStyle = '#241408';
       ctx.font = 'bold 15px sans-serif';
-      ctx.textAlign = 'center';
+      ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillText(m.label, cx, y + 18);
-      ctx.font = '12px sans-serif';
+      ctx.fillText(m.label, x + 18, y + 19);
+      ctx.font = '11px sans-serif';
       ctx.fillStyle = 'rgba(36, 20, 8, 0.72)';
-      ctx.fillText(m.hint, cx, y + 36);
+      ctx.fillText(m.hint, x + 18, y + 40);
       this._modeAreas.push({ mode: m.mode, x, y, w: cardW, h: cardH });
     }
   }

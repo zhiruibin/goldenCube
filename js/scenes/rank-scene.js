@@ -15,6 +15,7 @@ const { achievementManager } = require('../../utils/achievement-manager');
 const goldenBlock = require('../../utils/golden-block-manager');
 const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
 const { drawThemeBackground, drawThemeImageContain } = require('../theme/theme-images');
+const { layoutTabRow } = require('../widgets/tab-layout');
 const { fillNightBackground, drawBrandTitle } = require('../theme/arcade-night');
 
 let lastViewState = null;
@@ -27,7 +28,6 @@ class RankScene {
         this._total = 0;
         this._tab = 'friend'; // 'friend' | 'global'
         this._mode = 'stage';
-        this._period = 'total';
         this._loading = false;
         this._error = '';
         this._offline = false;
@@ -54,7 +54,6 @@ class RankScene {
         this._suppressTap = false;
 
         this._modeAreas = [];
-        this._periodAreas = [];
         this._tabAreas = [];
 
         this._replayBtns = [];
@@ -67,7 +66,6 @@ class RankScene {
         const s = lastViewState || {};
         this._tab = s.tab || 'friend';
         this._mode = 'stage';
-        this._period = s.period || 'total';
         this._scrollY = s.scrollY || 0;
         if (typeof s.myScore === 'number' && s.myScore > 0) {
             this._myScore = s.myScore;
@@ -81,7 +79,6 @@ class RankScene {
         lastViewState = {
             tab: this._tab,
             mode: this._mode,
-            period: this._period,
             scrollY: this._scrollY,
             myScore: this._myScore,
         };
@@ -115,11 +112,6 @@ class RankScene {
 
         // 闯关榜说明（无 classic/timed/marathon 切换）
         this._renderStageHint(ctx);
-
-        // 周期切换（全服榜：总榜/周榜/月榜）
-        if (this._tab === 'global') {
-            this._renderPeriodSelect(ctx);
-        }
 
         // 列表区
         const listTop = this._listTop();
@@ -257,8 +249,17 @@ class RankScene {
         ctx.clip();
 
         this._replayBtns = [];
+        let displayedRank = 0;
+        let previous = null;
         for (let i = 0; i < this._rankData.length; i++) {
             const item = this._rankData[i];
+            const tied = previous
+                && previous.clearedCount === item.clearedCount
+                && previous.linesSum === item.linesSum
+                && previous.piecesSum === item.piecesSum
+                && previous.timeSum === item.timeSum;
+            if (!tied) displayedRank = i + 1;
+            previous = item;
             const y = top + i * itemH - this._scrollY;
             if (y + itemH < top || y > bottom) continue;
 
@@ -278,10 +279,10 @@ class RankScene {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillStyle = '#ffffff';
-            if (i < 3) {
-                IconRenderer.draw(ctx, 'medal', listX + 30, y + itemH / 2 - 2, 26, medalColors[i]);
+            if (displayedRank <= 3) {
+                IconRenderer.draw(ctx, 'medal', listX + 30, y + itemH / 2 - 2, 26, medalColors[displayedRank - 1]);
             } else {
-                ctx.fillText(String(i + 1), listX + 30, y + itemH / 2 - 2);
+                ctx.fillText(String(displayedRank), listX + 30, y + itemH / 2 - 2);
             }
 
             // 微信头像（有 avatarUrl 时绘制；否则仅昵称）
@@ -332,7 +333,10 @@ class RankScene {
             ctx.textAlign = 'right';
             ctx.fillStyle = '#FFC857';
             ctx.font = 'bold 16px sans-serif';
-            ctx.fillText(cleared + ' 关', right - 4, y + itemH / 2 - 2);
+            ctx.fillText(cleared + ' 关', right - 4, y + itemH / 2 - 10);
+            ctx.fillStyle = 'rgba(255,236,210,0.64)';
+            ctx.font = '11px sans-serif';
+            ctx.fillText('消行 ' + (item.linesSum || 0), right - 4, y + itemH / 2 + 10);
         }
 
         ctx.restore();
@@ -374,6 +378,14 @@ class RankScene {
                     rightText = '同关数 · 比效率';
                 }
             }
+        } else if (typeof this._myRank === 'number' && this._myRank > 20 && this._rankData.length >= 20) {
+            const threshold = this._rankData[19];
+            const thresholdCleared = threshold && typeof threshold.clearedCount === 'number'
+                ? threshold.clearedCount : decodeClearedCount((threshold && threshold.score) || 0);
+            const mine = this._myCleared != null ? this._myCleared : decodeClearedCount(this._myScore || 0);
+            rightText = thresholdCleared > mine
+                ? `距Top20还差 ${thresholdCleared - mine} 关`
+                : '同关数 · 比效率进Top20';
         } else if (this._myRank === 1) {
             rightText = '当前第一';
         }
@@ -383,11 +395,11 @@ class RankScene {
 
     _renderTabs(ctx) {
         const W = GameGlobal.game.width;
-        const tabW = 110;
-        const tabH = 42;
+        const layout = layoutTabRow(W, 2, { gap: 0, side: 16, height: 42, maxWidth: 110 });
+        const tabW = layout.width;
+        const tabH = layout.height;
         const tabY = this._topInset() + 50;
-        const gap = 10;
-        const startX = W / 2 - tabW - gap / 2;
+        const startX = layout.startX;
 
         const drawTab = (x, label, active) => {
             const skin = active ? 'cardStageGold' : 'cardStageBrown';
@@ -413,8 +425,8 @@ class RankScene {
         };
 
         drawTab(startX, '好友排行', this._tab === 'friend');
-        const globalX = startX + tabW + gap;
-        drawTab(globalX, '全服排行', this._tab === 'global');
+        const globalX = layout.xAt(1);
+        drawTab(globalX, '全服Top20', this._tab === 'global');
 
         this._tabAreas = [
             { x: startX, y: tabY, w: tabW, h: tabH, tab: 'friend' },
@@ -431,45 +443,12 @@ class RankScene {
         ctx.font = '13px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('闯关榜 · 通关数优先，同则比消行效率', W / 2, y + 15);
-    }
-
-    /** 渲染周期切换（全服榜） */
-    _renderPeriodSelect(ctx) {
-        const W = GameGlobal.game.width;
-        const names = [['total', '总榜'], ['week', '周榜'], ['month', '月榜']];
-        const itemW = 72;
-        const itemH = 34;
-        const gap = 8;
-        const totalW = names.length * itemW + (names.length - 1) * gap;
-        const startX = (W - totalW) / 2;
-        const y = this._topInset() + 130;
-
-        this._periodAreas = [];
-        for (let i = 0; i < names.length; i++) {
-            const x = startX + i * (itemW + gap);
-            const active = this._period === names[i][0];
-            const skin = active ? 'cardStageAmber' : 'cardStageBrown';
-            const drawn = drawThemeImageContain(
-                ctx, skin, x + itemW / 2, y + itemH / 2, itemW, itemH
-            );
-            if (!drawn.drawn) {
-                ctx.fillStyle = active ? '#c9a227' : '#5a4030';
-                this._roundRect(ctx, x, y, itemW, itemH, 6);
-                ctx.fill();
-            }
-            ctx.fillStyle = active ? '#241408' : '#ffffff';
-            ctx.font = 'bold 12px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(names[i][1], x + itemW / 2, y + itemH / 2 + 1);
-            this._periodAreas.push({ x, y, w: itemW, h: itemH, period: names[i][0] });
-        }
+        ctx.fillText('总榜 · 通关数优先，同则比消行/方块/时间', W / 2, y + 15);
     }
 
     /** 列表顶部 y */
     _listTop() {
-        return this._tab === 'global' ? this._topInset() + 168 : this._topInset() + 128;
+        return this._topInset() + 128;
     }
 
     /** 列表底部：好友榜分享 + 返回；全服榜返回 */
@@ -623,7 +602,7 @@ class RankScene {
         this._myScore = null;
         this._myCleared = null;
 
-        cloudService.getRankList({ mode: this._mode, period: this._period, page: 1, pageSize: 20 })
+        cloudService.getRankList({ mode: this._mode, page: 1, pageSize: 20 })
             .then((res) => {
                 this._loading = false;
         if (res && res.success) {
@@ -825,21 +804,6 @@ class RankScene {
             }
         }
         // （闯关榜无模式切换）
-
-        // 周期切换（仅全服榜）
-        if (this._tab === 'global' && this._periodAreas) {
-            for (const area of this._periodAreas) {
-                if (x >= area.x && x <= area.x + area.w &&
-                    y >= area.y && y <= area.y + area.h) {
-                    if (area.period !== this._period) {
-                        this._period = area.period;
-                        this._scrollY = 0;
-                        this._loadRankData();
-                    }
-                    return;
-                }
-            }
-        }
 
         // 全服榜行内回放
         if (this._tab === 'global') {

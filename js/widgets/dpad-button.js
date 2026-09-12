@@ -6,6 +6,43 @@
 
 const { drawThemeButtonSkin } = require('../theme/theme-images');
 
+/** 绘制圆角多边形；radius 是沿相邻边收进的距离。 */
+function roundedPolygon(ctx, points, radius) {
+    if (!points || points.length < 3) return;
+    const corners = points.map((point, i) => {
+        const prev = points[(i + points.length - 1) % points.length];
+        const next = points[(i + 1) % points.length];
+        const prevLen = Math.hypot(prev.x - point.x, prev.y - point.y) || 1;
+        const nextLen = Math.hypot(next.x - point.x, next.y - point.y) || 1;
+        const prevInset = Math.min(radius, prevLen * 0.38);
+        const nextInset = Math.min(radius, nextLen * 0.38);
+        return {
+            point,
+            start: {
+                x: point.x + (prev.x - point.x) * prevInset / prevLen,
+                y: point.y + (prev.y - point.y) * prevInset / prevLen,
+            },
+            end: {
+                x: point.x + (next.x - point.x) * nextInset / nextLen,
+                y: point.y + (next.y - point.y) * nextInset / nextLen,
+            },
+        };
+    });
+    ctx.beginPath();
+    ctx.moveTo(corners[0].start.x, corners[0].start.y);
+    for (let i = 0; i < corners.length; i++) {
+        const corner = corners[i];
+        if (i > 0) ctx.lineTo(corner.start.x, corner.start.y);
+        ctx.quadraticCurveTo(
+            corner.point.x,
+            corner.point.y,
+            corner.end.x,
+            corner.end.y
+        );
+    }
+    ctx.closePath();
+}
+
 class DPadButton {
     /**
      * @param {Object} opts
@@ -221,21 +258,27 @@ class DPadButton {
         const alpha = this._pressed ? Math.min(0.95 + pulseAlpha, 1) : 0.92;
         ctx.fillStyle = `rgba(255, 248, 236, ${alpha})`;
         const s = r * 0.45;
-        ctx.beginPath();
+        let arrowPoints;
         if (this.direction === 'left') {
-            ctx.moveTo(this.x - s, this.y);
-            ctx.lineTo(this.x + s * 0.7, this.y - s);
-            ctx.lineTo(this.x + s * 0.7, this.y + s);
+            arrowPoints = [
+                { x: this.x - s, y: this.y },
+                { x: this.x + s * 0.7, y: this.y - s },
+                { x: this.x + s * 0.7, y: this.y + s },
+            ];
         } else if (this.direction === 'right') {
-            ctx.moveTo(this.x + s, this.y);
-            ctx.lineTo(this.x - s * 0.7, this.y - s);
-            ctx.lineTo(this.x - s * 0.7, this.y + s);
+            arrowPoints = [
+                { x: this.x + s, y: this.y },
+                { x: this.x - s * 0.7, y: this.y - s },
+                { x: this.x - s * 0.7, y: this.y + s },
+            ];
         } else {
-            ctx.moveTo(this.x, this.y + s);
-            ctx.lineTo(this.x - s, this.y - s * 0.7);
-            ctx.lineTo(this.x + s, this.y - s * 0.7);
+            arrowPoints = [
+                { x: this.x, y: this.y + s },
+                { x: this.x - s, y: this.y - s * 0.7 },
+                { x: this.x + s, y: this.y - s * 0.7 },
+            ];
         }
-        ctx.closePath();
+        roundedPolygon(ctx, arrowPoints, Math.max(4.5, s * 0.38));
         ctx.fill();
         ctx.restore();
     }

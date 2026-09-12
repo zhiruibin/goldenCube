@@ -10,6 +10,7 @@ const { drawCoinHudCentered } = require('../../utils/coin-hud');
 const IconRenderer = require('../render/icon-renderer');
 const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
 const { drawThemeBackground, drawThemeImageContain } = require('../theme/theme-images');
+const { layoutTabRow } = require('../widgets/tab-layout');
 const { fillNightBackground, drawBrandTitle } = require('../theme/arcade-night');
 
 const CATEGORY_ORDER = ['progress', 'plaza', 'workshop', 'social'];
@@ -95,12 +96,10 @@ class AchievementScene {
     _renderTabs(ctx) {
         const W = GameGlobal.game.width;
         const n = CATEGORY_ORDER.length;
-        const gap = 6;
-        const tabH = 36;
-        const tabW = Math.min(78, Math.floor((W - 24 - gap * (n - 1)) / n));
+        const layout = layoutTabRow(W, n, { gap: 0, side: 12, height: 36, maxWidth: 78 });
+        const tabH = layout.height;
+        const tabW = layout.width;
         const tabY = this._topInset() + 72;
-        const totalW = n * tabW + (n - 1) * gap;
-        const startX = (W - totalW) / 2;
 
         this._tabAreas = [];
         ctx.font = 'bold 12px sans-serif';
@@ -109,7 +108,7 @@ class AchievementScene {
 
         for (let i = 0; i < CATEGORY_ORDER.length; i++) {
             const key = CATEGORY_ORDER[i];
-            const x = startX + i * (tabW + gap);
+            const x = layout.xAt(i);
             const active = this._category === key;
             const skin = active ? 'cardStageGold' : 'cardStageBrown';
             const drawn = drawThemeImageContain(
