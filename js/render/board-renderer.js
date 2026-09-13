@@ -7,7 +7,7 @@
  */
 
 const { boardSkins, blockSkins } = require('../../data/skins');
-const { GARBAGE, hashSeed, drawGarbageCell } = require('./garbage-cell');
+const { GARBAGE, GOLD_GARBAGE, hashSeed, drawGarbageCell, drawGoldGarbageCell } = require('./garbage-cell');
 const {
     resolveTileStyle,
     drawBoardChrome,
@@ -587,6 +587,10 @@ class BoardRenderer {
      * @param {number} colorId - 棋盘格子数值（1-7）
      */
     _drawCell(ctx, x, y, size, colorId, col, row) {
+        if (colorId === GOLD_GARBAGE) {
+            drawGoldGarbageCell(ctx, x, y, size);
+            return;
+        }
         if (colorId === GARBAGE) {
             const gc = (typeof col === 'number') ? col : Math.floor((x - this.x) / size);
             const gr = (typeof row === 'number') ? row : Math.floor((y - this.y) / size);

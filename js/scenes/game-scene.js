@@ -20,6 +20,7 @@ const IconRenderer = require('../render/icon-renderer');
 const { MiniTetrisFx } = require('../render/mini-tetris-fx');
 const { FRAME_INTERVAL } = require('../runtime/frame-budget');
 const { ConfettiFx } = require('../render/confetti-fx');
+const { buildIsoBlockFaces, drawSolidIsoBlock } = require('../render/iso-block-renderer');
 const goldenBlock = require('../../utils/golden-block-manager');
 const { LuckyDrawOverlay } = require('../widgets/lucky-draw-overlay');
 const luckyDrawManager = require('../../utils/lucky-draw-manager');
@@ -30,8 +31,12 @@ const endless = require('../../utils/endless-manager');
 /** 硬降短时冷却：防止连点/多指瞬时误砸下一块（不改按钮布局） */
 const HARD_DROP_COOLDOWN_MS = 200;
 
+/** 最后一格金块退场：接近屏幕底部即淡出，并立即衔接结算页。 */
+const GOLD_COLLECT_EXIT_SEC = 0.5;
+
 /** 首次闯关：垃圾布局完成后提示通关目标（仅展示一次） */
-const STAGE_TUTORIAL_SEEN_KEY = 'gc_tutorial_garbage_clear_seen';
+// 金块规则上线后使用新键，让老玩家也能看到一次新版说明。
+const STAGE_TUTORIAL_SEEN_KEY = 'gc_tutorial_gold_block_seen_v1';
 
 class GameScene {
     constructor() {
@@ -78,6 +83,7 @@ class GameScene {
         this._panelWidth = 90;
         // 消行特效队列
         this._lineClearEffects = [];
+        this._goldBlockFx = null;
 
         // 多触点追踪：touchId -> 'dpad' | 'button' | null
         this._activeTouches = {};
@@ -268,7 +274,6 @@ class GameScene {
             this._engine.resume();
             this._paused = false;
             if (this._miniFx) { this._miniFx.resume(); }
-            // 暂停恢复后 0.3s 屏蔽输入，防止恢复瞬间误操作（文档 3.2.9）
             this._inputBlockUntil = Date.now() + 300;
         }
         try {
@@ -404,7 +409,7 @@ class GameScene {
         const endRow = cell.row;
         // 与正常方块一致：从棋盘可见顶行开始砸落，不从屏幕外进入
         const startRow = 0;
-        this._engine.placeIntroGarbageCell(cell.row, cell.col);
+        this._engine.placeIntroGarbageCell(cell.row, cell.col, !!cell.golden);
 
         if (this._effectRenderer) {
             if (this._settings.bgEffects && endRow > startRow) {
@@ -560,6 +565,8 @@ class GameScene {
             btn.render(ctx);
         }
         if (this._miniFx) { this._miniFx.render(ctx); }
+        // 金块需要越过棋盘与操作区坠向屏幕底部，因此放在常规 HUD 之后绘制。
+        this._renderGoldBlockFx(ctx);
         // 暂停遮罩
         if (this._paused) {
             this._renderPauseOverlay(ctx);
@@ -729,6 +736,27 @@ class GameScene {
     }
 
     _bindEngineEvents() {
+        if (typeof this._engine.onGoldBlock === 'function') {
+            this._engine.onGoldBlock((event) => {
+                const goldEvent = Object.assign({ startedAt: Date.now() }, event || {});
+                if (goldEvent.type === 'collected' && goldEvent.from) {
+                    // 交给全局层继续绘制，切到结算页后动画也不会被 GameScene 销毁。
+                    try {
+                        GameGlobal.game._goldTransition = {
+                            startedAt: goldEvent.startedAt,
+                            duration: GOLD_COLLECT_EXIT_SEC,
+                            fromX: this._boardX + (goldEvent.from.col + 0.5) * this._cellSize,
+                            fromY: this._boardY + (goldEvent.from.row + 0.5) * this._cellSize,
+                            cellSize: this._cellSize,
+                        };
+                    } catch (e) { /* ignore */ }
+                    this._goldBlockFx = null;
+                } else {
+                    this._goldBlockFx = goldEvent;
+                }
+                try { GameGlobal.game._forceRender = true; } catch (e) { /* ignore */ }
+            });
+        }
         this._engine.onGameOver((score, level, lines, reason) => {
             if (this._mode === 'stage') this._stageOverReason = reason;
         });
@@ -762,7 +790,7 @@ class GameScene {
                         } else {
                             this._goToStageFail();
                         }
-                    }, 0);
+                    }, 500);
                     return;
                 }
             }
@@ -858,6 +886,112 @@ class GameScene {
         this._engine.onLevelChange((level) => {
             if (this._audio) this._audio.playLevelUp();
         });
+    }
+
+    _renderGoldBlockFx(ctx) {
+        const fx = this._goldBlockFx;
+        if (!fx || !fx.from) return;
+        const elapsed = (Date.now() - fx.startedAt) / 1000;
+        const duration = fx.type === 'collected' ? GOLD_COLLECT_EXIT_SEC : 0.72;
+        if (elapsed >= duration) {
+            this._goldBlockFx = null;
+            return;
+        }
+        const t = Math.max(0, Math.min(1, elapsed / duration));
+        const cs = this._cellSize;
+        const fromX = this._boardX + (fx.from.col + 0.5) * cs;
+        const fromY = this._boardY + (fx.from.row + 0.5) * cs;
+        if (fx.type === 'collected') {
+            this._renderCollectedGoldBlock(ctx, fromX, fromY, t, cs);
+            return;
+        }
+        const toX = fx.to
+            ? this._boardX + (fx.to.col + 0.5) * cs
+            : fromX;
+        const toY = fx.to
+            ? this._boardY + (fx.to.row + 0.5) * cs
+            : GameGlobal.game.height;
+        const x = fromX + (toX - fromX) * t;
+        const y = fromY + (toY - fromY) * t - Math.sin(Math.PI * t) * cs * 2.2;
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, (1 - t) * 2.5);
+        ctx.shadowColor = '#ffd54a';
+        ctx.shadowBlur = 14;
+        ctx.fillStyle = '#ffd54a';
+        ctx.beginPath();
+        ctx.arc(x, y, Math.max(3, cs * (0.24 - t * 0.08)), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#fff4b0';
+        ctx.beginPath();
+        ctx.arc(x - cs * 0.06, y - cs * 0.06, Math.max(1, cs * 0.07), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = Math.min(1, (1 - t) * 3);
+        ctx.fillStyle = '#FFE082';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(fx.type === 'collected' ? '金块已挖出！' : '金块转移', x, y - cs * 0.6);
+        ctx.restore();
+    }
+
+    /** 最后一格垃圾清除：实体金块上弹后受重力落向屏幕底部，承接结算页升起动画。 */
+    _renderCollectedGoldBlock(ctx, fromX, fromY, t, cs) {
+        const H = GameGlobal.game.height;
+        const apexY = Math.max(this._boardY + cs * 0.8, fromY - cs * 4.8);
+        // 不必掉出屏幕：在底部操作区上沿附近淡出，减少等待并衔接结算页升起。
+        const endY = H - Math.max(44, cs * 2.2);
+        const riseEnd = 0.30;
+        let y;
+        if (t <= riseEnd) {
+            const riseT = t / riseEnd;
+            const easedRise = 1 - Math.pow(1 - riseT, 2);
+            y = fromY + (apexY - fromY) * easedRise;
+        } else {
+            const fallT = (t - riseEnd) / (1 - riseEnd);
+            y = apexY + (endY - apexY) * fallT * fallT;
+        }
+        const fadeStart = 0.78;
+        const alpha = t < fadeStart ? 1 : Math.max(0, (1 - t) / (1 - fadeStart));
+        const scale = t < fadeStart ? 1 + Math.sin(Math.PI * t) * 0.12 : 1 - (t - fadeStart) * 1.8;
+        const size = cs * 1.18 * Math.max(0.68, scale);
+
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.translate(fromX, y);
+        ctx.rotate(t * Math.PI * 0.55);
+        ctx.shadowColor = '#ffd43b';
+        ctx.shadowBlur = 12 + Math.sin(Math.PI * t) * 8;
+        const geo = buildIsoBlockFaces(0, 0, size, 'cube');
+        drawSolidIsoBlock(ctx, geo, {
+            left: '#d39a16',
+            right: '#b87308',
+            top: '#ffe875',
+            bottom: '#7c4300',
+            leftStroke: 'rgba(255,239,150,0.78)',
+            rightStroke: 'rgba(255,214,70,0.72)',
+            topStroke: '#fff6bd',
+            backEdge: 'rgba(255,245,190,0.78)',
+            frontEdge: 'rgba(255,248,205,0.92)',
+            shadow: false,
+        });
+        ctx.restore();
+
+        // 末段在接近屏幕底部的位置留下短促余辉，随后切换至结算页重新升起。
+        if (t > 0.72) {
+            const glowT = Math.min(1, (t - 0.72) / 0.28);
+            ctx.save();
+            ctx.globalAlpha = Math.sin(Math.PI * glowT) * 0.45;
+            ctx.fillStyle = '#ffd43b';
+            ctx.beginPath();
+            if (typeof ctx.ellipse === 'function') {
+                ctx.ellipse(fromX, endY + cs * 0.55, cs * (1.4 + glowT), cs * 0.22, 0, 0, Math.PI * 2);
+            } else {
+                ctx.arc(fromX, endY + cs * 0.55, cs * 0.6, 0, Math.PI * 2);
+            }
+            ctx.fill();
+            ctx.restore();
+        }
     }
 
     /** 消行飘字文案（英文术语：QUAD/T-SPIN/CLEAR/COMBO，避开"三消/四消"中文表述） */
@@ -1333,8 +1467,8 @@ class GameScene {
         ctx.textBaseline = 'alphabetic';
         const line2Baseline = by - textBtnGap;
         const line1Baseline = line2Baseline - 26;
-        ctx.fillText('消除掉所有灰色垃圾方块', W / 2, line1Baseline);
-        ctx.fillText('即可通关', W / 2, line2Baseline);
+        ctx.fillText('清除垃圾，追踪其中的金块', W / 2, line1Baseline);
+        ctx.fillText('挖出最后的金块即可通关', W / 2, line2Baseline);
 
         const bw = Math.min(200, cardW * 0.62);
         const bx = W / 2 - bw / 2;
@@ -1515,7 +1649,6 @@ class GameScene {
             if (GameGlobal.game) GameGlobal.game._forceRender = true;
         } catch (e) { /* ignore */ }
     }
-
 
     // ==================== 触摸事件处理（多触点） ====================
 
@@ -2134,8 +2267,8 @@ class GameScene {
             }
         }
 
-        // 稍留时间让终局消行/硬降特效播完；破纪录则先摇奖再进结算页
-        setTimeout(() => {
+        // 结果确定后立即切页；金块退场由全局层跨场景并行播放。
+        const enterResult = () => {
             const navigateParams = {
                 stageId: this._stageId,
                 replayKey,
@@ -2163,7 +2296,8 @@ class GameScene {
                 return;
             }
             this._enterStageResult(navigateParams);
-        }, 700);
+        };
+        enterResult();
     }
 
     /** 闯关失败：不退入场费 → 失败结算页（广告免费重开在结算页） */

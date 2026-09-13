@@ -2,7 +2,7 @@
  * 垃圾方块绘制：灰色块体 + 确定性裂纹，与玩家方块皮肤解耦
  */
 
-const { GARBAGE } = require('../../utils/tetris-engine');
+const { GARBAGE, GOLD_GARBAGE } = require('../../utils/tetris-engine');
 
 /** 垃圾块主色（工具栏、图例等 UI 与盘面保持一致） */
 const GARBAGE_UI_COLOR = '#787880';
@@ -93,6 +93,33 @@ function drawGarbageCell(ctx, x, y, size, seed) {
  */
 function drawGarbageLayoutCell(ctx, x, y, size, col, row) {
     drawGarbageCell(ctx, x, y, size, hashSeed(col, row));
+}
+
+/** 目标金块：仍是垃圾格，但用金矿石材质明确标识。 */
+function drawGoldGarbageCell(ctx, x, y, size) {
+    const inset = size >= 8 ? 1 : 0.5;
+    const w = Math.max(1, size - inset * 2);
+    let grad = null;
+    try {
+        grad = ctx.createLinearGradient(x, y, x + size, y + size);
+        grad.addColorStop(0, '#fff3a3');
+        grad.addColorStop(0.34, '#ffd43b');
+        grad.addColorStop(0.7, '#d99000');
+        grad.addColorStop(1, '#7c4300');
+    } catch (e) { /* 单色回退 */ }
+    ctx.save();
+    ctx.shadowColor = 'rgba(255, 210, 50, 0.9)';
+    ctx.shadowBlur = Math.max(3, size * 0.28);
+    ctx.fillStyle = grad || '#f5bd24';
+    ctx.fillRect(x + inset, y + inset, w, w);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(255,255,220,0.72)';
+    ctx.fillRect(x + size * 0.18, y + size * 0.16, size * 0.42, Math.max(1, size * 0.11));
+    ctx.fillRect(x + size * 0.16, y + size * 0.18, Math.max(1, size * 0.1), size * 0.34);
+    ctx.strokeStyle = 'rgba(86,45,0,0.72)';
+    ctx.lineWidth = Math.max(0.6, size * 0.045);
+    ctx.strokeRect(x + inset + 0.5, y + inset + 0.5, w - 1, w - 1);
+    ctx.restore();
 }
 
 function _edgePoint(edge, bx, by, bw, t) {
@@ -188,8 +215,10 @@ function _drawCracks(ctx, x, y, size, inset, w, seed) {
 
 module.exports = {
     GARBAGE,
+    GOLD_GARBAGE,
     GARBAGE_UI_COLOR,
     hashSeed,
     drawGarbageCell,
+    drawGoldGarbageCell,
     drawGarbageLayoutCell,
 };

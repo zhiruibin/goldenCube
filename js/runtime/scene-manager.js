@@ -191,6 +191,7 @@ class SceneManager {
         if (this.current && this.current.render) {
             this.current.render(ctx);
         }
+        this._renderGoldTransition(ctx);
         // 全局授权弹窗叠在当前场景之上（隐私优先于资料授权）
         try {
             const {
@@ -215,6 +216,55 @@ class SceneManager {
                 renderProfileAuthDialog(ctx, W, H);
             }
         } catch (e) { /* ignore */ }
+    }
+
+    /** 最后一块金块跨场景退场；不阻塞 GameScene → StageResultScene 切换。 */
+    _renderGoldTransition(ctx) {
+        let fx = null;
+        try { fx = GameGlobal.game && GameGlobal.game._goldTransition; } catch (e) { return; }
+        if (!fx) return;
+        const duration = Math.max(0.1, Number(fx.duration) || 0.5);
+        const t = Math.max(0, (Date.now() - fx.startedAt) / 1000 / duration);
+        if (t >= 1) {
+            GameGlobal.game._goldTransition = null;
+            return;
+        }
+        const H = GameGlobal.game.height;
+        const cs = Number(fx.cellSize) || 20;
+        const apexY = Math.max(20, fx.fromY - cs * 4.8);
+        const endY = H - Math.max(44, cs * 2.2);
+        const riseEnd = 0.30;
+        let y;
+        let x = fx.fromX;
+        if (t <= riseEnd) {
+            const riseT = t / riseEnd;
+            y = fx.fromY + (apexY - fx.fromY) * (1 - Math.pow(1 - riseT, 2));
+        } else {
+            const fallT = (t - riseEnd) / (1 - riseEnd);
+            y = apexY + (endY - apexY) * fallT * fallT;
+            // 下落阶段向屏幕底部中央汇拢，承接结算页从中央升起的金块。
+            const centerT = 1 - Math.pow(1 - fallT, 2);
+            x = fx.fromX + (GameGlobal.game.width / 2 - fx.fromX) * centerT;
+        }
+        // 从弹出第一帧开始线性淡化，500ms 时完全不可见并由上方清理。
+        const alpha = Math.max(0, 1 - t);
+        const size = cs * 1.18 * (1 + Math.sin(Math.PI * t) * 0.12);
+        try {
+            const { buildIsoBlockFaces, drawSolidIsoBlock } = require('../render/iso-block-renderer');
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.translate(x, y);
+            ctx.rotate(t * Math.PI * 0.55);
+            ctx.shadowColor = '#ffd43b';
+            ctx.shadowBlur = 12 + Math.sin(Math.PI * t) * 8;
+            drawSolidIsoBlock(ctx, buildIsoBlockFaces(0, 0, size, 'cube'), {
+                left: '#d39a16', right: '#b87308', top: '#ffe875', bottom: '#7c4300',
+                leftStroke: 'rgba(255,239,150,0.78)', rightStroke: 'rgba(255,214,70,0.72)',
+                topStroke: '#fff6bd', backEdge: 'rgba(255,245,190,0.78)',
+                frontEdge: 'rgba(255,248,205,0.92)', shadow: false,
+            });
+            ctx.restore();
+        } catch (e) { /* ignore transition render failures */ }
     }
 }
 

@@ -4,7 +4,7 @@
  * 参考产品方案 3.3.1 / 3.3.2 / 3.3.5
  */
 
-const { GARBAGE } = require('../../utils/tetris-engine');
+const { GARBAGE, GOLD_GARBAGE } = require('../../utils/tetris-engine');
 
 // 粒子配置表（文档 3.3.1）
 const PARTICLE_CONFIG = {
@@ -55,9 +55,11 @@ const TYPE_HEX = {
     11: '#B33771', 12: '#F5F5F5', 13: '#00BFA5', 14: '#C8A2C8', 15: '#FF7F50',
     16: '#98FB98', 17: '#87CEEB', 18: '#FFE08A',
     99: '#787880', // 闯关垃圾
+    100: '#FFD43B', // 垃圾层中的目标金块
 };
 
 const GARBAGE_DEBRIS_COLORS = ['#787880', '#6a6a72', '#909098', '#52525a'];
+const GOLD_DEBRIS_COLORS = ['#fff3a3', '#ffd43b', '#e6a300', '#fff8cf'];
 
 /** 方块类型字母 → 十六进制颜色（标准 7 种 + 特殊/实验室方块，供残影/波纹取色） */
 const PIECE_TYPE_COLOR_HEX = {
@@ -155,7 +157,9 @@ class EffectRenderer {
         if (!rowColors || !rowColors.length) return;
         const particles = [];
         for (let col = 0; col < rowColors.length; col++) {
-            if (rowColors[col] !== GARBAGE) continue;
+            if (rowColors[col] !== GARBAGE && rowColors[col] !== GOLD_GARBAGE) continue;
+            const golden = rowColors[col] === GOLD_GARBAGE;
+            const palette = golden ? GOLD_DEBRIS_COLORS : GARBAGE_DEBRIS_COLORS;
             const cx = boardX + (col + 0.5) * cellSize;
             const cy = boardY + (row + 0.5) * cellSize;
             const n = 4;
@@ -168,7 +172,7 @@ class EffectRenderer {
                     vx: Math.cos(angle) * speed,
                     vy: Math.sin(angle) * speed - 25,
                     size: cellSize * 0.1 * (0.65 + Math.random() * 0.7),
-                    color: GARBAGE_DEBRIS_COLORS[i % GARBAGE_DEBRIS_COLORS.length],
+                    color: palette[i % palette.length],
                     life: 0.22 + Math.random() * 0.16,
                     maxLife: 0.38,
                     gravity: 160,

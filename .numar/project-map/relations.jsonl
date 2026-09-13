@@ -50,6 +50,8 @@
 {"from":"component.gameplay_scenes.6","type":"locatedAt","to":"source.gameplay_scenes.6"}
 {"from":"capability.gameplay_scenes","type":"implementedBy","to":"component.gameplay_scenes.7"}
 {"from":"component.gameplay_scenes.7","type":"locatedAt","to":"source.gameplay_scenes.7"}
+{"from":"capability.gameplay_scenes","type":"implementedBy","to":"component.gameplay_scenes.8"}
+{"from":"component.gameplay_scenes.8","type":"locatedAt","to":"source.gameplay_scenes.8"}
 {"from":"project.goldencube-app","type":"contains","to":"module.rendering_effects"}
 {"from":"module.rendering_effects","type":"provides","to":"capability.rendering_effects"}
 {"from":"capability.rendering_effects","type":"implementedBy","to":"component.rendering_effects.1"}
@@ -168,6 +170,10 @@
 {"from":"component.achievement_reward.15","type":"locatedAt","to":"source.achievement_reward.15"}
 {"from":"capability.achievement_reward","type":"implementedBy","to":"component.achievement_reward.16"}
 {"from":"component.achievement_reward.16","type":"locatedAt","to":"source.achievement_reward.16"}
+{"from":"capability.achievement_reward","type":"implementedBy","to":"component.achievement_reward.17"}
+{"from":"component.achievement_reward.17","type":"locatedAt","to":"source.achievement_reward.17"}
+{"from":"capability.achievement_reward","type":"implementedBy","to":"component.achievement_reward.18"}
+{"from":"component.achievement_reward.18","type":"locatedAt","to":"source.achievement_reward.18"}
 {"from":"project.goldencube-app","type":"contains","to":"module.dev_tools"}
 {"from":"module.dev_tools","type":"provides","to":"capability.dev_tools"}
 {"from":"capability.dev_tools","type":"implementedBy","to":"component.dev_tools.1"}
@@ -289,6 +295,7 @@
 {"from":"evidence.gameplay_scenes.5","type":"supports","to":"source.gameplay_scenes.5"}
 {"from":"evidence.gameplay_scenes.6","type":"supports","to":"source.gameplay_scenes.6"}
 {"from":"evidence.gameplay_scenes.7","type":"supports","to":"source.gameplay_scenes.7"}
+{"from":"evidence.gameplay_scenes.8","type":"supports","to":"source.gameplay_scenes.8"}
 {"from":"evidence.rendering_effects.1","type":"supports","to":"source.rendering_effects.1"}
 {"from":"evidence.rendering_effects.2","type":"supports","to":"source.rendering_effects.2"}
 {"from":"evidence.rendering_effects.3","type":"supports","to":"source.rendering_effects.3"}
@@ -341,6 +348,8 @@
 {"from":"evidence.achievement_reward.14","type":"supports","to":"source.achievement_reward.14"}
 {"from":"evidence.achievement_reward.15","type":"supports","to":"source.achievement_reward.15"}
 {"from":"evidence.achievement_reward.16","type":"supports","to":"source.achievement_reward.16"}
+{"from":"evidence.achievement_reward.17","type":"supports","to":"source.achievement_reward.17"}
+{"from":"evidence.achievement_reward.18","type":"supports","to":"source.achievement_reward.18"}
 {"from":"evidence.dev_tools.1","type":"supports","to":"source.dev_tools.1"}
 {"from":"evidence.dev_tools.2","type":"supports","to":"source.dev_tools.2"}
 {"from":"evidence.dev_tools.3","type":"supports","to":"source.dev_tools.3"}

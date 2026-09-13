@@ -26,6 +26,8 @@ const HIDDEN_ROWS = 2;
 const TOTAL_ROWS = BOARD_ROWS + HIDDEN_ROWS;
 const EMPTY = 0;
 const GARBAGE = 99;
+/** 藏在垃圾层中的目标金块：碰撞/计数仍按垃圾处理。 */
+const GOLD_GARBAGE = 100;
 
 const GameState = {
     IDLE: 'idle',
@@ -204,6 +206,8 @@ class TetrisEngine {
         this._stats = this._createStats();
         this._garbageMask = null;
         this._garbageRemaining = 0;
+        this._goldGarbage = null;
+        this._goldMoveCount = 0;
         this._endlessMode = false;
         this._stageConfig = null;
         this._stageFirstPiecePending = null;
@@ -221,6 +225,7 @@ class TetrisEngine {
         this._onGameOver = null;
         this._onHoldChange = null;
         this._onCombo = null;
+        this._onGoldBlock = null;
     }
 
     // ========================================================================
@@ -245,6 +250,8 @@ class TetrisEngine {
         this._stats = this._createStats();
         this._garbageMask = this._createEmptyMask();
         this._garbageRemaining = 0;
+        this._goldGarbage = null;
+        this._goldMoveCount = 0;
         this._endlessMode = false;
         this._stageConfig = null;
         this._stageFirstPiecePending = null;
@@ -307,6 +314,7 @@ class TetrisEngine {
         this._onGameOver = null;
         this._onHoldChange = null;
         this._onCombo = null;
+        this._onGoldBlock = null;
         this._state = GameState.IDLE;
     }
 
@@ -576,6 +584,7 @@ class TetrisEngine {
     onLevelChange(cb) { this._onLevelChange = cb; }
     onGameOver(cb) { this._onGameOver = cb; }
     onCombo(cb) { this._onCombo = cb; }
+    onGoldBlock(cb) { this._onGoldBlock = cb; }
 
     // ========================================================================
     // 私有 — 碰撞检测
@@ -886,6 +895,8 @@ class TetrisEngine {
      * 2) 非垃圾块按列重力塌陷；垃圾格保持原位，作为不可穿越屏障
      */
     _clearFullRowsOnly(fullRows) {
+        const oldGold = this._goldGarbage;
+        const goldCleared = !!oldGold && fullRows.indexOf(oldGold.row) >= 0;
         for (const r of fullRows) {
             for (let c = 0; c < BOARD_COLS; c++) {
                 if (this._garbageMask && this._garbageMask[r][c]) {
@@ -895,6 +906,48 @@ class TetrisEngine {
                 this._board[r][c] = EMPTY;
             }
         }
+        if (goldCleared) this._moveOrCollectGold(oldGold);
+    }
+
+    /** 金块所在行消除后，转移到剩余垃圾的底部三行；没有垃圾时即被挖出。 */
+    _moveOrCollectGold(from) {
+        this._goldGarbage = null;
+        if (this._garbageRemaining <= 0) {
+            this._emit(this._onGoldBlock, {
+                type: 'collected',
+                from: { row: from.row - HIDDEN_ROWS, col: from.col },
+            });
+            return;
+        }
+        const next = this._selectGoldGarbageCell();
+        if (!next) return;
+        this._board[next.row][next.col] = GOLD_GARBAGE;
+        this._goldGarbage = next;
+        this._goldMoveCount++;
+        this._emit(this._onGoldBlock, {
+            type: 'moved',
+            from: { row: from.row - HIDDEN_ROWS, col: from.col },
+            to: { row: next.row - HIDDEN_ROWS, col: next.col },
+            remaining: this._garbageRemaining,
+        });
+    }
+
+    _selectGoldGarbageCell() {
+        const cells = [];
+        let bottomRow = -1;
+        for (let r = HIDDEN_ROWS; r < TOTAL_ROWS; r++) {
+            for (let c = 0; c < BOARD_COLS; c++) {
+                if (!this._garbageMask[r][c]) continue;
+                if (this._board[r][c] !== GARBAGE) continue;
+                cells.push({ row: r, col: c });
+                bottomRow = Math.max(bottomRow, r);
+            }
+        }
+        if (!cells.length) return null;
+        const deep = cells.filter(cell => cell.row >= bottomRow - 2);
+        // 确定性轮换，回放与同一关卡的表现保持一致，也不消耗方块随机序列。
+        const seed = (this._garbageRemaining * 17 + this._goldMoveCount * 31 + bottomRow * 7) >>> 0;
+        return deep[seed % deep.length];
     }
 
     /** 计算当前棋盘非垃圾块的列向塌陷（不修改棋盘） */
@@ -1032,6 +1085,13 @@ class TetrisEngine {
 
         if (this._endlessMode) {
             this._addEndlessLineScore(fullRows.length);
+        }
+
+        // 有限关卡最后一块垃圾（金块）被挖出后，结果已经确定。
+        // 不再等待塌陷与连锁动画；立即结算，视觉退场由跨场景动画独立播放。
+        if (!this._endlessMode && this._garbageRemaining === 0) {
+            this._stageFinishSettle();
+            return;
         }
 
         const duration = this._calcStageFallDuration(moves);
@@ -1365,6 +1425,8 @@ class TetrisEngine {
         }
         this._garbageMask = this._createEmptyMask();
         this._garbageRemaining = 0;
+        this._goldGarbage = null;
+        this._goldMoveCount = 0;
         this._endlessMode = !!(this._stageConfig && this._stageConfig.endless);
         this._endlessLineFactory = (this._stageConfig && this._stageConfig.lineFactory) || null;
         if (layout) {
@@ -1381,6 +1443,13 @@ class TetrisEngine {
                     }
                 }
             });
+        }
+        if (!this._endlessMode && this._garbageRemaining > 0) {
+            const gold = this._selectGoldGarbageCell();
+            if (gold) {
+                this._board[gold.row][gold.col] = GOLD_GARBAGE;
+                this._goldGarbage = gold;
+            }
         }
         if (this._stageConfig.dropIntervalMs) {
             this._dropInterval = this._stageConfig.dropIntervalMs;
@@ -1448,6 +1517,8 @@ class TetrisEngine {
                 ? this._garbageMask.map((row) => row.slice())
                 : null,
             garbageRemaining: this._garbageRemaining,
+            goldGarbage: this._goldGarbage ? Object.assign({}, this._goldGarbage) : null,
+            goldMoveCount: this._goldMoveCount || 0,
             score: this._score,
             lines: this._lines,
             level: this._level,
@@ -1530,12 +1601,17 @@ class TetrisEngine {
         for (let r = 0; r < TOTAL_ROWS; r++) {
             for (let c = 0; c < BOARD_COLS; c++) {
                 if (!this._garbageMask[r][c]) continue;
-                cells.push({ row: r - HIDDEN_ROWS, col: c });
+                cells.push({
+                    row: r - HIDDEN_ROWS,
+                    col: c,
+                    golden: this._board[r][c] === GOLD_GARBAGE,
+                });
                 this._board[r][c] = EMPTY;
                 this._garbageMask[r][c] = false;
             }
         }
         this._garbageRemaining = 0;
+        this._goldGarbage = null;
         // 底行先落地，上层再砸下来，更像堆叠
         cells.sort((a, b) => (b.row - a.row) || (a.col - b.col));
         return cells;
@@ -1546,21 +1622,28 @@ class TetrisEngine {
      * @param {number} visibleRow
      * @param {number} col
      */
-    placeIntroGarbageCell(visibleRow, col) {
+    placeIntroGarbageCell(visibleRow, col, golden) {
         const r = visibleRow + HIDDEN_ROWS;
         if (r < 0 || r >= TOTAL_ROWS || col < 0 || col >= BOARD_COLS) return;
         if (this._board[r][col] === GARBAGE) return;
-        this._board[r][col] = GARBAGE;
+        this._board[r][col] = golden ? GOLD_GARBAGE : GARBAGE;
         if (!this._garbageMask) this._garbageMask = this._createEmptyMask();
         if (!this._garbageMask[r][col]) {
             this._garbageMask[r][col] = true;
             this._garbageRemaining++;
         }
+        if (golden) this._goldGarbage = { row: r, col };
     }
 
     /** 剩余垃圾格数（归零即过关） */
     getGarbageRemaining() {
         return this._garbageRemaining;
+    }
+
+    getGoldGarbage() {
+        return this._goldGarbage
+            ? { row: this._goldGarbage.row - HIDDEN_ROWS, col: this._goldGarbage.col }
+            : null;
     }
 
     /** 当前含垃圾行数（理论最少消行） */
@@ -1654,6 +1737,7 @@ module.exports = {
     TOTAL_ROWS,
     EMPTY,
     GARBAGE,
+    GOLD_GARBAGE,
     LEVEL_SPEEDS,
     LINE_SCORES,
     SOFT_DROP_SCORE,
