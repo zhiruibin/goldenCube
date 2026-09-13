@@ -203,6 +203,43 @@ function _saveStageBest(id, rec) {
     } catch (e) { /* ignore */ }
 }
 
+function getAllStageBests() {
+    const records = [];
+    getStages().forEach((stage) => {
+        const best = getStageBest(stage.id);
+        if (!best) return;
+        records.push({
+            stageId: Number(stage.id),
+            lines: best.lines,
+            pieces: best.pieces || 0,
+            timeMs: best.timeMs || 0,
+        });
+    });
+    return records;
+}
+
+function mergeStageBests(progress) {
+    let changed = 0;
+    const src = progress && typeof progress === 'object' ? progress : {};
+    Object.keys(src).forEach((key) => {
+        const stageId = Number(key);
+        if (!getStage(stageId)) return;
+        const raw = src[key] || {};
+        const incoming = {
+            lines: Number(raw.lines),
+            pieces: Number(raw.pieces) || 0,
+            timeMs: Number(raw.timeMs) || 0,
+        };
+        if (!_isValidBest(incoming)) return;
+        const local = getStageBest(stageId);
+        if (local && !isBetter(incoming, local)) return;
+        _saveStageBest(stageId, incoming);
+        changed++;
+    });
+    if (changed) syncUnlockedFromProgress();
+    return changed;
+}
+
 function _getRecordRewardCount(id) {
     try {
         return Number(wx.getStorageSync(KEYS.rewardCountPrefix + Number(id))) || 0;
@@ -455,6 +492,8 @@ module.exports = {
     isCleared,
     isBetter,
     rewardClear,
+    getAllStageBests,
+    mergeStageBests,
     getClearedCount,
     getTotalStageCount,
     getAchievementGoldCap,

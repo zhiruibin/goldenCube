@@ -53,13 +53,23 @@ class WorkshopScene {
         this._playDialog = null;
         this._playDialogArmed = false;
         this._actionSheet = null;
-        this._scrollY = 0;
+        this._scrollY = typeof p.scrollY === 'number' && Number.isFinite(p.scrollY)
+            ? Math.max(0, p.scrollY)
+            : 0;
         this._scrollVel = 0;
         this._moveSamples = [];
         this._rebuild();
+        Promise.resolve(workshop.syncMyReviewStatuses()).then((changed) => {
+            if (changed) this._rebuild();
+        }).catch(() => {});
     }
 
     onExit() {
+        // SceneManager 在 onExit 之后才将 _params 压栈，因此在这里记住当前列表上下文。
+        this._params = Object.assign({}, this._params || {}, {
+            mineSub: this._mineSub,
+            scrollY: this._scrollY || 0,
+        });
         this._buttons = [];
         this._listRects = [];
         this._scrollVel = 0;
@@ -68,6 +78,9 @@ class WorkshopScene {
 
     onResume() {
         this._rebuild();
+        Promise.resolve(workshop.syncMyReviewStatuses()).then((changed) => {
+            if (changed) this._rebuild();
+        }).catch(() => {});
     }
 
     getRenderInterval() {
@@ -413,15 +426,12 @@ class WorkshopScene {
                         'not-cleared': '请先自通',
                         'need-clear': '布局已改，请重通',
                         invalid: (r && r.detail) || '布局不合规',
-                        cloud: (r && r.detail) || '云发布失败',
+                        cloud: (r && r.detail) || '云审核提交失败',
                     };
                     this._showToast((r && map[r.reason]) || '提交失败');
                 } else {
-                    this._showToast(r.offline ? '已本地发布（离线）' : '已发布到广场');
-                    this._mineSub = 'published';
-                    if (achievementManager && typeof achievementManager.reportWorkshopPublished === 'function') {
-                        achievementManager.reportWorkshopPublished();
-                    }
+                    this._showToast('已提交审核');
+                    this._mineSub = 'reviewing';
                 }
                 this._rebuild();
             });
@@ -436,16 +446,21 @@ class WorkshopScene {
                 title: '删除关卡',
                 body: '删除「' + stage.title + '」并腾出槽位？',
                 onOk: () => {
-                    workshop.deleteStage(stage.stageId);
                     this._confirm = null;
-                    this._rebuild();
+                    Promise.resolve(workshop.deleteStage(stage.stageId)).then((result) => {
+                        this._showToast(result && result.pendingCloud ? '已删除，将在联网后同步' : '已删除');
+                        this._rebuild();
+                    });
                 },
             };
             return;
         }
         if (action === 'withdraw') {
-            workshop.withdrawReview(stage.stageId);
-            this._rebuild();
+            Promise.resolve(workshop.withdrawReview(stage.stageId)).then((r) => {
+                this._showToast(r && r.ok ? '已撤回审核' : '撤回失败');
+                if (r && r.ok) this._mineSub = 'cleared';
+                this._rebuild();
+            });
             return;
         }
         if (action === 'delist') {

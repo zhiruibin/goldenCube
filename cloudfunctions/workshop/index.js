@@ -1,7 +1,7 @@
 /**
  * 工坊 / 关卡广场云函数 workshop
  * 职责：
- *  - publishStage   提交发布（机审通过即上架）
+ *  - publishStage   提交审核（机审通过后等待管理员）
  *  - delistStage    作者下架
  *  - listPlaza      广场列表（官方 / 新关 / 热门 / 好通关）
  *  - getStage       单关详情（含布局，供开打）
@@ -23,6 +23,18 @@ const COLLECTION = 'workshop_stages';
 const MAX_LIST = 50;
 const SUBMIT_DAILY_MAX = 3;
 
+function isAdmin(openid) {
+  const configured = String(process.env.WORKSHOP_ADMIN_OPENIDS || '')
+    .split(',')
+    .map((v) => v.trim())
+    .filter(Boolean);
+  return configured.indexOf(openid) >= 0;
+}
+
+function requireAdmin(openid) {
+  if (!isAdmin(openid)) throw new Error('admin required');
+}
+
 exports.main = async (event) => {
   const { OPENID } = cloud.getWXContext();
   if (!OPENID) {
@@ -33,6 +45,18 @@ exports.main = async (event) => {
     switch (action) {
       case 'publishStage':
         return await publishStage(OPENID, data);
+      case 'listMyStages':
+        return await listMyStages(OPENID);
+      case 'listReviewingStages':
+        return await listReviewingStages(OPENID, data);
+      case 'approveStage':
+        return await approveStage(OPENID, data);
+      case 'rejectStage':
+        return await rejectStage(OPENID, data);
+      case 'withdrawReview':
+        return await withdrawReview(OPENID, data);
+      case 'deleteStage':
+        return await deleteStage(OPENID, data);
       case 'delistStage':
         return await delistStage(OPENID, data);
       case 'listPlaza':
@@ -150,6 +174,14 @@ function sanitizeStage(doc, includeRows) {
     coinThreshold: doc.coinThreshold || 0,
     dropIntervalMs: doc.dropIntervalMs || 1000,
     authorBest: doc.authorBest || null,
+    review: doc.review ? {
+      submittedAt: Number(doc.review.submittedAt) || 0,
+      reviewedAt: Number(doc.review.reviewedAt) || 0,
+      rejectReason: doc.review.rejectReason || '',
+      snapshotId: doc.review.snapshotId || '',
+      auto: !!doc.review.auto,
+    } : null,
+    rejectReason: doc.rejectReason || '',
     stats: doc.stats || { playCount: 0, clearCount: 0, challengeSendCount: 0, likeCount: 0 },
     heatScore: typeof doc.heatScore === 'number' ? doc.heatScore : calcHeat(doc),
     publishedAt: doc.publishedAt || 0,
@@ -182,7 +214,7 @@ async function countTodaySubmits(openid) {
 }
 
 /**
- * 发布到广场：机审通过即 published
+ * 提交审核：机审通过后进入 reviewing，等待管理员审核。
  * data: { stageId, title, rows, authorBest, dropIntervalMs, nickname, avatarUrl }
  */
 async function publishStage(openid, data) {
@@ -226,7 +258,7 @@ async function publishStage(openid, data) {
     authorName: nickname || ('玩家' + openid.slice(-4)),
     authorAvatar: avatarUrl,
     title,
-    status: 'published',
+    status: 'reviewing',
     rows,
     layoutHash: hash,
     minLines: meta.minLines,
@@ -248,12 +280,12 @@ async function publishStage(openid, data) {
     },
     review: {
       submittedAt: now,
-      reviewedAt: now,
+      reviewedAt: 0,
       rejectReason: '',
       snapshotId: hash,
       auto: true,
     },
-    publishedAt: (existing && existing.publishedAt) || now,
+    publishedAt: 0,
     updatedAt: now,
     createdAt: (existing && existing.createdAt) || now,
   };
@@ -269,6 +301,103 @@ async function publishStage(openid, data) {
     success: true,
     stage: sanitizeStage(Object.assign({ _id: addRes._id }, doc), true),
   };
+}
+
+async function listReviewingStages(openid, data) {
+  requireAdmin(openid);
+  const page = Math.max(1, Math.floor(Number((data && data.page) || 1)));
+  const pageSize = Math.min(MAX_LIST, Math.max(1, Math.floor(Number((data && data.pageSize) || 30))));
+  const res = await db.collection(COLLECTION)
+    .where({ status: 'reviewing' })
+    .limit(100)
+    .get();
+  const list = (res.data || []).sort((a, b) => {
+    const at = (a.review && a.review.submittedAt) || a.updatedAt || 0;
+    const bt = (b.review && b.review.submittedAt) || b.updatedAt || 0;
+    return at - bt;
+  });
+  const start = (page - 1) * pageSize;
+  return {
+    success: true,
+    list: list.slice(start, start + pageSize).map((d) => sanitizeStage(d, true)),
+    total: list.length,
+    page,
+    pageSize,
+  };
+}
+
+async function listMyStages(openid) {
+  const res = await db.collection(COLLECTION)
+    .where({ authorOpenid: openid })
+    .limit(100)
+    .get();
+  return { success: true, list: (res.data || []).map((d) => sanitizeStage(d, true)) };
+}
+
+async function approveStage(openid, data) {
+  requireAdmin(openid);
+  const stageId = String((data && data.stageId) || '').slice(0, 64);
+  const doc = await _findByStageId(stageId);
+  if (!doc || doc.status !== 'reviewing') return { success: false, errMsg: 'not-reviewing' };
+  const now = Date.now();
+  const review = Object.assign({}, doc.review || {}, {
+    reviewedAt: now,
+    reviewerOpenid: openid,
+    rejectReason: '',
+  });
+  await db.collection(COLLECTION).doc(doc._id).update({
+    data: { status: 'published', review, rejectReason: '', publishedAt: now, updatedAt: now },
+  });
+  return { success: true, stageId };
+}
+
+async function rejectStage(openid, data) {
+  requireAdmin(openid);
+  const stageId = String((data && data.stageId) || '').slice(0, 64);
+  const reason = String((data && data.reason) || '未通过审核').trim().slice(0, 100) || '未通过审核';
+  const doc = await _findByStageId(stageId);
+  if (!doc || doc.status !== 'reviewing') return { success: false, errMsg: 'not-reviewing' };
+  const now = Date.now();
+  const review = Object.assign({}, doc.review || {}, {
+    reviewedAt: now,
+    reviewerOpenid: openid,
+    rejectReason: reason,
+  });
+  await db.collection(COLLECTION).doc(doc._id).update({
+    data: { status: 'rejected', review, rejectReason: reason, publishedAt: 0, updatedAt: now },
+  });
+  return { success: true, stageId, reason };
+}
+
+async function withdrawReview(openid, data) {
+  const stageId = String((data && data.stageId) || '').slice(0, 64);
+  const res = await db.collection(COLLECTION)
+    .where({ stageId, authorOpenid: openid })
+    .limit(1)
+    .get();
+  const doc = (res.data && res.data[0]) || null;
+  if (!doc || doc.status !== 'reviewing') return { success: false, errMsg: 'not-reviewing' };
+  await db.collection(COLLECTION).doc(doc._id).update({
+    data: { status: 'cleared', updatedAt: Date.now() },
+  });
+  return { success: true, stageId };
+}
+
+async function deleteStage(openid, data) {
+  const stageId = String((data && data.stageId) || '').slice(0, 64);
+  if (!stageId) return { success: false, errMsg: 'stageId required' };
+  const res = await db.collection(COLLECTION)
+    .where({ stageId, authorOpenid: openid })
+    .limit(1)
+    .get();
+  const doc = (res.data && res.data[0]) || null;
+  // 本地草稿从未上云时，云端不存在也视为删除成功。
+  if (!doc) return { success: true, stageId, missing: true };
+  if (doc.status === 'reviewing' || doc.status === 'published') {
+    return { success: false, errMsg: 'withdraw-or-delist-first' };
+  }
+  await db.collection(COLLECTION).doc(doc._id).remove();
+  return { success: true, stageId };
 }
 
 async function delistStage(openid, data) {
@@ -318,7 +447,7 @@ async function listPlaza(openid, data) {
 
   const total = list.length;
   const slice = list.slice(skip, skip + pageSize).map((d) => sanitizeStage(d, true));
-  return { success: true, list: slice, total, page, pageSize };
+  return { success: true, list: slice, total, page, pageSize, isAdmin: isAdmin(openid) };
 }
 
 async function getStage(openid, data) {

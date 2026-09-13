@@ -18,6 +18,7 @@ const KEYS = {
     freePlayDaily: 'gc_workshop_freePlayDaily',
     authorShareDaily: 'gc_workshop_authorShareDaily',
     plazaCache: 'gc_workshop_plazaCache', // { [stageId]: stageDoc }
+    deletedStages: 'gc_workshop_deletedStages', // 离线删除墓碑，防止云端恢复时复活
 };
 
 const FREE_SLOTS = 3;
@@ -353,9 +354,24 @@ function updateStage(stageId, patch) {
 }
 
 function deleteStage(stageId) {
-    const list = listStages().filter((s) => s.stageId !== stageId);
+    const id = String(stageId || '');
+    const list = listStages().filter((s) => s.stageId !== id);
     _saveAll(list);
-    return { ok: true };
+    const deleted = _loadJson(KEYS.deletedStages, []) || [];
+    if (deleted.indexOf(id) < 0) deleted.push(id);
+    _saveJson(KEYS.deletedStages, deleted);
+    try {
+        const save = GameGlobal && GameGlobal.game && GameGlobal.game.cloudSave;
+        if (save && typeof save.flush === 'function') save.flush(true).catch(() => {});
+    } catch (e) { /* ignore */ }
+    let service;
+    try { service = require('./cloud-service').cloudService; } catch (e) { service = null; }
+    if (!service || !service.isAvailable()) return Promise.resolve({ ok: true, pendingCloud: true });
+    return service.deleteWorkshopStage(id).then((res) => {
+        if (!res || !res.success) return { ok: true, pendingCloud: true, detail: res && res.errMsg };
+        _saveJson(KEYS.deletedStages, deleted.filter((item) => item !== id));
+        return { ok: true, pendingCloud: false };
+    }).catch(() => ({ ok: true, pendingCloud: true }));
 }
 
 function listByStatus(status) {
@@ -399,8 +415,7 @@ function markAuthorCleared(stageId, best) {
 }
 
 /**
- * 提交发布：优先上云；成功后本地标 published。
- * 云不可用时降级本地上架（仅本机可见）。
+ * 提交审核：云端机审通过后进入 reviewing，等待管理员审核。
  * @returns {Promise<{ok, stage?, reason?, detail?, offline?}>}
  */
 function submitForReview(stageId) {
@@ -421,24 +436,23 @@ function submitForReview(stageId) {
     const v = validateLayout(cur.rows);
     if (!v.ok) return Promise.resolve({ ok: false, reason: 'invalid', detail: v.reason });
 
-    const applyLocalPublish = () => {
+    const applyLocalReviewing = () => {
         if (!_bumpDaily(KEYS.submitDaily, SUBMIT_DAILY_MAX)) {
             return { ok: false, reason: 'daily-limit' };
         }
-        cur.status = STATUS.published;
-        cur.publishedAt = Date.now();
+        cur.status = STATUS.reviewing;
+        cur.publishedAt = 0;
         cur.updatedAt = Date.now();
         cur.rejectReason = '';
         cur.review = {
             submittedAt: Date.now(),
-            reviewedAt: Date.now(),
+            reviewedAt: 0,
             rejectReason: '',
             snapshotId: cur.layoutHash,
             auto: true,
         };
         list[idx] = cur;
         _saveAll(list);
-        cachePlazaStage(cur);
         _notifyWorkshopAchievement();
         return { ok: true, stage: cur };
     };
@@ -447,12 +461,10 @@ function submitForReview(stageId) {
     try {
         cloudService = require('./cloud-service').cloudService;
     } catch (e) {
-        return Promise.resolve(applyLocalPublish());
+        return Promise.resolve({ ok: false, reason: 'cloud', detail: '云服务不可用，无法提交审核' });
     }
     if (!cloudService.isAvailable()) {
-        const r = applyLocalPublish();
-        r.offline = true;
-        return Promise.resolve(r);
+        return Promise.resolve({ ok: false, reason: 'cloud', detail: '云服务不可用，无法提交审核', offline: true });
     }
 
     let profile = {};
@@ -476,11 +488,8 @@ function submitForReview(stageId) {
             if (msg.indexOf('invalid') >= 0) return { ok: false, reason: 'invalid', detail: msg };
             return { ok: false, reason: 'cloud', detail: msg || '发布失败' };
         }
-        const r = applyLocalPublish();
-        if (res.stage) {
-            cachePlazaStage(res.stage);
-            if (r.stage && res.stage.stats) r.stage.stats = res.stage.stats;
-        }
+        const r = applyLocalReviewing();
+        if (res.stage && r.stage) r.stage.review = res.stage.review || r.stage.review;
         return r;
     }).catch((e) => ({
         ok: false,
@@ -489,17 +498,88 @@ function submitForReview(stageId) {
     }));
 }
 
+function listReviewingStages() {
+    try {
+        return require('./cloud-service').cloudService.listReviewingWorkshopStages({ pageSize: 50 })
+            .then((res) => (res && res.success && Array.isArray(res.list)) ? res.list : []);
+    } catch (e) {
+        return Promise.resolve([]);
+    }
+}
+
+function approveReview(stageId) {
+    return require('./cloud-service').cloudService.approveWorkshopStage(stageId);
+}
+
+function rejectReview(stageId, reason) {
+    return require('./cloud-service').cloudService.rejectWorkshopStage(stageId, reason);
+}
+
+function syncMyReviewStatuses() {
+    let service;
+    try { service = require('./cloud-service').cloudService; } catch (e) { return Promise.resolve(false); }
+    if (!service || !service.isAvailable()) return Promise.resolve(false);
+    return service.listMyWorkshopStages().then((res) => {
+        if (!res || !res.success || !Array.isArray(res.list)) return false;
+        const remote = {};
+        res.list.forEach((s) => { if (s && s.stageId) remote[s.stageId] = s; });
+        const deleted = _loadJson(KEYS.deletedStages, []) || [];
+        const deletedMap = {};
+        deleted.forEach((id) => { deletedMap[id] = true; });
+        deleted.forEach((id) => {
+            service.deleteWorkshopStage(id).then((result) => {
+                if (!result || !result.success) return;
+                const latest = _loadJson(KEYS.deletedStages, []) || [];
+                _saveJson(KEYS.deletedStages, latest.filter((item) => item !== id));
+            }).catch(() => {});
+        });
+        const list = listStages();
+        let changed = false;
+        res.list.forEach((cloudStage) => {
+            if (!cloudStage || !cloudStage.stageId || remote[cloudStage.stageId] == null) return;
+            if (deletedMap[cloudStage.stageId]) return;
+            if (list.some((local) => local && local.stageId === cloudStage.stageId)) return;
+            if (!cloudStage.rows) return;
+            list.push(Object.assign({}, cloudStage, { rows: cloneRows(cloudStage.rows) }));
+            changed = true;
+        });
+        list.forEach((local) => {
+            const cloudStage = remote[local.stageId];
+            if (!cloudStage) return;
+            if (local.status !== cloudStage.status
+                || local.rejectReason !== (cloudStage.rejectReason || '')) {
+                local.status = cloudStage.status;
+                local.rejectReason = cloudStage.rejectReason || '';
+                local.review = cloudStage.review || local.review || null;
+                local.publishedAt = cloudStage.publishedAt || 0;
+                local.updatedAt = cloudStage.updatedAt || local.updatedAt;
+                changed = true;
+            }
+        });
+        if (changed) _saveAll(list);
+        return changed;
+    }).catch(() => false);
+}
+
 function withdrawReview(stageId) {
     const list = listStages();
     const idx = list.findIndex((s) => s.stageId === stageId);
     if (idx < 0) return { ok: false, reason: 'missing' };
     const cur = list[idx];
     if (cur.status !== STATUS.reviewing) return { ok: false, reason: 'not-reviewing' };
-    cur.status = STATUS.cleared;
-    cur.updatedAt = Date.now();
-    list[idx] = cur;
-    _saveAll(list);
-    return { ok: true, stage: cur };
+    let service;
+    try { service = require('./cloud-service').cloudService; } catch (e) { service = null; }
+    if (!service || !service.isAvailable()) {
+        return Promise.resolve({ ok: false, reason: 'cloud' });
+    }
+    return service.withdrawWorkshopReview(stageId).then((res) => {
+        if (!res || !res.success) return { ok: false, reason: 'cloud', detail: res && res.errMsg };
+        cur.status = STATUS.cleared;
+        cur.updatedAt = Date.now();
+        list[idx] = cur;
+        _saveAll(list);
+        return { ok: true, stage: cur };
+    }).catch(() => ({ ok: false, reason: 'cloud' }));
 }
 
 function delistStage(stageId) {
@@ -603,8 +683,14 @@ function _mergeOfficialPlazaStage(base, overlay) {
  * 广场列表：云优先，失败降级本地缓存；官方精选始终可本地返回
  * @returns {Promise<Array>}
  */
-function listPlaza(sort) {
+function listPlaza(sort, options) {
     const mode = sort || 'new';
+    const onReviewerStatus = options && typeof options.onReviewerStatus === 'function'
+        ? options.onReviewerStatus
+        : null;
+    const reportReviewerStatus = (res) => {
+        if (onReviewerStatus && res && res.success) onReviewerStatus(res.isAdmin === true);
+    };
     let cloudService;
     try {
         cloudService = require('./cloud-service').cloudService;
@@ -618,6 +704,7 @@ function listPlaza(sort) {
             return Promise.resolve(local);
         }
         return cloudService.listPlaza({ sort: 'official', pageSize: 100 }).then((res) => {
+            reportReviewerStatus(res);
             if (res && res.success && Array.isArray(res.list)) {
                 return _mergeOfficialCloudStats(local, res.list);
             }
@@ -628,6 +715,7 @@ function listPlaza(sort) {
         return Promise.resolve(listPlazaLocal(mode));
     }
     return cloudService.listPlaza({ sort: mode, pageSize: 50 }).then((res) => {
+        reportReviewerStatus(res);
         if (res && res.success && Array.isArray(res.list)) {
             cachePlazaStages(res.list);
             // 合并官方关，避免云列表冲掉精选可见性（非 official tab）
@@ -1123,6 +1211,10 @@ module.exports = {
     listByStatus,
     markAuthorCleared,
     submitForReview,
+    listReviewingStages,
+    approveReview,
+    rejectReview,
+    syncMyReviewStatuses,
     withdrawReview,
     delistStage,
     listPlaza,

@@ -25,12 +25,27 @@ const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
 const endless = require('../../utils/endless-manager');
 const { roundRectPath } = require('../render/board-tiles');
 const { layoutTabRow } = require('../widgets/tab-layout');
+const REVIEWER_CACHE_KEY = 'gc_workshop_reviewer_v1';
+
+function readReviewerCache() {
+    try { return wx.getStorageSync(REVIEWER_CACHE_KEY) === true; } catch (e) { return false; }
+}
+
+function writeReviewerCache(value) {
+    try { wx.setStorageSync(REVIEWER_CACHE_KEY, value === true); } catch (e) { /* ignore */ }
+}
 
 const PLAZA_SORT = [
     { id: 'official', label: '官方' },
     { id: 'new', label: '新关' },
     { id: 'heat', label: '热门' },
     { id: 'clearRate', label: '好通关' },
+];
+const ADMIN_PLAZA_SORT = [
+    { id: 'official', label: '官方' },
+    { id: 'new', label: '新关' },
+    { id: 'heat', label: '热门' },
+    { id: 'reviewing', label: '待审核' },
 ];
 
 class PlazaScene {
@@ -58,6 +73,8 @@ class PlazaScene {
         this._wallTop = 0;
         this._focusStageId = '';
         this._endlessIntro = null;
+        // 仅用于首帧 Tab 展示，所有审核数据与操作仍由云函数重新鉴权。
+        this._isAdmin = readReviewerCache();
     }
 
     onEnter(params) {
@@ -231,10 +248,11 @@ class PlazaScene {
         const tabY = hintY + 18;
 
         // Tab：按约 2:1 等比框 + contain，避免石砖皮被横向压扁
-        const tabs = layoutTabRow(W, PLAZA_SORT.length, { gap, side, height: 46 });
+        const plazaTabs = this._isAdmin ? ADMIN_PLAZA_SORT : PLAZA_SORT;
+        const tabs = layoutTabRow(W, plazaTabs.length, { gap, side, height: 46 });
         const tabW = tabs.width;
         const tabH = 46;
-        PLAZA_SORT.forEach((t, i) => {
+        plazaTabs.forEach((t, i) => {
             const active = this._plazaSort === t.id;
             this._buttons.push(new Button({
                 x: tabs.xAt(i),
@@ -321,6 +339,18 @@ class PlazaScene {
         const sort = this._plazaSort;
         const gen = ++this._plazaLoadGen;
 
+        if (sort === 'reviewing') {
+            this._plazaLoading = true;
+            Promise.resolve(workshop.listReviewingStages()).then((items) => {
+                if (this._plazaLoadGen !== gen || this._plazaSort !== sort) return;
+                this._applyPlazaList(sort, items);
+            }).catch(() => {
+                if (this._plazaLoadGen !== gen || this._plazaSort !== sort) return;
+                this._applyPlazaList(sort, []);
+            });
+            return;
+        }
+
         if (!silentReload) {
             this._plazaLoading = true;
             const cached = this._plazaTabCache[sort];
@@ -349,7 +379,9 @@ class PlazaScene {
             }
         }
 
-        Promise.resolve(workshop.listPlaza(sort)).then((items) => {
+        Promise.resolve(workshop.listPlaza(sort, {
+            onReviewerStatus: (isAdmin) => this._applyReviewerStatus(isAdmin),
+        })).then((items) => {
             if (this._plazaLoadGen !== gen || this._plazaSort !== sort) return;
             this._applyPlazaList(sort, items);
         }).catch(() => {
@@ -365,11 +397,22 @@ class PlazaScene {
         });
     }
 
+    _applyReviewerStatus(isAdmin) {
+        const nextIsAdmin = isAdmin === true;
+        writeReviewerCache(nextIsAdmin);
+        if (this._isAdmin === nextIsAdmin) return;
+        this._isAdmin = nextIsAdmin;
+        if (nextIsAdmin && this._plazaSort === 'clearRate') this._plazaSort = 'reviewing';
+        if (!nextIsAdmin && this._plazaSort === 'reviewing') this._plazaSort = 'clearRate';
+        this._rebuild();
+    }
+
     _getPlazaListHint() {
         if (this._plazaLoading) return '加载中…';
         if (this._plazaSort === 'official') return '暂无官方精选关卡';
         if (this._plazaSort === 'heat') return '热门分类暂无关卡';
         if (this._plazaSort === 'clearRate') return '好通关分类暂无关卡';
+        if (this._plazaSort === 'reviewing') return '暂无待审核关卡';
         return '暂无玩家发布关卡';
     }
 
@@ -387,6 +430,10 @@ class PlazaScene {
             if (!id) continue;
             if (endless.isEndlessStageId(id)) {
                 items[i] = endless.getEndlessStageMeta();
+                flags[id] = 'unlocked';
+                continue;
+            }
+            if (this._plazaSort === 'reviewing') {
                 flags[id] = 'unlocked';
                 continue;
             }
@@ -454,11 +501,87 @@ class PlazaScene {
     }
 
     _tryPlayPlaza(stage) {
+        if (this._plazaSort === 'reviewing' && this._isAdmin) {
+            this._openReviewActions(stage);
+            return;
+        }
         if (endless.isEndlessStageId(stage && stage.stageId)) {
             this._tryPlayEndless(stage);
             return;
         }
         this._openPlayDialog(stage);
+    }
+
+    _openReviewActions(stage) {
+        if (!stage || !stage.stageId) return;
+        try {
+            wx.showActionSheet({
+                itemList: ['试玩审核', '审核通过', '驳回关卡'],
+                success: (res) => {
+                    if (!res) return;
+                    if (res.tapIndex === 0) this._startReviewGame(stage);
+                    else if (res.tapIndex === 1) this._approveReview(stage);
+                    else if (res.tapIndex === 2) this._rejectReview(stage);
+                },
+            });
+        } catch (e) { this._showToast('无法打开审核操作'); }
+    }
+
+    _startReviewGame(stage) {
+        GameGlobal.game.sceneManager.switchTo('game', {
+            mode: 'stage',
+            workshop: true,
+            workshopStageId: stage.stageId,
+            workshopTitle: stage.title,
+            workshopRows: workshop.cloneRows(stage.rows),
+            authorTrial: false,
+            reviewMode: true,
+            workshopReturnTo: 'list',
+            workshopListParams: {
+                origin: 'plaza', plazaSort: 'reviewing', scrollY: this._scrollY || 0,
+                focusStageId: stage.stageId,
+            },
+            entryPaid: 0,
+            dropIntervalMs: stage.dropIntervalMs || 1000,
+        });
+    }
+
+    _approveReview(stage) {
+        this._showToast('处理中…');
+        Promise.resolve(workshop.approveReview(stage.stageId)).then((res) => {
+            if (!res || !res.success) {
+                this._showToast((res && res.errMsg) || '审核操作失败');
+                return;
+            }
+            this._showToast('已通过并发布');
+            this._plazaTabCache.reviewing = null;
+            this._loadPlaza(false);
+        }).catch(() => this._showToast('审核操作失败'));
+    }
+
+    _rejectReview(stage) {
+        try {
+            wx.showModal({
+                title: '驳回关卡',
+                content: '请填写驳回原因',
+                editable: true,
+                placeholderText: '例如：标题或布局不合规',
+                confirmText: '驳回',
+                success: (res) => {
+                    if (!res || !res.confirm) return;
+                    const reason = String(res.content || '').trim() || '未通过审核';
+                    Promise.resolve(workshop.rejectReview(stage.stageId, reason)).then((result) => {
+                        if (!result || !result.success) {
+                            this._showToast((result && result.errMsg) || '驳回失败');
+                            return;
+                        }
+                        this._showToast('已驳回');
+                        this._plazaTabCache.reviewing = null;
+                        this._loadPlaza(false);
+                    }).catch(() => this._showToast('驳回失败'));
+                },
+            });
+        } catch (e) { this._showToast('无法打开驳回窗口'); }
     }
 
     _tryPlayEndless(stage) {

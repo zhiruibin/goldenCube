@@ -8,14 +8,21 @@
 2. 右键 `cloudfunctions/workshop` → **上传并部署：云端安装依赖**。
 3. 云开发控制台新建集合 **`workshop_stages`**，权限建议「仅创建者可读写」或更严（仅云函数管理员写）。
 4. （可选）索引：`status` + `publishedAt`；`status` + `heatScore`；`stageId`；`authorOpenid`。
+5. 在云函数环境变量中配置 **`WORKSHOP_ADMIN_OPENIDS`**，值为审核管理员的 OpenID；多个账号使用英文逗号分隔。未配置时没有任何账号能查看或操作待审核关卡。
 
 ## API（`{ action, data }`）
 
 | action | 说明 |
 | --- | --- |
-| `publishStage` | 机审 + 上架（须携带当前布局的 `authorBest.layoutHash`） |
+| `publishStage` | 机审后提交为 `reviewing`（须携带当前布局的 `authorBest.layoutHash`） |
+| `listReviewingStages` | 管理员读取待审核关卡 |
+| `approveStage` | 管理员通过并发布关卡 |
+| `rejectStage` | 管理员驳回关卡并填写原因 |
+| `withdrawReview` | 作者撤回待审核关卡 |
+| `deleteStage` | 作者永久删除已撤回/已下架关卡 |
+| `listMyStages` | 作者同步自己投稿的审核状态 |
 | `delistStage` | 作者下架 |
-| `listPlaza` | 广场列表 `sort=new\|heat\|clearRate` |
+| `listPlaza` | 广场列表 `sort=new\|heat\|clearRate`，响应同时携带 `isAdmin` |
 | `getStage` | 单关详情（含 `rows`） |
 | `reportPlay` | 开打 +1 |
 | `reportClear` | 通关 +1；返回 `grantShare` 供客户端发作者分成 |

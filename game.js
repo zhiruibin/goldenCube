@@ -38,6 +38,7 @@ GameGlobal.game = {
 /*** 小游戏入口函数
  */
 function onStart() {
+    let cloudReadyPromise = Promise.resolve();
     // 获取主 Canvas
     const canvas = wx.createCanvas();
     const ctx = canvas.getContext('2d');
@@ -123,6 +124,11 @@ function onStart() {
     try {
         const { cloudService } = require('./utils/cloud-service');
         cloudService.init();
+        const cloudSave = require('./utils/cloud-save-manager');
+        cloudReadyPromise = cloudSave.init(cloudService).then(() => {
+            cloudService.syncStageProgress().catch(() => {});
+        }).catch(() => {});
+        GameGlobal.game.cloudSave = cloudSave;
     } catch (e) {
         console.warn('[Game] 云服务初始化失败（降级本地模式）', e);
     }
@@ -184,10 +190,13 @@ function onStart() {
         console.warn('[Game] 读取启动参数失败', e);
     }
     GameGlobal.game.kickLoop = _kickLoop;
-    GameGlobal.game.sceneManager.switchTo('home');
-    if (launchQuery) {
-        _handleShareChallengeEntry(launchQuery, { fromLaunch: true });
-    }
+    // 先恢复云存档再创建首页，避免首页的每日奖励/内存缓存抢在恢复前写入。
+    cloudReadyPromise.then(() => {
+        GameGlobal.game.sceneManager.switchTo('home');
+        if (launchQuery) _handleShareChallengeEntry(launchQuery, { fromLaunch: true });
+        GameGlobal.game._forceRender = true;
+        _kickLoop();
+    });
 
     // 启动主循环
 
@@ -789,6 +798,7 @@ wx.onTouchCancel(function (e) {
  */
 wx.onHide(function () {
     GameGlobal.game._hidden = true;
+    if (GameGlobal.game.cloudSave) GameGlobal.game.cloudSave.flush().catch(() => {});
     _clearLoopTimer();
     const sm = GameGlobal.game.sceneManager;
     if (sm && sm.current) {

@@ -153,6 +153,7 @@ class CloudService {
                         nickname: (payload && payload.nickname) || '',
                         avatarUrl: (payload && payload.avatarUrl) || '',
                         replay: (payload && payload.replay) || null,
+                        stageBest: (payload && payload.stageBest) || null,
                     },
                 },
             });
@@ -216,6 +217,28 @@ class CloudService {
             nickname: profile.nickname || '',
             avatarUrl: profile.avatarUrl || '',
         });
+    }
+
+    /** 将本地逐关记录与云存档双向合并。 */
+    async syncStageProgress() {
+        if (!this.isAvailable()) return { success: false, offline: true };
+        let goldenBlock;
+        try { goldenBlock = require('./golden-block-manager'); } catch (e) { return { success: false }; }
+        try {
+            const res = await wx.cloud.callFunction({
+                name: 'rank',
+                data: {
+                    action: 'syncStageProgress',
+                    data: { records: goldenBlock.getAllStageBests() },
+                },
+            });
+            const result = (res && res.result) || {};
+            if (result.success) goldenBlock.mergeStageBests(result.progress || {});
+            return result;
+        } catch (e) {
+            console.warn('[Cloud] 逐关进度同步失败', e);
+            return { success: false, errMsg: (e && e.errMsg) || String(e) };
+        }
     }
 
     /**
@@ -768,6 +791,51 @@ class CloudService {
         }
     }
 
+    async listReviewingWorkshopStages(opts) {
+        if (!this.isAvailable()) return { success: false, list: [], total: 0, offline: true };
+        try {
+            return await this._callWorkshop('listReviewingStages', {
+                page: (opts && opts.page) || 1,
+                pageSize: (opts && opts.pageSize) || 50,
+            });
+        } catch (e) {
+            return { success: false, list: [], total: 0, errMsg: (e && e.errMsg) || String(e) };
+        }
+    }
+
+    async listMyWorkshopStages() {
+        if (!this.isAvailable()) return { success: false, list: [], offline: true };
+        try {
+            return await this._callWorkshop('listMyStages', {});
+        } catch (e) {
+            return { success: false, list: [], errMsg: (e && e.errMsg) || String(e) };
+        }
+    }
+
+    async approveWorkshopStage(stageId) {
+        if (!this.isAvailable()) return { success: false, offline: true };
+        return this._callWorkshop('approveStage', { stageId });
+    }
+
+    async rejectWorkshopStage(stageId, reason) {
+        if (!this.isAvailable()) return { success: false, offline: true };
+        return this._callWorkshop('rejectStage', { stageId, reason });
+    }
+
+    async withdrawWorkshopReview(stageId) {
+        if (!this.isAvailable()) return { success: false, offline: true };
+        return this._callWorkshop('withdrawReview', { stageId });
+    }
+
+    async deleteWorkshopStage(stageId) {
+        if (!this.isAvailable()) return { success: false, offline: true };
+        try {
+            return await this._callWorkshop('deleteStage', { stageId });
+        } catch (e) {
+            return { success: false, errMsg: (e && e.errMsg) || String(e) };
+        }
+    }
+
     async delistWorkshopStage(stageId) {
         if (!this.isAvailable()) {
             return { success: false, offline: true, errMsg: 'cloud unavailable' };
@@ -794,6 +862,7 @@ class CloudService {
                 success: !!r.success,
                 list: r.list || [],
                 total: r.total || 0,
+                isAdmin: r.isAdmin === true,
                 offline: false,
                 errMsg: r.errMsg || '',
             };

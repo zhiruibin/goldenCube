@@ -35,6 +35,7 @@ class WorkshopResultScene {
         this._result = this._params.result || {};
         this._failed = !!this._params.failed;
         this._authorTrial = !!this._params.authorTrial;
+        this._reviewMode = !!this._params.reviewMode;
         this._endless = !!this._params.endless
             || endless.isEndlessStageId(this._params.workshopStageId);
         this._stageId = this._params.workshopStageId;
@@ -95,6 +96,7 @@ class WorkshopResultScene {
         const p = this._listParams || {};
         if (p.origin === 'plaza' || p.origin === 'workshop') return p.origin;
         if (p.mainTab === 'plaza') return 'plaza';
+        if (this._reviewMode) return 'plaza';
         if (this._authorTrial) return 'workshop';
         return 'plaza';
     }
@@ -211,6 +213,8 @@ class WorkshopResultScene {
         if (this._failed) {
             contentBottom = footY + 26;
             if (this._endless) contentBottom = footY + 48;
+        } else if (this._reviewMode) {
+            contentBottom = footY + 26;
         } else if (this._authorTrial) {
             contentBottom = footY + 76;
         } else {
@@ -250,6 +254,14 @@ class WorkshopResultScene {
             });
             rows.push({
                 text: '返回广场',
+                color: '#5a4030',
+                skin: 'btnBarBrown',
+                labelColor: '#fff8ef',
+                onClick: () => this._goList(),
+            });
+        } else if (this._reviewMode) {
+            rows.push({
+                text: '返回待审核',
                 color: '#5a4030',
                 skin: 'btnBarBrown',
                 labelColor: '#fff8ef',
@@ -510,8 +522,8 @@ class WorkshopResultScene {
                 ? ((this._result && this._result.isNewBest) ? '新纪录！' : '本局结束')
                 : '无尽')
             : (this._failed
-                ? '未通关'
-                : (this._authorTrial ? '自通成功' : '通关！'));
+                ? (this._reviewMode ? '审核试玩未通过' : '未通关')
+                : (this._reviewMode ? '审核试玩完成' : (this._authorTrial ? '自通成功' : '通关！')));
         // 与闯关结算页同级上间距
         drawBrandTitle(ctx, headline, W / 2, topInset + 96, 'bold 24px sans-serif');
 
@@ -552,12 +564,18 @@ class WorkshopResultScene {
             ctx.fillStyle = MUTED;
             ctx.font = '14px sans-serif';
             ctx.fillText(
-                this._authorTrial
+                this._reviewMode
+                    ? '审核试玩未通过，可返回待审核列表'
+                    : (this._authorTrial
                     ? '试玩未通关，可继续改盘后再试'
-                    : '未通关，可再试一次',
+                    : '未通关，可再试一次'),
                 W / 2,
                 footY + 18
             );
+        } else if (this._reviewMode) {
+            ctx.fillStyle = MUTED;
+            ctx.font = '14px sans-serif';
+            ctx.fillText('审核试玩不产生奖励和广场统计', W / 2, footY + 18);
         } else if (this._authorTrial) {
             this._drawCredentialBadge(ctx, W, footY + 8);
             ctx.fillStyle = MUTED;

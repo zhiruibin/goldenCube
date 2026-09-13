@@ -107,6 +107,7 @@ class GameScene {
         this._workshopRows = this._params.workshopRows || null;
         this._workshopTitle = this._params.workshopTitle || '';
         this._authorTrial = !!this._params.authorTrial;
+        this._reviewMode = !!this._params.reviewMode;
         this._endless = !!this._params.endless
             || endless.isEndlessStageId(this._workshopStageId);
         this._endlessResume = !!(this._endless && this._params.endlessResume && this._params.endlessSnapshot);
@@ -1814,7 +1815,9 @@ class GameScene {
             coinGained: 0,
             goldGranted: 0,
         };
-        if (this._authorTrial) {
+        if (this._reviewMode) {
+            // 管理员审核试玩不产生金币、广场统计或作者自通凭证。
+        } else if (this._authorTrial) {
             workshop.finishAuthorTrialClear(this._workshopStageId, {
                 lines, pieces, timeMs,
             });
@@ -1879,6 +1882,7 @@ class GameScene {
                 workshopStageId: this._workshopStageId,
                 workshopTitle: this._workshopTitle,
                 authorTrial: this._authorTrial,
+                reviewMode: this._reviewMode,
                 workshopReturnTo: this._workshopReturnTo,
                 workshopListParams: listParams,
                 result,
@@ -1951,6 +1955,26 @@ class GameScene {
                         coinGained: 0,
                         goldGranted: 0,
                     },
+                    replayKey: '',
+                }, ['home', 'plaza']);
+            }, 500);
+            return;
+        }
+        if (this._reviewMode) {
+            this._stageSettleLocked = true;
+            const lines = this._engine ? this._engine.getLines() : 0;
+            const pieces = this._pieceCount || 0;
+            const timeMs = Date.now() - this._stageStartTime;
+            setTimeout(() => {
+                GameGlobal.game.sceneManager.leaveTo('workshopResult', {
+                    workshopStageId: this._workshopStageId,
+                    workshopTitle: this._workshopTitle,
+                    authorTrial: false,
+                    reviewMode: true,
+                    workshopReturnTo: 'list',
+                    workshopListParams: this._workshopListParams,
+                    failed: true,
+                    result: { lines, pieces, timeMs, coinWant: 0, coinGained: 0, goldGranted: 0 },
                     replayKey: '',
                 }, ['home', 'plaza']);
             }, 500);
@@ -2236,6 +2260,12 @@ class GameScene {
                 timeSum: sums.timeSum,
                 nickname: profile.nickname || '',
                 avatarUrl: profile.avatarUrl || '',
+                stageBest: {
+                    stageId: this._stageId,
+                    lines: goldResult.best.lines,
+                    pieces: goldResult.best.pieces || 0,
+                    timeMs: goldResult.best.timeMs || 0,
+                },
             }).then((res) => {
                 if (res && res.success && typeof res.rank === 'number' && res.rank > 0) {
                     try {

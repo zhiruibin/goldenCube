@@ -4,6 +4,7 @@
 //   2. getRankList - 查询全服 Top 20 生涯榜
 //   3. getMyRank  - 查询当前用户排名
 //   4. getReplay  - 回放（兼容旧数据；闯关主榜通常无回放）
+//   5. syncStageProgress - 合并并返回逐关最佳成绩云存档
 
 const cloud = require('wx-server-sdk');
 
@@ -13,6 +14,7 @@ const db = cloud.database();
 const _ = db.command;
 
 const COLLECTION = 'rankings';
+const SAVE_COLLECTION = 'player_saves';
 const ALLOWED_MODES = ['stage'];
 const TOP_LIMIT = 20;
 
@@ -63,6 +65,12 @@ exports.main = async (event, context) => {
             return await getMyRank(OPENID, data || {});
         case 'getReplay':
             return await getReplay(OPENID, data || {});
+        case 'syncStageProgress':
+            return await syncStageProgress(OPENID, data || {});
+        case 'pullPlayerSave':
+            return await pullPlayerSave(OPENID);
+        case 'pushPlayerSave':
+            return await pushPlayerSave(OPENID, data || {});
         default:
             return { success: false, errMsg: `Unknown action: ${action}` };
     }
@@ -107,6 +115,11 @@ async function submitScore(openid, data) {
         prev = null;
     }
 
+    const progressMerge = mergeStageProgress(
+        (prev && prev.stageProgress) || {},
+        data.stageBest ? [data.stageBest] : []
+    );
+
     const isNewRecord = isBetterSums(sums, prev);
 
     if (isNewRecord) {
@@ -134,6 +147,7 @@ async function submitScore(openid, data) {
             nickname: profile.nickname || (prev && prev.nickname) || '',
             avatarUrl: profile.avatarUrl || (prev && prev.avatarUrl) || '',
             replay: replayField,
+            stageProgress: progressMerge.progress,
             achievedAt: now,
             updatedAt: now,
         };
@@ -146,11 +160,12 @@ async function submitScore(openid, data) {
         } catch (e) {
             return { success: false, errMsg: `write failed: ${(e && e.errMsg) || e.message || e}` };
         }
-    } else if (prev && prev._id && (profile.nickname || profile.avatarUrl)) {
+    } else if (prev && prev._id && (profile.nickname || profile.avatarUrl || progressMerge.changed)) {
         try {
             const patch = { updatedAt: now };
             if (profile.nickname) patch.nickname = profile.nickname;
             if (profile.avatarUrl) patch.avatarUrl = profile.avatarUrl;
+            if (progressMerge.changed) patch.stageProgress = progressMerge.progress;
             // 旧数据补 achievedAt：用历史时间，保留同分先后顺序
             if (!prev.achievedAt) {
                 const legacy = Number(prev.updatedAt) || Number(prev.createdAt) || 0;
@@ -188,6 +203,97 @@ async function submitScore(openid, data) {
         clearedCount: isNewRecord ? sums.clearedCount : (prev && prev.clearedCount) || sums.clearedCount,
         mode,
     };
+}
+
+function sanitizeStageBest(raw) {
+    const stageId = Math.floor(Number(raw && raw.stageId));
+    const lines = Math.floor(Number(raw && raw.lines));
+    const pieces = Math.max(0, Math.floor(Number(raw && raw.pieces) || 0));
+    const timeMs = Math.max(0, Math.floor(Number(raw && raw.timeMs) || 0));
+    if (!(stageId >= 1 && stageId <= 1000) || !(lines >= 1 && lines <= 10000)) return null;
+    return { stageId, lines, pieces, timeMs };
+}
+
+function isBetterStageBest(a, b) {
+    if (!b) return true;
+    if (a.lines !== b.lines) return a.lines < b.lines;
+    if (a.pieces !== b.pieces) return a.pieces < b.pieces;
+    return a.timeMs < b.timeMs;
+}
+
+function mergeStageProgress(base, incoming) {
+    const progress = Object.assign({}, base && typeof base === 'object' ? base : {});
+    let changed = false;
+    (Array.isArray(incoming) ? incoming : []).slice(0, 1000).forEach((raw) => {
+        const rec = sanitizeStageBest(raw);
+        if (!rec) return;
+        const key = String(rec.stageId);
+        const old = sanitizeStageBest(Object.assign({ stageId: rec.stageId }, progress[key] || {}));
+        if (!isBetterStageBest(rec, old)) return;
+        progress[key] = { lines: rec.lines, pieces: rec.pieces, timeMs: rec.timeMs };
+        changed = true;
+    });
+    return { progress, changed };
+}
+
+async function syncStageProgress(openid, data) {
+    const coll = db.collection(COLLECTION);
+    const found = await coll.where({ openid, mode: 'stage' }).limit(1).get();
+    const prev = (found.data && found.data[0]) || null;
+    const merged = mergeStageProgress((prev && prev.stageProgress) || {}, data.records || []);
+    if (prev && prev._id && merged.changed) {
+        await coll.doc(prev._id).update({ data: { stageProgress: merged.progress, updatedAt: Date.now() } });
+    }
+    return { success: true, progress: merged.progress };
+}
+
+function sanitizeSaveSnapshot(raw) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('invalid snapshot');
+    const snapshot = {};
+    const keys = Object.keys(raw);
+    if (keys.length > 500) throw new Error('too many save keys');
+    keys.forEach((key) => {
+        if (!/^gc_[A-Za-z0-9_:-]{1,100}$/.test(key)) return;
+        snapshot[key] = raw[key];
+    });
+    if (JSON.stringify(snapshot).length > 750000) throw new Error('snapshot too large');
+    return snapshot;
+}
+
+async function pullPlayerSave(openid) {
+    const res = await db.collection(SAVE_COLLECTION).where({ openid }).limit(1).get();
+    const doc = (res.data && res.data[0]) || null;
+    return {
+        success: true,
+        exists: !!doc,
+        revision: doc ? (Number(doc.revision) || 0) : 0,
+        snapshot: doc && doc.snapshot && typeof doc.snapshot === 'object' ? doc.snapshot : {},
+        updatedAt: doc ? (Number(doc.updatedAt) || 0) : 0,
+    };
+}
+
+async function pushPlayerSave(openid, data) {
+    const snapshot = sanitizeSaveSnapshot(data.snapshot);
+    const coll = db.collection(SAVE_COLLECTION);
+    const found = await coll.where({ openid }).limit(1).get();
+    const prev = (found.data && found.data[0]) || null;
+    const expected = Math.max(0, Math.floor(Number(data.baseRevision) || 0));
+    const remoteRevision = prev ? (Number(prev.revision) || 0) : 0;
+    if (prev && expected !== remoteRevision) {
+        return {
+            success: false,
+            conflict: true,
+            revision: remoteRevision,
+            snapshot: prev.snapshot || {},
+            errMsg: 'revision conflict',
+        };
+    }
+    const now = Date.now();
+    const nextRevision = remoteRevision + 1;
+    const record = { openid, snapshot, revision: nextRevision, updatedAt: now };
+    if (prev && prev._id) await coll.doc(prev._id).update({ data: record });
+    else await coll.add({ data: Object.assign({ createdAt: now }, record) });
+    return { success: true, revision: nextRevision, updatedAt: now };
 }
 
 async function getRankList(openid, data) {
