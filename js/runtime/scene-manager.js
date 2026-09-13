@@ -251,17 +251,23 @@ class SceneManager {
         const size = cs * 1.18 * (1 + Math.sin(Math.PI * t) * 0.12);
         try {
             const { buildIsoBlockFaces, drawSolidIsoBlock } = require('../render/iso-block-renderer');
+            const a = (base) => Math.max(0, Math.min(1, alpha * base)).toFixed(3);
             ctx.save();
-            ctx.globalAlpha = alpha;
             ctx.translate(x, y);
             ctx.rotate(t * Math.PI * 0.55);
-            ctx.shadowColor = '#ffd43b';
+            ctx.shadowColor = 'rgba(255,212,59,' + a(0.9) + ')';
             ctx.shadowBlur = 12 + Math.sin(Math.PI * t) * 8;
             drawSolidIsoBlock(ctx, buildIsoBlockFaces(0, 0, size, 'cube'), {
-                left: '#d39a16', right: '#b87308', top: '#ffe875', bottom: '#7c4300',
-                leftStroke: 'rgba(255,239,150,0.78)', rightStroke: 'rgba(255,214,70,0.72)',
-                topStroke: '#fff6bd', backEdge: 'rgba(255,245,190,0.78)',
-                frontEdge: 'rgba(255,248,205,0.92)', shadow: false,
+                left: 'rgba(211,154,22,' + a(1) + ')',
+                right: 'rgba(184,115,8,' + a(1) + ')',
+                top: 'rgba(255,232,117,' + a(1) + ')',
+                bottom: 'rgba(124,67,0,' + a(1) + ')',
+                leftStroke: 'rgba(255,239,150,' + a(0.78) + ')',
+                rightStroke: 'rgba(255,214,70,' + a(0.72) + ')',
+                topStroke: 'rgba(255,246,189,' + a(1) + ')',
+                backEdge: 'rgba(255,245,190,' + a(0.78) + ')',
+                frontEdge: 'rgba(255,248,205,' + a(0.92) + ')',
+                shadow: false,
             });
             ctx.restore();
         } catch (e) { /* ignore transition render failures */ }
