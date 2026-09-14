@@ -95,6 +95,47 @@ function drawGarbageLayoutCell(ctx, x, y, size, col, row) {
     drawGarbageCell(ctx, x, y, size, hashSeed(col, row));
 }
 
+/** 中秋专题障碍：月白方形月石，无普通垃圾块的灰色裂纹。 */
+function drawMidAutumnGarbageCell(ctx, x, y, size, seed) {
+    const s = seed >>> 0;
+    const inset = size >= 8 ? 1 : 0.5;
+    const w = Math.max(1, size - inset * 2);
+    let grad = null;
+    try {
+        grad = ctx.createLinearGradient(x, y, x + size, y + size);
+        grad.addColorStop(0, '#f2f7f5');
+        grad.addColorStop(0.46, '#a9bdc2');
+        grad.addColorStop(1, '#4c626d');
+    } catch (e) { /* 单色回退 */ }
+    ctx.save();
+    ctx.fillStyle = grad || '#9aabb0';
+    ctx.fillRect(x + inset, y + inset, w, w);
+    const edge = Math.max(0.7, size * 0.09);
+    ctx.fillStyle = 'rgba(244,255,252,.78)';
+    ctx.fillRect(x + inset, y + inset, w, edge);
+    ctx.fillRect(x + inset, y + inset, edge, w);
+    ctx.fillStyle = 'rgba(30,52,63,.55)';
+    ctx.fillRect(x + inset, y + inset + w - edge, w, edge);
+    ctx.fillRect(x + inset + w - edge, y + inset, edge, w);
+    ctx.strokeStyle = 'rgba(220,241,239,.82)';
+    ctx.lineWidth = Math.max(.6, size * .035);
+    ctx.strokeRect(x + inset + .5, y + inset + .5, w - 1, w - 1);
+
+    // 月坑保留中秋识别，但不改变方形轮廓。
+    if (size >= 7) {
+        for (let i = 0; i < 2; i++) {
+            const px = x + size * (.25 + _rand(s, i * 3 + 1) * .5);
+            const py = y + size * (.25 + _rand(s, i * 3 + 2) * .5);
+            const craterR = size * (.055 + _rand(s, i * 3 + 3) * .055);
+            ctx.fillStyle = 'rgba(47, 65, 73, 0.22)';
+            ctx.beginPath(); ctx.arc(px, py, craterR, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+            ctx.lineWidth = Math.max(0.4, size * 0.025); ctx.stroke();
+        }
+    }
+    ctx.restore();
+}
+
 /** 目标金块：仍是垃圾格，但用金矿石材质明确标识。 */
 function drawGoldGarbageCell(ctx, x, y, size) {
     const inset = size >= 8 ? 1 : 0.5;
@@ -119,6 +160,40 @@ function drawGoldGarbageCell(ctx, x, y, size) {
     ctx.strokeStyle = 'rgba(86,45,0,0.72)';
     ctx.lineWidth = Math.max(0.6, size * 0.045);
     ctx.strokeRect(x + inset + 0.5, y + inset + 0.5, w - 1, w - 1);
+    ctx.restore();
+}
+
+/** 中秋专题目标块“月华碎片”：深青方形玉片内嵌一轮月亮。 */
+function drawMidAutumnMoonShard(ctx, x, y, size) {
+    const inset = size >= 8 ? 1 : 0.5;
+    const w = Math.max(1, size - inset * 2);
+    let grad = null;
+    try {
+        grad = ctx.createLinearGradient(x, y, x + size, y + size);
+        grad.addColorStop(0, '#286b76');
+        grad.addColorStop(.52, '#154550');
+        grad.addColorStop(1, '#082831');
+    } catch (e) { /* 单色回退 */ }
+    ctx.save();
+    ctx.shadowColor = 'rgba(255,230,130,.72)';
+    ctx.shadowBlur = Math.max(3, size * .22);
+    ctx.fillStyle = grad || '#154550';
+    ctx.fillRect(x + inset, y + inset, w, w);
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(126,225,220,.88)';
+    ctx.lineWidth = Math.max(.7, size * .045);
+    ctx.strokeRect(x + inset + .5, y + inset + .5, w - 1, w - 1);
+
+    const cx = x + size * .5;
+    const cy = y + size * .48;
+    const r = size * .27;
+    ctx.fillStyle = '#FFE991';
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(166,119,40,.22)';
+    ctx.beginPath(); ctx.arc(cx - r * .3, cy - r * .18, Math.max(.7, r * .16), 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx + r * .28, cy + r * .24, Math.max(.6, r * .12), 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,225,.78)';
+    ctx.beginPath(); ctx.arc(cx - r * .3, cy - r * .34, Math.max(.6, r * .12), 0, Math.PI * 2); ctx.fill();
     ctx.restore();
 }
 
@@ -219,6 +294,8 @@ module.exports = {
     GARBAGE_UI_COLOR,
     hashSeed,
     drawGarbageCell,
+    drawMidAutumnGarbageCell,
+    drawMidAutumnMoonShard,
     drawGoldGarbageCell,
     drawGarbageLayoutCell,
 };

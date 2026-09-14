@@ -20,6 +20,7 @@ const { drawLayoutBoardTiles } = require('../render/board-tiles');
 const { adManager, isRewardedVideoConfigured } = require('../../utils/ad-manager');
 const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
 const { layoutTabRow } = require('../widgets/tab-layout');
+const featureAccess = require('../../utils/feature-access');
 
 const STATUS_TABS = [
     { id: 'draft', label: '待自通', status: workshop.STATUS.draft },
@@ -44,6 +45,14 @@ class WorkshopScene {
     }
 
     onEnter(params) {
+        if (!featureAccess.getStatus('workshop').unlocked) {
+            const sm = GameGlobal.game.sceneManager;
+            sm.back();
+            setTimeout(() => featureAccess.showLockedDialog('workshop', {
+                onGo: () => sm.leaveTo('worldMap', {}, ['home']),
+            }), 0);
+            return;
+        }
         const p = params || {};
         // 兼容旧 mainTab/mineSub 回流参数
         if (p.mineSub) this._mineSub = p.mineSub;

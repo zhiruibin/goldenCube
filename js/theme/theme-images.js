@@ -31,6 +31,22 @@ const THEME_PATHS = {
   cardStageAmber: 'assets/images/theme/card-stage-amber.png',
   cardStageGold: 'assets/images/theme/card-stage-gold.png',
   cardStageBrown: 'assets/images/theme/card-stage-brown.png',
+  badgeNewMidAutumn: 'assets/images/theme/badge-new-midautumn.png',
+  badgeMidAutumn: 'assets/images/theme/badge-mid-autumn.png',
+  badgeMidAutumnLocked: 'assets/images/theme/badge-mid-autumn-locked.png',
+  stagePlaqueCurrent: 'assets/images/theme/stage-plaque-current-v2.png',
+  stagePlaqueCurrentFlower: 'assets/images/theme/stage-plaque-current-flower-v2.png',
+  stagePlaqueCleared: 'assets/images/theme/stage-plaque-cleared.png',
+  stagePlaqueClearedFloral: 'assets/images/theme/stage-plaque-cleared-v2.png',
+  stagePlaqueLocked: 'assets/images/theme/stage-plaque-locked-v2.png',
+  stagePlaqueFinale: 'assets/images/theme/stage-plaque-finale.png',
+  stagePlaqueFinaleFlower: 'assets/images/theme/stage-plaque-finale-flower.png',
+  stageFinaleLock: 'assets/images/theme/stage-finale-lock.png',
+  plazaCardFrameThin: 'assets/images/theme/plaza-card-frame-thin.png',
+  midAutumnCardCleared: 'assets/images/theme/mid-autumn/stage-card-cleared-v2.png',
+  midAutumnCardCurrent: 'assets/images/theme/mid-autumn/stage-card-current-v2.png',
+  midAutumnCardLocked: 'assets/images/theme/mid-autumn/stage-card-locked-v3.png',
+  midAutumnCardFinale: 'assets/images/theme/mid-autumn/stage-card-finale-v2.png',
 };
 
 /** @type {Record<string, { img: any, ready: boolean, failed: boolean }>} */

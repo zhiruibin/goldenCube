@@ -11,7 +11,7 @@ const { EffectRenderer } = require('../render/effect-renderer');
 const { BackgroundEffects } = require('../render/background-effects');
 const { DPadButton } = require('../widgets/dpad-button');
 const { Button } = require('../widgets/button');
-const { drawThemeBackground, drawThemeButtonSkin9Slice } = require('../theme/theme-images');
+const { drawThemeBackground, drawThemeButtonSkin, drawThemeButtonSkin9Slice } = require('../theme/theme-images');
 const { fillNightBackground } = require('../theme/arcade-night');
 const { PIECES, PIECE_COLORS } = require('../../data/pieces');
 const { achievementManager } = require('../../utils/achievement-manager');
@@ -101,6 +101,10 @@ class GameScene {
         this._playContext = this._params.playContext || 'stage';
         this._mode = 'stage';
         this._stageId = this._params.stageId || null;
+        // 专题对局可覆盖障碍块外观；普通关卡保持默认渲染。
+        this._themeId = this._params.themeId || '';
+        this._themeEvent = !!this._params.themeEvent;
+        this._themeEventStageId = Number(this._params.themeEventStageId) || 0;
         this._entryPaid = Number(this._params.entryPaid) || 0;
         this._workshop = !!this._params.workshop;
         this._workshopStageId = this._params.workshopStageId || null;
@@ -680,6 +684,7 @@ class GameScene {
             const rows = this._workshopRows || {};
             this._stageInfo = this._engine.initStage(rows, {
                 dropIntervalMs: this._params.dropIntervalMs || 1000,
+                firstPiece: this._params.firstPiece,
                 endless: !!this._endless,
                 lineFactory: this._endless ? () => endless.generateGarbageLine() : null,
             });
@@ -749,6 +754,7 @@ class GameScene {
                             fromX: this._boardX + (goldEvent.from.col + 0.5) * this._cellSize,
                             fromY: this._boardY + (goldEvent.from.row + 0.5) * this._cellSize,
                             cellSize: this._cellSize,
+                            themeId: this._themeId || '',
                         };
                     } catch (e) { /* ignore */ }
                     this._goldBlockFx = null;
@@ -781,11 +787,15 @@ class GameScene {
                     setTimeout(() => {
                         if (this._stageSettleLocked) return;
                         if (this._stageOverReason === 'stageClear') {
-                            if (this._workshop) {
+                            if (this._themeEvent) {
+                                this._goToThemeEventResult(true, lines);
+                            } else if (this._workshop) {
                                 this._goToWorkshopResult(lines);
                             } else {
                                 this._goToStageResult(lines);
                             }
+                        } else if (this._themeEvent) {
+                            this._goToThemeEventResult(false, lines);
                         } else if (this._workshop) {
                             this._goToWorkshopFail();
                         } else {
@@ -915,6 +925,18 @@ class GameScene {
         const x = fromX + (toX - fromX) * t;
         const y = fromY + (toY - fromY) * t - Math.sin(Math.PI * t) * cs * 2.2;
         ctx.save();
+        if (this._themeId === 'midAutumn') {
+            const { drawMidAutumnMoonShard } = require('../render/garbage-cell');
+            const size = cs * (1 + Math.sin(Math.PI * t) * .1);
+            ctx.globalAlpha = Math.min(1, (1 - t) * 2.5);
+            drawMidAutumnMoonShard(ctx, x - size / 2, y - size / 2, size);
+            ctx.fillStyle = '#FFE9A3';
+            ctx.font = 'bold 14px sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+            ctx.fillText('月华转移', x, y - cs * .7);
+            ctx.restore();
+            return;
+        }
         ctx.globalAlpha = Math.min(1, (1 - t) * 2.5);
         ctx.shadowColor = '#ffd54a';
         ctx.shadowBlur = 14;
@@ -1069,7 +1091,8 @@ class GameScene {
     _initRenderers() {
         this._boardRenderer = new BoardRenderer(
             this._boardX, this._boardY,
-            this._cellSize, 10, 20
+            this._cellSize, 10, 20,
+            this._themeId || ''
         );
 
         this._pieceRenderer = new PieceRenderer();
@@ -1513,13 +1536,13 @@ class GameScene {
         }
         ctx.fillText(info, W / 2, H / 2 - 50);
 
-        // 继续游戏 / 返回：用宽卡石板（约 2:1），避免方钮横向拉扁
-        const bw = Math.max(140, Math.min(252, Math.round(W * 0.68)) - 90);
-        const bh = Math.max(44, Math.round(bw * 0.48));
+        // 继续游戏 / 返回：使用原生 4:1 横向按钮素材，避免方形卡片皮肤被拉扁。
+        const bw = Math.min(240, Math.round(W * 0.68));
+        const bh = Math.round(bw / 4);
         const bx = W / 2 - bw / 2;
         const by1 = H / 2 - 8;
         this._pauseResumeBtnRect = { x: bx, y: by1, w: bw, h: bh };
-        if (!drawThemeButtonSkin9Slice(ctx, 'cardStageGold', bx, by1, bw, bh, 0.22)) {
+        if (!drawThemeButtonSkin(ctx, 'btnBarGold', bx, by1, bw, bh)) {
             ctx.fillStyle = '#c89840';
             this._roundRect(ctx, bx, by1, bw, bh, 12);
             ctx.fill();
@@ -1534,7 +1557,7 @@ class GameScene {
 
         // 返回关卡 / 工坊 — 棕色宽卡
         this._pauseQuitBtnRect = { x: bx, y: nextY, w: bw, h: bh };
-        if (!drawThemeButtonSkin9Slice(ctx, 'cardStageBrown', bx, nextY, bw, bh, 0.22)) {
+        if (!drawThemeButtonSkin(ctx, 'btnBarBrown', bx, nextY, bw, bh)) {
             ctx.fillStyle = 'rgba(60, 42, 28, 0.88)';
             this._roundRect(ctx, bx, nextY, bw, bh, 12);
             ctx.fill();
@@ -1546,13 +1569,15 @@ class GameScene {
         ctx.fillStyle = '#fff4e0';
         ctx.font = 'bold 18px sans-serif';
         ctx.fillText(
-            this._endless
-                ? '← 返回广场'
-                : (this._workshop
-                    ? (this._authorTrial
-                        ? (this._workshopReturnTo === 'editor' ? '← 返回编辑' : '← 返回列表')
-                        : '← 返回工坊')
-                    : '← 返回关卡'),
+            this._themeEvent
+                ? '返回'
+                : (this._endless
+                    ? '← 返回广场'
+                    : (this._workshop
+                        ? (this._authorTrial
+                            ? (this._workshopReturnTo === 'editor' ? '← 返回编辑' : '← 返回列表')
+                            : '← 返回工坊')
+                        : '← 返回关卡')),
             W / 2,
             nextY + bh / 2 + 1
         );
@@ -1889,6 +1914,43 @@ class GameScene {
                 replayKey,
             }, stack);
         }, 700);
+    }
+
+    /** 专题关卡独立结算，不写入普通闯关或工坊统计。 */
+    _goToThemeEventResult(cleared, lines) {
+        if (this._stageSettleLocked) return;
+        this._stageSettleLocked = true;
+        if (this._audio) this._audio.stopBGM();
+        const timeMs = Date.now() - this._stageStartTime;
+        let firstClear = false;
+        let badgeUnlocked = false;
+        let themeProgress = null;
+        if (cleared) {
+            try {
+                const marked = require('../../data/mid-autumn-stages')
+                    .markCleared(this._themeEventStageId);
+                firstClear = marked.first;
+                badgeUnlocked = !!(marked.badge && marked.badge.first);
+                themeProgress = marked.progress;
+            } catch (e) { /* ignore */ }
+        }
+        if (!themeProgress) {
+            try { themeProgress = require('../../data/mid-autumn-stages').getProgress(); } catch (e) { /* ignore */ }
+        }
+        const resultScene = badgeUnlocked ? 'themeBadgeAward' : 'themeEventResult';
+        GameGlobal.game.sceneManager.leaveTo(resultScene, {
+            stageId: this._themeEventStageId,
+            cleared: !!cleared,
+            firstClear,
+            badgeUnlocked,
+            themeProgress,
+            result: {
+                lines: Number(lines) || 0,
+                pieces: this._pieceCount || 0,
+                timeMs,
+                reason: this._stageOverReason || '',
+            },
+        }, ['home', 'themeEvent']);
     }
 
     /** 工坊/广场通关：落盘本局回放，供结算页「回看本局」 */
@@ -2390,7 +2452,9 @@ class GameScene {
             this._saveEndlessRun();
         }
         const sm = GameGlobal.game.sceneManager;
-        if (this._workshop) {
+        if (this._themeEvent) {
+            sm.leaveTo('themeEvent', {}, ['home']);
+        } else if (this._workshop) {
             this._leaveWorkshopOrigin();
         } else {
             // 栈保留首页+世界地图，关选「返回」回到地图，而不是已放弃的对局

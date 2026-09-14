@@ -71,7 +71,7 @@ class AchievementScene {
         }
 
         const titleY = this._topInset() + 16;
-        drawBrandTitle(ctx, '成就', W / 2, titleY, 'bold 28px sans-serif');
+        drawBrandTitle(ctx, '图鉴', W / 2, titleY, 'bold 28px sans-serif');
 
         // 完成度（仅计当前有效成就，不含 deprecated）
         const activeIds = new Set(getAllAchievements().map((a) => a.id));

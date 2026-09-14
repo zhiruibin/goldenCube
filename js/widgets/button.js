@@ -34,7 +34,7 @@ class Button {
         this.skin = opts.skin || null;
         /** 'stretch' | '9slice' | 'contain'（等比缩放，不拉扁） */
         this.skinMode = opts.skinMode || 'stretch';
-        /** 'row' | 'iconStack' | 'text' */
+        /** 'row' | 'iconStack' | 'iconOnly' | 'text' */
         this.layout = opts.layout || 'row';
         this.labelColor = opts.labelColor || '#ffffff';
         this.fontScale = opts.fontScale || 1;
@@ -139,6 +139,8 @@ class Button {
         ctx.fillStyle = this.labelColor || '#ffffff';
         if (this.layout === 'text' || (!this.icon && this.text)) {
             this._drawCenteredLabel(ctx);
+        } else if (this.layout === 'iconOnly' && IconRenderer.has(this.icon)) {
+            this._drawIconOnly(ctx);
         } else if (this.layout === 'iconStack' && IconRenderer.has(this.icon)) {
             this._drawIconStack(ctx);
         } else if (this.icon === 'hardDrop') {
@@ -217,6 +219,19 @@ class Button {
         // 文字紧跟图标下方，图标变小后自然上移
         const textCy = iconCy + iconSize * 0.55 + fontPx * 0.55 + 2;
         ctx.fillText(this.text, cx, textCy);
+    }
+
+    /** 圆形主题钮专用：图标独立居中，不为不存在的文字预留空间。 */
+    _drawIconOnly(ctx) {
+        const cx = this.x + this.w / 2;
+        const cy = this.y + this.h / 2;
+        const size = Math.min(this.w, this.h) * 0.56;
+        ctx.save();
+        ctx.shadowColor = 'rgba(35, 16, 6, 0.8)';
+        ctx.shadowBlur = 2;
+        ctx.shadowOffsetY = 1;
+        IconRenderer.draw(ctx, this.icon, cx, cy, size, this.labelColor || '#fff6e8');
+        ctx.restore();
     }
 
     /**

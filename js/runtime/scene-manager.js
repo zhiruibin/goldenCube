@@ -192,6 +192,15 @@ class SceneManager {
             this.current.render(ctx);
         }
         this._renderGoldTransition(ctx);
+        // 功能解锁说明弹窗：全局 Canvas 浮层，低于隐私/资料授权弹窗。
+        try {
+            const { isDialogVisible, renderDialog } = require('../../utils/feature-access');
+            if (isDialogVisible()) {
+                const W = (typeof GameGlobal !== 'undefined' && GameGlobal.game && GameGlobal.game.width) || 375;
+                const H = (typeof GameGlobal !== 'undefined' && GameGlobal.game && GameGlobal.game.height) || 667;
+                renderDialog(ctx, W, H);
+            }
+        } catch (e) { /* ignore */ }
         // 全局授权弹窗叠在当前场景之上（隐私优先于资料授权）
         try {
             const {
@@ -250,6 +259,16 @@ class SceneManager {
         const alpha = Math.max(0, 1 - t);
         const size = cs * 1.18 * (1 + Math.sin(Math.PI * t) * 0.12);
         try {
+            if (fx.themeId === 'midAutumn') {
+                const { drawMidAutumnMoonShard } = require('../render/garbage-cell');
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.translate(x, y);
+                ctx.rotate(t * Math.PI * .42);
+                drawMidAutumnMoonShard(ctx, -size / 2, -size / 2, size);
+                ctx.restore();
+                return;
+            }
             const { buildIsoBlockFaces, drawSolidIsoBlock } = require('../render/iso-block-renderer');
             const a = (base) => Math.max(0, Math.min(1, alpha * base)).toFixed(3);
             ctx.save();

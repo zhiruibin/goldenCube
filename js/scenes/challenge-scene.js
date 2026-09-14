@@ -10,6 +10,7 @@ const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
 const { drawThemeBackground, drawThemeImageContain, drawThemeButtonSkin } = require('../theme/theme-images');
 const { layoutTabRow } = require('../widgets/tab-layout');
 const { fillNightBackground, drawBrandTitle } = require('../theme/arcade-night');
+const featureAccess = require('../../utils/feature-access');
 
 const PENDING_CHALLENGES_KEY = 'gc_pending_challenges';
 /** 与云函数挑战过期一致：本地待应战超过 7 天视为失效 */
@@ -390,7 +391,19 @@ class ChallengeScene {
       ctx.font = '11px sans-serif';
       ctx.fillStyle = 'rgba(36, 20, 8, 0.72)';
       ctx.fillText(m.hint, x + 18, y + 40);
-      this._modeAreas.push({ mode: m.mode, x, y, w: cardW, h: cardH });
+      const locked = m.mode === 'plaza' && !featureAccess.getStatus('plaza').unlocked;
+      if (locked) {
+        ctx.fillStyle = 'rgba(20, 14, 9, 0.16)';
+        this._roundRect(ctx, x, y, cardW, cardH, 10);
+        ctx.fill();
+        ctx.save();
+        ctx.shadowColor = 'rgba(30, 16, 8, 0.7)';
+        ctx.shadowBlur = 2;
+        ctx.shadowOffsetY = 1;
+        IconRenderer.draw(ctx, 'lock', x + cardW - 24, y + 18, 20, 'rgba(255, 246, 232, 0.96)');
+        ctx.restore();
+      }
+      this._modeAreas.push({ mode: m.mode, x, y, w: cardW, h: cardH, locked });
     }
   }
 
@@ -1048,7 +1061,12 @@ class ChallengeScene {
         if (x >= area.x && x <= area.x + area.w && y >= area.y && y <= area.y + area.h) {
           this._sheetOpen = false;
           if (area.mode === 'plaza') {
-            GameGlobal.game.sceneManager.switchTo('plaza', {}, ['home']);
+            if (area.locked) {
+              this._sheetOpen = true;
+              featureAccess.showLockedDialog('plaza');
+            } else {
+              GameGlobal.game.sceneManager.switchTo('plaza', {}, ['home']);
+            }
           } else {
             GameGlobal.game.sceneManager.switchTo('worldMap');
           }

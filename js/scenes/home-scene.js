@@ -15,6 +15,9 @@ const {
 const { drawThemeBackground, drawThemeImageContain } = require('../theme/theme-images');
 const { MiniTetrisFx } = require('../render/mini-tetris-fx');
 const { FRAME_INTERVAL } = require('../runtime/frame-budget');
+const featureAccess = require('../../utils/feature-access');
+const IconRenderer = require('../render/icon-renderer');
+const themeEventManager = require('../../utils/theme-event-manager');
 
 /** 首页底栏槽位高度（占位特效 / 后续 Banner 共用） */
 const HOME_FOOTER_SLOT_H = 72;
@@ -50,6 +53,10 @@ class HomeScene {
         this._privacyLinkRect = null;
         this._miniFx = null;
         this._bannerTimer = null;
+        this._featureLocks = [];
+        this._themeEvent = themeEventManager.getCurrent();
+        this._challengeButton = null;
+        this._themeButton = null;
     }
 
     onEnter(params) {
@@ -60,8 +67,17 @@ class HomeScene {
         this._claimDailyLogin();
         this._maybeRemindPending();
         this._initFooterContent();
+        this._refreshThemeEvent();
         // 若音频已在用户手势中初始化过，回首页立即恢复 BGM
         this._ensureHomeBgm();
+    }
+
+    _refreshThemeEvent() {
+        themeEventManager.refresh().then((event) => {
+            this._themeEvent = event;
+            this._initUI();
+            try { if (GameGlobal.game.kickLoop) GameGlobal.game.kickLoop(); } catch (e) { /* ignore */ }
+        });
     }
 
     getRenderInterval() {
@@ -81,6 +97,7 @@ class HomeScene {
         this._maybeRemindPending();
         this._initFooterContent();
         this._ensureHomeBgm();
+        this._refreshThemeEvent();
     }
 
     /** 首页 BGM：仅在 AudioContext 已初始化时尝试（需先有用户触摸） */
@@ -141,6 +158,8 @@ class HomeScene {
         for (const btn of this._buttons) {
             btn.render(ctx);
         }
+        this._renderFeatureLocks(ctx);
+        this._renderEntryBadges(ctx);
 
         if (this._miniFx) {
             this._miniFx.render(ctx);
@@ -183,8 +202,12 @@ class HomeScene {
         const iconRowLeft = centerX - (iconSize * 4 + iconGap * 3) / 2;
 
         this._buttons = [];
+        this._featureLocks = [];
+        this._challengeButton = null;
+        this._themeButton = null;
 
         const pendingCount = getPendingChallengeCount();
+        const themeEvent = this._themeEvent || themeEventManager.getCurrent();
 
         const bigBtns = [
             {
@@ -208,35 +231,39 @@ class HomeScene {
                 row: 0,
                 text: '关卡\n广场',
                 fontScale: 1,
-                color: '#c9a227',
-                skin: 'btnSquareGold',
-                onClick: () => GameGlobal.game.sceneManager.switchTo('plaza'),
+                color: '#178f91',
+                skin: 'btnSquareTeal',
+                feature: 'plaza',
+                onClick: () => featureAccess.enter('plaza', () => {
+                    GameGlobal.game.sceneManager.switchTo('plaza');
+                }),
             },
             {
                 col: 0,
                 row: 1,
                 text: '工坊',
                 fontScale: 1,
-                color: '#8b5a2b',
+                color: '#9a5528',
                 skin: 'btnSquareBrown',
-                onClick: () => GameGlobal.game.sceneManager.switchTo('workshop'),
+                feature: 'workshop',
+                onClick: () => featureAccess.enter('workshop', () => {
+                    GameGlobal.game.sceneManager.switchTo('workshop');
+                }),
             },
             {
                 col: 1,
                 row: 1,
-                text: pendingCount > 0 ? ('挑战\n(' + pendingCount + ')') : '好友\n挑战',
+                text: themeEvent.title || '主题\n挑战',
                 fontScale: 1,
-                color: pendingCount > 0 ? '#33d6ff' : '#1aa8a0',
-                skin: 'btnSquareTeal',
-                onClick: () => GameGlobal.game.sceneManager.switchTo('challenge', {
-                    tab: pendingCount > 0 ? 'incoming' : 'sent',
-                }),
+                color: themeEvent.accentColor || '#1aa8a0',
+                skin: themeEvent.buttonSkin || 'btnSquareTeal',
+                onClick: () => GameGlobal.game.sceneManager.switchTo('themeEvent'),
             },
         ];
 
         for (let i = 0; i < bigBtns.length; i++) {
             const item = bigBtns[i];
-            this._buttons.push(new Button({
+            const button = new Button({
                 x: left + item.col * (cell + gap),
                 y: gridY + item.row * (cell + gap),
                 w: cell,
@@ -249,19 +276,24 @@ class HomeScene {
                 color: item.color,
                 skin: item.skin,
                 onClick: item.onClick,
-            }));
+            });
+            this._buttons.push(button);
+            if (i === 3) this._themeButton = button;
+            if (item.feature && !featureAccess.getStatus(item.feature).unlocked) {
+                this._featureLocks.push({ button, feature: item.feature });
+            }
         }
 
         const iconY = gridY + cell * 2 + gap * 2 + 4;
         const footerBtns = [
+            { text: '约战', target: 'challenge', icon: 'gamepad' },
             { text: '排行', target: 'rank', icon: 'trophy' },
-            { text: '成就', target: 'achievement', icon: 'medal' },
-            { text: '商店', target: 'shop', icon: 'cart' },
-            { text: '设置', target: 'settings', icon: 'gear' },
+            { text: '图鉴', target: 'achievement', icon: 'medal' },
+            { text: '皮肤', target: 'shop', icon: 'rainbow' },
         ];
         for (let i = 0; i < footerBtns.length; i++) {
             const item = footerBtns[i];
-            this._buttons.push(new Button({
+            const button = new Button({
                 x: iconRowLeft + i * (iconSize + iconGap),
                 y: iconY,
                 w: iconSize,
@@ -273,6 +305,10 @@ class HomeScene {
                 color: '#6b4a2e',
                 skin: 'btnIconBrown',
                 onClick: () => {
+                    if (item.target === 'challenge') {
+                        GameGlobal.game.sceneManager.switchTo('challenge', { tab: pendingCount > 0 ? 'incoming' : 'sent' });
+                        return;
+                    }
                     if (item.target === 'rank') {
                         const { ensurePrivacyAuthorize, showPrivacyFailTip } = require('../../utils/privacy');
                         ensurePrivacyAuthorize().then((ok) => {
@@ -286,8 +322,19 @@ class HomeScene {
                     }
                     GameGlobal.game.sceneManager.switchTo(item.target);
                 },
-            }));
+            });
+            this._buttons.push(button);
+            if (item.target === 'challenge') this._challengeButton = button;
         }
+
+        // 设置从底栏移到左上角，避开右上角微信胶囊。
+        const topInset = Math.max(8, ((GameGlobal.game.systemInfo || {}).statusBarHeight || 0) + 8);
+        this._buttons.push(new Button({
+            x: 12, y: topInset, w: 42, h: 42, radius: 21,
+            text: '', icon: 'gear', layout: 'iconOnly', labelColor: '#fff6e8',
+            color: '#6b4a2e', skin: 'btnCircleBrown',
+            onClick: () => GameGlobal.game.sceneManager.switchTo('settings'),
+        }));
 
         if (isRewardedVideoConfigured() === true) {
             const welfareY = iconY + iconSize + gap;
@@ -317,6 +364,52 @@ class HomeScene {
             w: W,
             h: 44,
         };
+    }
+
+    _renderFeatureLocks(ctx) {
+        (this._featureLocks || []).forEach((item) => {
+            const button = item.button;
+            const color = 'rgba(255, 246, 232, 0.94)';
+            ctx.save();
+            ctx.shadowColor = 'rgba(30, 16, 8, 0.7)';
+            ctx.shadowBlur = 2;
+            ctx.shadowOffsetY = 1;
+            IconRenderer.draw(ctx, 'lock', button.x + button.w - 22, button.y + 21, 20, color);
+            ctx.restore();
+        });
+    }
+
+    _renderEntryBadges(ctx) {
+        const pending = getPendingChallengeCount();
+        if (pending > 0 && this._challengeButton) {
+            this._drawBadge(ctx, this._challengeButton.x + this._challengeButton.w - 3, this._challengeButton.y + 3, pending > 99 ? '99+' : String(pending), '#e34b4b');
+        }
+        const event = this._themeEvent || {};
+        if (event.active && event.badge && this._themeButton) {
+            drawThemeImageContain(
+                ctx,
+                'badgeNewMidAutumn',
+                this._themeButton.x + this._themeButton.w - 17,
+                this._themeButton.y + 19,
+                54,
+                54
+            );
+        }
+    }
+
+    _drawBadge(ctx, cx, cy, text, color) {
+        const label = String(text || '');
+        const w = Math.max(24, 14 + label.length * 10);
+        ctx.save();
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(cx - w / 2 + 10, cy, 10, Math.PI / 2, Math.PI * 1.5);
+        ctx.arc(cx + w / 2 - 10, cy, 10, -Math.PI / 2, Math.PI / 2);
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = '#fff6e8'; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 11px sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(label, cx, cy + 0.5);
+        ctx.restore();
     }
 
     /** 底栏槽位：隐私指引上方固定高度区域 */

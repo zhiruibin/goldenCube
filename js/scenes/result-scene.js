@@ -128,7 +128,7 @@ class ResultScene {
                 this._newAchievementCount = newly.length;
                 this._newCoinReward = reward;
                 setTimeout(() => {
-                    wx.showToast({ title: `成就解锁 ${newly.length} 个，+${reward} 金币`, icon: 'none' });
+                    wx.showToast({ title: `图鉴解锁 ${newly.length} 个，+${reward} 金币`, icon: 'none' });
                 }, 800);
             }
         } catch (e) {

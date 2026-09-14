@@ -6,6 +6,7 @@
 const goldenBlock = require('./golden-block-manager');
 const { achievementManager } = require('./achievement-manager');
 const { getAllAchievements } = require('../data/achievements');
+const themeEventManager = require('./theme-event-manager');
 
 let initialized = false;
 
@@ -58,8 +59,8 @@ function buildShareMessage(channel) {
     } else if (current.name === 'achievement') {
         source = 'achievement';
         title = isTimeline
-            ? `我的挖个方块成就进度 ${achievementText()}，继续收集！`
-            : `我已解锁 ${achievementText()} 项成就，你能超过我吗？`;
+            ? `我的挖个方块图鉴进度 ${achievementText()}，继续收集！`
+            : `我已解锁 ${achievementText()} 项图鉴，你能超过我吗？`;
     } else if (current.name === 'stageResult') {
         source = 'stageResult';
         const stage = current.scene && current.scene._stage;
@@ -67,6 +68,13 @@ function buildShareMessage(channel) {
         const stageId = stage && stage.id != null ? stage.id : '';
         const lines = result && Math.max(0, Number(result.lines) || 0);
         title = `我成功挖通第 ${stageId || '?'} 关，消除了 ${lines || 0} 行！`;
+    } else if (current.name === 'themeEvent') {
+        source = 'themeEvent';
+        const event = themeEventManager.getCurrent();
+        const name = event.pageTitle || '主题挑战';
+        title = event.active
+            ? (isTimeline ? `挖个方块·${name}正在进行！` : `来参加挖个方块的${name}，看看谁挖得更快！`)
+            : '挖个方块的下一期主题挑战，敬请期待！';
     }
 
     const message = {

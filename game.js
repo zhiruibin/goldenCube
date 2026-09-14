@@ -151,6 +151,9 @@ function onStart() {
     const PlazaScene = require('./js/scenes/plaza-scene');
     const WorkshopEditorScene = require('./js/scenes/workshop-editor-scene');
     const WorkshopResultScene = require('./js/scenes/workshop-result-scene');
+    const ThemeEventScene = require('./js/scenes/theme-event-scene');
+    const ThemeEventResultScene = require('./js/scenes/theme-event-result-scene');
+    const ThemeBadgeAwardScene = require('./js/scenes/theme-badge-award-scene');
     GameGlobal.game.sceneManager.register('home', HomeScene);
     GameGlobal.game.sceneManager.register('game', GameScene);
     GameGlobal.game.sceneManager.register('result', ResultScene);
@@ -168,6 +171,9 @@ function onStart() {
     GameGlobal.game.sceneManager.register('plaza', PlazaScene);
     GameGlobal.game.sceneManager.register('workshopEditor', WorkshopEditorScene);
     GameGlobal.game.sceneManager.register('workshopResult', WorkshopResultScene);
+    GameGlobal.game.sceneManager.register('themeEvent', ThemeEventScene);
+    GameGlobal.game.sceneManager.register('themeEventResult', ThemeEventResultScene);
+    GameGlobal.game.sceneManager.register('themeBadgeAward', ThemeBadgeAwardScene);
 
     // 预加载结算页方块插画
     try {
@@ -759,6 +765,14 @@ wx.onTouchEnd(function (e) {
                     if (hitTestProfileAuthSkip(x, y)) {
                         skipProfileAuthDialog();
                     }
+                    return;
+                }
+            } catch (e) { /* ignore */ }
+            // 功能解锁 Canvas 弹窗：浮层存在时阻断底层场景点击。
+            try {
+                const { isDialogVisible, handleDialogTap } = require('./utils/feature-access');
+                if (isDialogVisible()) {
+                    handleDialogTap(x, y);
                     return;
                 }
             } catch (e) { /* ignore */ }

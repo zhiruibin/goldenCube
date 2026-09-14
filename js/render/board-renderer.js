@@ -7,7 +7,10 @@
  */
 
 const { boardSkins, blockSkins } = require('../../data/skins');
-const { GARBAGE, GOLD_GARBAGE, hashSeed, drawGarbageCell, drawGoldGarbageCell } = require('./garbage-cell');
+const {
+    GARBAGE, GOLD_GARBAGE, hashSeed, drawGarbageCell,
+    drawMidAutumnGarbageCell, drawMidAutumnMoonShard, drawGoldGarbageCell,
+} = require('./garbage-cell');
 const {
     resolveTileStyle,
     drawBoardChrome,
@@ -38,12 +41,13 @@ const TYPE_LETTER = {
 };
 
 class BoardRenderer {
-    constructor(x, y, cellSize, cols, rows) {
+    constructor(x, y, cellSize, cols, rows, themeId) {
         this.x = x;
         this.y = y;
         this.cellSize = cellSize;
         this.cols = cols;
         this.rows = rows;
+        this._themeId = themeId || '';
         // 方块颜色映射（与 pieces.js 一致，构造时按已装备方块皮肤覆盖）
         this._colorMap = {
             1: '#00f0f0', // I
@@ -588,13 +592,16 @@ class BoardRenderer {
      */
     _drawCell(ctx, x, y, size, colorId, col, row) {
         if (colorId === GOLD_GARBAGE) {
-            drawGoldGarbageCell(ctx, x, y, size);
+            if (this._themeId === 'midAutumn') drawMidAutumnMoonShard(ctx, x, y, size);
+            else drawGoldGarbageCell(ctx, x, y, size);
             return;
         }
         if (colorId === GARBAGE) {
             const gc = (typeof col === 'number') ? col : Math.floor((x - this.x) / size);
             const gr = (typeof row === 'number') ? row : Math.floor((y - this.y) / size);
-            drawGarbageCell(ctx, x, y, size, hashSeed(gc, gr));
+            const seed = hashSeed(gc, gr);
+            if (this._themeId === 'midAutumn') drawMidAutumnGarbageCell(ctx, x, y, size, seed);
+            else drawGarbageCell(ctx, x, y, size, seed);
             return;
         }
 

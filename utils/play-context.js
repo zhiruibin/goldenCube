@@ -54,6 +54,7 @@ function replayMetaFromGame(scene) {
         workshopTitle: scene._workshopTitle || '',
         challengeId: scene._challengeId || '',
         challengeKind: scene._challengeMode || '',
+        themeId: scene._themeId || '',
     };
     return meta;
 }

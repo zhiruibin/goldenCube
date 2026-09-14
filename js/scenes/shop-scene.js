@@ -76,7 +76,7 @@ class ShopScene {
         }
 
         const titleY = this._topInset() + 16;
-        drawBrandTitle(ctx, '商店', W / 2, titleY, 'bold 28px sans-serif');
+        drawBrandTitle(ctx, '皮肤', W / 2, titleY, 'bold 28px sans-serif');
 
         // 金币（Title 下方居中一行，避免与居中标题抢横向空间）
         drawCoinHudCentered(ctx, W, titleY + 30, this._coins);

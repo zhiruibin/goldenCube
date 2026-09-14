@@ -3,6 +3,7 @@
  * 滑动帧只做 fillRect / fillText / 一张描边；禁止每格 roundRect、渐变、clip、读 storage。
  */
 const { roundRectPath } = require('./board-tiles');
+const { getThemeImage } = require('../theme/theme-images');
 
 const GOLD = '#FFC857';
 const CYAN = '#00c6ff';
@@ -289,21 +290,61 @@ function drawCardMeta(ctx, box, state) {
     }
 }
 
+/** 固定约 5px 的主题边框；只绘四角与四边，透明中心不参与拉伸。 */
+function drawThinThemeFrame(ctx, x, y, w, h) {
+    const entry = getThemeImage('plazaCardFrameThin');
+    if (!entry.ready || !entry.img) return false;
+    const img = entry.img;
+    // 512x384 成品的有效透明边界与切片尺寸。
+    const sx = 11;
+    const sy = 23;
+    const sw = 489;
+    const sh = 339;
+    const sc = 28;
+    const dc = Math.min(14, Math.floor(w / 3), Math.floor(h / 3));
+    const midW = Math.max(1, w - dc * 2);
+    const midH = Math.max(1, h - dc * 2);
+
+    ctx.drawImage(img, sx, sy, sc, sc, x, y, dc, dc);
+    ctx.drawImage(img, sx + sw - sc, sy, sc, sc, x + w - dc, y, dc, dc);
+    ctx.drawImage(img, sx, sy + sh - sc, sc, sc, x, y + h - dc, dc, dc);
+    ctx.drawImage(img, sx + sw - sc, sy + sh - sc, sc, sc, x + w - dc, y + h - dc, dc, dc);
+    ctx.drawImage(img, sx + sc, sy, sw - sc * 2, sc, x + dc, y, midW, dc);
+    ctx.drawImage(img, sx + sc, sy + sh - sc, sw - sc * 2, sc, x + dc, y + h - dc, midW, dc);
+    ctx.drawImage(img, sx, sy + sc, sc, sh - sc * 2, x, y + dc, dc, midH);
+    ctx.drawImage(img, sx + sw - sc, sy + sc, sc, sh - sc * 2, x + w - dc, y + dc, dc, midH);
+    return true;
+}
+
 function drawCard(ctx, box, state) {
     const r = 8;
     ctx.fillStyle = '#0c101c';
     roundRectPath(ctx, box.x, box.y, box.w, box.h, r);
     ctx.fill();
 
-    drawSilhouette(ctx, box.stage, box.x, box.y, box.w, box.h - META_FOOTER_H, state);
-    drawCardMeta(ctx, box, state);
+    // 内容避开矿石边框；小卡至少 7px，大卡最多 10px。
+    const inset = Math.max(7, Math.min(10, Math.round(Math.min(box.w, box.h) * 0.055)));
+    const inner = Object.assign({}, box, {
+        x: box.x + inset,
+        y: box.y + inset,
+        w: box.w - inset * 2,
+        h: box.h - inset * 2,
+    });
+    drawSilhouette(ctx, inner.stage, inner.x, inner.y, inner.w, inner.h - META_FOOTER_H, state);
+    drawCardMeta(ctx, inner, state);
+    // 保留元卡片的文本缓存与无尽模式问号命中区。
+    box._metaKey = inner._metaKey;
+    box._meta = inner._meta;
+    box.helpRect = inner.helpRect;
 
-    ctx.strokeStyle = state === 'cleared' ? GOLD
-        : state === 'unlocked' ? CYAN
-        : 'rgba(255,255,255,0.12)';
-    ctx.lineWidth = state === 'cleared' ? 2.4 : state === 'unlocked' ? 2 : 1;
-    roundRectPath(ctx, box.x + 1, box.y + 1, box.w - 2, box.h - 2, r);
+    drawThinThemeFrame(ctx, box.x, box.y, box.w, box.h);
+
+    // 代码外缘保持 1.5px，用于统一轮廓清晰度。
+    ctx.strokeStyle = 'rgba(151, 105, 55, 0.82)';
+    ctx.lineWidth = 1.5;
+    roundRectPath(ctx, box.x + 0.75, box.y + 0.75, box.w - 1.5, box.h - 1.5, r);
     ctx.stroke();
+
 }
 
 module.exports = {

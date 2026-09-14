@@ -25,6 +25,7 @@ const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
 const endless = require('../../utils/endless-manager');
 const { roundRectPath } = require('../render/board-tiles');
 const { layoutTabRow } = require('../widgets/tab-layout');
+const featureAccess = require('../../utils/feature-access');
 const REVIEWER_CACHE_KEY = 'gc_workshop_reviewer_v1';
 
 function readReviewerCache() {
@@ -78,6 +79,14 @@ class PlazaScene {
     }
 
     onEnter(params) {
+        if (!featureAccess.getStatus('plaza').unlocked) {
+            const sm = GameGlobal.game.sceneManager;
+            sm.back();
+            setTimeout(() => featureAccess.showLockedDialog('plaza', {
+                onGo: () => sm.leaveTo('worldMap', {}, ['home']),
+            }), 0);
+            return;
+        }
         const p = params || {};
         this._plazaSort = p.plazaSort || 'official';
         if (p.toast) this._showToast(p.toast);

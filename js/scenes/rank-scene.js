@@ -426,7 +426,7 @@ class RankScene {
 
         drawTab(startX, '好友排行', this._tab === 'friend');
         const globalX = layout.xAt(1);
-        drawTab(globalX, '全服Top20', this._tab === 'global');
+        drawTab(globalX, '全服前20', this._tab === 'global');
 
         this._tabAreas = [
             { x: startX, y: tabY, w: tabW, h: tabH, tab: 'friend' },

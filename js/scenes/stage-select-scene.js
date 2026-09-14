@@ -6,7 +6,7 @@
 const { fillNightBackground } = require('../theme/arcade-night');
 const {
     drawThemeBackground,
-    drawThemeImageContain,
+    drawThemeButtonSkin,
     getThemeImage,
 } = require('../theme/theme-images');
 const goldenBlock = require('../../utils/golden-block-manager');
@@ -22,8 +22,10 @@ const {
 
 const COLS = 2;
 const H_PAD = 16;
-const CARD_GAP = 12;
-const CARD_H = 84;
+const CARD_GAP = 8;
+const CARD_H = 74;
+const CARD_ROW_GAP = 7;
+const FINALE_PLAQUE_ASPECT = 512 / 167;
 
 /** 金矿工坊：章节页文案色（卡片仍用半透明样式） */
 const MINE_TITLE = '#FFE566';
@@ -108,6 +110,8 @@ class StageSelectScene {
         this._animT = 1;
         // 入场选择弹窗
         this._entryDialog = null;
+        this._scrollY = 0;
+        this._scrollDrag = null;
     }
 
     onEnter(params) {
@@ -116,6 +120,8 @@ class StageSelectScene {
         this._toastT = 0;
         this._animTime = 0;
         this._entryDialog = null;
+        this._scrollY = 0;
+        this._scrollDrag = null;
         this._initFallingBlocks();
         this._initBackButton();
         this._chapters = goldenBlock.getChapters();
@@ -194,7 +200,8 @@ class StageSelectScene {
         const gridTop = headerTop + titleRowH + subtitleGap + subtitleH + 14;
 
         const stageCount = (this._stages && this._stages.length) ? this._stages.length : 10;
-        const rows = Math.ceil(stageCount / COLS);
+        // 前9关两列任务牌 + 第10关横跨两列的章节终点牌，共6行。
+        const rows = stageCount === 10 ? 6 : Math.ceil(stageCount / COLS);
         const backSkin = getThemeImage('mapBtnBack');
         const skinW = (backSkin.ready && backSkin.img && backSkin.img.width) || 640;
         const skinH = (backSkin.ready && backSkin.img && backSkin.img.height) || 287;
@@ -206,15 +213,10 @@ class StageSelectScene {
         const gridBottom = backBtnY - 28;
         const availGridH = Math.max(0, gridBottom - gridTop);
 
-        let cardGap = CARD_GAP;
-        let cardH = CARD_H;
-        const neededH = rows * cardH + (rows - 1) * cardGap;
-        if (neededH > availGridH && rows > 0) {
-            cardGap = Math.max(8, Math.floor(cardGap * availGridH / neededH));
-            cardH = Math.max(72, Math.floor((availGridH - (rows - 1) * cardGap) / rows));
-        }
-
+        const cardGap = CARD_GAP;
         const cardW = (contentW - (COLS - 1) * cardGap) / COLS;
+        // 以任务牌素材的视觉比例反算高度，避免宽屏设备把牌匾重新拉成细条。
+        const cardH = Math.max(CARD_H - 5, Math.min(95, Math.round(cardW / 1.95) - 5));
         // 标题在胶囊下方整行可用，只需避开右侧安全边距
         const titleMaxW = Math.max(80, contentW);
 
@@ -256,34 +258,80 @@ class StageSelectScene {
             const cards = [];
             const hitRects = [];
             stageList.forEach((stage, i) => {
+                const finale = stageList.length === 10 && i === 9;
                 const col = i % COLS;
-                const row = Math.floor(i / COLS);
-                const x = m.contentLeft + col * (m.cardW + m.cardGap);
-                const y = m.gridTop + row * (m.cardH + m.cardGap);
-                const cleared = !!goldenBlock.getStageBest(stage.id);
-                // 与 card-stage-amber 约 2:1，等比缩小
-                const btnW = 64;
-                const btnH = 32;
-                const challengeBtn = cleared ? {
-                    x: x + m.cardW - btnW - 10,
-                    y: y + m.cardH - btnH - 10,
-                    w: btnW,
-                    h: btnH,
-                    stageId: stage.id,
-                } : null;
+                const row = finale ? 5 : Math.floor(i / COLS);
+                const offsetX = finale ? 4 : [-2, 2, 1, -2, -1, 2, 2, -1, 0][i];
+                const offsetY = finale ? 0 : [0, 2, -1, 1, 2, -1, 1, -2, 0][i];
+                const x = finale
+                    ? m.contentLeft + offsetX
+                    : m.contentLeft + col * (m.cardW + m.cardGap) + offsetX;
+                // 各状态牌匾使用相同高度，以固定视觉间距紧凑排布。
+                const rowPitch = m.cardH + CARD_ROW_GAP;
+                const y = m.gridTop + row * rowPitch + offsetY;
+                const w = finale ? m.contentW - 8 : m.cardW;
+                const stageBest = goldenBlock.getStageBest(stage.id);
+                const isCleared = !!stageBest;
+                const isCurrent = goldenBlock.isUnlocked(stage.id) && !isCleared;
+                const cardH = finale
+                    ? Math.round(w / FINALE_PLAQUE_ASPECT)
+                    : m.cardH - (isCurrent ? 10 : 0) - (isCleared ? 15 : 0);
+                const tilt = this._getStableCardTilt(chap.id, stage.id, finale);
                 cards.push({
                     stage,
                     x,
                     y,
-                    w: m.cardW,
-                    h: m.cardH,
-                    challengeBtn,
+                    w,
+                    h: cardH,
+                    finale,
+                    tilt,
+                    challengeBtn: null,
                 });
-                hitRects.push({ x, y, w: m.cardW, h: m.cardH, challengeBtn });
+                hitRects.push({ x, y, w, h: cardH, challengeBtn: null });
             });
             this._chapterCards.push(cards);
             this._chapterHitRects.push(hitRects);
         }
+        this._focusCurrentStage();
+    }
+
+    /**
+     * 根据章节与关卡生成稳定的伪随机角度。普通牌范围 ±5°；
+     * 横跨两列的终点牌保持水平，强化终点层级并避免碰到边框。
+     */
+    _getStableCardTilt(chapterId, stageId, finale) {
+        if (finale) return 0;
+        const seed = Number(chapterId) * 97 + Number(stageId) * 131;
+        const random01 = Math.abs(Math.sin(seed * 12.9898) * 43758.5453) % 1;
+        const maxDeg = 5;
+        const degrees = -maxDeg + random01 * maxDeg * 2;
+        return degrees * Math.PI / 180;
+    }
+
+    _getScrollMax() {
+        const m = this._getLayoutMetrics();
+        const cards = (this._chapterCards && this._chapterCards[this._chapter]) || [];
+        if (!cards.length) return 0;
+        const contentBottom = Math.max.apply(null, cards.map((card) => card.y + card.h));
+        const viewportBottom = m.backBtnY - 28;
+        return Math.max(0, contentBottom - viewportBottom + 8);
+    }
+
+    _clampScroll(value) {
+        return Math.max(0, Math.min(this._getScrollMax(), Number(value) || 0));
+    }
+
+    _focusCurrentStage() {
+        const cards = (this._chapterCards && this._chapterCards[this._chapter]) || [];
+        const current = cards.find((card) => goldenBlock.isUnlocked(card.stage.id)
+            && !goldenBlock.getStageBest(card.stage.id));
+        if (!current) {
+            this._scrollY = this._clampScroll(this._scrollY);
+            return;
+        }
+        const m = this._getLayoutMetrics();
+        const viewportH = m.backBtnY - 28 - m.gridTop;
+        this._scrollY = this._clampScroll(current.y + current.h / 2 - m.gridTop - viewportH / 2);
     }
 
     _initBackButton() {
@@ -335,12 +383,15 @@ class StageSelectScene {
         const ch = this._chapter;
         const cards = this._chapterHitRects[ch] || [];
         const localX = x;
+        const m = this._getLayoutMetrics();
+        if (y < m.gridTop || y > m.backBtnY - 28) return;
+        const contentY = y + this._scrollY;
         // 已通关关卡上的「挑战」按钮优先命中
         for (let i = 0; i < cards.length; i++) {
             const r = cards[i];
             const cb = r.challengeBtn;
             if (!cb) continue;
-            if (localX >= cb.x && localX <= cb.x + cb.w && y >= cb.y && y <= cb.y + cb.h) {
+            if (localX >= cb.x && localX <= cb.x + cb.w && contentY >= cb.y && contentY <= cb.y + cb.h) {
                 if (!goldenBlock.isChapterUnlocked(this._chapters[ch].id)) {
                     this._showToast('通关上一章全部关卡后解锁');
                     return;
@@ -351,7 +402,7 @@ class StageSelectScene {
         }
         for (let i = 0; i < cards.length; i++) {
             const r = cards[i];
-            if (localX >= r.x && localX <= r.x + r.w && y >= r.y && y <= r.y + r.h) {
+            if (localX >= r.x && localX <= r.x + r.w && contentY >= r.y && contentY <= r.y + r.h) {
                 if (!goldenBlock.isChapterUnlocked(this._chapters[ch].id)) {
                     this._showToast('通关上一章全部关卡后解锁');
                     return;
@@ -487,13 +538,27 @@ class StageSelectScene {
         this._toastT = 1.6;
     }
 
-    handleTouchStart() {
-        if (this._entryDialog) this._entryDialog.armed = true;
+    handleTouchStart(identifier, x, y) {
+        if (this._entryDialog) {
+            this._entryDialog.armed = true;
+            return;
+        }
+        const m = this._getLayoutMetrics();
+        if (y < m.gridTop || y > m.backBtnY - 28) return;
+        this._scrollDrag = { id: identifier, startY: y, baseScroll: this._scrollY };
+        this._suppressTap = false;
     }
 
-    handleTouchMove() {}
+    handleTouchMove(identifier, x, y) {
+        if (!this._scrollDrag || this._scrollDrag.id !== identifier) return;
+        const dy = y - this._scrollDrag.startY;
+        if (Math.abs(dy) > 7) this._suppressTap = true;
+        this._scrollY = this._clampScroll(this._scrollDrag.baseScroll - dy);
+    }
 
-    handleTouchEnd() {}
+    handleTouchEnd(identifier) {
+        if (this._scrollDrag && this._scrollDrag.id === identifier) this._scrollDrag = null;
+    }
 
     update(dt) {
         this._animTime += dt;
@@ -616,48 +681,97 @@ class StageSelectScene {
         const unlocked = goldenBlock.isUnlocked(stage.id);
         const best = goldenBlock.getStageBest(stage.id);
         const cleared = !!best;
-        const nameY = y + Math.max(42, h - 36);
-        const nameMaxW = w - 24 - (cleared ? 78 : 0);
 
         let styleKey = 'locked';
         if (chapterUnlocked && unlocked) {
             styleKey = cleared ? 'cleared' : 'unlocked';
         }
         const style = CARD_STYLES[styleKey];
+        const localX = -w / 2;
+        const localY = -h / 2;
 
-        ctx.fillStyle = style.fill;
-        roundRectPath(ctx, x, y, w, h, 10);
-        ctx.fill();
-        ctx.strokeStyle = style.stroke;
-        ctx.lineWidth = style.lineWidth;
-        ctx.stroke();
+        ctx.save();
+        ctx.translate(x + w / 2, y + h / 2);
+        ctx.rotate(card.tilt || 0);
 
-        // 已通关：内侧细高光，和其他状态拉开层次
-        if (styleKey === 'cleared') {
-            ctx.strokeStyle = 'rgba(255, 245, 200, 0.35)';
-            ctx.lineWidth = 1;
-            roundRectPath(ctx, x + 3, y + 3, w - 6, h - 6, 8);
-            ctx.stroke();
+        // 当前任务牌保持呼吸暖光；终点牌使用独立的大型皮肤。
+        if (styleKey === 'unlocked') {
+            const breathe = .55 + Math.sin(this._animTime * 2.5) * .12;
+            ctx.save();
+            ctx.shadowColor = 'rgba(255,184,48,' + breathe.toFixed(2) + ')';
+            ctx.shadowBlur = 12;
+            ctx.fillStyle = 'rgba(180,105,28,.16)';
+            roundRectPath(ctx, localX + 5, localY + 5, w - 10, h - 10, 9);
+            ctx.fill();
+            ctx.restore();
         }
 
-        ctx.fillStyle = style.num;
-        ctx.font = 'bold 30px sans-serif';
+        const chapter = this._chapters && this._chapters[this._chapter];
+        const flowerChapter = !!(chapter && Number(chapter.id) === 3);
+        const skin = card.finale
+            ? (flowerChapter ? 'stagePlaqueFinaleFlower' : 'stagePlaqueFinale')
+            : (styleKey === 'locked'
+                ? 'stagePlaqueLocked'
+                : (styleKey === 'cleared'
+                    ? 'stagePlaqueClearedFloral'
+                    : 'stagePlaqueCleared'));
+        // 所有任务牌均按完整图片绘制。终点牌高度已按源图比例反算，
+        // 无需九宫格；切片会把中央石板再次压成细条。
+        const plateDrawn = drawThemeButtonSkin(ctx, skin, localX - 2, localY - 2, w + 4, h + 4);
+        if (!plateDrawn) {
+            ctx.fillStyle = style.fill;
+            roundRectPath(ctx, localX, localY, w, h, 9); ctx.fill();
+            ctx.strokeStyle = style.stroke; ctx.lineWidth = style.lineWidth; ctx.stroke();
+        }
+
+        const pad = card.finale ? 24 : 16;
+        const numSize = card.finale ? Math.min(42, h * .48) : Math.min(30, h * .40);
+        const infoTop = localY + (card.finale ? 16 : 13);
+        ctx.fillStyle = styleKey === 'locked' ? '#D8C7AE' : '#FFE278';
+        ctx.font = 'bold ' + Math.round(numSize) + 'px sans-serif';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
-        ctx.fillText(String(stage.id), x + 12, y + 10);
+        ctx.shadowColor = 'rgba(20,10,4,.9)';
+        ctx.shadowBlur = 2;
+        ctx.shadowOffsetX = 1;
+        ctx.shadowOffsetY = 2;
+        if (card.finale) {
+            // 终点横牌采用“30  花园圆心”单行布局，充分利用横向空间。
+            ctx.textBaseline = 'middle';
+            const rowY = 2;
+            const finaleTextX = localX + pad + 40;
+            ctx.fillText(String(stage.id), finaleTextX, rowY);
+            const numberW = ctx.measureText(String(stage.id)).width;
+            ctx.fillStyle = styleKey === 'locked' ? '#E5D7C2' : '#fff8e8';
+            ctx.font = 'bold 18px sans-serif';
+            const nameMaxW = w * .46;
+            ctx.fillText(
+                this._truncateText(ctx, stage.name, nameMaxW),
+                finaleTextX + numberW + 13,
+                rowY + 2
+            );
+        } else {
+            ctx.fillText(String(stage.id), localX + pad, infoTop);
+            // 编号与名称组成一个信息组；右侧约 40% 完整留给锁链和挂锁。
+            const nameY = infoTop + numSize + 1;
+            const nameMaxW = w * .52;
+            ctx.fillStyle = styleKey === 'locked' ? '#E5D7C2' : '#fff8e8';
+            ctx.font = 'bold 13px sans-serif';
+            ctx.fillText(this._truncateText(ctx, stage.name, nameMaxW), localX + pad, nameY);
+        }
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
 
-        ctx.fillStyle = style.name;
-        ctx.font = 'bold 14px sans-serif';
-        ctx.fillText(this._truncateText(ctx, stage.name, nameMaxW), x + 12, nameY);
-
-        ctx.font = '12px sans-serif';
-        ctx.fillStyle = style.status;
+        ctx.font = (card.finale ? '12px' : '10px') + ' sans-serif';
+        ctx.fillStyle = styleKey === 'locked' ? 'rgba(225,207,180,.54)' : style.status;
         ctx.textAlign = 'right';
         let status;
         if (!chapterUnlocked) {
-            status = '🔒 章节未解锁';
+            status = '章节未解锁';
         } else if (!unlocked) {
-            status = '🔒 解锁 ' + (stage.unlockCost || 0) + ' 块';
+            status = '解锁 ' + (stage.unlockCost || 0) + ' 块';
         } else if (cleared) {
             status = '最佳 ' + best.lines + ' 行';
         } else {
@@ -667,34 +781,43 @@ class StageSelectScene {
                 ? ('入场 ' + fee + '币 · T' + T)
                 : ('免费 · 理论 ' + (stage.minLines || 0));
         }
-        ctx.fillText(status, x + w - 12, y + 12);
-        ctx.textAlign = 'left';
-
-        if (chapterUnlocked && cleared && card.challengeBtn) {
-            const cb = card.challengeBtn;
-            const bx = cb.x + pageX;
-            const by = cb.y;
-            // amber 宽卡贴图等比 contain，不拉伸变形
-            const drawn = drawThemeImageContain(
-                ctx,
-                'cardStageAmber',
-                bx + cb.w / 2,
-                by + cb.h / 2,
-                cb.w,
-                cb.h
-            );
-            if (!drawn.drawn) {
-                ctx.fillStyle = 'rgba(168, 104, 48, 0.92)';
-                roundRectPath(ctx, bx, by, cb.w, cb.h, 6);
-                ctx.fill();
-            }
-            ctx.fillStyle = '#fff8ec';
-            ctx.font = 'bold 11px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('挑战好友', bx + cb.w / 2, by + cb.h / 2 + 1);
-            ctx.textAlign = 'left';
+        // 锁定牌的锁链和挂锁已成为素材主体，不再塞入细小状态文字。
+        if (styleKey !== 'locked') {
+            // 已解锁木牌右侧有花叶和金属包角，文案向内收出足够安全距离。
+            const statusRight = w / 2 - (styleKey === 'unlocked' ? 22 : pad) - (styleKey === 'cleared' ? 10 : 0);
+            const statusY = localY + (styleKey === 'unlocked' ? 16 : 14) + (styleKey === 'cleared' ? 5 : 0);
+            ctx.fillText(status, statusRight, statusY);
         }
+
+        if (styleKey === 'locked' && card.finale) {
+            const lock = getThemeImage('stageFinaleLock');
+            if (lock.ready && lock.img) {
+                const lockH = Math.min(76, h * .82);
+                const lockW = lockH * ((lock.img.width || 1) / Math.max(1, lock.img.height || 1));
+                ctx.drawImage(lock.img, w / 2 - lockW - 16, -lockH / 2 + 3, lockW, lockH);
+            }
+        }
+        // 已解锁态只保留文字信息，避免装饰图标挤压木牌的有效内容区。
+        ctx.restore();
+    }
+
+    _drawMissionWall(ctx, m) {
+        const top = m.gridTop - 8;
+        const bottom = m.backBtnY - 24;
+        ctx.save();
+        const beam = (x, y, w, h) => {
+            const g = ctx.createLinearGradient(x, y, x + w, y);
+            g.addColorStop(0, 'rgba(49,25,12,.82)');
+            g.addColorStop(.45, 'rgba(119,69,31,.78)');
+            g.addColorStop(1, 'rgba(42,22,11,.84)');
+            ctx.fillStyle = g; roundRectPath(ctx, x, y, w, h, 5); ctx.fill();
+            ctx.strokeStyle = 'rgba(206,133,61,.25)'; ctx.lineWidth = 1; ctx.stroke();
+        };
+        beam(m.contentLeft - 7, top, 12, bottom - top);
+        beam(m.contentRight - 5, top, 12, bottom - top);
+        beam(m.contentCenterX - 5, top + 3, 10, bottom - top - 6);
+        beam(m.contentLeft - 6, top, m.contentW + 12, 11);
+        ctx.restore();
     }
 
     render(ctx) {
@@ -740,8 +863,26 @@ class StageSelectScene {
                 m.subtitleY
             );
 
+            this._drawMissionWall(ctx, m);
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(m.contentLeft - 10, m.gridTop - 3, m.contentW + 20, m.backBtnY - 25 - m.gridTop);
+            ctx.clip();
             for (let i = 0; i < cards.length; i++) {
-                this._drawCard(ctx, cards[i], pageX, unlocked);
+                const card = Object.assign({}, cards[i], { y: cards[i].y - this._scrollY });
+                if (card.y + card.h >= m.gridTop - 6 && card.y <= m.backBtnY - 22) {
+                    this._drawCard(ctx, card, pageX, unlocked);
+                }
+            }
+            ctx.restore();
+
+            if (this._getScrollMax() > 0) {
+                const trackY = m.gridTop + 6;
+                const trackH = m.backBtnY - 40 - trackY;
+                const thumbH = Math.max(28, trackH * Math.min(1, trackH / (trackH + this._getScrollMax())));
+                const thumbY = trackY + (trackH - thumbH) * (this._scrollY / this._getScrollMax());
+                ctx.fillStyle = 'rgba(255,224,150,.28)';
+                roundRectPath(ctx, m.contentRight + 6, thumbY, 3, thumbH, 1.5); ctx.fill();
             }
         }
 
