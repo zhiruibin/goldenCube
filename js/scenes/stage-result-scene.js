@@ -1,6 +1,6 @@
 /**
  * StageResultScene - 关卡结算（挖个方块）
- * 展示消行 vs 理论、金币效率结算、金色方块奖励；下一关 / 重玩 / 返回；可选广告再领一份。
+ * 展示关卡成绩与金方块进度奖励；下一关 / 重玩 / 返回。
  *
  * 入场：金方块自屏底升起放大至英雄位（揭示态），到位后再撒花与开放按钮。
  */
@@ -14,8 +14,6 @@ const {
 } = require('../theme/arcade-night');
 const { drawThemeBackground } = require('../theme/theme-images');
 const goldenBlock = require('../../utils/golden-block-manager');
-const { coinManager } = require('../../utils/coin-manager');
-const { adManager, isRewardedVideoConfigured } = require('../../utils/ad-manager');
 const { Button } = require('../widgets/button');
 const { stageSelectStack } = require('../../utils/stage-nav');
 const { buildIsoBlockFaces, drawSolidIsoBlock } = require('../render/iso-block-renderer');
@@ -24,6 +22,7 @@ const {
     drawResultBlockImage,
 } = require('../render/result-block-image');
 const { ConfettiFx } = require('../render/confetti-fx');
+const IconRenderer = require('../render/icon-renderer');
 const {
     promptStageEntry,
     handleEntryDialogTap,
@@ -61,7 +60,6 @@ class StageResultScene {
         this._stage = null;
         this._result = null;
         this._animTime = 0;
-        this._doubleClaimed = false;
         this._confettiFx = null;
         this._entryDialog = null;
         this._toast = '';
@@ -81,13 +79,11 @@ class StageResultScene {
     onEnter(params) {
         this._params = params || {};
         this._animTime = 0;
-        this._doubleClaimed = false;
         this._entryDialog = null;
         this._toast = '';
         this._toastUntil = 0;
         this._stage = goldenBlock.getStage(this._params.stageId);
         this._result = this._params.result || null;
-        this._replayKey = this._params.replayKey || '';
         this._shareCardActive = true;
         this._prepareShareCard();
         preloadResultBlockImages();
@@ -187,23 +183,8 @@ class StageResultScene {
             ? goldenBlock.getStage(Number(this._stage.id) + 1)
             : null;
 
-        const canDouble = !this._doubleClaimed
-            && this._result
-            && (this._result.coinWant || 0) > 0
-            && coinManager.getAdBonusRemaining() > 0
-            && isRewardedVideoConfigured() === true;
-
         // 竖排通栏：每行一钮，4:1 条形石砖皮
         const rows = [];
-        if (canDouble) {
-            rows.push({
-                text: '看广告再领金币',
-                color: '#c89840',
-                skin: 'btnBarAmber',
-                labelColor: '#241408',
-                onClick: () => this._claimDouble(),
-            });
-        }
         if (nextStage && goldenBlock.isChapterUnlocked(
             nextStage.chapterId || Math.floor((nextStage.id - 1) / 10) + 1
         )) {
@@ -222,22 +203,6 @@ class StageResultScene {
             labelColor: '#241408',
             onClick: () => this._promptEnter(this._stage),
         });
-        if (this._replayKey) {
-            rows.push({
-                text: '回看本局',
-                color: '#c89840',
-                skin: 'btnBarAmber',
-                labelColor: '#241408',
-                onClick: () => {
-                    GameGlobal.game.sceneManager.switchTo('replay', {
-                        replayKey: this._replayKey,
-                        fromStageResult: true,
-                        stageId: this._params.stageId,
-                        result: this._result,
-                    });
-                },
-            });
-        }
         rows.push({
             text: '返回关卡',
             color: '#5a4030',
@@ -280,13 +245,114 @@ class StageResultScene {
             + (this._result.milestoneReward || 0);
     }
 
-    _getGoldRewardLabel() {
-        if (!this._result) return '';
-        const bits = [];
-        if (this._result.reward) bits.push(this._result.first ? '首通' : '破纪录');
-        if (this._result.chapterReward) bits.push('章奖');
-        if (this._result.milestoneReward) bits.push('全通');
-        return bits.join(' · ');
+    /** 结算状态统一使用主题章印，不再依赖“首通 / 破纪录”等纯文字行。 */
+    _getResultMedals() {
+        if (!this._result) return [];
+        const r = this._result;
+        const medals = [];
+        if (r.assisted) {
+            medals.push({ kind: 'assisted', label: '辅助', icon: 'shield' });
+        } else if (r.first) {
+            medals.push({ kind: 'first', label: '首通', icon: 'crown' });
+        } else if (r.isNewBest) {
+            medals.push({ kind: 'record', label: '新纪录', icon: 'bolt' });
+        } else {
+            medals.push({ kind: 'clear', label: '通关', icon: 'check' });
+        }
+        if (r.chapterReward) medals.push({ kind: 'chapter', label: '章完成', icon: 'medal' });
+        if (r.milestoneReward) medals.push({ kind: 'all', label: '全通', icon: 'trophy' });
+        return medals;
+    }
+
+    _drawResultMedal(ctx, medal, cx, cy, size, animTime, index) {
+        const palettes = {
+            first: ['#fff0a3', '#d89319', '#6d3308', 'rgba(255,205,62,.58)'],
+            record: ['#bdf7ff', '#269fc2', '#063b58', 'rgba(65,220,255,.52)'],
+            clear: ['#ffe2ab', '#b66d2d', '#52270e', 'rgba(224,145,65,.42)'],
+            chapter: ['#d9ffc2', '#65a943', '#244d20', 'rgba(133,224,91,.45)'],
+            all: ['#f7d7ff', '#a04ec4', '#47205e', 'rgba(214,106,255,.52)'],
+            assisted: ['#d8dde2', '#69757f', '#30363b', 'rgba(199,214,225,.30)'],
+        };
+        const p = palettes[medal.kind] || palettes.clear;
+        const pulse = 1 + Math.sin((animTime || 0) * 3.4 + index * 1.7) * 0.035;
+        const radius = size * 0.36 * pulse;
+        ctx.save();
+
+        // 柔光与八向放射，让章印像嵌在金块上的宝石而不是普通 UI 圆点。
+        const glow = ctx.createRadialGradient(cx, cy, radius * .2, cx, cy, radius * 1.65);
+        glow.addColorStop(0, p[3]);
+        glow.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius * 1.65, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.translate(cx, cy);
+        ctx.rotate(Math.PI / 8);
+        ctx.beginPath();
+        for (let i = 0; i < 16; i++) {
+            const rr = i % 2 === 0 ? radius * 1.23 : radius * .94;
+            const a = i * Math.PI / 8 - Math.PI / 2;
+            const x = Math.cos(a) * rr;
+            const y = Math.sin(a) * rr;
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fillStyle = p[1];
+        ctx.fill();
+        ctx.rotate(-Math.PI / 8);
+
+        const face = ctx.createRadialGradient(-radius * .28, -radius * .32, 1, 0, 0, radius);
+        face.addColorStop(0, p[0]);
+        face.addColorStop(.48, p[1]);
+        face.addColorStop(1, p[2]);
+        ctx.beginPath();
+        ctx.arc(0, 0, radius, 0, Math.PI * 2);
+        ctx.fillStyle = face;
+        ctx.fill();
+        ctx.strokeStyle = p[0];
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(0, 0, radius * .76, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255,255,255,.34)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        IconRenderer.draw(ctx, medal.icon, 0, -1, radius * 1.02, '#fff5cb');
+
+        // 小型绶带保留最低限度语义，图标仍然是视觉主体。
+        const rw = Math.max(35, medal.label.length * 10 + 10);
+        const rh = 14;
+        const ry = radius * .68;
+        ctx.beginPath();
+        ctx.moveTo(-rw / 2 - 4, ry);
+        ctx.lineTo(-rw / 2, ry + rh / 2);
+        ctx.lineTo(-rw / 2 - 4, ry + rh);
+        ctx.lineTo(rw / 2 + 4, ry + rh);
+        ctx.lineTo(rw / 2, ry + rh / 2);
+        ctx.lineTo(rw / 2 + 4, ry);
+        ctx.closePath();
+        ctx.fillStyle = p[2];
+        ctx.fill();
+        ctx.strokeStyle = p[1];
+        ctx.stroke();
+        ctx.fillStyle = '#fff4d2';
+        ctx.font = 'bold 9px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(medal.label, 0, ry + rh / 2 + .5);
+        ctx.restore();
+    }
+
+    _drawResultMedals(ctx, cx, cy, heroSize, animTime) {
+        const medals = this._getResultMedals();
+        if (!medals.length) return;
+        const size = Math.max(54, Math.min(62, heroSize * .56));
+        const gap = size * 1.12;
+        const startX = cx - ((medals.length - 1) * gap) / 2;
+        for (let i = 0; i < medals.length; i++) {
+            this._drawResultMedal(ctx, medals[i], startX + i * gap, cy, size, animTime, i);
+        }
     }
 
     /**
@@ -304,9 +370,7 @@ class StageResultScene {
         y += 28; // 消行
         y += 22; // 理论
         y += 22; // 用块用时
-        y += 24; // 金币
-        if (this._result.coinDouble) y += 20;
-        if (this._result.luckyCoinBonus > 0) y += 20;
+        if (this._result.assisted) y += 20;
         const statsBottom = y + 4;
         const heroSize = 108;
         let heroCy = statsBottom + 18 + heroSize * 0.52;
@@ -467,21 +531,6 @@ class StageResultScene {
         }
     }
 
-    _claimDouble() {
-        if (!this._buttonsReady) return;
-        if (this._doubleClaimed || !this._result) return;
-        const base = this._result.coinWant || this._result.coinGained || 0;
-        if (base <= 0) return;
-        adManager.showRewardedVideo()
-            .then(() => {
-                const gained = coinManager.rewardAdDouble(base);
-                this._doubleClaimed = true;
-                this._result.coinDouble = gained;
-                this._buildButtons();
-            })
-            .catch(() => { /* 未看完不发 */ });
-    }
-
     handleTap(x, y) {
         if (this._revealPhase === 'rising') {
             this._finishReveal(true);
@@ -586,7 +635,6 @@ class StageResultScene {
             if (this._result) {
                 const lines = this._result.lines || 0;
                 const theory = this._result.minLines || (this._stage ? this._stage.minLines : 0);
-                const T = this._result.coinThreshold || theory * 2;
                 ctx.fillStyle = ACCENT;
                 ctx.font = 'bold 30px sans-serif';
                 ctx.fillText(String(lines) + ' 行', cx, y);
@@ -594,7 +642,7 @@ class StageResultScene {
                 ctx.fillStyle = MUTED;
                 ctx.font = '14px sans-serif';
                 ctx.fillText(
-                    '理论 ' + theory + ' · 阈值 T=' + T + (lines <= theory ? ' · 满分！' : ''),
+                    '目标 ' + theory + ' 行' + (lines <= theory ? ' · 高效通关！' : ''),
                     cx, y
                 );
                 y += 22;
@@ -607,25 +655,10 @@ class StageResultScene {
                 );
                 y += 22;
 
-                const coinGained = this._result.coinGained || 0;
-                const coinWant = this._result.coinWant || 0;
-                ctx.fillStyle = ACCENT;
-                ctx.font = 'bold 17px sans-serif';
-                ctx.fillText(
-                    '金币 +' + coinGained + (coinGained < coinWant ? '（日限）' : ''),
-                    cx, y
-                );
-                y += 24;
-                if (this._result.coinDouble) {
-                    ctx.fillStyle = SUBTITLE;
-                    ctx.font = '14px sans-serif';
-                    ctx.fillText('广告再领 +' + this._result.coinDouble, cx, y);
-                    y += 20;
-                }
-                if (this._result.luckyCoinBonus > 0) {
-                    ctx.fillStyle = SUBTITLE;
-                    ctx.font = '14px sans-serif';
-                    ctx.fillText('幸运摇奖 +' + this._result.luckyCoinBonus, cx, y);
+                if (this._result.assisted) {
+                    ctx.fillStyle = MUTED;
+                    ctx.font = '13px sans-serif';
+                    ctx.fillText('辅助通关 · 本局不计最佳纪录与排行', cx, y);
                     y += 20;
                 }
             }
@@ -647,21 +680,16 @@ class StageResultScene {
                     ctx.fillStyle = ACCENT;
                     ctx.font = 'bold 16px sans-serif';
                     ctx.fillText('金色方块 +' + goldTotal, pose.cx, cubeBottomY + 18);
-                    const label = this._getGoldRewardLabel();
-                    if (label) {
-                        ctx.fillStyle = MUTED;
-                        ctx.font = '13px sans-serif';
-                        ctx.fillText(label, pose.cx, cubeBottomY + 38);
-                    }
-                } else {
-                    ctx.fillStyle = MUTED;
-                    ctx.font = '14px sans-serif';
-                    const capped = !!(this._result && this._result.isNewBest);
-                    ctx.fillText(
-                        capped ? '已破纪录，破纪录奖励已达上限' : '本关已通关，未刷新记录',
-                        pose.cx, cubeBottomY + 18
-                    );
                 }
+
+                // 独立陈列在奖励文案与按钮之间；根据剩余空间动态居中，短屏也不会压住按钮。
+                const rewardBottomY = cubeBottomY + (goldTotal > 0 ? 36 : 18);
+                const buttonTopY = this._buttonsTopY || H * .72;
+                const medalY = Math.max(
+                    rewardBottomY + 34,
+                    Math.min(buttonTopY - 40, (rewardBottomY + buttonTopY) / 2)
+                );
+                this._drawResultMedals(ctx, pose.cx, medalY, pose.size, heroAnim);
                 ctx.restore();
             }
         }

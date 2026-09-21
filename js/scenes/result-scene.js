@@ -62,20 +62,14 @@ class ResultScene {
         this._challengeRetryRect = null;
         // 背景装饰：缓慢下落的半透明方块
         this._fallingBlocks = [];
-        // 成就系统：结算页新解锁数量与金币奖励
+        // 成就系统：结算页新解锁数量
         this._newAchievementCount = 0;
-        this._newCoinReward = 0;
-        // 经济系统：本局消行金币收益与今日进度
-        this._coinEarned = 0;
-        this._todayCoinEarned = 0;
-        this._dailyLimit = 600;
         /** 应战结算后是否已提示回击（每进结算页一次） */
         this._counterPrompted = false;
     }
 
     onEnter(params) {
         this._params = params || {};
-        this._replayKey = this._params.replayKey || '';
         this._challengeId = this._params.challengeId || '';
         if (!this._challengeId) {
             setTimeout(() => GameGlobal.game.sceneManager.switchTo('home'), 0);
@@ -97,38 +91,19 @@ class ResultScene {
         this._profilePromise = null;
         this._animTime = 0;
 
-        // 经济系统：读取本局消行金币收益与今日进度（含对局页已发的摇奖金币）
-        this._coinEarned = this._params.coinEarned || 0;
-        try {
-            const { coinManager, DAILY_LIMIT } = require('../../utils/coin-manager');
-            this._todayCoinEarned = coinManager.getTodayEarned();
-            this._dailyLimit = DAILY_LIMIT;
-        } catch (e) {
-            this._todayCoinEarned = 0;
-            this._dailyLimit = 600;
-        }
-
         // 初始化背景装饰：缓慢下落的半透明方块
         this._initFallingBlocks();
 
-        // 成就系统：结算时检查解锁并提示金币奖励
+        // 成就系统：结算时检查新解锁图鉴
         this._newAchievementCount = 0;
-        this._newCoinReward = 0;
         try {
             const { achievementManager } = require('../../utils/achievement-manager');
             achievementManager.init();
             const newly = achievementManager.consumeLastNew();
             if (newly && newly.length > 0) {
-                const { getAllAchievements } = require('../../data/achievements');
-                const all = getAllAchievements();
-                let reward = 0;
-                for (const a of all) {
-                    if (newly.indexOf(a.id) >= 0) reward += (a.reward || 0);
-                }
                 this._newAchievementCount = newly.length;
-                this._newCoinReward = reward;
                 setTimeout(() => {
-                    wx.showToast({ title: `图鉴解锁 ${newly.length} 个，+${reward} 金币`, icon: 'none' });
+                    wx.showToast({ title: `图鉴解锁 ${newly.length} 个`, icon: 'none' });
                 }, 800);
             }
         } catch (e) {
@@ -221,33 +196,18 @@ class ResultScene {
         ctx.font = '16px sans-serif';
         ctx.textAlign = 'center';
 
-        const showCoinLine = (this._coinEarned || 0) > 0 || (this._todayCoinEarned || 0) > 0;
         ctx.fillStyle = '#8fd36a';
         ctx.fillText(`块数 ${this._params.pieces || 0}`, W / 2 - 70, infoY);
         ctx.fillStyle = '#1f9b98';
         const sec = Math.max(0, Math.floor((this._params.timeMs || 0) / 1000));
         ctx.fillText(`用时 ${sec}s`, W / 2 + 70, infoY);
-        const coinLineY = panelY + panelH - 16;
-        const opponentY = showCoinLine ? coinLineY - 28 : coinLineY;
+        const opponentY = panelY + panelH - 16;
         if (this._targetScore != null) {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'alphabetic';
             ctx.fillStyle = 'rgba(255,255,255,0.45)';
             ctx.font = '14px sans-serif';
             ctx.fillText(`对手 ${this._targetScore} 行（越少越好）`, W / 2, opponentY);
-        }
-
-        const coinEarned = this._coinEarned || 0;
-        const todayEarned = this._todayCoinEarned || 0;
-        if (showCoinLine) {
-            const coinText = coinEarned > 0
-                ? `本局金币 +${coinEarned}  ·  今日 ${todayEarned}/${this._dailyLimit}`
-                : `今日金币 ${todayEarned}/${this._dailyLimit}`;
-            ctx.font = '14px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'alphabetic';
-            ctx.fillStyle = '#ffd700';
-            ctx.fillText(coinText, W / 2, coinLineY);
         }
 
         const statusY = panelY + panelH + 44;
@@ -260,10 +220,8 @@ class ResultScene {
     }
 
     _settleLayout() {
-        const showReplay = !!this._replayKey;
         return {
-            showReplay,
-            btnCount: 4 + (showReplay ? 1 : 0),
+            btnCount: 4,
             contentH: CONTENT_H_CHALLENGE,
         };
     }
@@ -325,23 +283,6 @@ class ResultScene {
             labelColor: '#241408',
             onClick: () => GameGlobal.game.sceneManager.leaveTo('plaza', {}, ['home']),
         });
-        if (layout.showReplay) {
-            pushBtn({
-                text: '回看本局',
-                icon: 'play',
-                color: '#6b4a2e',
-                skin: 'cardStageBrown',
-                skinMode: 'stretch',
-                labelColor: '#ffffff',
-                onClick: () => GameGlobal.game.sceneManager.switchTo(
-                    'replay',
-                    Object.assign({}, this._params, {
-                        replayKey: this._replayKey,
-                        fromChallenge: true,
-                    })
-                ),
-            });
-        }
         pushBtn({
             text: '返回',
             color: '#6b4a2e',

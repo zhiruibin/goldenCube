@@ -10,7 +10,6 @@ const {
     getThemeImage,
 } = require('../theme/theme-images');
 const goldenBlock = require('../../utils/golden-block-manager');
-const { coinManager } = require('../../utils/coin-manager');
 const { Button } = require('../widgets/button');
 const { roundRectPath } = require('../render/board-tiles');
 const {
@@ -137,10 +136,7 @@ class StageSelectScene {
         this._offsetX = 0;
         this._animT = 1;
         this._buildChapterCards();
-        const login = coinManager.tryClaimDailyLogin();
-        if (login.claimed) {
-            this._showToast('每日登录 +' + login.amount + ' 金币');
-        } else if (this._params.toast) {
+        if (this._params.toast) {
             this._showToast(this._params.toast);
         }
     }
@@ -208,7 +204,8 @@ class StageSelectScene {
         const backAspect = skinW / Math.max(1, skinH);
         const backBtnW = Math.min(188, Math.round(W * 0.48));
         const backBtnH = Math.max(44, Math.round(backBtnW / backAspect));
-        const backBtnY = H - bottomInset - backBtnH - 36;
+        // 底部奖励提示与返回按钮作为一组下移 30px，释放终点牌下方的视觉空间。
+        const backBtnY = H - bottomInset - backBtnH - 6;
         const footerY = backBtnY - 22;
         const gridBottom = backBtnY - 28;
         const availGridH = Math.max(0, gridBottom - gridTop);
@@ -270,8 +267,7 @@ class StageSelectScene {
                 const rowPitch = m.cardH + CARD_ROW_GAP;
                 const y = m.gridTop + row * rowPitch + offsetY;
                 const w = finale ? m.contentW - 8 : m.cardW;
-                const stageBest = goldenBlock.getStageBest(stage.id);
-                const isCleared = !!stageBest;
+                const isCleared = goldenBlock.isCleared(stage.id);
                 const isCurrent = goldenBlock.isUnlocked(stage.id) && !isCleared;
                 const cardH = finale
                     ? Math.round(w / FINALE_PLAQUE_ASPECT)
@@ -324,7 +320,7 @@ class StageSelectScene {
     _focusCurrentStage() {
         const cards = (this._chapterCards && this._chapterCards[this._chapter]) || [];
         const current = cards.find((card) => goldenBlock.isUnlocked(card.stage.id)
-            && !goldenBlock.getStageBest(card.stage.id));
+            && !goldenBlock.isCleared(card.stage.id));
         if (!current) {
             this._scrollY = this._clampScroll(this._scrollY);
             return;
@@ -680,7 +676,7 @@ class StageSelectScene {
         const x = card.x + pageX;
         const unlocked = goldenBlock.isUnlocked(stage.id);
         const best = goldenBlock.getStageBest(stage.id);
-        const cleared = !!best;
+        const cleared = goldenBlock.isCleared(stage.id);
 
         let styleKey = 'locked';
         if (chapterUnlocked && unlocked) {
@@ -709,7 +705,9 @@ class StageSelectScene {
         const chapter = this._chapters && this._chapters[this._chapter];
         const flowerChapter = !!(chapter && Number(chapter.id) === 3);
         const skin = card.finale
-            ? (flowerChapter ? 'stagePlaqueFinaleFlower' : 'stagePlaqueFinale')
+            ? (cleared
+                ? (flowerChapter ? 'stagePlaqueFinaleFlowerCleared' : 'stagePlaqueFinaleCleared')
+                : (flowerChapter ? 'stagePlaqueFinaleFlower' : 'stagePlaqueFinale'))
             : (styleKey === 'locked'
                 ? 'stagePlaqueLocked'
                 : (styleKey === 'cleared'
@@ -773,19 +771,20 @@ class StageSelectScene {
         } else if (!unlocked) {
             status = '解锁 ' + (stage.unlockCost || 0) + ' 块';
         } else if (cleared) {
-            status = '最佳 ' + best.lines + ' 行';
+            status = best ? ('最佳 ' + best.lines + ' 行') : '已通关 · 辅助';
         } else {
-            const fee = coinManager.getEntryFee(stage.id);
-            const T = stage.coinThreshold || ((stage.minLines || 1) * 2);
-            status = fee > 0
-                ? ('入场 ' + fee + '币 · T' + T)
-                : ('免费 · 理论 ' + (stage.minLines || 0));
+            status = '目标 ' + (stage.minLines || 0) + ' 行';
         }
         // 锁定牌的锁链和挂锁已成为素材主体，不再塞入细小状态文字。
         if (styleKey !== 'locked') {
             // 已解锁木牌右侧有花叶和金属包角，文案向内收出足够安全距离。
-            const statusRight = w / 2 - (styleKey === 'unlocked' ? 22 : pad) - (styleKey === 'cleared' ? 10 : 0);
-            const statusY = localY + (styleKey === 'unlocked' ? 16 : 14) + (styleKey === 'cleared' ? 5 : 0);
+            // 终点横牌的透明边缘和厚金属框更宽，需使用独立安全区，避免文案浮到上边框外。
+            const statusRight = card.finale
+                ? w / 2 - 52
+                : w / 2 - (styleKey === 'unlocked' ? 22 : pad) - (styleKey === 'cleared' ? 10 : 0);
+            const statusY = card.finale
+                ? localY + 44
+                : localY + (styleKey === 'unlocked' ? 16 : 14) + (styleKey === 'cleared' ? 5 : 0);
             ctx.fillText(status, statusRight, statusY);
         }
 
@@ -887,12 +886,11 @@ class StageSelectScene {
         }
 
         const balance = goldenBlock.getBalance();
-        const coins = coinManager.getCoins();
         ctx.fillStyle = MINE_ACCENT;
         ctx.font = 'bold 15px sans-serif';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
-        ctx.fillText('◆ ' + balance + '  ·  币 ' + coins, m.balanceX, m.balanceY);
+        ctx.fillText('◆ 金方块 ' + balance, m.balanceX, m.balanceY);
 
         if (this._backButton) this._backButton.render(ctx);
 

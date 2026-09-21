@@ -39,7 +39,7 @@ GameGlobal.game = {
  */
 function onStart() {
     let cloudReadyPromise = Promise.resolve();
-    // 获取主 Canvas
+
     const canvas = wx.createCanvas();
     const ctx = canvas.getContext('2d');
     const info = wx.getSystemInfoSync();
@@ -126,7 +126,13 @@ function onStart() {
         cloudService.init();
         const cloudSave = require('./utils/cloud-save-manager');
         cloudReadyPromise = cloudSave.init(cloudService).then(() => {
+            const progression = require('./utils/progression-v2');
+            progression.migrate();
             cloudService.syncStageProgress().catch(() => {});
+            return progression.recordLogin(cloudService).then((result) => {
+                GameGlobal.game.pendingLoginBadges = (result && result.newlyEarned) || [];
+                return cloudSave.flush(true).catch(() => {});
+            }).catch(() => {});
         }).catch(() => {});
         GameGlobal.game.cloudSave = cloudSave;
     } catch (e) {
@@ -142,7 +148,6 @@ function onStart() {
     const SettingsScene = require('./js/scenes/settings-scene');
     const AchievementScene = require('./js/scenes/achievement-scene');
     const ChallengeScene = require('./js/scenes/challenge-scene');
-    const ReplayScene = require('./js/scenes/replay-scene');
     const WorldMapScene = require('./js/scenes/world-map-scene');
     const StageSelectScene = require('./js/scenes/stage-select-scene');
     const StageResultScene = require('./js/scenes/stage-result-scene');
@@ -162,7 +167,6 @@ function onStart() {
     GameGlobal.game.sceneManager.register('settings', SettingsScene);
     GameGlobal.game.sceneManager.register('achievement', AchievementScene);
     GameGlobal.game.sceneManager.register('challenge', ChallengeScene);
-    GameGlobal.game.sceneManager.register('replay', ReplayScene);
     GameGlobal.game.sceneManager.register('worldMap', WorldMapScene);
     GameGlobal.game.sceneManager.register('stageSelect', StageSelectScene);
     GameGlobal.game.sceneManager.register('stageResult', StageResultScene);
@@ -220,8 +224,8 @@ function onStart() {
 }
 
 /*** 主循环
- * 可见页 60fps；切后台 / 无当前场景 interval=0 停表。
- * 点按仍会立刻补一帧；滑动中已排队的 rAF 不拆掉重跑，避免一帧画多次把主线程卡死。
+ * 动态页面按声明帧率运行；静态页面 interval=0 时仅在 forceRender 下补绘一帧。
+ * 滑动中已排队的 rAF 不拆掉重跑，避免一帧画多次把主线程卡死。
  */
 const MENU_RENDER_INTERVAL = FRAME_INTERVAL;
 const RAF_MAX_INTERVAL = 0.02;
@@ -261,6 +265,8 @@ function _kickLoop() {
 function _resolveRenderInterval(sm) {
     if (GameGlobal.game._hidden) return 0;
     if (!sm || !sm.current) return 0;
+    // 全局跨场景动画优先保持连续帧，不能被静态页面停帧截断。
+    if (GameGlobal.game._goldTransition) return FRAME_INTERVAL;
     if (typeof sm.current.getRenderInterval === 'function') {
         const n = Number(sm.current.getRenderInterval());
         if (n === 0) return 0;
@@ -287,6 +293,12 @@ function _loop() {
             try {
                 const interval = _resolveRenderInterval(sm);
                 if (!(interval > 0)) {
+                    if (GameGlobal.game._forceRender) {
+                        GameGlobal.game._forceRender = false;
+                        GameGlobal.game._renderAcc = 0;
+                        sm.update(GameGlobal.game.deltaTime);
+                        sm.render(GameGlobal.game.ctx);
+                    }
                     return;
                 }
                 nextDelay = Math.max(16, interval * 1000);

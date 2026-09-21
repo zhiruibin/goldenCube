@@ -1,10 +1,9 @@
 /**
  * ShopScene - 商店场景
- * 职责：展示方块皮肤、棋盘皮肤、音效包，支持购买和装备
+ * 职责：展示方块皮肤、棋盘皮肤、音效包，按进度自动解锁并装备
  */
 
 const { Button } = require('../widgets/button');
-const { drawCoinHudCentered } = require('../../utils/coin-hud');
 const IconRenderer = require('../render/icon-renderer');
 const { blockSkins, boardSkins, soundPacks, soundPackProfiles } = require('../../data/skins');
 const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
@@ -20,7 +19,6 @@ class ShopScene {
         this._scrollY = 0;
         this._tabAreas = [];
         // 缓存本地存储数据，避免渲染帧内频繁读 storage
-        this._coins = 0;
         this._owned = [];
         this._equipped = {};
         this._touchId = null;
@@ -44,13 +42,22 @@ class ShopScene {
 
     /** 从本地存储刷新一次缓存（进入场景时调用） */
     _refreshCache() {
-        this._coins = wx.getStorageSync('gc_coins') || 0;
         this._owned = wx.getStorageSync('gc_ownedItems') || [];
         this._equipped = {
             block: wx.getStorageSync('gc_equipped_block') || 'default',
             board: wx.getStorageSync('gc_equipped_board') || 'default',
             sound: wx.getStorageSync('gc_equipped_sound') || 'default',
         };
+        const all = blockSkins.concat(boardSkins, soundPacks);
+        const nextOwned = this._owned.slice();
+        all.forEach((item) => {
+            if (nextOwned.indexOf(item.id) >= 0 || item.unlockCondition === 'default') return;
+            if (this._canUnlockByCondition(item)) nextOwned.push(item.id);
+        });
+        if (nextOwned.length !== this._owned.length) {
+            this._owned = nextOwned;
+            wx.setStorageSync('gc_ownedItems', nextOwned);
+        }
     }
 
     onPause() {}
@@ -77,9 +84,6 @@ class ShopScene {
 
         const titleY = this._topInset() + 16;
         drawBrandTitle(ctx, '皮肤', W / 2, titleY, 'bold 28px sans-serif');
-
-        // 金币（Title 下方居中一行，避免与居中标题抢横向空间）
-        drawCoinHudCentered(ctx, W, titleY + 30, this._coins);
 
         // Tab 切换
         this._renderTabs(ctx);
@@ -199,7 +203,6 @@ class ShopScene {
             let rightText = '';
             let rightFont = '14px sans-serif';
             let rightColor = '#ffd700';
-            let hasCoin = false;
 
             if (isEquipped) {
                 rightText = '使用中';
@@ -209,18 +212,18 @@ class ShopScene {
                 rightText = '装备';
                 rightFont = '14px sans-serif';
                 rightColor = '#c9a227';
-            } else if (item.unlockCondition && item.unlockCondition !== 'purchase') {
+            } else if (item.unlockCondition) {
                 // 条件解锁商品：右侧只显示简短标签，具体条件已由描述体现，避免两段长文案重叠
                 rightText = '条件解锁';
                 rightFont = '12px sans-serif';
                 rightColor = '#a0a0a0';
             } else {
-                rightText = String(item.price);
-                hasCoin = true;
+                rightText = '未解锁';
+                rightColor = '#a0a0a0';
             }
 
             ctx.font = rightFont;
-            const rightW = ctx.measureText(rightText).width + (hasCoin ? 14 + 4 + 2 : 0);
+            const rightW = ctx.measureText(rightText).width;
 
             // 描述：最大宽度 = 右侧文案左侧预留 8px
             ctx.font = '12px sans-serif';
@@ -235,10 +238,6 @@ class ShopScene {
             ctx.fillStyle = rightColor;
             ctx.textAlign = 'right';
             ctx.fillText(rightText, listX + listW - 15, y + itemH / 2 - 7);
-            if (hasCoin) {
-                const priceW = ctx.measureText(rightText).width;
-                IconRenderer.draw(ctx, 'coin', listX + listW - 15 - priceW - 4 - 7, y + itemH / 2, 14, '#ffd700');
-            }
         }
 
         ctx.restore();
@@ -461,7 +460,7 @@ class ShopScene {
 
     /**
      * 绘制棋盘皮肤预览（迷你棋盘缩略图）
-     * 背景/网格/边框来自皮肤 style，方块使用当前装备的方块皮肤配色，动态特效以动画示意图展示（星空为缓慢闪烁）
+     * 背景/网格/边框来自皮肤 style，动态特效为时间驱动动画示意
      */
     _drawBoardPreview(ctx, item, x, y, size) {
         const style = item.style || {};
@@ -469,16 +468,6 @@ class ShopScene {
         const grid = style.gridColor || 'rgba(255,255,255,0.05)';
         const border = style.borderColor || '#16213e';
         const effect = item.effect || null;
-
-        // 读取当前装备的方块皮肤颜色
-        let blockColors = null;
-        try {
-            const equippedId = wx.getStorageSync('gc_equipped_block') || 'default';
-            const skin = blockSkins.find((s) => s.id === equippedId) || blockSkins[0];
-            blockColors = skin.colors || {};
-        } catch (e) {
-            blockColors = null;
-        }
 
         const cell = size / 4;
         const rows = 4;
@@ -508,32 +497,6 @@ class ShopScene {
             ctx.lineTo(x + c * cell, y + size);
             ctx.stroke();
         }
-
-        // 几格已锁定方块（用装备方块皮肤配色）
-        const filled = [
-            { r: 2, c: 0, t: 'J' },
-            { r: 2, c: 1, t: 'J' },
-            { r: 2, c: 2, t: 'J' },
-            { r: 1, c: 2, t: 'J' },
-            { r: 0, c: 3, t: 'O' },
-            { r: 1, c: 3, t: 'O' },
-            { r: 0, c: 0, t: 'I' },
-            { r: 1, c: 0, t: 'I' },
-        ];
-        filled.forEach((f) => {
-            const raw = (blockColors && blockColors[f.t]) || '#888888';
-            const color = Array.isArray(raw) ? raw[0] : raw;
-            const fx = x + f.c * cell;
-            const fy = y + f.r * cell;
-            ctx.fillStyle = color;
-            ctx.fillRect(fx + 1, fy + 1, cell - 2, cell - 2);
-            ctx.fillStyle = 'rgba(255,255,255,0.2)';
-            ctx.fillRect(fx + 1, fy + 1, cell - 2, 2);
-            ctx.fillRect(fx + 1, fy + 1, 2, cell - 2);
-            ctx.fillStyle = 'rgba(0,0,0,0.3)';
-            ctx.fillRect(fx + 1, fy + cell - 3, cell - 2, 2);
-            ctx.fillRect(fx + cell - 3, fy + 1, 2, cell - 2);
-        });
 
         // 边框
         ctx.strokeStyle = border;
@@ -581,39 +544,83 @@ class ShopScene {
             }
             ctx.globalAlpha = 1;
         } else if (effect === 'bubbles') {
+            // 气泡：4~5 个气泡从底部循环上浮，x 随 sin 微摆
+            const time = Date.now() / 1000;
+            const bubbles = [
+                { bx: 0.2, speed: 14, offset: 0.0, r: 3.0, sway: 2.5, phase: 0.0 },
+                { bx: 0.45, speed: 18, offset: 0.3, r: 2.0, sway: 2.0, phase: 1.3 },
+                { bx: 0.65, speed: 12, offset: 0.55, r: 3.5, sway: 3.0, phase: 2.6 },
+                { bx: 0.85, speed: 16, offset: 0.75, r: 2.5, sway: 2.2, phase: 3.9 },
+                { bx: 0.3, speed: 20, offset: 0.45, r: 4.0, sway: 2.8, phase: 5.2 },
+            ];
             ctx.strokeStyle = '#7ec8ff';
             ctx.lineWidth = 1;
-            ctx.globalAlpha = 0.6;
-            const bubbles = [[size - 10, 8, 3], [size / 2, size - 6, 4], [12, size / 2, 2.5]];
-            for (const [bx, by, br] of bubbles) {
+            for (const b of bubbles) {
+                const baseX = x + b.bx * size;
+                const cycle = size + b.r * 2;
+                const py = y + size + b.r - ((time * b.speed + b.offset * cycle) % cycle);
+                const px = baseX + Math.sin(time * 1.6 + b.phase) * b.sway;
+                ctx.globalAlpha = 0.6;
                 ctx.beginPath();
-                ctx.arc(x + bx, y + by, br, 0, Math.PI * 2);
+                ctx.arc(px, py, b.r, 0, Math.PI * 2);
                 ctx.stroke();
             }
         } else if (effect === 'matrix') {
+            // 数字雨：3~4 列数字随时间循环下落，字符按秒奇偶切换 0/1
+            const time = Date.now() / 1000;
+            const cols = [
+                { cx: 0.2, speed: 10, offset: 0.0 },
+                { cx: 0.5, speed: 14, offset: 0.35 },
+                { cx: 0.8, speed: 12, offset: 0.6 },
+                { cx: 0.35, speed: 16, offset: 0.8 },
+            ];
             ctx.font = 'bold 8px monospace';
             ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
             ctx.fillStyle = '#00ff66';
-            ctx.globalAlpha = 0.7;
-            ctx.fillText('1', x + 6, y + 6);
-            ctx.fillText('0', x + size - 6, y + size / 2);
-            ctx.fillText('1', x + size / 2, y + size - 5);
+            const glyph = Math.floor(time) % 2 === 0 ? '0' : '1';
+            for (const c of cols) {
+                const cycle = size + 8;
+                const py = y - 8 + ((time * c.speed + c.offset * cycle) % cycle);
+                const px = x + c.cx * size;
+                ctx.globalAlpha = 0.7;
+                ctx.fillText(glyph, px, py);
+            }
         } else if (effect === 'sakura') {
+            // 樱花：4~5 片花瓣循环下落，x 随 sin 左右摇摆
+            const time = Date.now() / 1000;
+            const petals = [
+                { px: 0.15, speed: 11, offset: 0.0, sway: 3.0, phase: 0.0, rot: 0.4 },
+                { px: 0.4, speed: 14, offset: 0.25, sway: 2.4, phase: 1.2, rot: 0.9 },
+                { px: 0.6, speed: 12, offset: 0.5, sway: 3.4, phase: 2.4, rot: 0.2 },
+                { px: 0.85, speed: 15, offset: 0.7, sway: 2.6, phase: 3.6, rot: 0.7 },
+                { px: 0.3, speed: 13, offset: 0.4, sway: 3.2, phase: 4.8, rot: 1.1 },
+            ];
             ctx.fillStyle = '#ffb6c1';
-            ctx.globalAlpha = 0.8;
-            const petals = [[8, 6], [size - 10, size - 8], [size / 2 + 4, size / 2]];
-            for (const [px, py] of petals) {
+            for (const p of petals) {
+                const cycle = size + 6;
+                const py = y - 4 + ((time * p.speed + p.offset * cycle) % cycle);
+                const px = x + p.px * size + Math.sin(time * 1.8 + p.phase) * p.sway;
+                ctx.globalAlpha = 0.8;
                 ctx.beginPath();
-                ctx.ellipse(x + px, y + py, 2.5, 1.8, 0.4, 0, Math.PI * 2);
+                ctx.ellipse(px, py, 2.5, 1.8, p.rot, 0, Math.PI * 2);
                 ctx.fill();
             }
         } else if (effect === 'lava') {
+            // 熔岩：4 个光点位置固定，半径与亮度随 sin(time) 脉动
+            const time = Date.now() / 1000;
+            const lavas = [
+                { lx: 0.12, ly: 0.2, lr: 1.5, phase: 0.0 },
+                { lx: 0.85, ly: 0.5, lr: 1.2, phase: 1.6 },
+                { lx: 0.5, ly: 0.85, lr: 1.8, phase: 3.2 },
+                { lx: 0.85, ly: 0.2, lr: 1.0, phase: 4.8 },
+            ];
             ctx.fillStyle = '#ff5a00';
-            ctx.globalAlpha = 0.8;
-            const lavas = [[6, 8, 1.5], [size - 8, size / 2, 1.2], [size / 2, size - 8, 1.8], [size - 6, 8, 1.0]];
-            for (const [lx, ly, lr] of lavas) {
+            for (const l of lavas) {
+                const pulse = 0.5 + 0.5 * Math.sin(time * 2 + l.phase);
+                ctx.globalAlpha = 0.4 + 0.5 * pulse;
                 ctx.beginPath();
-                ctx.arc(x + lx, y + ly, lr, 0, Math.PI * 2);
+                ctx.arc(x + l.lx * size, y + l.ly * size, l.lr * (0.75 + 0.5 * pulse), 0, Math.PI * 2);
                 ctx.fill();
             }
         }
@@ -759,23 +766,6 @@ class ShopScene {
                 return;
             }
 
-            // 购买类
-            if (item.unlockCondition === 'purchase') {
-                const coins = this._coins;
-                if (coins >= item.price) {
-                    this._coins = coins - item.price;
-                    wx.setStorageSync('gc_coins', this._coins);
-                    this._owned = owned.concat(item.id);
-                    wx.setStorageSync('gc_ownedItems', this._owned);
-                    this._equipped[this._tab] = item.id;
-                    wx.setStorageSync(equippedKey, item.id);
-                    wx.showToast({ title: '购买成功：' + item.name, icon: 'none' });
-                } else {
-                    wx.showToast({ title: '金币不足', icon: 'none' });
-                }
-                return;
-            }
-
             wx.showToast({ title: this._unlockHint(item), icon: 'none' });
             return;
         }
@@ -786,6 +776,13 @@ class ShopScene {
         const cond = item.unlockCondition;
         if (!cond || cond === 'purchase') return false;
         if (cond === 'default') return true;
+        const stageMatch = /^stage_clear_(\d+)$/.exec(cond);
+        if (stageMatch) {
+            try {
+                const goldenBlock = require('../../utils/golden-block-manager');
+                return goldenBlock.isCleared(Number(stageMatch[1]));
+            } catch (e) { return false; }
+        }
         if (cond === 'stages_cleared_10') {
             try {
                 const goldenBlock = require('../../utils/golden-block-manager');
@@ -806,6 +803,8 @@ class ShopScene {
             games_50: '累计对局 50 场解锁',
             tetris_count_100: '累计 100 次 QUAD 解锁',
         };
+        const stageMatch = /^stage_clear_(\d+)$/.exec(item.unlockCondition || '');
+        if (stageMatch) return '通关主线第 ' + stageMatch[1] + ' 关解锁';
         return hints[item.unlockCondition] || '未满足解锁条件';
     }
 

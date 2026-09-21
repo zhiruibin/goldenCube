@@ -4,7 +4,7 @@
  *
  * 数据流：
  *   - 好友榜：主域 postMessage → 开放数据域 wx.getFriendCloudStorage → sharedCanvas → 主域 drawImage
- *   - 全服榜：云函数 rank.getRankList → 云数据库 rankings（前十可回放）
+ *   - 全服榜：云函数 rank.getRankList → 云数据库 rankings
  */
 
 const { Button } = require('../widgets/button');
@@ -56,8 +56,6 @@ class RankScene {
         this._modeAreas = [];
         this._tabAreas = [];
 
-        this._replayBtns = [];
-        this._replayLoading = false;
         this._shareBusy = false;
     }
 
@@ -248,7 +246,6 @@ class RankScene {
         ctx.rect(0, top, W, bottom - top);
         ctx.clip();
 
-        this._replayBtns = [];
         let displayedRank = 0;
         let previous = null;
         for (let i = 0; i < this._rankData.length; i++) {
@@ -300,31 +297,7 @@ class RankScene {
             ctx.fillStyle = '#ffffff';
             ctx.fillText(item.nickname || '玩家', hasAvatar ? listX + 88 : listX + 60, y + itemH / 2 - 2);
 
-            const hasReplay = !!item.hasReplay && i < 10;
-            const btnW = 48;
-            const btnH = 24;
-            const btnGap = 6;
             let right = listX + listW - 12;
-
-            if (hasReplay) {
-                const btnX = right - btnW;
-                const btnY = y + (itemH - btnH) / 2 - 2;
-                const drawn = drawThemeImageContain(
-                    ctx, 'cardStageGold', btnX + btnW / 2, btnY + btnH / 2, btnW, btnH
-                );
-                if (!drawn.drawn) {
-                    ctx.fillStyle = 'rgba(201,162,39,0.35)';
-                    this._roundRect(ctx, btnX, btnY, btnW, btnH, 6);
-                    ctx.fill();
-                }
-                ctx.fillStyle = '#241408';
-                ctx.font = 'bold 12px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText('回放', btnX + btnW / 2, btnY + btnH / 2);
-                this._replayBtns.push({ x: btnX, y: btnY, w: btnW, h: btnH, replayId: item.id || '' });
-                right = btnX - btnGap;
-            }
 
             // 通关数（主展示）
             const cleared = typeof item.clearedCount === 'number'
@@ -636,27 +609,6 @@ class RankScene {
             });
     }
 
-    /** 从云端拉取回放数据并跳转到回放场景（全服榜前十行内回放） */
-    _openReplay(replayId) {
-        if (this._replayLoading) return;
-        this._replayLoading = true;
-        cloudService.getReplay(replayId)
-            .then((res) => {
-                const replay = res && res.replay;
-                if (replay && replay.seed != null && Array.isArray(replay.inputs)) {
-                    GameGlobal.game.sceneManager.switchTo('replay', { replayData: replay, fromRank: true });
-                } else {
-                    wx.showToast({ title: '回放加载失败', icon: 'none' });
-                }
-            })
-            .catch(() => {
-                wx.showToast({ title: '回放加载失败', icon: 'none' });
-            })
-            .finally(() => {
-                this._replayLoading = false;
-            });
-    }
-
     _topInset() {
         const sys = GameGlobal.game.systemInfo || {};
         return Math.max(sys.statusBarHeight || 0, (sys.safeArea && sys.safeArea.top) || 0);
@@ -804,19 +756,6 @@ class RankScene {
             }
         }
         // （闯关榜无模式切换）
-
-        // 全服榜行内回放
-        if (this._tab === 'global') {
-            if (this._replayBtns.length > 0) {
-                for (const rb of this._replayBtns) {
-                    if (x >= rb.x && x <= rb.x + rb.w &&
-                        y >= rb.y && y <= rb.y + rb.h) {
-                        this._openReplay(rb.replayId);
-                        return;
-                    }
-                }
-            }
-        }
 
         // 按钮
         for (const btn of this._buttons) {

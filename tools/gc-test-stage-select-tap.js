@@ -102,37 +102,37 @@ assert(switched.params && switched.params.stageId === 2, '应进入第 2 关');
 assert(goldenBlock.isUnlocked(2), '确认后应已解锁');
 assert(store.gc_goldenBlocks === 4, '应扣 1 金方块');
 
+// 第 11 章生成关只保留金方块永久解锁，开打免费。
+store.gc_stagesUnlocked = [];
+store.gc_goldenBlocks = 5;
+store.gc_coins = 500;
+const chapter11 = new StageSelectScene();
+chapter11.onEnter({ chapterId: 11 });
+const stage102 = chapter11._chapterCards[10][1].stage;
+assert(stage102.id === 102, '第 11 章第二张卡应为第 102 关');
+assert(stage102.unlockCost === 1, '第 102 关应消耗 1 个金方块解锁');
+chapter11._handleCardTap(chapter11._chapterCards[10][1]);
+assert(chapter11._entryDialog && chapter11._entryDialog.stage.id === 102, '第 102 关应打开自己的入场弹窗');
+assert(chapter11._entryDialog.locked === true, '第 102 关未解锁时弹窗应为锁定状态');
+assert(chapter11._entryDialog.needGold === 1, '第 102 关弹窗应显示 1 个金方块解锁');
+assert(chapter11._entryDialog.fee === 0, '第 102 关不应再收金币入场费');
+
 store.gc_goldenBlocks = 0;
 store.gc_coins = 0;
 store.gc_stagesUnlocked = [];
 let entry = enterOfficialStage(4);
-assert(entry.reason === 'no-gold-and-coins', '两样都缺应一并提示, got=' + entry.reason);
-assert(stageEntryShortageText(entry) === '金方块不足，金币也不足', '两样都缺文案');
+assert(entry.reason === 'no-gold', '只校验金方块, got=' + entry.reason);
+assert(stageEntryShortageText(entry) === '金方块不足', '缺金方块文案');
 
 store.gc_goldenBlocks = 5;
-store.gc_coins = 0;
 entry = enterOfficialStage(4);
-assert(entry.reason === 'no-coins', '只缺金币');
-assert(store.gc_goldenBlocks === 5, '缺金币时不应先扣金方块');
-
-store.gc_goldenBlocks = 0;
-store.gc_coins = 100;
-entry = enterOfficialStage(4);
-assert(entry.reason === 'no-gold', '只缺金方块');
-assert(store.gc_coins === 100, '缺金方块时不应扣金币');
-
-store.gc_goldenBlocks = 5;
-store.gc_coins = 100;
-entry = enterOfficialStage(4);
-assert(entry.ok, '两样都够应开打');
+assert(entry.ok, '金方块足够应解锁并开打');
 assert(entry.goldPaid === 1, '未解锁应扣 1 金方块');
-assert(entry.paid > 0, '第 4 关应同时扣金币');
+assert(entry.paid === 0, '第 4 关不应扣金币');
 assert(goldenBlock.isUnlocked(4), '开打后应已解锁');
 assert(store.gc_goldenBlocks === 4, '金方块应只扣 1');
 
-const coinsAfterUnlock = store.gc_coins;
 entry = enterOfficialStage(4);
-assert(entry.ok && entry.goldPaid === 0, '已解锁只扣金币');
-assert(store.gc_coins === coinsAfterUnlock - entry.paid, '已解锁不应再扣金方块');
+assert(entry.ok && entry.goldPaid === 0 && entry.paid === 0, '已解锁应免费重玩');
 
 console.log('PASS: handleTap 免费关直进 / 未解锁确认窗 / 确认扣费');

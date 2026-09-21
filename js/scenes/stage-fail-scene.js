@@ -1,6 +1,6 @@
 /**
  * StageFailScene - 闯关失败结算
- * 展示本局成绩；支持广告免费重开 / 付费重玩 / 回看 / 分享 / 返回关选。
+ * 展示本局成绩；支持观看激励视频回退8步 / 免费重玩 / 分享 / 返回关选。
  */
 
 const {
@@ -12,8 +12,8 @@ const {
 } = require('../theme/arcade-night');
 const { drawThemeBackground } = require('../theme/theme-images');
 const goldenBlock = require('../../utils/golden-block-manager');
-const { coinManager } = require('../../utils/coin-manager');
 const { adManager, isRewardedVideoConfigured } = require('../../utils/ad-manager');
+const rewindManager = require('../../utils/rewind-manager');
 const { achievementManager } = require('../../utils/achievement-manager');
 const stageFailShareCard = require('../../utils/stage-fail-share-card');
 const { Button } = require('../widgets/button');
@@ -30,6 +30,7 @@ const {
     preloadResultBlockImages,
     drawResultBlockImage,
 } = require('../render/result-block-image');
+const IconRenderer = require('../render/icon-renderer');
 
 class StageFailScene {
     constructor() {
@@ -53,7 +54,6 @@ class StageFailScene {
         this._shareBusy = false;
         this._stage = goldenBlock.getStage(this._params.stageId);
         this._result = this._params.result || null;
-        this._replayKey = this._params.replayKey || '';
         preloadResultBlockImages();
         this._buildButtons();
     }
@@ -81,19 +81,24 @@ class StageFailScene {
         this._toastUntil = Date.now() + 2200;
     }
 
-    _freeRetryViaAd() {
-        if (coinManager.getFreeRetryRemaining() <= 0) return;
+    _rewindViaAd() {
+        const pending = rewindManager.load();
+        if (!pending || !this._params.rewindAvailable) return;
         if (isRewardedVideoConfigured() !== true) return;
         adManager.showRewardedVideo()
             .then(() => {
-                coinManager.consumeFreeRetry();
-                GameGlobal.game.sceneManager.replace('game', {
-                    mode: 'stage',
-                    stageId: this._params.stageId,
-                    entryPaid: 0,
+                const payload = rewindManager.consume();
+                if (!payload) {
+                    this._showToast('回退记录已失效');
+                    return;
+                }
+                const gameParams = Object.assign({}, payload.gameParams || {}, {
+                    assisted: true,
+                    rewindPayload: payload,
                 });
+                GameGlobal.game.sceneManager.replace('game', gameParams);
             })
-            .catch(() => { /* 未看完不重开 */ });
+            .catch(() => this._showToast('需完整观看视频，或稍后再试'));
     }
 
     /** 分享本局失败战绩（专用紧凑分享卡，避免截屏顶空白） */
@@ -151,16 +156,16 @@ class StageFailScene {
         const gapY = 10;
 
         const rows = [];
-        const canFreeRetry = coinManager.getFreeRetryRemaining() > 0
+        const canRewind = !!this._params.rewindAvailable
+            && !!rewindManager.load()
             && isRewardedVideoConfigured() === true;
-        if (canFreeRetry) {
-            const left = coinManager.getFreeRetryRemaining();
+        if (canRewind) {
             rows.push({
-                text: '广告免费重开（剩' + left + '）',
+                text: '观看视频，回退' + rewindManager.REWIND_STEPS + '步',
                 color: '#c89840',
                 skin: 'btnBarAmber',
                 labelColor: '#241408',
-                onClick: () => this._freeRetryViaAd(),
+                onClick: () => this._rewindViaAd(),
             });
         }
 
@@ -170,24 +175,6 @@ class StageFailScene {
             skin: 'btnBarGold',
             labelColor: '#241408',
             onClick: () => this._promptEnter(this._stage),
-        });
-        rows.push({
-            text: '回看本局',
-            color: '#c89840',
-            skin: 'btnBarAmber',
-            labelColor: '#241408',
-            onClick: () => {
-                if (!this._replayKey) {
-                    this._showToast('暂无可回看');
-                    return;
-                }
-                GameGlobal.game.sceneManager.switchTo('replay', {
-                    replayKey: this._replayKey,
-                    fromStageFail: true,
-                    stageId: this._params.stageId,
-                    result: this._result,
-                });
-            },
         });
         rows.push({
             text: '分享',
@@ -281,6 +268,76 @@ class StageFailScene {
         });
     }
 
+    /** 失败状态章印：与成功页章印占据同一视觉位置，避免英雄位上沿留空。 */
+    _drawFailMedal(ctx, cx, cy, size) {
+        const pulse = 1 + Math.sin(this._animTime * 2.5) * 0.025;
+        const radius = size * .36 * pulse;
+        ctx.save();
+
+        const glow = ctx.createRadialGradient(cx, cy, radius * .2, cx, cy, radius * 1.6);
+        glow.addColorStop(0, 'rgba(196,72,55,.38)');
+        glow.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius * 1.6, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.translate(cx, cy);
+        ctx.rotate(Math.PI / 8);
+        ctx.beginPath();
+        for (let i = 0; i < 16; i++) {
+            const rr = i % 2 === 0 ? radius * 1.2 : radius * .94;
+            const a = i * Math.PI / 8 - Math.PI / 2;
+            const x = Math.cos(a) * rr;
+            const y = Math.sin(a) * rr;
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fillStyle = '#8e4638';
+        ctx.fill();
+        ctx.rotate(-Math.PI / 8);
+
+        const face = ctx.createRadialGradient(-radius * .28, -radius * .32, 1, 0, 0, radius);
+        face.addColorStop(0, '#ffd2bd');
+        face.addColorStop(.5, '#a54c3c');
+        face.addColorStop(1, '#3f211d');
+        ctx.beginPath();
+        ctx.arc(0, 0, radius, 0, Math.PI * 2);
+        ctx.fillStyle = face;
+        ctx.fill();
+        ctx.strokeStyle = '#e89a7c';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(0, 0, radius * .76, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255,225,211,.28)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        IconRenderer.draw(ctx, 'warning', 0, -1, radius * 1.02, '#ffe4cf');
+
+        const rw = 48;
+        const rh = 14;
+        const ry = radius * .68;
+        ctx.beginPath();
+        ctx.moveTo(-rw / 2 - 4, ry);
+        ctx.lineTo(-rw / 2, ry + rh / 2);
+        ctx.lineTo(-rw / 2 - 4, ry + rh);
+        ctx.lineTo(rw / 2 + 4, ry + rh);
+        ctx.lineTo(rw / 2, ry + rh / 2);
+        ctx.lineTo(rw / 2 + 4, ry);
+        ctx.closePath();
+        ctx.fillStyle = '#3f211d';
+        ctx.fill();
+        ctx.strokeStyle = '#9d5142';
+        ctx.stroke();
+        ctx.fillStyle = '#ffe5d1';
+        ctx.font = 'bold 9px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('未通关', 0, ry + rh / 2 + .5);
+        ctx.restore();
+    }
+
     render(ctx) {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
@@ -337,6 +394,14 @@ class StageFailScene {
             const reasonText = this._result.reason === 'topOut' ? '方块堆满，本局结束'
                 : '未达过关条件';
             ctx.fillText(reasonText, cx, cubeBottomY + 18);
+
+            const reasonBottomY = cubeBottomY + 36;
+            const buttonTopY = this._buttonsTopY || H * .72;
+            const medalY = Math.max(
+                reasonBottomY + 34,
+                Math.min(buttonTopY - 40, (reasonBottomY + buttonTopY) / 2)
+            );
+            this._drawFailMedal(ctx, cx, medalY, Math.max(54, Math.min(62, heroSize * .56)));
         }
 
         ctx.textAlign = 'left';

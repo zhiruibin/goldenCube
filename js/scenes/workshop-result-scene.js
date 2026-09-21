@@ -1,5 +1,5 @@
 /**
- * WorkshopResultScene - 工坊/广场结算（只展示金币，永不发金方块）
+ * WorkshopResultScene - 工坊/广场结算（无金币；广场失败可激励视频回退）
  * 含作者试玩通关 / 未通关。
  */
 const {
@@ -19,6 +19,8 @@ const {
 const { buildIsoBlockFaces, drawSolidIsoBlock } = require('../render/iso-block-renderer');
 const workshop = require('../../utils/workshop-manager');
 const endless = require('../../utils/endless-manager');
+const rewindManager = require('../../utils/rewind-manager');
+const { adManager, isRewardedVideoConfigured } = require('../../utils/ad-manager');
 
 class WorkshopResultScene {
     constructor() {
@@ -45,7 +47,6 @@ class WorkshopResultScene {
             origin: this._authorTrial ? 'workshop' : 'plaza',
             mineSub: 'draft',
         };
-        this._replayKey = this._params.replayKey || '';
         preloadResultBlockImages();
         this._buildButtons();
 
@@ -182,20 +183,18 @@ class WorkshopResultScene {
         });
     }
 
-    _openReplay() {
-        if (!this._replayKey) {
-            return;
-        }
-        GameGlobal.game.sceneManager.switchTo('replay', {
-            replayKey: this._replayKey,
-            fromWorkshopResult: true,
-            workshopStageId: this._stageId,
-            workshopTitle: this._title,
-            authorTrial: this._authorTrial,
-            workshopReturnTo: this._returnTo,
-            workshopListParams: this._listParams,
-            result: this._result,
-            failed: this._failed,
+    _rewindViaAd() {
+        const pending = rewindManager.load();
+        if (!pending || !this._params.rewindAvailable || isRewardedVideoConfigured() !== true) return;
+        adManager.showRewardedVideo().then(() => {
+            const payload = rewindManager.consume();
+            if (!payload) return;
+            GameGlobal.game.sceneManager.replace('game', Object.assign({}, payload.gameParams || {}, {
+                assisted: true,
+                rewindPayload: payload,
+            }));
+        }).catch(() => {
+            try { wx.showToast({ title: '需完整观看视频，或稍后再试', icon: 'none' }); } catch (e) { /* ignore */ }
         });
     }
 
@@ -218,8 +217,7 @@ class WorkshopResultScene {
         } else if (this._authorTrial) {
             contentBottom = footY + 76;
         } else {
-            // 「+N 金币」+「广场通关不奖励金方块」
-            contentBottom = footY + 52;
+            contentBottom = footY + 30;
         }
         return {
             topInset,
@@ -301,13 +299,6 @@ class WorkshopResultScene {
                 });
             }
             rows.push({
-                text: '回看本局',
-                color: '#c89840',
-                skin: 'btnBarAmber',
-                labelColor: '#241408',
-                onClick: () => this._openReplay(),
-            });
-            rows.push({
                 text: this._returnTo === 'editor' ? '返回编辑' : '返回列表',
                 color: '#5a4030',
                 skin: 'btnBarBrown',
@@ -316,6 +307,16 @@ class WorkshopResultScene {
             });
         } else {
             // 广场 / 他人关：与闯关结算同款竖排通栏
+            if (this._failed && this._params.rewindAvailable && rewindManager.load()
+                && isRewardedVideoConfigured() === true) {
+                rows.push({
+                    text: '观看视频，回退' + rewindManager.REWIND_STEPS + '步',
+                    color: '#c89840',
+                    skin: 'btnBarAmber',
+                    labelColor: '#241408',
+                    onClick: () => this._rewindViaAd(),
+                });
+            }
             rows.push({
                 text: this._failed ? '再试一次' : '再玩一局',
                 color: '#c9a227',
@@ -329,13 +330,6 @@ class WorkshopResultScene {
                     }
                     this._goList({ toast: '请再次开打' });
                 },
-            });
-            rows.push({
-                text: '回看本局',
-                color: '#c89840',
-                skin: 'btnBarAmber',
-                labelColor: '#241408',
-                onClick: () => this._openReplay(),
             });
             const origin = this._resolveOrigin();
             rows.push({
@@ -413,7 +407,7 @@ class WorkshopResultScene {
             ? 'fail'
             : (this._authorTrial
                 ? 'clear'
-                : ((r.coinGained || 0) > 0 ? 'record' : 'clear'));
+                : (r.isNewBest ? 'record' : 'clear'));
         const drawn = drawResultBlockImage(ctx, kind, cx, cy, size * 1.35, this._animTime);
         if (drawn) return;
 
@@ -582,19 +576,11 @@ class WorkshopResultScene {
             ctx.font = '13px sans-serif';
             ctx.fillText('工坊自通不产出金方块', W / 2, footY + 68);
         } else {
-            const r = this._result || {};
             ctx.fillStyle = ACCENT;
-            ctx.font = 'bold 22px sans-serif';
-            ctx.fillText('+' + (r.coinGained || 0) + ' 金币', W / 2, footY + 18);
-            if ((r.coinWant || 0) > (r.coinGained || 0)) {
-                ctx.fillStyle = MUTED;
-                ctx.font = '12px sans-serif';
-                ctx.fillText('日池已触顶（理论 ' + r.coinWant + '）', W / 2, footY + 44);
-            } else {
-                ctx.fillStyle = MUTED;
-                ctx.font = '13px sans-serif';
-                ctx.fillText('广场通关不奖励金方块', W / 2, footY + 44);
-            }
+            ctx.font = 'bold 15px sans-serif';
+            ctx.fillText(this._result.assisted
+                ? '辅助通关 · 本局不计最佳纪录'
+                : '通关记录已保存', W / 2, footY + 18);
         }
 
         ctx.textAlign = 'left';

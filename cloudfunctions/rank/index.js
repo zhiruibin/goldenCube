@@ -3,8 +3,7 @@
 //   1. submitScore - 上报复合键（clearedCount DESC → lines/pieces/time ASC），编码为 score 降序
 //   2. getRankList - 查询全服 Top 20 生涯榜
 //   3. getMyRank  - 查询当前用户排名
-//   4. getReplay  - 回放（兼容旧数据；闯关主榜通常无回放）
-//   5. syncStageProgress - 合并并返回逐关最佳成绩云存档
+//   4. syncStageProgress - 合并并返回逐关最佳成绩云存档
 
 const cloud = require('wx-server-sdk');
 
@@ -15,6 +14,7 @@ const _ = db.command;
 
 const COLLECTION = 'rankings';
 const SAVE_COLLECTION = 'player_saves';
+const PROGRESS_COLLECTION = 'player_progress';
 const ALLOWED_MODES = ['stage'];
 const TOP_LIMIT = 20;
 
@@ -63,18 +63,62 @@ exports.main = async (event, context) => {
             return await getRankList(OPENID, data || {});
         case 'getMyRank':
             return await getMyRank(OPENID, data || {});
-        case 'getReplay':
-            return await getReplay(OPENID, data || {});
         case 'syncStageProgress':
             return await syncStageProgress(OPENID, data || {});
         case 'pullPlayerSave':
             return await pullPlayerSave(OPENID);
         case 'pushPlayerSave':
             return await pushPlayerSave(OPENID, data || {});
+        case 'recordLoginDay':
+            return await recordLoginDay(OPENID, data || {});
         default:
             return { success: false, errMsg: `Unknown action: ${action}` };
     }
 };
+
+const LOGIN_BADGES = [
+    { id: 'login_7', days: 7 },
+    { id: 'login_30', days: 30 },
+    { id: 'login_100', days: 100 },
+    { id: 'login_365', days: 365 },
+];
+
+function beijingDay(timestamp) {
+    return new Date(Number(timestamp) + 8 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+/** 服务端自然日累计；同一北京时间日期重复调用不会重复加一。 */
+async function recordLoginDay(openid, data) {
+    const now = Date.now();
+    const today = beijingDay(now);
+    const coll = db.collection(PROGRESS_COLLECTION);
+    const found = await coll.where({ openid }).limit(1).get();
+    const prev = (found.data && found.data[0]) || null;
+    const login = (prev && prev.loginProgress) || {};
+    const local = data && data.localProgress && typeof data.localProgress === 'object'
+        ? data.localProgress : {};
+    const alreadyCountedToday = login.lastLoginDay === today || local.lastLoginDay === today;
+    const total = Math.max(
+        0,
+        Math.floor(Number(login.totalLoginDays) || 0),
+        Math.floor(Number(local.totalLoginDays) || 0)
+    ) + (alreadyCountedToday ? 0 : 1);
+    const earned = Array.from(new Set(
+        (Array.isArray(login.earnedBadgeIds) ? login.earnedBadgeIds : [])
+            .concat(Array.isArray(local.earnedBadgeIds) ? local.earnedBadgeIds : [])
+    ));
+    const newlyEarned = [];
+    LOGIN_BADGES.forEach((badge) => {
+        if (total < badge.days || earned.indexOf(badge.id) >= 0) return;
+        earned.push(badge.id);
+        newlyEarned.push(badge.id);
+    });
+    const progress = { lastLoginDay: today, totalLoginDays: total, earnedBadgeIds: earned };
+    const record = { openid, loginProgress: progress, updatedAt: now };
+    if (prev && prev._id) await coll.doc(prev._id).update({ data: record });
+    else await coll.add({ data: record });
+    return { success: true, progress, newlyEarned };
+}
 
 /**
  * 提交闯关复合键
@@ -123,18 +167,6 @@ async function submitScore(openid, data) {
     const isNewRecord = isBetterSums(sums, prev);
 
     if (isNewRecord) {
-        let replayField = null;
-        const replay = data.replay;
-        if (replay && typeof replay === 'object' && replay.seed != null && Array.isArray(replay.inputs)) {
-            try {
-                const replayStr = JSON.stringify(replay);
-                if (replayStr.length <= 60000) {
-                    replayField = replay;
-                }
-            } catch (e) {
-                replayField = null;
-            }
-        }
         const record = {
             openid,
             mode,
@@ -146,7 +178,6 @@ async function submitScore(openid, data) {
             detail: data.detail || null,
             nickname: profile.nickname || (prev && prev.nickname) || '',
             avatarUrl: profile.avatarUrl || (prev && prev.avatarUrl) || '',
-            replay: replayField,
             stageProgress: progressMerge.progress,
             achievedAt: now,
             updatedAt: now,
@@ -353,7 +384,6 @@ async function getRankList(openid, data) {
             timeSum: item.timeSum || 0,
             updatedAt: item.achievedAt || item.updatedAt || 0,
             achievedAt: item.achievedAt || item.updatedAt || 0,
-            hasReplay: !!(item.replay && item.replay.seed != null),
         }));
     } catch (e) {
         list = [];
@@ -440,25 +470,6 @@ async function getMyRank(openid, data) {
     } catch (e) {
         return { success: false, errMsg: (e && e.errMsg) || String(e) };
     }
-}
-
-async function getReplay(openid, data) {
-    const replayId = data && typeof data.replayId === 'string' ? data.replayId.trim() : '';
-    if (!replayId) {
-        return { success: false, errMsg: 'invalid replayId' };
-    }
-
-    try {
-        const res = await db.collection(COLLECTION).doc(replayId).get();
-        const rec = res && res.data ? res.data : null;
-        if (rec && rec.replay && rec.replay.seed != null) {
-            return { success: true, replay: rec.replay, mode: rec.mode || '' };
-        }
-    } catch (e) {
-        // ignore
-    }
-
-    return { success: false, errMsg: 'replay not found' };
 }
 
 function defaultName(openid) {

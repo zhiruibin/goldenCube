@@ -27,6 +27,7 @@ function award(id) {
     if (ids.indexOf(id) >= 0) return { awarded: true, first: false };
     ids.push(id);
     try { wx.setStorageSync(STORAGE_KEY, ids); } catch (e) { return { awarded: false, first: false }; }
+    try { require('../utils/badge-progress-signal').invalidate('theme'); } catch (e) { /* ignore */ }
     return { awarded: true, first: true };
 }
 

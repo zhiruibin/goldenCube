@@ -10,3 +10,4 @@
 {"id":"capability.cloud_backend","type":"capability","name":"云开发后端服务","businessKnowledgeKeys":[]}
 {"id":"capability.achievement_reward","type":"capability","name":"成就与奖励系统","businessKnowledgeKeys":[]}
 {"id":"capability.dev_tools","type":"capability","name":"开发与构建工具","businessKnowledgeKeys":[]}
+{"id":"capability.theme_event","type":"capability","name":"主题限时活动","businessKnowledgeKeys":[]}

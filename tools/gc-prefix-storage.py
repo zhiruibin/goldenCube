@@ -19,7 +19,6 @@ SKIP_DIRS = {'cloudfunctions', 'tools', 'node_modules', '.git', 'assets'}
 # 整串精确 key（不带引号）
 BARE_KEYS = [
     'pending_challenges',
-    'replay_last',
     'unlockedAchievements',
     'lastNewAchievements',
     'profile_auth_skipped',

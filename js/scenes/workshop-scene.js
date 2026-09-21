@@ -12,7 +12,6 @@ const {
 const { drawThemeBackground, drawThemeImageContain, drawThemeButtonSkin } = require('../theme/theme-images');
 const workshop = require('../../utils/workshop-manager');
 const goldenBlock = require('../../utils/golden-block-manager');
-const { coinManager } = require('../../utils/coin-manager');
 const { applyShortageHighlight, renderEntryDialog } = require('../../utils/stage-entry-ui');
 const { achievementManager } = require('../../utils/achievement-manager');
 const { drawGarbageLayoutCell } = require('../render/garbage-cell');
@@ -502,7 +501,7 @@ class WorkshopScene {
         }
         const fee = workshop.spendChallengeFee();
         if (!fee.ok) {
-            this._showToast('金币不足（需 ' + workshop.CHALLENGE_FEE + '）');
+            this._showToast('暂时无法发起挑战');
             return;
         }
         this._showToast('创建挑战中…');
@@ -522,11 +521,6 @@ class WorkshopScene {
             avatarUrl: profile.avatarUrl || '',
         }).then((res) => {
             if (!res || !res.success) {
-                // 退回挑战费
-                try {
-                    const bal = require('../../utils/coin-manager').coinManager.getCoins();
-                    wx.setStorageSync('gc_coins', bal + (fee.paid || 0));
-                } catch (e) { /* ignore */ }
                 this._showToast((res && res.errMsg) || '发起失败');
                 return;
             }
@@ -553,10 +547,6 @@ class WorkshopScene {
             } catch (e) { /* ignore */ }
             this._showToast('挑战已创建，请分享给好友');
         }).catch(() => {
-            try {
-                const bal = require('../../utils/coin-manager').coinManager.getCoins();
-                wx.setStorageSync('gc_coins', bal + (fee.paid || 0));
-            } catch (e2) { /* ignore */ }
             this._showToast('发起失败');
         });
     }
@@ -567,18 +557,15 @@ class WorkshopScene {
     }
 
     _openPlayDialog(stage) {
-        const fee = workshop.getPlayFee(stage);
         const unlocked = workshop.isPlazaUnlocked(stage.stageId);
         this._playDialog = {
             stage,
-            fee,
             locked: !unlocked,
             needGold: unlocked ? 0 : workshop.PLAZA_UNLOCK_GOLD,
-            freeLeft: workshop.getFreePlayRemaining(),
-            canAd: unlocked && isRewardedVideoConfigured() === true,
+            rewardedLeft: 0,
+            canAd: false,
             canChallenge: false,
             lackGold: false,
-            lackCoins: false,
         };
         this._playDialogArmed = false;
     }
@@ -626,8 +613,7 @@ class WorkshopScene {
         ctx.textBaseline = 'middle';
         ctx.fillText(
             '槽位 ' + workshop.countOccupiedSlots() + '/' + workshop.getSlotCap()
-            + ' · 金' + goldenBlock.getBalance()
-            + ' · 币' + coinManager.getCoins(),
+            + ' · 金方块 ' + goldenBlock.getBalance(),
             W / 2,
             metaY
         );

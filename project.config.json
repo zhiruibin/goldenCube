@@ -33,6 +33,42 @@
       {
         "value": "data/plaza-official-v1.json",
         "type": "file"
+      },
+      {
+        "value": "assets/images/theme/plaza-card-frame.png",
+        "type": "file"
+      },
+      {
+        "value": "assets/images/theme/stage-plaque-current-flower.png",
+        "type": "file"
+      },
+      {
+        "value": "assets/images/theme/stage-plaque-current.png",
+        "type": "file"
+      },
+      {
+        "value": "assets/images/theme/stage-plaque-locked.png",
+        "type": "file"
+      },
+      {
+        "value": "assets/images/theme/mid-autumn/stage-card-cleared.png",
+        "type": "file"
+      },
+      {
+        "value": "assets/images/theme/mid-autumn/stage-card-current.png",
+        "type": "file"
+      },
+      {
+        "value": "assets/images/theme/mid-autumn/stage-card-finale.png",
+        "type": "file"
+      },
+      {
+        "value": "assets/images/theme/mid-autumn/stage-card-locked-v2.png",
+        "type": "file"
+      },
+      {
+        "value": "assets/images/theme/mid-autumn/stage-card-locked.png",
+        "type": "file"
       }
     ],
     "include": []

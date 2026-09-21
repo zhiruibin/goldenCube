@@ -44,26 +44,10 @@ function normalizeGameParams(params) {
     return p;
 }
 
-/** 回放 meta 附加 playContext（写入 recorder.finish） */
-function replayMetaFromGame(scene) {
-    const meta = {
-        playContext: scene._playContext || 'stage',
-        stageId: scene._stageId || null,
-        workshopStageId: scene._workshopStageId || null,
-        workshopRows: scene._workshopRows || null,
-        workshopTitle: scene._workshopTitle || '',
-        challengeId: scene._challengeId || '',
-        challengeKind: scene._challengeMode || '',
-        themeId: scene._themeId || '',
-    };
-    return meta;
-}
-
 module.exports = {
     VALID_PLAY_CONTEXTS,
     VALID_CHALLENGE_KINDS,
     resolvePlayContext,
     resolveChallengeKind,
     normalizeGameParams,
-    replayMetaFromGame,
 };

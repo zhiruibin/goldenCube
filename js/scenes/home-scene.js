@@ -1,12 +1,11 @@
 /**
  * HomeScene - 首页场景
- * 职责：入口 Hub（闯关/关卡广场/工坊/排行/成就/商店/设置）+ 好友挑战 + 每日登录金币
+ * 职责：入口 Hub（闯关/关卡广场/工坊/排行/图鉴/皮肤/设置）+ 好友挑战
  */
 const { Button } = require('../widgets/button');
 const { Panel } = require('../widgets/panel');
-const { coinManager, DAILY_WELFARE_REWARD } = require('../../utils/coin-manager');
 const { getPendingChallengeCount } = require('./challenge-scene');
-const { adManager, isRewardedVideoConfigured, isBannerConfigured } = require('../../utils/ad-manager');
+const { adManager, isBannerConfigured } = require('../../utils/ad-manager');
 const {
     MUTED,
     fillNightBackground,
@@ -64,10 +63,22 @@ class HomeScene {
         this._animTime = 0;
         this._fallingBlocks = [];
         this._initUI();
-        this._claimDailyLogin();
         this._maybeRemindPending();
         this._initFooterContent();
         this._refreshThemeEvent();
+        const loginBadges = (GameGlobal.game && GameGlobal.game.pendingLoginBadges) || [];
+        if (loginBadges.length > 0) {
+            GameGlobal.game.pendingLoginBadges = [];
+            try {
+                const defs = require('../../utils/progression-v2').LOGIN_BADGES;
+                const badge = defs.find((item) => item.id === loginBadges[0]);
+                setTimeout(() => wx.showToast({
+                    title: '获得登录徽章：' + (badge ? badge.name : '纪念徽章'),
+                    icon: 'none',
+                    duration: 2400,
+                }), 500);
+            } catch (e) { /* ignore */ }
+        }
         // 若音频已在用户手势中初始化过，回首页立即恢复 BGM
         this._ensureHomeBgm();
     }
@@ -286,10 +297,10 @@ class HomeScene {
 
         const iconY = gridY + cell * 2 + gap * 2 + 4;
         const footerBtns = [
-            { text: '约战', target: 'challenge', icon: 'gamepad' },
-            { text: '排行', target: 'rank', icon: 'trophy' },
-            { text: '图鉴', target: 'achievement', icon: 'medal' },
-            { text: '皮肤', target: 'shop', icon: 'rainbow' },
+            { text: '约战', target: 'challenge', icon: 'gamepad', iconAtlasIndex: 0 },
+            { text: '排行', target: 'rank', icon: 'trophy', iconAtlasIndex: 1 },
+            { text: '图鉴', target: 'achievement', icon: 'medal', iconAtlasIndex: 2 },
+            { text: '皮肤', target: 'shop', icon: 'rainbow', iconAtlasIndex: 3 },
         ];
         for (let i = 0; i < footerBtns.length; i++) {
             const item = footerBtns[i];
@@ -300,6 +311,9 @@ class HomeScene {
                 h: iconSize,
                 text: item.text,
                 icon: item.icon,
+                iconImage: 'homeFooterIconsV1',
+                iconAtlasIndex: item.iconAtlasIndex,
+                iconAtlasCols: 4,
                 layout: 'iconStack',
                 labelColor: '#fff6e8',
                 color: '#6b4a2e',
@@ -335,28 +349,6 @@ class HomeScene {
             color: '#6b4a2e', skin: 'btnCircleBrown',
             onClick: () => GameGlobal.game.sceneManager.switchTo('settings'),
         }));
-
-        if (isRewardedVideoConfigured() === true) {
-            const welfareY = iconY + iconSize + gap;
-            const welfareClaimed = coinManager.isDailyWelfareClaimed();
-            const welfareText = welfareClaimed
-                ? '今日福利已领'
-                : ('每日福利 +' + DAILY_WELFARE_REWARD);
-            const welfareW = iconSize * 4 + iconGap * 3;
-            this._buttons.push(new Button({
-                x: iconRowLeft,
-                y: welfareY,
-                w: welfareW,
-                h: 44,
-                text: welfareText,
-                layout: 'text',
-                labelColor: '#fff6e8',
-                color: welfareClaimed ? '#555' : '#6b4a2e',
-                skin: 'btnIconBrown',
-                skinMode: '9slice',
-                onClick: () => this._claimDailyWelfare(),
-            }));
-        }
 
         this._privacyLinkRect = {
             x: 0,
@@ -460,48 +452,6 @@ class HomeScene {
         if (this._miniFx) {
             this._miniFx.destroy();
             this._miniFx = null;
-        }
-    }
-
-    /** 每日福利：看激励视频 +30 金币（日 1） */
-    _claimDailyWelfare() {
-        if (coinManager.isDailyWelfareClaimed()) {
-            try { wx.showToast({ title: '今日已领过福利', icon: 'none' }); } catch (e) { /* ignore */ }
-            return;
-        }
-        if (isRewardedVideoConfigured() !== true) {
-            try { wx.showToast({ title: '广告暂不可用', icon: 'none' }); } catch (e) { /* ignore */ }
-            return;
-        }
-        adManager.showRewardedVideo()
-            .then(() => {
-                const res = coinManager.tryClaimDailyWelfare();
-                if (res && res.claimed) {
-                    try {
-                        wx.showToast({ title: '福利 +' + res.amount + ' 金币', icon: 'none' });
-                    } catch (e) { /* ignore */ }
-                    this._initUI();
-                } else {
-                    try { wx.showToast({ title: '今日已领过福利', icon: 'none' }); } catch (e) { /* ignore */ }
-                }
-            })
-            .catch(() => {
-                try { wx.showToast({ title: '需完整观看广告', icon: 'none' }); } catch (e) { /* ignore */ }
-            });
-    }
-
-
-    /** 每日首次进入首页领取登录奖励（不占消行日上限） */
-    _claimDailyLogin() {
-        try {
-            const res = coinManager.tryClaimDailyLogin();
-            if (res && res.claimed && res.amount > 0) {
-                setTimeout(() => {
-                    wx.showToast({ title: `每日登录 +${res.amount} 金币`, icon: 'none' });
-                }, 400);
-            }
-        } catch (e) {
-            // 领取失败不影响首页
         }
     }
 

@@ -1,13 +1,13 @@
 /**
- * 官方闯关入场：与广场一致——点卡只开窗，确认时才校验并扣金方块 / 金币。
+ * 官方闯关入场：已解锁免费进入；未解锁使用金方块，余额不足可看广告永久解锁。
  */
 const { SUBTITLE } = require('../js/theme/arcade-night');
 const { roundRectPath } = require('../js/render/board-tiles');
 const { drawGoldenCubeBadge } = require('../js/render/title-decor');
 const { drawThemeButtonSkin } = require('../js/theme/theme-images');
-const { coinManager } = require('./coin-manager');
 const goldenBlock = require('./golden-block-manager');
 const { adManager, isRewardedVideoConfigured } = require('./ad-manager');
+const progression = require('./progression-v2');
 
 const DIALOG_MASK = 'rgba(10, 7, 4, 0.62)';
 const LACK_RED = '#ff5c5c';
@@ -18,8 +18,7 @@ const COST_ICON_GAP = 6;
 function applyShortageHighlight(dialog, result) {
     if (!dialog) return;
     const reason = result && result.reason;
-    dialog.lackGold = reason === 'no-gold' || reason === 'no-gold-and-coins';
-    dialog.lackCoins = reason === 'no-coins' || reason === 'no-gold-and-coins';
+    dialog.lackGold = reason === 'no-gold';
 }
 
 function hitRect(x, y, rect) {
@@ -38,27 +37,7 @@ function fillGoldBorderedPanel(ctx, x, y, w, h, r) {
     ctx.lineWidth = 1;
 }
 
-function _drawCoinGlyph(ctx, cx, cy, size) {
-    ctx.save();
-    const r = size * 0.42;
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.fillStyle = '#e8b032';
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.strokeStyle = '#ffe08a';
-    ctx.lineWidth = Math.max(1, size * 0.08);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(cx, cy, r * 0.58, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(255, 248, 210, 0.75)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    ctx.restore();
-}
-
-function _drawCostLine(ctx, cx, y, kind, text, lack) {
+function _drawCostLine(ctx, cx, y, text, lack) {
     ctx.font = '13px sans-serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
@@ -67,11 +46,7 @@ function _drawCostLine(ctx, cx, y, kind, text, lack) {
     const left = cx - total / 2;
     const iconX = left + COST_ICON / 2;
     ctx.save();
-    if (kind === 'gold') {
-        drawGoldenCubeBadge(ctx, iconX, y, COST_ICON);
-    } else {
-        _drawCoinGlyph(ctx, iconX, y, COST_ICON);
-    }
+    drawGoldenCubeBadge(ctx, iconX, y, COST_ICON);
     ctx.restore();
     ctx.fillStyle = lack ? LACK_RED : SUBTITLE;
     ctx.font = '13px sans-serif';
@@ -90,44 +65,39 @@ function formatEntryDialogTitle(stage) {
     return name || '解锁关卡';
 }
 
-function _entryShortage(needGold, fee) {
-    const lackGold = needGold > 0 && goldenBlock.getBalance() < needGold;
-    const lackCoins = fee > 0 && coinManager.getCoins() < fee;
-    if (lackGold && lackCoins) return 'no-gold-and-coins';
-    if (lackGold) return 'no-gold';
-    if (lackCoins) return 'no-coins';
-    return '';
+function _entryShortage(needGold) {
+    return needGold > 0 && goldenBlock.getBalance() < needGold ? 'no-gold' : '';
 }
 
 /** 开打确认缺资源时的提示文案（与广场一致） */
 function stageEntryShortageText(result) {
     if (!result || result.ok) return '';
-    if (result.reason === 'no-gold-and-coins') return '金方块不足，金币也不足';
     if (result.reason === 'no-gold') return '金方块不足';
-    if (result.reason === 'no-coins') return '金币不足（需 ' + (result.fee || 0) + '）';
     if (result.reason === 'missing') return '关卡不可用';
     return '无法开打';
 }
 
 /**
- * 官方关开打：先校验再扣费。未解锁扣金方块+金币；已解锁只扣金币。
+ * 官方关开打：已解锁免费；未解锁仅扣金方块。
  * @param {number} stageId
- * @param {{ skipFee?: boolean }} [opts] skipFee 为看广告免入场费（仍须已解锁）
+ * @param {{ rewardedUnlock?: boolean }} [opts]
  */
 function enterOfficialStage(stageId, opts) {
     const o = opts || {};
-    const skipFee = !!o.skipFee;
+    const rewardedUnlock = !!o.rewardedUnlock;
     const stage = goldenBlock.getStage(stageId);
     if (!stage) {
         return { ok: false, reason: 'missing', fee: 0, needGold: 0 };
     }
     const already = goldenBlock.isUnlocked(stage.id);
     const needGold = already ? 0 : (stage.unlockCost || 0);
-    const fullFee = coinManager.getEntryFee(stage.id);
-    const fee = skipFee ? 0 : fullFee;
-    const shortage = _entryShortage(needGold, fee);
+    if (rewardedUnlock && needGold > 0) {
+        const granted = goldenBlock.grantStageUnlock(stage.id, 'rewarded_ad');
+        return Object.assign({ paid: 0, fee: 0, goldPaid: 0, needGold }, granted);
+    }
+    const shortage = _entryShortage(needGold);
     if (shortage) {
-        return { ok: false, reason: shortage, fee: fullFee, needGold };
+        return { ok: false, reason: shortage, fee: 0, needGold };
     }
 
     let goldPaid = 0;
@@ -135,31 +105,17 @@ function enterOfficialStage(stageId, opts) {
         const unlocked = goldenBlock.unlockStage(stage.id);
         if (!unlocked.ok) {
             const reason = unlocked.reason === 'no-gold' ? 'no-gold' : (unlocked.reason || 'no-gold');
-            return { ok: false, reason, fee: fullFee, needGold };
+            return { ok: false, reason, fee: 0, needGold };
         }
         goldPaid = needGold;
-    }
-
-    let paid = 0;
-    if (fee > 0) {
-        const coinRes = coinManager.spendEntryFee(stage.id);
-        if (!coinRes.ok) {
-            if (goldPaid > 0) {
-                goldenBlock.addBalance(goldPaid);
-                goldenBlock.revokeUnlock(stage.id);
-            }
-            const reason = coinRes.reason === 'no-coins' ? 'no-coins' : (coinRes.reason || 'no-coins');
-            return { ok: false, reason, fee: fullFee, needGold };
-        }
-        paid = coinRes.paid;
     }
 
     return {
         ok: true,
         already,
         goldPaid,
-        paid,
-        fee: skipFee ? 0 : fullFee,
+        paid: 0,
+        fee: 0,
         needGold,
     };
 }
@@ -167,21 +123,20 @@ function enterOfficialStage(stageId, opts) {
 /** @returns {object|null} 需弹窗时返回 dialog 状态；已解锁且免费关返回 null（应直接 enter） */
 function createEntryDialog(stage) {
     if (!stage) return null;
-    const fee = coinManager.getEntryFee(stage.id);
     const unlocked = goldenBlock.isUnlocked(stage.id);
     const needGold = unlocked ? 0 : (stage.unlockCost || 0);
-    if (needGold <= 0 && fee <= 0) return null;
+    if (needGold <= 0) return null;
+    const lackGold = goldenBlock.getBalance() < needGold;
     return {
         stage,
-        fee,
+        fee: 0,
         locked: needGold > 0,
         needGold,
-        freeLeft: coinManager.getFreeEntryRemaining(),
-        canAd: unlocked && isRewardedVideoConfigured() === true,
+        rewardedLeft: progression.getRewardedRemaining('officialUnlock'),
+        canAd: lackGold && isRewardedVideoConfigured() === true,
         canChallenge: false,
         armed: false,
-        lackGold: false,
-        lackCoins: false,
+        lackGold,
         panelRect: null,
         closeRect: null,
         payRect: null,
@@ -253,7 +208,7 @@ function handleEntryDialogTap(dialog, x, y, hooks) {
             if (typeof hooks.onToast === 'function') {
                 hooks.onToast(msg);
             } else if (typeof hooks.onInsufficient === 'function') {
-                hooks.onInsufficient(d.fee);
+                hooks.onInsufficient(d.needGold);
             }
             return 'handled';
         }
@@ -262,15 +217,9 @@ function handleEntryDialogTap(dialog, x, y, hooks) {
     }
 
     if (d.adRect && hitRect(x, y, d.adRect)) {
-        if (d.locked) {
+        if (d.rewardedLeft <= 0) {
             if (typeof hooks.onToast === 'function') {
-                hooks.onToast('请先解锁关卡');
-            }
-            return 'handled';
-        }
-        if (d.freeLeft <= 0) {
-            if (typeof hooks.onToast === 'function') {
-                hooks.onToast('今日免费入场已用完');
+                hooks.onToast('今日主线视频解锁次数已用完');
             }
             return 'handled';
         }
@@ -282,13 +231,13 @@ function handleEntryDialogTap(dialog, x, y, hooks) {
         }
         adManager.showRewardedVideo()
             .then(() => {
-                if (!coinManager.consumeFreeEntry()) {
+                if (!progression.consumeRewardedUnlock('officialUnlock')) {
                     if (typeof hooks.onToast === 'function') {
-                        hooks.onToast('今日免费入场已用完');
+                        hooks.onToast('今日主线视频解锁次数已用完');
                     }
                     return;
                 }
-                const paid = enterOfficialStage(d.stage.id, { skipFee: true });
+                const paid = enterOfficialStage(d.stage.id, { rewardedUnlock: true });
                 if (!paid.ok) {
                     if (typeof hooks.onToast === 'function') {
                         hooks.onToast(stageEntryShortageText(paid));
@@ -297,7 +246,9 @@ function handleEntryDialogTap(dialog, x, y, hooks) {
                 }
                 _doEnter(d.stage.id, 0, hooks);
             })
-            .catch(() => { /* 未看完 */ });
+            .catch(() => {
+                if (typeof hooks.onToast === 'function') hooks.onToast('需完整观看视频，或稍后再试');
+            });
         return 'handled';
     }
 
@@ -326,11 +277,11 @@ function renderEntryDialog(ctx, W, H, dialog) {
     ctx.fillRect(0, 0, W, H);
 
     const showGold = !!d.locked && (d.needGold > 0);
-    const showAd = !d.locked && d.canAd === true;
+    const showAd = d.locked && d.canAd === true;
     const showChallenge = !d.locked && d.canChallenge === true;
 
     const bw = Math.min(300, W * 0.82);
-    const infoLines = showGold ? 2 : 1;
+    const infoLines = 1;
     const extraBtns = (showAd ? 1 : 0) + (showChallenge ? 1 : 0);
     const btnCount = 2 + extraBtns;
     const infoTop = 62;
@@ -360,25 +311,22 @@ function renderEntryDialog(ctx, W, H, dialog) {
             ctx,
             W / 2,
             infoY,
-            'gold',
             '需要用 ' + d.needGold + ' 金方块解锁',
             !!d.lackGold
         );
-        infoY += lineH;
+    } else {
+        ctx.fillStyle = SUBTITLE;
+        ctx.font = '13px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('已解锁，本次挑战免费', W / 2, infoY);
     }
-    _drawCostLine(
-        ctx,
-        W / 2,
-        infoY,
-        'coin',
-        '用 ' + (d.fee || 0) + ' 金币闯关',
-        !!d.lackCoins
-    );
 
     const btnW = bw - 40;
     let by = py + btnBlockTop;
     d.payRect = { x: px + 20, y: by, w: btnW, h: btnH };
-    _fillEntryBtn(ctx, d.payRect, 'primary', '支付开打');
+    _fillEntryBtn(ctx, d.payRect, d.lackGold ? 'disabled' : 'primary',
+        d.locked ? '使用金方块解锁' : '开始挑战');
     by += btnH + btnGap;
 
     if (showAd) {
@@ -386,8 +334,8 @@ function renderEntryDialog(ctx, W, H, dialog) {
         _fillEntryBtn(
             ctx,
             d.adRect,
-            d.freeLeft > 0 ? 'ad' : 'disabled',
-            '看广告免费（余' + d.freeLeft + '）'
+            d.rewardedLeft > 0 ? 'ad' : 'disabled',
+            '观看视频永久解锁（余' + d.rewardedLeft + '）'
         );
         by += btnH + btnGap;
     }
@@ -461,11 +409,9 @@ function renderCenterToast(ctx, W, H, text) {
     ctx.textBaseline = 'alphabetic';
 }
 
-/** 按钮文案：重玩/下一关展示入场费 */
+/** 已解锁关卡不再收取入场费。 */
 function formatStageEntryButtonLabel(baseLabel, stageId) {
-    const fee = coinManager.getEntryFee(stageId);
-    if (fee <= 0) return baseLabel;
-    return baseLabel + '（' + fee + '币）';
+    return baseLabel;
 }
 
 module.exports = {

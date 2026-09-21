@@ -1,7 +1,7 @@
 /**
  * AchievementManager - 进度系 + 社交成就
  * 条件：通关数 / 章节全通 / 全通 / 解锁数 / 分享 / 邀请 / 挑战发起 / 应战 / 发起+应战双十 / 工坊发布 / 近十局全胜
- * 奖励：金方块走 goldenBlock.grantAchievementGold；金币走 coinManager.rewardAdBonus
+ * 奖励：仅保留配置明确声明的金方块奖励；金币系统已移除。
  */
 
 const { getAllAchievements, getAchievementById } = require('../data/achievements');
@@ -391,13 +391,6 @@ class AchievementManager {
         const gold = Number(a.rewardGold) || 0;
         if (gold > 0) {
             goldenBlock.grantAchievementGold(gold);
-        }
-        const coins = Number(a.rewardCoins) || Number(a.reward) || 0;
-        if (coins > 0) {
-            try {
-                const { coinManager } = require('./coin-manager');
-                coinManager.rewardAdBonus(coins);
-            } catch (e) { /* ignore */ }
         }
         return true;
     }

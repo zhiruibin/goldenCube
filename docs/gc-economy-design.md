@@ -1,5 +1,7 @@
 # 挖个方块 经济与商业化系统设计
 
+> 历史文档：本文描述的金币经济已经停用。当前运行规则见 [`gc-economy-v2-no-coins.md`](./gc-economy-v2-no-coins.md)。
+
 ## 1. 背景与设计原则
 
 - 玩法为**章节残局闯关**（设计目标 **10 章 × 10 关 = 100 关**；当前工程可先上线前 3 章）。主题化关卡详见 [`docs/gc-chapter-stages-design.md`](./gc-chapter-stages-design.md)。经济数值若仍按 30 关锚定，扩章时需同步上调 G3/解锁终局账。

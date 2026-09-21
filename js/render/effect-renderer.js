@@ -552,7 +552,7 @@ class EffectRenderer {
         });
     }
 
-    /** 是否仍有未播完的特效（供回放等场景在结束后继续 tick） */
+    /** 是否仍有未播完的特效（供结算切换前继续 tick） */
     hasActiveEffects() {
         return this._effects.length > 0;
     }

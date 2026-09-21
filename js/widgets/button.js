@@ -8,6 +8,7 @@ const {
     drawThemeButtonSkin,
     drawThemeButtonSkin9Slice,
     drawThemeImageContain,
+    getThemeImage,
 } = require('../theme/theme-images');
 
 class Button {
@@ -30,6 +31,10 @@ class Button {
         this.h = opts.h;
         this.text = opts.text || '';
         this.icon = opts.icon || null;
+        this.iconImage = opts.iconImage || null;
+        this.iconAtlasIndex = Number.isInteger(opts.iconAtlasIndex) ? opts.iconAtlasIndex : 0;
+        this.iconAtlasCols = Math.max(1, opts.iconAtlasCols || 1);
+        this.iconAtlasRows = Math.max(1, opts.iconAtlasRows || 1);
         this.color = opts.color || '#00c6ff';
         this.skin = opts.skin || null;
         /** 'stretch' | '9slice' | 'contain'（等比缩放，不拉扁） */
@@ -141,6 +146,8 @@ class Button {
             this._drawCenteredLabel(ctx);
         } else if (this.layout === 'iconOnly' && IconRenderer.has(this.icon)) {
             this._drawIconOnly(ctx);
+        } else if (this.layout === 'iconStack' && this.iconImage) {
+            this._drawImageIconStack(ctx);
         } else if (this.layout === 'iconStack' && IconRenderer.has(this.icon)) {
             this._drawIconStack(ctx);
         } else if (this.icon === 'hardDrop') {
@@ -218,6 +225,32 @@ class Button {
         ctx.textBaseline = 'middle';
         // 文字紧跟图标下方，图标变小后自然上移
         const textCy = iconCy + iconSize * 0.55 + fontPx * 0.55 + 2;
+        ctx.fillText(this.text, cx, textCy);
+    }
+
+    /** 首页功能钮：从透明图集中裁出独立的主题图标，未加载时回退线稿图标。 */
+    _drawImageIconStack(ctx) {
+        const cx = this.x + this.w / 2;
+        const cy = this.y + this.h / 2;
+        const iconSize = Math.min(this.w * 0.48, this.h * 0.48);
+        const fontPx = Math.max(12, Math.min(15, this.h * 0.2));
+        const iconCy = cy - this.h * 0.15;
+        const entry = getThemeImage(this.iconImage);
+        if (entry.ready && entry.img) {
+            const sourceW = entry.img.width / this.iconAtlasCols;
+            const sourceH = entry.img.height / this.iconAtlasRows;
+            const sourceX = (this.iconAtlasIndex % this.iconAtlasCols) * sourceW;
+            const sourceY = Math.floor(this.iconAtlasIndex / this.iconAtlasCols) * sourceH;
+            ctx.drawImage(entry.img, sourceX, sourceY, sourceW, sourceH,
+                cx - iconSize / 2, iconCy - iconSize / 2, iconSize, iconSize);
+        } else if (IconRenderer.has(this.icon)) {
+            IconRenderer.draw(ctx, this.icon, cx, iconCy, iconSize * 0.72,
+                this.labelColor || '#ffffff');
+        }
+        ctx.font = `bold ${fontPx}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const textCy = iconCy + iconSize * 0.52 + fontPx * 0.55 + 1;
         ctx.fillText(this.text, cx, textCy);
     }
 

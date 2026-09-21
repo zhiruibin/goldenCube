@@ -85,9 +85,8 @@
 ├─ challengeId?（仅挑战）
 └─ engineRule: stage   // 挖个方块对局一律残局规则
 
-结算 / 回放
+结算
 ├─ 文案：关卡名 / 广场关名 / 「好友挑战」，禁止「经典模式」
-├─ 本地回放 key：按 playContext + id，不按 classic/timed
 └─ 上报排行：仅主线闯关复合键 → boardKey=stage；广场/工坊不上主榜
 
 挑战
@@ -118,9 +117,7 @@
 1. 盘点所有 `switchTo('game' / 'switchTo')`：必须带 `playContext`（或现有等价：`stage` + stageId / workshop 标记）。  
 2. 删除或 `#ifdef` 掉 `timed` / `marathon` 倒计时与目标行逻辑、经典复活。  
 3. `result-scene`：去掉按 `gc_bestScore_${mode}` 的经典最佳分；主线成绩只走金方块 / 关卡最佳。  
-4. 回放：`meta` 写清 `playContext` + `stageId` / `workshopRows`；缺省按 stage 残局初始化，不按 classic。
-
-**验收**：代码路径上无法开到 timed/marathon；回放工坊关不依赖 classic。
+**验收**：代码路径上无法开到 timed/marathon。
 
 ### P2 · 命名清理与云示例（可缓）
 
@@ -146,13 +143,9 @@
 
 ---
 
-## 6. 与「回放」的关系
+## 6. 回放功能状态
 
-回放扩展时遵守本设计：
-
-- 结算「回看本局」按 **playContext** 存 key，不按 classic/timed。  
-- 云端 rankings.replay：仅随 **闯关复合榜破纪录** 更新（已是「最佳一局」而非全量）；与「模式」无关。  
-- 勿新增 `mode: classic` 的回传。
+回放功能已于 2026-09 移除：客户端不再录制或播放操作，结算页和排行榜不再提供回放入口，排行榜云函数也不再上传或查询回放数据。旧版 `gc_replay_` 本地键仍排除在云存档之外，仅用于兼容历史残留。
 
 ---
 

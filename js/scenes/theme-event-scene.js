@@ -87,12 +87,16 @@ class ThemeEventScene {
         this._toast = '';
         this._toastUntil = 0;
         this._scrollY = 0;
+        this._scrollVel = 0;
+        this._moveSamples = [];
         this._drag = null;
         this._suppressTap = false;
     }
 
     onEnter(params) {
         this._params = params || {};
+        this._scrollVel = 0;
+        this._moveSamples = [];
         this._clearedIds = midAutumn.getClearedIds();
         this._badgeOwned = themeBadges.has(midAutumn.BADGE_ID);
         this._layout();
@@ -101,13 +105,30 @@ class ThemeEventScene {
             try { if (GameGlobal.game.kickLoop) GameGlobal.game.kickLoop(); } catch (e) { /* ignore */ }
         });
     }
-    onExit() { this._buttons = []; this._cards = []; }
+    onExit() { this._buttons = []; this._cards = []; this._scrollVel = 0; this._moveSamples = []; }
     onPause() {}
     onResume() {
         this._clearedIds = midAutumn.getClearedIds();
         this._badgeOwned = themeBadges.has(midAutumn.BADGE_ID);
     }
-    update() {}
+    update(dt) {
+        const vel = this._scrollVel || 0;
+        if (this._drag || Math.abs(vel) < 24) {
+            if (!this._drag) this._scrollVel = 0;
+            return;
+        }
+        const sec = Math.max(0, Math.min(.05, Number(dt) || 0));
+        if (sec <= 0) return;
+        const next = this._clampScroll(this._scrollY + vel * sec);
+        this._scrollY = next;
+        const max = this._getMaxScroll();
+        if (next <= 0 || next >= max) {
+            this._scrollVel = 0;
+            return;
+        }
+        // 指数衰减使不同帧率下的滑动距离保持接近，约每帧保留 91% 速度。
+        this._scrollVel = vel * Math.pow(.91, sec * 60);
+    }
 
     _metrics() {
         const W = GameGlobal.game.width;
@@ -280,8 +301,10 @@ class ThemeEventScene {
         const numX = card.x + 15;
         const textX = card.x + card.w * .18;
         const centerY = card.y + card.h / 2;
-        ctx.shadowColor = 'rgba(8,18,28,.88)'; ctx.shadowBlur = 2; ctx.shadowOffsetY = 1;
-        ctx.fillStyle = unlocked ? (card.finale ? '#684419' : '#F4E5BD') : 'rgba(214,225,230,.62)';
+        ctx.shadowColor = card.finale ? 'rgba(15,8,3,.96)' : 'rgba(8,18,28,.88)';
+        ctx.shadowBlur = card.finale ? 4 : 2; ctx.shadowOffsetY = 1;
+        ctx.fillStyle = card.finale ? '#FFE5A0'
+            : (unlocked ? '#F4E5BD' : 'rgba(214,225,230,.62)');
         ctx.font = 'bold 25px sans-serif';
         ctx.fillText(String(s.no).padStart(2, '0'), numX, centerY);
         this._drawStagePreview(ctx, card, PREVIEW_SHAPES[s.no - 1]);
@@ -296,7 +319,8 @@ class ThemeEventScene {
             );
         }
         ctx.font = '15px sans-serif';
-        ctx.fillStyle = unlocked ? (card.finale ? '#51391f' : '#F7F1DF') : 'rgba(208,219,225,.64)';
+        ctx.fillStyle = card.finale ? '#FFF0C9'
+            : (unlocked ? '#F7F1DF' : 'rgba(208,219,225,.64)');
         const poemMaxW = card.w * (card.finale ? .48 : .50);
         ctx.fillText(s.line1, textX, centerY - 10, poemMaxW);
         ctx.fillText(s.line2, textX, centerY + 10, poemMaxW);
@@ -336,6 +360,8 @@ class ThemeEventScene {
     }
 
     handleTouchStart(identifier, x, y) {
+        this._scrollVel = 0;
+        this._moveSamples = [{ t: Date.now(), y }];
         this._drag = { id: identifier, startY: y, lastY: y, baseScroll: this._scrollY };
         this._suppressTap = false;
     }
@@ -346,22 +372,43 @@ class ThemeEventScene {
         const dy = y - this._drag.startY;
         if (Math.abs(dy) > 8) this._suppressTap = true;
         this._scrollY = this._clampScroll(this._drag.baseScroll - dy);
+        const now = Date.now();
+        this._moveSamples.push({ t: now, y });
+        while (this._moveSamples.length > 2 && now - this._moveSamples[0].t > 120) {
+            this._moveSamples.shift();
+        }
     }
 
     handleTouchEnd(identifier) {
         if (!this._drag || this._drag.id !== identifier) return;
         this._drag = null;
+        const samples = this._moveSamples;
+        this._moveSamples = [];
+        if (!this._suppressTap || samples.length < 2) return;
+        const newest = samples[samples.length - 1];
+        let oldest = samples[0];
+        for (let i = samples.length - 2; i >= 0; i--) {
+            if (newest.t - samples[i].t > 100) break;
+            oldest = samples[i];
+        }
+        const seconds = Math.max(.016, (newest.t - oldest.t) / 1000);
+        let velocity = (oldest.y - newest.y) / seconds;
+        velocity = Math.max(-3600, Math.min(3600, velocity));
+        this._scrollVel = Math.abs(velocity) >= 150 ? velocity : 0;
     }
 
-    _clampScroll(value) {
+    _getMaxScroll() {
         const m = this._metrics();
-        // 末排下方保留滚动空间，避免 19/20 关贴住提示文字和返回按钮。
         const contentBottom = this._cards.length
             ? Math.max.apply(null, this._cards.map((card) => card.y + card.h))
             : m.cardsTop;
         const contentH = contentBottom - m.cardsTop + SCROLL_BOTTOM_PAD;
         const viewportH = m.backY - 27 - m.cardsTop;
-        return Math.max(0, Math.min(Math.max(0, contentH - viewportH), Number(value) || 0));
+        return Math.max(0, contentH - viewportH);
+    }
+
+    _clampScroll(value) {
+        return Math.max(0, Math.min(this._getMaxScroll(), Number(value) || 0));
     }
 
     _isStageUnlocked(stageNo) {

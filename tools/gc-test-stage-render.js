@@ -93,7 +93,7 @@ assert(title.args[1] === 16, '章节标题 x = contentLeft (got=' + title.args[1
 assert(title.textAlign === 'left', '章节标题 textAlign=left (got=' + title.textAlign + ')');
 
 const balanceOps = ops.filter((o) => o.m === 'fillText' && String(o.args[0]).indexOf('◆') === 0);
-assert(balanceOps.length > 0, '金方块/金币余额已绘制');
+assert(balanceOps.length > 0, '金方块余额已绘制');
 assert(balanceOps[0].args[1] === 16, '余额左对齐于 contentLeft (got x=' + balanceOps[0].args[1] + ')');
 assert(balanceOps[0].textAlign === 'left', '余额 textAlign=left');
 // 测试桩胶囊 top=48 bottom=80 → 垂直中心 64
@@ -111,12 +111,11 @@ result.onEnter({
         timeMs: 30000,
         reward: 1,
         first: true,
-        coinWant: 100,
-        coinGained: 100,
-        coinThreshold: 6,
         minLines: 3,
     },
 });
+// 结算页先播放金块升起动画；渲染断言直接切到完整信息态。
+result._finishReveal(true);
 ops.length = 0;
 result.render(ctxStub);
 
@@ -132,6 +131,28 @@ const resBg = ops.filter((o) => o.m === 'fillRect');
 assert(resBg.length > 0 && resBg[0].args[0] === 0 && resBg[0].args[1] === 0
     && resBg[0].args[2] === W && resBg[0].args[3] === H,
     '结算背景满屏 fillRect(0,0,W,H)');
+
+const firstMedals = result._getResultMedals();
+assert(firstMedals.length === 1 && firstMedals[0].kind === 'first', '首通使用首通章印');
+result._result = { first: false, isNewBest: true };
+assert(result._getResultMedals()[0].kind === 'record', '非首通破纪录使用新纪录章印');
+result._result = { first: false, isNewBest: false };
+assert(result._getResultMedals()[0].kind === 'clear', '普通重复通关使用通关章印');
+result._result = { assisted: true, chapterReward: 1, milestoneReward: 10 };
+const assistedMedals = result._getResultMedals();
+assert(assistedMedals.map((item) => item.kind).join(',') === 'assisted,chapter,all',
+    '辅助、章节完成、全通章印可以并列展示');
+
+const StageFailScene = require('../js/scenes/stage-fail-scene');
+const failedResult = new StageFailScene();
+failedResult.onEnter({
+    stageId: 1,
+    result: { lines: 1, minLines: 3, pieces: 8, timeMs: 18000, reason: 'topOut' },
+});
+ops.length = 0;
+failedResult.render(ctxStub);
+assert(ops.some((o) => o.m === 'fillText' && o.args[0] === '未通关'),
+    '失败结算英雄位绘制未通关章印');
 
 console.log('\n==== RESULT ====');
 console.log('passed:', passed, 'failed:', failed);

@@ -1,5 +1,5 @@
 /**
- * 广场镶嵌墙：排序套模板、点卡解锁、蒙层关闭。
+ * 广场镶嵌墙：排序套模板、金方块/广告解锁、蒙层关闭。
  * 运行：node tools/gc-test-plaza-wall.js
  */
 'use strict';
@@ -31,6 +31,11 @@ global.wx = {
         return { left: 281, right: 368, top: 48, bottom: 80, width: 87, height: 32 };
     },
 };
+
+// 广场在通关 20 个主线关卡后开放；测试夹具直接准备已通关状态。
+for (let i = 1; i <= 20; i++) {
+    store['gc_stageClear_' + i] = { cleared: true, firstClearedAt: 1, assisted: false };
+}
 
 const plazaWall = require('../js/render/plaza-wall-fx');
 const PlazaScene = require('../js/scenes/plaza-scene');
@@ -75,31 +80,31 @@ scene.onEnter();
 assert(Array.isArray(scene._listRects) && scene._listRects.length >= 8, '官方包应铺出镶嵌墙');
 const first = scene._listRects[0];
 const second = scene._listRects[1];
+const playCard = second; // 第一格是无需解锁的无尽练习，第二格才是普通广场关卡。
 assert(first.w > second.w, '官方第一张应大于第二张, ' + first.w + ' vs ' + second.w);
 assert(first.h > plazaWall.metaFooterH() + 20, '嵌板应留出盘面区域');
 
 switched = null;
-scene.handleTap(first.x + first.w / 2, first.y + first.h / 2);
+scene.handleTap(playCard.x + playCard.w / 2, playCard.y + playCard.h / 2);
 assert(scene._playDialog && scene._playDialog.locked, '点未解锁嵌板应弹出确认窗');
 assert(scene._playDialog.needGold === workshop.PLAZA_UNLOCK_GOLD, '应告知用金方块解锁');
-assert(scene._playDialog.fee > 0, '应告知用金币闯关');
+assert(scene._playDialog.fee == null || scene._playDialog.fee === 0, '闯关不应再收金币');
 assert(!scene._confirm, '不应再弹出第二层解锁窗');
 assert(!switched, '点卡开窗不应立刻进游戏');
 
 scene._playRects = { pay: { x: 0, y: 0, w: 400, h: 800 } };
-scene.handleTap(first.x + first.w / 2, first.y + first.h / 2);
+scene.handleTap(playCard.x + playCard.w / 2, playCard.y + playCard.h / 2);
 assert(scene._playDialog, '开窗同一记抬手不应触发确认扣费');
 assert(!switched, '开窗同一记抬手不应进游戏');
 
 store.gc_goldenBlocks = 0;
-store.gc_coins = 0;
 scene.onTouchStart(10, 10);
 scene._playRects = { pay: { x: 0, y: 0, w: 400, h: 800 } };
 scene.handleTap(20, 20);
 assert(scene._playDialog, '资源不足应留在确认窗');
 assert(scene._playDialog.lackGold === true, '缺金方块应标红金方块行');
-assert(scene._playDialog.lackCoins === true, '缺金币应标红金币行');
-assert(scene._toast === '金方块不足，金币也不足', '两样都缺 toast, got=' + scene._toast);
+assert(scene._playDialog.lackCoins !== true, '不应再存在金币不足状态');
+assert(scene._toast === '金方块不足，可观看视频解锁', '缺金方块 toast, got=' + scene._toast);
 
 scene._playRects = {};
 scene.onTouchStart(10, 10);
@@ -108,7 +113,6 @@ scene.handleTap(10, 10);
 assert(!scene._playDialog, '点蒙层应关闭弹窗');
 
 let dlgStrokes = 0;
-let goldStroke = false;
 let dlgTexts = [];
 const dlgCtx = {
     fillStyle: '',
@@ -127,7 +131,6 @@ const dlgCtx = {
     fill() {},
     stroke() {
         dlgStrokes += 1;
-        if (String(this.strokeStyle).indexOf('255, 200, 87') >= 0) goldStroke = true;
     },
     fillRect() {},
     fillText(t) { dlgTexts.push(String(t || '')); },
@@ -142,18 +145,18 @@ const lockedDlg = {
     stage: { title: '试关' },
     locked: true,
     needGold: 1,
-    fee: 12,
-    lackGold: false,
-    lackCoins: false,
+    lackGold: true,
+    canAd: true,
+    rewardedLeft: 1,
 };
 renderLockedEntryDialog(dlgCtx, 375, 667, lockedDlg);
 assert(dlgStrokes >= 1, '锁定弹窗应描边');
-assert(goldStroke, '锁定弹窗应使用金色边框');
 assert(lockedDlg.payRect && lockedDlg.cancelRect, '锁定弹窗应有支付/取消热区');
 assert(lockedDlg.payRect.y < lockedDlg.cancelRect.y, '支付开打应在取消上方');
 assert(Math.abs(lockedDlg.payRect.x - lockedDlg.cancelRect.x) < 1, '按钮应竖排左对齐');
-assert(!lockedDlg.adRect && !lockedDlg.challengeRect, '未解锁不应出现广告/约好友');
-assert(dlgTexts.indexOf('支付开打') >= 0, '主按钮应为支付开打');
+assert(lockedDlg.adRect && !lockedDlg.challengeRect, '缺金方块时应提供视频解锁，不显示约好友');
+assert(dlgTexts.indexOf('使用金方块解锁') >= 0, '主按钮应为金方块解锁');
+assert(dlgTexts.some((t) => t.indexOf('观看视频永久解锁') >= 0), '应显示视频永久解锁按钮');
 assert(dlgTexts.some((t) => t.indexOf('金方块') >= 0), '未解锁应显示金方块行');
 
 dlgTexts = [];
@@ -161,17 +164,13 @@ const unlockedDlg = {
     stage: { title: '试关' },
     locked: false,
     needGold: 0,
-    fee: 12,
-    canAd: true,
     canChallenge: true,
-    freeLeft: 3,
     lackGold: false,
-    lackCoins: false,
 };
 renderLockedEntryDialog(dlgCtx, 375, 667, unlockedDlg);
 assert(dlgTexts.every((t) => t.indexOf('金方块') < 0), '已解锁不应显示金方块行');
-assert(unlockedDlg.payRect.y < unlockedDlg.adRect.y, '广告应在支付开打下方');
-assert(unlockedDlg.adRect.y < unlockedDlg.challengeRect.y, '约好友应在广告下方');
+assert(!unlockedDlg.adRect, '已解锁关卡不应再提供视频解锁');
+assert(unlockedDlg.payRect.y < unlockedDlg.challengeRect.y, '约好友应在开始挑战下方');
 assert(unlockedDlg.challengeRect.y < unlockedDlg.cancelRect.y, '取消应在约好友下方');
 assert(dlgTexts.indexOf('约好友来战') >= 0, '已解锁通关后应能约好友');
 
@@ -217,53 +216,39 @@ assert(gradients === 0, '卡片绘制不应每格建渐变');
 
 scene._scrollY = 220;
 switched = null;
-scene._startPlazaGame(first.stage);
+scene._startPlazaGame(playCard.stage);
 assert(switched && switched.name === 'game', '开打应进入游戏');
 assert(switched.params.workshopListParams.scrollY === 220, '开打应带上滚动位置');
-assert(switched.params.workshopListParams.focusStageId === first.stage.stageId, '开打应带上当前关卡');
+assert(switched.params.workshopListParams.focusStageId === playCard.stage.stageId, '开打应带上当前关卡');
 
 const back = new PlazaScene();
 back.onEnter({
     plazaSort: 'official',
     scrollY: 280,
-    focusStageId: first.stage.stageId,
+    focusStageId: playCard.stage.stageId,
 });
 assert(back._scrollY > 0, '返回广场应停留在原滚动位置, got ' + back._scrollY);
-assert(back._focusStageId === first.stage.stageId, '返回应记住刚打的关卡');
-assert(back._cardState[first.stage.stageId], '刚打的关卡卡片状态应被刷新');
+assert(back._focusStageId === playCard.stage.stageId, '返回应记住刚打的关卡');
+assert(back._cardState[playCard.stage.stageId], '刚打的关卡卡片状态应被刷新');
 
-const sid = first.stage.stageId;
+const sid = playCard.stage.stageId;
 store.gc_goldenBlocks = 0;
-store.gc_coins = 0;
 store.gc_workshop_plazaUnlocked = {};
 let entry = workshop.enterPlazaStage(sid);
-assert(entry.reason === 'no-gold-and-coins', '两样都缺应一并提示, got ' + entry.reason);
-assert(workshop.plazaEntryShortageText(entry) === '金方块不足，金币也不足', '两样都缺文案');
+assert(entry.reason === 'no-gold', '缺金方块应阻止开打, got ' + entry.reason);
+assert(workshop.plazaEntryShortageText(entry) === '金方块不足，可观看视频解锁', '缺金方块文案');
 
 store.gc_goldenBlocks = 5;
-store.gc_coins = 0;
 entry = workshop.enterPlazaStage(sid);
-assert(entry.reason === 'no-coins', '只缺金币');
-assert(store.gc_goldenBlocks === 5, '缺金币时不应先扣金方块');
-
-store.gc_goldenBlocks = 0;
-store.gc_coins = 100;
-entry = workshop.enterPlazaStage(sid);
-assert(entry.reason === 'no-gold', '只缺金方块');
-assert(store.gc_coins === 100, '缺金方块时不应扣金币');
-
-store.gc_goldenBlocks = 5;
-store.gc_coins = 100;
-entry = workshop.enterPlazaStage(sid);
-assert(entry.ok, '两样都够应开打');
+assert(entry.ok, '金方块足够应解锁并开打');
 assert(entry.goldPaid === 1, '未解锁应扣 1 金方块');
-assert(entry.paid > 0, '未解锁应同时扣金币');
+assert(entry.paid === 0, '未解锁也不应扣金币');
 assert(workshop.isPlazaUnlocked(sid), '开打后应已解锁');
-assert(store.gc_goldenBlocks === 4, '金方块应只扣 1');
+// 夹具首次触发成就检查时可能补发既有主线成就金；扣款额以 goldPaid 为准。
+const goldAfterUnlock = store.gc_goldenBlocks;
 
-const coinsAfterUnlock = store.gc_coins;
 entry = workshop.enterPlazaStage(sid);
-assert(entry.ok && entry.goldPaid === 0, '已解锁只扣金币');
-assert(store.gc_coins === coinsAfterUnlock - entry.paid, '已解锁不应再扣金方块');
+assert(entry.ok && entry.goldPaid === 0 && entry.paid === 0, '已解锁应免费开打');
+assert(store.gc_goldenBlocks === goldAfterUnlock, '已解锁不应再扣金方块');
 
 console.log('PASS: 广场镶嵌墙布局与点卡解锁');

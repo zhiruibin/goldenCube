@@ -111,7 +111,7 @@ const achievements = {
             category: 'plaza',
             condition: { type: 'plaza_clear_count', count: 1 },
             rewardGold: 0,
-            rewardCoins: 15,
+            rewardCoins: 0,
         },
         {
             id: 'plaza_clear_10',
@@ -121,7 +121,7 @@ const achievements = {
             category: 'plaza',
             condition: { type: 'plaza_clear_count', count: 10 },
             rewardGold: 0,
-            rewardCoins: 30,
+            rewardCoins: 0,
         },
         {
             id: 'plaza_clear_30',
@@ -131,7 +131,7 @@ const achievements = {
             category: 'plaza',
             condition: { type: 'plaza_clear_count', count: 30 },
             rewardGold: 0,
-            rewardCoins: 45,
+            rewardCoins: 0,
         },
         {
             id: 'plaza_unlock_5',
@@ -141,7 +141,7 @@ const achievements = {
             category: 'plaza',
             condition: { type: 'plaza_unlock_count', count: 5 },
             rewardGold: 0,
-            rewardCoins: 25,
+            rewardCoins: 0,
         },
         {
             id: 'plaza_unlock_20',
@@ -151,7 +151,7 @@ const achievements = {
             category: 'plaza',
             condition: { type: 'plaza_unlock_count', count: 20 },
             rewardGold: 0,
-            rewardCoins: 40,
+            rewardCoins: 0,
         },
     ],
     workshop: [
@@ -163,7 +163,7 @@ const achievements = {
             category: 'workshop',
             condition: { type: 'workshop_create_count', count: 1 },
             rewardGold: 0,
-            rewardCoins: 15,
+            rewardCoins: 0,
         },
         {
             id: 'workshop_create_5',
@@ -173,7 +173,7 @@ const achievements = {
             category: 'workshop',
             condition: { type: 'workshop_create_count', count: 5 },
             rewardGold: 0,
-            rewardCoins: 30,
+            rewardCoins: 0,
         },
         {
             id: 'workshop_author_clear_1',
@@ -183,7 +183,7 @@ const achievements = {
             category: 'workshop',
             condition: { type: 'workshop_author_clear_count', count: 1 },
             rewardGold: 0,
-            rewardCoins: 20,
+            rewardCoins: 0,
         },
         {
             id: 'workshop_author_clear_5',
@@ -193,7 +193,7 @@ const achievements = {
             category: 'workshop',
             condition: { type: 'workshop_author_clear_count', count: 5 },
             rewardGold: 0,
-            rewardCoins: 35,
+            rewardCoins: 0,
         },
         {
             id: 'social_workshop_publish_1',
@@ -203,7 +203,7 @@ const achievements = {
             category: 'workshop',
             condition: { type: 'workshop_publish', count: 1 },
             rewardGold: 0,
-            rewardCoins: 40,
+            rewardCoins: 0,
         },
         {
             id: 'workshop_publish_3',
@@ -213,7 +213,7 @@ const achievements = {
             category: 'workshop',
             condition: { type: 'workshop_publish', count: 3 },
             rewardGold: 0,
-            rewardCoins: 50,
+            rewardCoins: 0,
         },
         {
             id: 'workshop_slot_6',
@@ -223,7 +223,7 @@ const achievements = {
             category: 'workshop',
             condition: { type: 'workshop_slot_cap', count: 6 },
             rewardGold: 0,
-            rewardCoins: 25,
+            rewardCoins: 0,
         },
     ],
     social: [
@@ -235,7 +235,7 @@ const achievements = {
             category: 'social',
             condition: { type: 'friend_share', count: 1 },
             rewardGold: 0,
-            rewardCoins: 20,
+            rewardCoins: 0,
         },
         {
             id: 'social_timeline_share_1',
@@ -245,7 +245,7 @@ const achievements = {
             category: 'social',
             condition: { type: 'timeline_share', count: 1 },
             rewardGold: 0,
-            rewardCoins: 20,
+            rewardCoins: 0,
         },
         {
             id: 'social_invite_1',
@@ -255,7 +255,7 @@ const achievements = {
             category: 'social',
             condition: { type: 'invite_friend', count: 1 },
             rewardGold: 0,
-            rewardCoins: 30,
+            rewardCoins: 0,
         },
         {
             id: 'social_challenge_send_1',
@@ -265,7 +265,7 @@ const achievements = {
             category: 'social',
             condition: { type: 'challenge_create', count: 1 },
             rewardGold: 0,
-            rewardCoins: 20,
+            rewardCoins: 0,
         },
         {
             id: 'social_challenge_accept_1',
@@ -275,7 +275,7 @@ const achievements = {
             category: 'social',
             condition: { type: 'challenge_respond', count: 1 },
             rewardGold: 0,
-            rewardCoins: 20,
+            rewardCoins: 0,
         },
         {
             id: 'social_challenge_perfect_ten',
@@ -285,7 +285,7 @@ const achievements = {
             category: 'social',
             condition: { type: 'challenge_create_and_respond', count: 10 },
             rewardGold: 0,
-            rewardCoins: 50,
+            rewardCoins: 0,
         },
         {
             id: 'social_challenge_last10_win',
@@ -295,7 +295,7 @@ const achievements = {
             category: 'social',
             condition: { type: 'challenge_last10_all_win', count: 10 },
             rewardGold: 0,
-            rewardCoins: 50,
+            rewardCoins: 0,
         },
     ],
 };
@@ -316,12 +316,12 @@ const deprecatedAchievements = [
     { id: 'prog_chapter_8', deprecated: true, rewardGold: 0, rewardCoins: 0 },
     { id: 'prog_chapter_9', deprecated: true, rewardGold: 0, rewardCoins: 0 },
     { id: 'prog_chapter_10', deprecated: true, rewardGold: 0, rewardCoins: 0 },
-    { id: 'plaza_clear_5', deprecated: true, rewardGold: 0, rewardCoins: 25 },
-    { id: 'plaza_clear_15', deprecated: true, rewardGold: 0, rewardCoins: 40 },
-    { id: 'plaza_unlock_1', deprecated: true, rewardGold: 0, rewardCoins: 20 },
-    { id: 'plaza_unlock_10', deprecated: true, rewardGold: 0, rewardCoins: 35 },
-    { id: 'plaza_official_5', deprecated: true, rewardGold: 0, rewardCoins: 30 },
-    { id: 'workshop_occupied_3', deprecated: true, rewardGold: 0, rewardCoins: 25 },
+    { id: 'plaza_clear_5', deprecated: true, rewardGold: 0, rewardCoins: 0 },
+    { id: 'plaza_clear_15', deprecated: true, rewardGold: 0, rewardCoins: 0 },
+    { id: 'plaza_unlock_1', deprecated: true, rewardGold: 0, rewardCoins: 0 },
+    { id: 'plaza_unlock_10', deprecated: true, rewardGold: 0, rewardCoins: 0 },
+    { id: 'plaza_official_5', deprecated: true, rewardGold: 0, rewardCoins: 0 },
+    { id: 'workshop_occupied_3', deprecated: true, rewardGold: 0, rewardCoins: 0 },
 ];
 
 const categoryNames = {

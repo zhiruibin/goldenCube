@@ -1,6 +1,6 @@
 /**
  * 核心云存档：启动恢复、变化防抖上传、切后台立即上传。
- * 回放和排行缓存体积较大/可重建，不进入通用存档。
+ * 排行缓存及旧版回放残留体积较大/可重建，不进入通用存档。
  */
 const META_REVISION = 'gc_cloud_save_revision_v1';
 const EXCLUDED_PREFIXES = [
@@ -9,6 +9,7 @@ const EXCLUDED_PREFIXES = [
     'gc_workshop_plazaCache',
     'gc_friend_kv_floor',
     'gc_cloud_save_',
+    'gc_stage_rewind_',
 ];
 const MAX_SNAPSHOT_CHARS = 700000;
 
@@ -59,6 +60,8 @@ function applySnapshot(snapshot) {
     Object.keys(src).filter(isManagedKey).forEach((key) => {
         try { wx.setStorageSync(key, src[key]); } catch (e) { /* ignore */ }
     });
+    // 云端恢复会绕过各业务管理器的写入入口，必须主动失效内存索引和图鉴快照。
+    try { require('./golden-block-manager').invalidateProgressCache(); } catch (e) { /* ignore */ }
 }
 
 function call(action, data) {

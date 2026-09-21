@@ -2,11 +2,10 @@
  * 工坊 / 关卡广场（本地 MVP）
  * 对齐 docs/gc-workshop-plaza-design.md
  * - 创作免费；槽位 3 免费，金递增扩至 10
- * - 广场：金解锁 + 币开打；通关只发金币，0 金方块
+ * - 广场：金方块或激励视频永久解锁；开打免费；通关不发货币
  */
 
 const goldenBlock = require('./golden-block-manager');
-const { coinManager } = require('./coin-manager');
 const OFFICIAL_PLAZA = require('../data/plaza-official-v1.js');
 
 const KEYS = {
@@ -39,7 +38,7 @@ const FREE_PLAY_DAILY = 8;
 const WORKSHOP_CLEAR_DAILY = 120;
 const AUTHOR_SHARE_DAILY = 80;
 const PLAZA_UNLOCK_GOLD = 1;
-const CHALLENGE_FEE = 10;
+const CHALLENGE_FEE = 0;
 
 const STATUS = {
     draft: 'draft',
@@ -177,11 +176,7 @@ function validateLayout(rows) {
 }
 
 function getPlayFee(meta) {
-    const minLines = meta.minLines || 0;
-    const garbageCount = meta.garbageCount || 0;
-    if (minLines <= 6 && garbageCount <= 24) return 8;
-    if (minLines >= 12 || garbageCount >= 50) return 16;
-    return 12;
+    return 0;
 }
 
 function getSlotCap() {
@@ -215,6 +210,7 @@ function _notifyWorkshopAchievement() {
             achievementManager.reportWorkshopProgress();
         }
     } catch (e) { /* ignore */ }
+    try { require('./badge-progress-signal').invalidate('workshop'); } catch (e) { /* ignore */ }
 }
 
 /** 工坊内关卡总数（占槽数） */
@@ -777,76 +773,57 @@ function _reportPlazaUnlock() {
     } catch (e) { /* ignore */ }
 }
 
-function _plazaEntryShortage(needGold, fee) {
-    const lackGold = needGold > 0 && goldenBlock.getBalance() < needGold;
-    const lackCoins = fee > 0 && coinManager.getCoins() < fee;
-    if (lackGold && lackCoins) return 'no-gold-and-coins';
-    if (lackGold) return 'no-gold';
-    if (lackCoins) return 'no-coins';
-    return '';
+function _plazaEntryShortage(needGold) {
+    return needGold > 0 && goldenBlock.getBalance() < needGold ? 'no-gold' : '';
 }
 
 /** 开打确认缺资源时的提示文案 */
 function plazaEntryShortageText(result) {
     if (!result || result.ok) return '';
-    if (result.reason === 'no-gold-and-coins') return '金方块不足，金币也不足';
-    if (result.reason === 'no-gold') return '金方块不足';
-    if (result.reason === 'no-coins') return '金币不足（需 ' + (result.fee || 0) + '）';
+    if (result.reason === 'no-gold') return '金方块不足，可观看视频解锁';
     if (result.reason === 'missing') return '关卡不可用';
     return '无法开打';
 }
 
 /**
- * 广场开打：先校验再扣费。未解锁扣金方块+金币；已解锁只扣金币。
+ * 广场开打：已解锁免费；未解锁仅扣金方块。
  * @param {string} stageId
  * @param {{ skipFee?: boolean }} [opts] skipFee 为看广告免开打费（仍须已解锁或另有金方块）
  */
 function enterPlazaStage(stageId, opts) {
     const o = opts || {};
-    const skipFee = !!o.skipFee;
+    const rewardedUnlock = !!o.rewardedUnlock;
     const stage = getStage(stageId);
     if (!stage || stage.status !== STATUS.published) {
-        return { ok: false, reason: 'missing', fee: 0, needGold: 0 };
+        return { ok: false, reason: 'missing', needGold: 0 };
     }
     const already = isPlazaUnlocked(stageId);
     const needGold = already ? 0 : PLAZA_UNLOCK_GOLD;
-    const fullFee = getPlayFee(stage);
-    const fee = skipFee ? 0 : fullFee;
-    const shortage = _plazaEntryShortage(needGold, fee);
+    if (rewardedUnlock && needGold > 0) {
+        _grantPlazaUnlock(stageId);
+        _reportPlazaUnlock();
+        return { ok: true, already: false, goldPaid: 0, paid: 0, needGold };
+    }
+    const shortage = _plazaEntryShortage(needGold);
     if (shortage) {
-        return { ok: false, reason: shortage, fee: fullFee, needGold };
+        return { ok: false, reason: shortage, needGold };
     }
 
     let goldPaid = 0;
     if (needGold > 0) {
         if (!goldenBlock.spendBalance(needGold)) {
-            return { ok: false, reason: 'no-gold', fee: fullFee, needGold };
+            return { ok: false, reason: 'no-gold', needGold };
         }
         goldPaid = needGold;
         _grantPlazaUnlock(stageId);
         _reportPlazaUnlock();
     }
 
-    let paid = 0;
-    if (fee > 0) {
-        const coinRes = spendPlayFee(stageId);
-        if (!coinRes.ok) {
-            if (goldPaid > 0) {
-                goldenBlock.addBalance(goldPaid);
-                _revokePlazaUnlock(stageId);
-            }
-            const reason = coinRes.reason === 'no-coins' ? 'no-coins' : (coinRes.reason || 'no-coins');
-            return { ok: false, reason, fee: fullFee, needGold };
-        }
-        paid = coinRes.paid;
-    }
-
     return {
         ok: true,
         already,
         goldPaid,
-        paid,
-        fee: skipFee ? 0 : fullFee,
+        paid: 0,
         needGold,
     };
 }
@@ -868,6 +845,20 @@ function unlockPlazaStage(stageId) {
     _grantPlazaUnlock(stageId);
     _reportPlazaUnlock();
     return { ok: true, cost: PLAZA_UNLOCK_GOLD, balance: goldenBlock.getBalance() };
+}
+
+function grantPlazaStageUnlock(stageId, source) {
+    if (isPlazaUnlocked(stageId)) return { ok: true, already: true };
+    const stage = getStage(stageId);
+    if (!stage || stage.status !== STATUS.published) return { ok: false, reason: 'missing' };
+    _grantPlazaUnlock(stageId);
+    _reportPlazaUnlock();
+    try {
+        wx.setStorageSync('gc_plazaUnlockMeta_' + stageId, {
+            source: source || 'grant', unlockedAt: Date.now(),
+        });
+    } catch (e) { /* ignore */ }
+    return { ok: true, already: false };
 }
 
 /** 当前用户是否已通关该广场关卡 */
@@ -932,28 +923,11 @@ function consumeFreePlay() {
 function spendPlayFee(stageId) {
     const stage = getStage(stageId);
     if (!stage) return { ok: false, reason: 'missing', fee: 0, paid: 0 };
-    const fee = getPlayFee(stage);
-    if (fee <= 0) return { ok: true, fee: 0, paid: 0 };
-    const bal = coinManager.getCoins();
-    if (bal < fee) return { ok: false, reason: 'no-coins', fee, paid: 0 };
-    try {
-        wx.setStorageSync('gc_coins', bal - fee);
-    } catch (e) {
-        return { ok: false, reason: 'storage', fee, paid: 0 };
-    }
-    return { ok: true, fee, paid: fee };
+    return { ok: true, fee: 0, paid: 0 };
 }
 
 function spendChallengeFee() {
-    const fee = CHALLENGE_FEE;
-    const bal = coinManager.getCoins();
-    if (bal < fee) return { ok: false, reason: 'no-coins', fee, paid: 0 };
-    try {
-        wx.setStorageSync('gc_coins', bal - fee);
-    } catch (e) {
-        return { ok: false, reason: 'storage', fee, paid: 0 };
-    }
-    return { ok: true, fee, paid: fee };
+    return { ok: true, fee: 0, paid: 0 };
 }
 
 function _ensurePlazaCacheEntry(stageId) {
@@ -1085,10 +1059,10 @@ function _calcHeat(s) {
 }
 
 /**
- * 广场通关结算：只发金币，绝不发金方块
- * @returns {{ coinWant, coinGained, goldGranted: 0, firstClear }}
+ * 广场通关结算：记录进度与最佳成绩，不发放货币。
  */
-function rewardPlazaClear(stageId, lines, pieces, timeMs) {
+function rewardPlazaClear(stageId, lines, pieces, timeMs, options) {
+    const assisted = !!(options && options.assisted);
     const stage = getStage(stageId);
     if (!stage) {
         return { coinWant: 0, coinGained: 0, goldGranted: 0, firstClear: false };
@@ -1111,23 +1085,15 @@ function rewardPlazaClear(stageId, lines, pieces, timeMs) {
         pieces: Math.max(0, Math.floor(Number(pieces) || 0)),
         timeMs: Math.max(0, Math.floor(Number(timeMs) || 0)),
     };
-    if (!_isValidPlazaBest(rec.best) || _plazaIsBetter(attempt, rec.best)) {
+    const isNewBest = !assisted && (!_isValidPlazaBest(rec.best) || _plazaIsBetter(attempt, rec.best));
+    if (isNewBest) {
         rec.best = attempt;
     }
     clearedMap[stageId] = rec;
     _saveJson(KEYS.clearedPlaza, clearedMap);
+    try { require('./badge-progress-signal').invalidate('plaza'); } catch (e) { /* ignore */ }
 
     const minLines = stage.minLines || 1;
-    const T = stage.coinThreshold || minLines * 2;
-    // 缩水版效率：官方公式 * 0.4，夹在 12～40
-    let want = coinManager.calcStageClearReward(lines, minLines, T);
-    want = Math.round(want * 0.4);
-    want = Math.max(12, Math.min(40, want));
-    if (!firstClear && rec.clearsToday > 1) {
-        want = Math.max(4, Math.floor(want * 0.3));
-    }
-
-    const gained = coinManager.rewardWorkshopClear(want);
 
     try {
         const { achievementManager } = require('./achievement-manager');
@@ -1147,15 +1113,16 @@ function rewardPlazaClear(stageId, lines, pieces, timeMs) {
     } catch (e) { /* ignore */ }
 
     return {
-        coinWant: want,
-        coinGained: gained,
+        coinWant: 0,
+        coinGained: 0,
         goldGranted: 0,
         firstClear,
+        assisted,
+        isNewBest,
         lines,
         pieces,
         timeMs,
         minLines,
-        coinThreshold: T,
     };
 }
 
@@ -1222,6 +1189,7 @@ module.exports = {
     getOfficialPlazaStages,
     isPlazaUnlocked,
     unlockPlazaStage,
+    grantPlazaStageUnlock,
     enterPlazaStage,
     plazaEntryShortageText,
     isPlazaCleared,

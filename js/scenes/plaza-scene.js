@@ -13,7 +13,7 @@ const {
 const { drawThemeBackground, drawThemeButtonSkin } = require('../theme/theme-images');
 const workshop = require('../../utils/workshop-manager');
 const goldenBlock = require('../../utils/golden-block-manager');
-const { coinManager } = require('../../utils/coin-manager');
+const progression = require('../../utils/progression-v2');
 const {
     applyShortageHighlight,
     renderEntryDialog,
@@ -426,9 +426,7 @@ class PlazaScene {
     }
 
     _refreshHud() {
-        this._hudLine = '金' + goldenBlock.getBalance()
-            + ' · 币' + coinManager.getCoins()
-            + ' · 今日免费 ' + workshop.getFreePlayRemaining();
+        this._hudLine = '金方块 ' + goldenBlock.getBalance();
     }
 
     _refreshPlazaFlags() {
@@ -648,7 +646,7 @@ class PlazaScene {
             '开局从底部生成随机垃圾（不超过 9 行）',
             '只有消掉含垃圾的行，底部才会补同样行数',
             '纯玩家块行消掉不补行，但照样计分',
-            '不计金币、金方块；消任意行都涨分',
+            '不消耗金方块；消任意行都涨分',
             '计分：1 行 +1，2 行 +4，3 行 +8，4 行 +16',
             '中途退出可续玩；失败后再进会重新开局',
         ];
@@ -703,18 +701,16 @@ class PlazaScene {
     }
 
     _openPlayDialog(stage) {
-        const fee = workshop.getPlayFee(stage);
         const unlocked = workshop.isPlazaUnlocked(stage.stageId);
+        const lackGold = !unlocked && goldenBlock.getBalance() < workshop.PLAZA_UNLOCK_GOLD;
         this._playDialog = {
             stage,
-            fee,
             locked: !unlocked,
             needGold: unlocked ? 0 : workshop.PLAZA_UNLOCK_GOLD,
-            freeLeft: workshop.getFreePlayRemaining(),
-            canAd: unlocked && isRewardedVideoConfigured() === true,
+            rewardedLeft: progression.getRewardedRemaining('plazaUnlock'),
+            canAd: lackGold && isRewardedVideoConfigured() === true,
             canChallenge: false,
-            lackGold: false,
-            lackCoins: false,
+            lackGold,
         };
         // 开窗这记抬手不能落到「确认」上，余额只在下一次点确认时检查
         this._playDialogArmed = false;
@@ -942,7 +938,6 @@ class PlazaScene {
             const best = cleared ? workshop.getPlazaBest(d.stage.stageId) : null;
             d.canChallenge = !!(cleared && best && best.lines >= 1);
         } else {
-            d.canAd = false;
             d.canChallenge = false;
         }
         renderEntryDialog(ctx, W, H, d);
@@ -1031,21 +1026,17 @@ class PlazaScene {
                 return;
             }
             if (this._hit(x, y, r.ad)) {
-                if (d.locked) {
-                    this._showToast('请先解锁关卡');
-                    return;
-                }
-                if (d.freeLeft <= 0) {
-                    this._showToast('今日免费开打已用完');
+                if (d.rewardedLeft <= 0) {
+                    this._showToast('今日广场视频解锁次数已用完');
                     return;
                 }
                 adManager.showRewardedVideo()
                     .then(() => {
-                        if (!workshop.consumeFreePlay()) {
-                            this._showToast('今日免费开打已用完');
+                        if (!progression.consumeRewardedUnlock('plazaUnlock')) {
+                            this._showToast('今日广场视频解锁次数已用完');
                             return;
                         }
-                        const paid = workshop.enterPlazaStage(d.stage.stageId, { skipFee: true });
+                        const paid = workshop.enterPlazaStage(d.stage.stageId, { rewardedUnlock: true });
                         if (!paid.ok) {
                             this._showToast(workshop.plazaEntryShortageText(paid));
                             return;

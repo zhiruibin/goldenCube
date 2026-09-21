@@ -644,8 +644,8 @@ class TetrisEngine {
             type = this._stageFirstPiecePending;
             this._stageFirstPiecePending = null;
         }
-        this._initPiece(type, 0);
         this._canHold = true;
+        this._initPiece(type, 0);
     }
 
     _initPiece(type, rotation) {
@@ -945,7 +945,7 @@ class TetrisEngine {
         }
         if (!cells.length) return null;
         const deep = cells.filter(cell => cell.row >= bottomRow - 2);
-        // 确定性轮换，回放与同一关卡的表现保持一致，也不消耗方块随机序列。
+        // 确定性轮换，保证同一关卡与失败回退后的表现一致，也不消耗方块随机序列。
         const seed = (this._garbageRemaining * 17 + this._goldMoveCount * 31 + bottomRow * 7) >>> 0;
         return deep[seed % deep.length];
     }
@@ -1508,8 +1508,8 @@ class TetrisEngine {
         this._lines += Math.max(0, Math.floor(Number(cleared) || 0));
     }
 
-    /** 无尽续玩快照 */
-    exportEndlessSnapshot() {
+    /** 可确定恢复的对局快照；无尽续玩与失败回退共用。 */
+    exportSnapshot() {
         const bag = this._bag;
         return {
             board: this._board.map((row) => row.slice()),
@@ -1522,6 +1522,8 @@ class TetrisEngine {
             score: this._score,
             lines: this._lines,
             level: this._level,
+            combo: this._combo,
+            stats: this._stats ? Object.assign({}, this._stats) : null,
             dropInterval: this._dropInterval,
             holdPiece: this._holdPiece ? { type: this._holdPiece.type } : null,
             canHold: !!this._canHold,
@@ -1544,9 +1546,10 @@ class TetrisEngine {
         };
     }
 
-    restoreEndlessSnapshot(snap) {
+    restoreSnapshot(snap, options) {
         if (!snap || !Array.isArray(snap.board)) return false;
-        this._endlessMode = true;
+        const opts = options || {};
+        if (typeof opts.endless === 'boolean') this._endlessMode = opts.endless;
         this._mode = 'stage';
         this._board = snap.board.map((row) => row.slice());
         this._garbageMask = snap.garbageMask
@@ -1556,6 +1559,10 @@ class TetrisEngine {
         this._score = Math.max(0, Number(snap.score) || 0);
         this._lines = Math.max(0, Number(snap.lines) || 0);
         this._level = Math.max(1, Number(snap.level) || 1);
+        this._combo = Number.isFinite(Number(snap.combo)) ? Number(snap.combo) : -1;
+        if (snap.stats && typeof snap.stats === 'object') {
+            this._stats = Object.assign(this._createStats(), snap.stats);
+        }
         if (snap.dropInterval) this._dropInterval = snap.dropInterval;
         this._holdPiece = snap.holdPiece && snap.holdPiece.type
             ? { type: snap.holdPiece.type, rotation: 0 }
@@ -1570,6 +1577,9 @@ class TetrisEngine {
             if (typeof snap.bag.seed === 'number') {
                 this._bag._seed = snap.bag.seed;
                 this._bag._rng = mulberry32(snap.bag.seed);
+                // 每个已生成 7-bag 的 Fisher-Yates 消耗 6 次随机数。
+                const generated = Array.isArray(snap.bag.bags) ? snap.bag.bags.length : 0;
+                for (let i = 0; i < generated * 6; i++) this._bag._rng();
             }
         }
         this._currentPiece = null;
@@ -1590,6 +1600,10 @@ class TetrisEngine {
         this._emit(this._onScoreChange, this._score, this._level, this._lines);
         return true;
     }
+
+    exportEndlessSnapshot() { return this.exportSnapshot(); }
+
+    restoreEndlessSnapshot(snap) { return this.restoreSnapshot(snap, { endless: true }); }
 
     /**
      * 开场掉落动画：取出已注入的垃圾格坐标，清空棋盘显示（供逐格放回）。

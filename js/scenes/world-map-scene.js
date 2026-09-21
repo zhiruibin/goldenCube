@@ -3,7 +3,6 @@
  */
 
 const goldenBlock = require('../../utils/golden-block-manager');
-const { coinManager } = require('../../utils/coin-manager');
 const { Button } = require('../widgets/button');
 const { WORLD_MAP, STAGE_SELECT } = require('../../utils/stage-nav');
 const fx = require('../render/world-map-fx');
@@ -442,15 +441,11 @@ class WorldMapScene {
         }
 
         const balance = goldenBlock.getBalance();
-        const coins = coinManager.getCoins();
         const pillH = 26;
         const pillY = m.balanceY - pillH / 2;
         const leftText = String(balance);
-        const rightText = String(coins);
         const leftW = Math.max(88, 36 + leftText.length * 9);
-        const rightW = Math.max(88, 36 + rightText.length * 9);
         this._drawResourcePill(ctx, 16, pillY, leftW, pillH, 'brick', leftText);
-        this._drawResourcePill(ctx, 16 + leftW + 10, pillY, rightW, pillH, 'coin', rightText);
 
         if (this._backButton) this._backButton.render(ctx);
 

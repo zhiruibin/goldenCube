@@ -301,13 +301,14 @@ function drawSpriteContain(ctx, key, cx, cy, box) {
 /**
  * 用贴图本身做外扩叠加，得到贴合方块轮廓的发光（不用几何六边形描边）。
  */
-function drawSpriteOuterGlow(ctx, key, cx, cy, box) {
+function drawSpriteOuterGlow(ctx, key, cx, cy, box, alphaScale) {
     const entry = getThemeImage(key);
     if (!entry.ready || !entry.img) return;
     const img = entry.img;
     const iw = img.width || 1;
     const ih = img.height || 1;
     const base = Math.min(box / iw, box / ih);
+    const intensity = alphaScale == null ? 1 : Math.max(0, Number(alphaScale) || 0);
     const layers = [
         { mul: 1.26, a: 0.1 },
         { mul: 1.18, a: 0.16 },
@@ -320,11 +321,43 @@ function drawSpriteOuterGlow(ctx, key, cx, cy, box) {
         const dw = iw * sc;
         const dh = ih * sc;
         ctx.save();
-        ctx.globalAlpha = L.a;
+        ctx.globalAlpha = L.a * intensity;
         try {
             ctx.globalCompositeOperation = 'lighter';
         } catch (e) { /* ignore */ }
         ctx.drawImage(img, cx - dw / 2, cy - dh / 2, dw, dh);
+        ctx.restore();
+    }
+}
+
+/**
+ * 锁定章节的轮廓光直接由方块贴图投影生成，避免预制光晕在不同 Canvas 实现中失真。
+ * 外层暖金负责可见度，内层奶油色负责“正在发光”的亮芯。
+ */
+function drawLockedCubeGlow(ctx, cx, cy, box) {
+    const entry = getThemeImage('mapCubeLocked');
+    if (!entry.ready || !entry.img) return;
+    const img = entry.img;
+    const iw = img.width || 1;
+    const ih = img.height || 1;
+    const scale = Math.min(box / iw, box / ih);
+    const dw = iw * scale;
+    const dh = ih * scale;
+    const x = cx - dw / 2;
+    const y = cy - dh / 2;
+    const layers = [
+        { color: 'rgba(255,174,45,0.90)', blur: Math.max(10, box * 0.12), alpha: 0.72 },
+        { color: 'rgba(255,244,194,0.98)', blur: Math.max(5, box * 0.055), alpha: 0.82 },
+    ];
+    for (let i = 0; i < layers.length; i++) {
+        const layer = layers[i];
+        ctx.save();
+        ctx.globalAlpha = layer.alpha;
+        ctx.shadowColor = layer.color;
+        ctx.shadowBlur = layer.blur;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        ctx.drawImage(img, x, y, dw, dh);
         ctx.restore();
     }
 }
@@ -398,7 +431,9 @@ function drawCube(ctx, layout, node, originY, nowMs) {
     drawContactShadow(ctx, cx, cy, box);
 
     const key = cubeSkinKey(node);
-    if (node.isProgress) {
+    if (node.state === 'locked') {
+        drawLockedCubeGlow(ctx, cx, cy, box);
+    } else if (node.isProgress) {
         // 先外扩叠加发光，再用带轮廓光的进度贴图
         drawSpriteOuterGlow(ctx, 'mapCubeUnlocked', cx, cy, box * 0.92);
     }
@@ -424,14 +459,27 @@ function drawCube(ctx, layout, node, originY, nowMs) {
     // 章节号
     const num = String((node.index != null ? node.index : 0) + 1);
     const numX = cx;
-    const numY = y + h * 0.36;
+    // 三种章节状态统一上移 30px，保持编号基线一致，并避开锁具/状态装饰。
+    const numY = y + h * 0.36 - 30;
     ctx.save();
     ctx.font = 'bold ' + Math.round(box * 0.17) + 'px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = 'rgba(0,0,0,0.45)';
-    ctx.fillText(num, numX + 1, numY + 1);
-    ctx.fillStyle = node.state === 'locked' ? 'rgba(230,210,180,0.55)' : 'rgba(70,42,12,0.78)';
+    if (node.state === 'locked') {
+        // 未解锁章节沿用原来的低饱和米灰色，与锁箱保持同一视觉层级。
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.fillText(num, numX + 1, numY + 1);
+        ctx.fillStyle = 'rgba(230,210,180,0.55)';
+    } else {
+        // 已解锁与已通关使用暖白字和深色描边，避开橙金背景干扰。
+        ctx.lineWidth = Math.max(2, Math.round(box * .025));
+        ctx.strokeStyle = 'rgba(22,10,3,.88)';
+        ctx.strokeText(num, numX, numY);
+        ctx.shadowColor = 'rgba(0,0,0,.72)';
+        ctx.shadowBlur = 3;
+        ctx.shadowOffsetY = 1;
+        ctx.fillStyle = '#FFF3D6';
+    }
     ctx.fillText(num, numX, numY);
     ctx.restore();
 

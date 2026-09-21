@@ -152,7 +152,6 @@ class CloudService {
                         detail: (payload && payload.detail) || null,
                         nickname: (payload && payload.nickname) || '',
                         avatarUrl: (payload && payload.avatarUrl) || '',
-                        replay: (payload && payload.replay) || null,
                         stageBest: (payload && payload.stageBest) || null,
                     },
                 },
@@ -241,6 +240,20 @@ class CloudService {
         }
     }
 
+    /** 服务端按北京时间累计不同登录自然日；只返回徽章进度，不发放资源。 */
+    async recordLoginDay(localProgress) {
+        if (!this.isAvailable()) return { success: false, offline: true };
+        try {
+            const res = await wx.cloud.callFunction({
+                name: 'rank',
+                data: { action: 'recordLoginDay', data: { localProgress: localProgress || null } },
+            });
+            return (res && res.result) || { success: false };
+        } catch (e) {
+            return { success: false, errMsg: (e && e.errMsg) || String(e) };
+        }
+    }
+
     /**
      * 查询全服排行榜
      * @param {object} opts { mode }
@@ -295,37 +308,6 @@ class CloudService {
                 return { ...cached, success: true, offline: true, fromCache: true };
             }
             return { success: false, list: [], total: 0, myRank: null, myScore: null, offline: false, fromCache: false, errMsg: (e && e.errMsg) || String(e) };
-        }
-    }
-
-    /**
-     * 获取单条回放（全服排行榜回放）
-     * @param {string} replayId
-     * @returns {Promise<{success:boolean, replay:object|null, mode:string, offline:boolean, errMsg?:string}>}
-     */
-    async getReplay(replayId) {
-        if (!replayId) {
-            return { success: false, replay: null, offline: false, errMsg: 'replayId 无效' };
-        }
-        if (!this.isAvailable()) {
-            return { success: false, replay: null, offline: true };
-        }
-        try {
-            const res = await wx.cloud.callFunction({
-                name: 'rank',
-                data: {
-                    action: 'getReplay',
-                    data: { replayId },
-                },
-            });
-            const r = (res && res.result) || {};
-            if (r.success) {
-                return { success: true, replay: r.replay || null, mode: r.mode || '', offline: false };
-            }
-            return { success: false, replay: null, offline: false, errMsg: r.errMsg || '' };
-        } catch (e) {
-            console.warn('[Cloud] 获取回放失败', e);
-            return { success: false, replay: null, offline: false, errMsg: (e && e.errMsg) || String(e) };
         }
     }
 

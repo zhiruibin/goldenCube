@@ -7,11 +7,14 @@
  */
 
 const STAGES_DATA = require('../data/stages-v1.js');
+const badgeProgressSignal = require('./badge-progress-signal');
 
 const KEYS = {
     balance: 'gc_goldenBlocks',
     unlocked: 'gc_stagesUnlocked',
     bestPrefix: 'gc_stageBest_',
+    clearPrefix: 'gc_stageClear_',
+    clearedIds: 'gc_stageClearedIds_v1',
     rewardCountPrefix: 'gc_stageRewardCount_',
     chaptersCleared: 'gc_chaptersCleared',
     allClearClaimed: 'gc_allClearClaimed',
@@ -19,6 +22,46 @@ const KEYS = {
     firstRankClaimed: 'gc_firstRankGoldClaimed',
     lastChapterIndex: 'gc_lastChapterIndex',
 };
+
+let _clearedIdSet = null;
+
+/**
+ * 通关索引只在首次迁移时扫描逐关旧键；之后整个会话均从内存 Set 读取。
+ * 聚合键随云存档同步，避免每次打开图鉴扫描全部关卡。
+ */
+function _getClearedIdSet() {
+    if (_clearedIdSet) return _clearedIdSet;
+    let stored = null;
+    try { stored = wx.getStorageSync(KEYS.clearedIds); } catch (e) { /* ignore */ }
+    if (Array.isArray(stored)) {
+        _clearedIdSet = new Set(stored.map(Number).filter(Number.isFinite));
+        return _clearedIdSet;
+    }
+
+    const migrated = [];
+    getStages().forEach((stage) => {
+        let cleared = false;
+        try {
+            const explicit = wx.getStorageSync(KEYS.clearPrefix + stage.id);
+            cleared = !!(explicit && explicit.cleared);
+        } catch (e) { /* ignore */ }
+        if (!cleared) cleared = !!getStageBest(stage.id);
+        if (cleared) migrated.push(Number(stage.id));
+    });
+    _clearedIdSet = new Set(migrated);
+    try { wx.setStorageSync(KEYS.clearedIds, migrated); } catch (e) { /* ignore */ }
+    return _clearedIdSet;
+}
+
+function _saveClearedIdSet() {
+    if (!_clearedIdSet) return;
+    try { wx.setStorageSync(KEYS.clearedIds, Array.from(_clearedIdSet).sort((a, b) => a - b)); } catch (e) { /* ignore */ }
+}
+
+function invalidateProgressCache() {
+    _clearedIdSet = null;
+    badgeProgressSignal.invalidate('all');
+}
 
 /** 全通关卡数：以 stages 长度为准（30 或 100） */
 function getTotalStageCount() {
@@ -132,7 +175,24 @@ function unlockStage(id) {
     return { ok: true, stage, balance: getBalance() };
 }
 
-/** 开打扣金币失败时回滚金方块解锁 */
+/** 不扣金方块的永久解锁入口，仅供已完成激励视频等受控流程调用。 */
+function grantStageUnlock(id, source) {
+    const stage = getStage(id);
+    if (!stage) return { ok: false, reason: 'no-stage' };
+    if (isUnlocked(id)) return { ok: true, already: true, stage, balance: getBalance() };
+    const list = getUnlocked();
+    list.push(stage.id);
+    _saveUnlocked(list);
+    try {
+        wx.setStorageSync('gc_stageUnlockMeta_' + stage.id, {
+            source: source || 'grant',
+            unlockedAt: Date.now(),
+        });
+    } catch (e) { /* ignore */ }
+    return { ok: true, already: false, stage, balance: getBalance() };
+}
+
+/** 兼容旧入口：在后续流程失败时回滚本次金方块解锁。 */
 function revokeUnlock(id) {
     const stage = getStage(id);
     if (!stage) return;
@@ -189,11 +249,77 @@ function isBetter(a, b) {
 }
 
 function isCleared(id) {
-    return !!getStageBest(id);
+    return _getClearedIdSet().has(Number(id));
+}
+
+function getStageClear(id) {
+    try {
+        const clear = wx.getStorageSync(KEYS.clearPrefix + Number(id));
+        if (clear && clear.cleared) return clear;
+    } catch (e) { /* ignore */ }
+    const best = getStageBest(id);
+    return best ? { cleared: true, firstClearedAt: 0, assisted: false, migrated: true } : null;
+}
+
+function _markStageCleared(id, assisted) {
+    const prev = getStageClear(id);
+    if (prev) return { first: false, clear: prev };
+    const clear = {
+        cleared: true,
+        firstClearedAt: Date.now(),
+        assisted: !!assisted,
+    };
+    try { wx.setStorageSync(KEYS.clearPrefix + Number(id), clear); } catch (e) { /* ignore */ }
+    _getClearedIdSet().add(Number(id));
+    _saveClearedIdSet();
+    badgeProgressSignal.invalidate('chapter');
+    return { first: true, clear };
+}
+
+/** 将旧版“最佳纪录即通关”存档显式迁移成独立通关记录。 */
+function migrateClearRecords() {
+    let changed = 0;
+    getStages().forEach((stage) => {
+        let explicit = null;
+        try { explicit = wx.getStorageSync(KEYS.clearPrefix + stage.id); } catch (e) { /* ignore */ }
+        if (explicit && explicit.cleared) return;
+        if (!getStageBest(stage.id)) return;
+        try {
+            wx.setStorageSync(KEYS.clearPrefix + stage.id, {
+                cleared: true,
+                firstClearedAt: 0,
+                assisted: false,
+                migrated: true,
+            });
+            changed++;
+        } catch (e) { /* ignore */ }
+    });
+    try { wx.removeStorageSync(KEYS.clearedIds); } catch (e) { /* ignore */ }
+    _clearedIdSet = null;
+    _getClearedIdSet();
+    return changed;
 }
 
 function getClearedCount() {
-    return getStages().filter((s) => isCleared(s.id)).length;
+    const validIds = new Set(getStages().map((stage) => Number(stage.id)));
+    let count = 0;
+    _getClearedIdSet().forEach((id) => { if (validIds.has(id)) count += 1; });
+    return count;
+}
+
+function getChapterProgressSnapshot() {
+    const cleared = _getClearedIdSet();
+    return getChapters().map((chapter) => {
+        const stages = getStagesByChapter(chapter.id);
+        let current = 0;
+        stages.forEach((stage) => { if (cleared.has(Number(stage.id))) current += 1; });
+        return {
+            chapter,
+            current,
+            target: stages.length,
+            owned: stages.length > 0 && current >= stages.length,
+        };
+    });
 }
 
 function _saveStageBest(id, rec) {
@@ -234,6 +360,7 @@ function mergeStageBests(progress) {
         const local = getStageBest(stageId);
         if (local && !isBetter(incoming, local)) return;
         _saveStageBest(stageId, incoming);
+        _markStageCleared(stageId, false);
         changed++;
     });
     if (changed) syncUnlockedFromProgress();
@@ -272,15 +399,20 @@ function _saveChaptersCleared(list) {
  * 通关结算：首通 +1；破纪录（非首通）+1 且每关最多 2 次；章全通 +1；全通里程碑 +10
  * @returns {{ first, isNewBest, reward, chapterReward, milestoneReward, best, clearedCount }}
  */
-function rewardClear(id, lines, pieces, timeMs) {
+function rewardClear(id, lines, pieces, timeMs, options) {
+    const assisted = !!(options && options.assisted);
     const rec = { lines, pieces: pieces || 0, timeMs: timeMs || 0 };
     const prev = getStageBest(id);
-    const first = !prev;
-    let isNewBest = !prev || isBetter(rec, prev);
+    const clearResult = _markStageCleared(id, assisted);
+    const first = clearResult.first;
+    let isNewBest = !assisted && (!prev || isBetter(rec, prev));
     let reward = 0;
     const tutorial = isTutorialStage(id);
 
-    if (tutorial) {
+    if (assisted) {
+        // 辅助通关只发设计内的首通固定奖励，不写最佳纪录、破纪录奖励或排行数据。
+        if (first) reward = 1;
+    } else if (tutorial) {
         if (first) {
             reward = 1;
             _saveStageBest(id, rec);
@@ -290,6 +422,9 @@ function rewardClear(id, lines, pieces, timeMs) {
         }
     } else if (first) {
         reward = 1;
+        _saveStageBest(id, rec);
+    } else if (!prev) {
+        // 之前通过辅助方式首通，本次正常完成只补建首条有效最佳纪录，不发破纪录奖励。
         _saveStageBest(id, rec);
     } else if (isNewBest) {
         const cnt = _getRecordRewardCount(id);
@@ -338,7 +473,8 @@ function rewardClear(id, lines, pieces, timeMs) {
         reward,
         chapterReward,
         milestoneReward,
-        best: getStageBest(id),
+        best: getStageBest(id) || rec,
+        assisted,
         clearedCount: getClearedCount(),
     };
 }
@@ -486,15 +622,20 @@ module.exports = {
     spendBalance,
     isUnlocked,
     unlockStage,
+    grantStageUnlock,
     revokeUnlock,
     syncUnlockedFromProgress,
     getStageBest,
+    getStageClear,
     isCleared,
     isBetter,
     rewardClear,
     getAllStageBests,
     mergeStageBests,
+    migrateClearRecords,
     getClearedCount,
+    getChapterProgressSnapshot,
+    invalidateProgressCache,
     getTotalStageCount,
     getAchievementGoldCap,
     grantAchievementGold,

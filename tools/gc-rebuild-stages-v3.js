@@ -1110,6 +1110,10 @@ for (let ch = 1; ch <= 10; ch++) {
     }
 }
 
+// 保留由扩展生成器写入的 101+ 关，避免重建前 100 关时误删后续章节。
+const extensionStages = prev.stages.filter((stage) => Number(stage.id) > 100);
+const allStages = stages.concat(extensionStages).sort((a, b) => Number(a.id) - Number(b.id));
+
 const out = {
     version: 3,
     cols: 10,
@@ -1127,7 +1131,7 @@ const out = {
         kinds,
     },
     chapters,
-    stages: stages.map(({ kind, top, ...rest }) => ({ ...rest, kind })),
+    stages: allStages.map(({ kind, top, ...rest }) => ({ ...rest, kind })),
 };
 
 fs.writeFileSync(OUT, JSON.stringify(out, null, 2) + '\n', 'utf8');
