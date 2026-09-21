@@ -7,6 +7,8 @@ const { SceneManager } = require('./js/runtime/scene-manager');
 const { InputManager } = require('./js/runtime/input-manager');
 const { adManager } = require('./utils/ad-manager');
 const AudioManager = require('./utils/audio-manager');
+const subpackageLoader = require('./utils/subpackage-loader');
+const BootScene = require('./js/scenes/boot-scene');
 
 /*** 全局共享对象，挂载到 wx 全局以便各模块访问
  */
@@ -39,6 +41,10 @@ GameGlobal.game = {
  */
 function onStart() {
     let cloudReadyPromise = Promise.resolve();
+    let startupServices = null;
+    // “首次启动”按本机判断，必须早于云存档恢复；否则清缓存后旧云数据会把它判成老玩家。
+    const firstLaunchRouter = require('./utils/first-launch-router');
+    const firstLaunchLocalState = firstLaunchRouter.captureLocalState();
 
     const canvas = wx.createCanvas();
     const ctx = canvas.getContext('2d');
@@ -104,6 +110,13 @@ function onStart() {
     // 全局音频管理器（延迟到首次用户交互时 init，满足自动播放策略）
     GameGlobal.game.audioManager = new AudioManager();
 
+    // 必须先于云请求和全量场景解析绘制首帧，冷启动期间不再出现纯黑屏。
+    GameGlobal.game.sceneManager.register('boot', BootScene);
+    GameGlobal.game.sceneManager.switchTo('boot', { status: '正在恢复冒险进度…' });
+    if (GameGlobal.game.sceneManager.current) {
+        GameGlobal.game.sceneManager.current.render(ctx);
+    }
+
     // 开通右上角「···」中的好友分享与朋友圈分享，并按当前页面生成文案。
     try {
         const { initShareMenu } = require('./utils/share-menu');
@@ -128,11 +141,7 @@ function onStart() {
         cloudReadyPromise = cloudSave.init(cloudService).then(() => {
             const progression = require('./utils/progression-v2');
             progression.migrate();
-            cloudService.syncStageProgress().catch(() => {});
-            return progression.recordLogin(cloudService).then((result) => {
-                GameGlobal.game.pendingLoginBadges = (result && result.newlyEarned) || [];
-                return cloudSave.flush(true).catch(() => {});
-            }).catch(() => {});
+            startupServices = { cloudService, cloudSave, progression };
         }).catch(() => {});
         GameGlobal.game.cloudSave = cloudSave;
     } catch (e) {
@@ -179,17 +188,12 @@ function onStart() {
     GameGlobal.game.sceneManager.register('themeEventResult', ThemeEventResultScene);
     GameGlobal.game.sceneManager.register('themeBadgeAward', ThemeBadgeAwardScene);
 
-    // 预加载结算页方块插画
-    try {
-        const { preloadResultBlockImages } = require('./js/render/result-block-image');
-        preloadResultBlockImages();
-    } catch (e) { /* ignore */ }
-    // 预加载金矿工坊主题贴图（首页背景 / 砖按钮）
+    // 只预加载首页首屏资源；其余贴图由场景或分包按需加载。
     try {
         const { preloadThemeImages } = require('./js/theme/theme-images');
         preloadThemeImages();
     } catch (e) { /* ignore */ }
-    // 冷启动：进入首页 Hub（闯关/排行/成就/商店/设置入口）；若带挑战分享卡再按身份分流
+    // 冷启动：新玩家直达第 1 关；已有玩家进入首页；挑战分享卡始终优先落首页分流。
     let launchQuery = null;
     try {
         const _launch = wx.getLaunchOptionsSync ? wx.getLaunchOptionsSync() : null;
@@ -200,12 +204,31 @@ function onStart() {
         console.warn('[Game] 读取启动参数失败', e);
     }
     GameGlobal.game.kickLoop = _kickLoop;
-    // 先恢复云存档再创建首页，避免首页的每日奖励/内存缓存抢在恢复前写入。
+    // 先恢复云存档再决定启动路由，避免跨设备老玩家被误判为首次启动。
     cloudReadyPromise.then(() => {
-        GameGlobal.game.sceneManager.switchTo('home');
+        const initialRoute = firstLaunchRouter.resolveInitialRoute({
+            hasChallengeLaunch: !!launchQuery,
+            localState: firstLaunchLocalState,
+        });
+        GameGlobal.game.sceneManager.replace(initialRoute.name, initialRoute.params);
         if (launchQuery) _handleShareChallengeEntry(launchQuery, { fromLaunch: true });
         GameGlobal.game._forceRender = true;
         _kickLoop();
+
+        // 首页首帧之后再做登录统计、关卡进度同步与云端回写，避免多次网络往返阻塞启动。
+        if (startupServices) {
+            const services = startupServices;
+            services.cloudService.syncStageProgress().catch(() => {});
+            services.progression.recordLogin(services.cloudService).then((result) => {
+                GameGlobal.game.pendingLoginBadges = (result && result.newlyEarned) || [];
+                const sm = GameGlobal.game.sceneManager;
+                if (sm && sm.currentName === 'home' && sm.current
+                    && typeof sm.current._consumeLoginBadgeNotice === 'function') {
+                    sm.current._consumeLoginBadgeNotice();
+                }
+                return services.cloudSave.flush(true).catch(() => {});
+            }).catch(() => {});
+        }
     });
 
     // 启动主循环
@@ -685,6 +708,8 @@ wx.onTouchStart(function (e) {
         }
     }
 
+    if (subpackageLoader.isBusy()) return;
+
     if (GameGlobal.game.inputManager) {
         GameGlobal.game.inputManager.handleTouchStart(e);
     }
@@ -707,6 +732,7 @@ wx.onTouchStart(function (e) {
 });
 
 wx.onTouchMove(function (e) {
+    if (subpackageLoader.isBusy()) return;
     if (GameGlobal.game.inputManager) {
         GameGlobal.game.inputManager.handleTouchMove(e);
     }
@@ -729,6 +755,12 @@ wx.onTouchMove(function (e) {
 wx.onTouchEnd(function (e) {
     _kickLoop();
     const im = GameGlobal.game.inputManager;
+    if (subpackageLoader.isBusy()) {
+        if (im) im.handleTouchCancel(e);
+        const ended = e.changedTouches || [];
+        for (let i = 0; i < ended.length; i++) _clearTouchStartScene(ended[i].identifier);
+        return;
+    }
     if (im) {
         im.handleTouchEnd(e);
     }

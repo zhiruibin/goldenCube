@@ -245,6 +245,16 @@ class StageResultScene {
             + (this._result.milestoneReward || 0);
     }
 
+    /** 普通重复通关也给出明确反馈，避免无奖励状态只剩一个章印。 */
+    _getOutcomeCaption() {
+        if (!this._result || this._result.assisted
+            || this._result.first || this._result.isNewBest) return '';
+        if (this._stage && this._stage.kind === 'tutorial') {
+            return '教学完成，继续挑战下一关吧';
+        }
+        return '顺利通关，最佳纪录保持不变';
+    }
+
     /** 结算状态统一使用主题章印，不再依赖“首通 / 破纪录”等纯文字行。 */
     _getResultMedals() {
         if (!this._result) return [];
@@ -347,7 +357,8 @@ class StageResultScene {
     _drawResultMedals(ctx, cx, cy, heroSize, animTime) {
         const medals = this._getResultMedals();
         if (!medals.length) return;
-        const size = Math.max(54, Math.min(62, heroSize * .56));
+        // 章印是结算状态的核心反馈，放大至约 86px；三枚并排仍可完整落在 375px 画布内。
+        const size = Math.max(82, Math.min(90, heroSize * .80));
         const gap = size * 1.12;
         const startX = cx - ((medals.length - 1) * gap) / 2;
         for (let i = 0; i < medals.length; i++) {
@@ -595,6 +606,7 @@ class StageResultScene {
 
         const uiAlpha = this._uiAlpha();
         const goldTotal = this._getGoldRewardTotal();
+        const outcomeCaption = this._getOutcomeCaption();
         const layout = this._getHeroLayout();
         const rising = this._revealPhase === 'rising';
         const pose = rising
@@ -680,10 +692,15 @@ class StageResultScene {
                     ctx.fillStyle = ACCENT;
                     ctx.font = 'bold 16px sans-serif';
                     ctx.fillText('金色方块 +' + goldTotal, pose.cx, cubeBottomY + 18);
+                } else if (outcomeCaption) {
+                    ctx.fillStyle = '#e7c98a';
+                    ctx.font = '14px sans-serif';
+                    ctx.fillText(outcomeCaption, pose.cx, cubeBottomY + 20);
                 }
 
                 // 独立陈列在奖励文案与按钮之间；根据剩余空间动态居中，短屏也不会压住按钮。
-                const rewardBottomY = cubeBottomY + (goldTotal > 0 ? 36 : 18);
+                const hasCaption = goldTotal > 0 || !!outcomeCaption;
+                const rewardBottomY = cubeBottomY + (hasCaption ? 38 : 18);
                 const buttonTopY = this._buttonsTopY || H * .72;
                 const medalY = Math.max(
                     rewardBottomY + 34,

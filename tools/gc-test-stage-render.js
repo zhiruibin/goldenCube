@@ -138,6 +138,11 @@ result._result = { first: false, isNewBest: true };
 assert(result._getResultMedals()[0].kind === 'record', '非首通破纪录使用新纪录章印');
 result._result = { first: false, isNewBest: false };
 assert(result._getResultMedals()[0].kind === 'clear', '普通重复通关使用通关章印');
+assert(result._getOutcomeCaption() === '教学完成，继续挑战下一关吧',
+    '教学关重复通关显示继续挑战说明');
+result._stage = { id: 2, kind: 'silhouette' };
+assert(result._getOutcomeCaption() === '顺利通关，最佳纪录保持不变',
+    '普通关通关未破纪录显示结果说明');
 result._result = { assisted: true, chapterReward: 1, milestoneReward: 10 };
 const assistedMedals = result._getResultMedals();
 assert(assistedMedals.map((item) => item.kind).join(',') === 'assisted,chapter,all',
@@ -153,6 +158,8 @@ ops.length = 0;
 failedResult.render(ctxStub);
 assert(ops.some((o) => o.m === 'fillText' && o.args[0] === '未通关'),
     '失败结算英雄位绘制未通关章印');
+assert(ops.some((o) => o.m === 'fillText' && o.args[0] === '距离目标还差 2 行，再试一次！'),
+    '失败结算显示距离目标的动态说明');
 
 console.log('\n==== RESULT ====');
 console.log('passed:', passed, 'failed:', failed);

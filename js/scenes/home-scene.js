@@ -66,6 +66,12 @@ class HomeScene {
         this._maybeRemindPending();
         this._initFooterContent();
         this._refreshThemeEvent();
+        this._consumeLoginBadgeNotice();
+        // 若音频已在用户手势中初始化过，回首页立即恢复 BGM
+        this._ensureHomeBgm();
+    }
+
+    _consumeLoginBadgeNotice() {
         const loginBadges = (GameGlobal.game && GameGlobal.game.pendingLoginBadges) || [];
         if (loginBadges.length > 0) {
             GameGlobal.game.pendingLoginBadges = [];
@@ -79,8 +85,6 @@ class HomeScene {
                 }), 500);
             } catch (e) { /* ignore */ }
         }
-        // 若音频已在用户手势中初始化过，回首页立即恢复 BGM
-        this._ensureHomeBgm();
     }
 
     _refreshThemeEvent() {
@@ -109,6 +113,7 @@ class HomeScene {
         this._initFooterContent();
         this._ensureHomeBgm();
         this._refreshThemeEvent();
+        this._consumeLoginBadgeNotice();
     }
 
     /** 首页 BGM：仅在 AudioContext 已初始化时尝试（需先有用户触摸） */

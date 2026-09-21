@@ -389,10 +389,12 @@ class StageFailScene {
             this._drawGrayBlockHero(ctx, cx, heroCy, heroSize);
 
             const cubeBottomY = heroCy + heroSize * 1.35 * 0.48;
-            ctx.fillStyle = MUTED;
+            ctx.fillStyle = '#e7c1ad';
             ctx.font = '14px sans-serif';
-            const reasonText = this._result.reason === 'topOut' ? '方块堆满，本局结束'
-                : '未达过关条件';
+            const remaining = Math.max(0, minLines - lines);
+            const reasonText = remaining > 0
+                ? '距离目标还差 ' + remaining + ' 行，再试一次！'
+                : '差一点就成功了，再试一次！';
             ctx.fillText(reasonText, cx, cubeBottomY + 18);
 
             const reasonBottomY = cubeBottomY + 36;
@@ -401,7 +403,8 @@ class StageFailScene {
                 reasonBottomY + 34,
                 Math.min(buttonTopY - 40, (reasonBottomY + buttonTopY) / 2)
             );
-            this._drawFailMedal(ctx, cx, medalY, Math.max(54, Math.min(62, heroSize * .56)));
+            // 与成功结算章印保持同一视觉尺寸。
+            this._drawFailMedal(ctx, cx, medalY, Math.max(82, Math.min(90, heroSize * .80)));
         }
 
         ctx.textAlign = 'left';

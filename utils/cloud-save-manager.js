@@ -4,6 +4,10 @@
  */
 const META_REVISION = 'gc_cloud_save_revision_v1';
 const EXCLUDED_PREFIXES = [
+    // 设备首次启动标记不能随账号云存档恢复，否则清缓存/换设备无法重新触发教学。
+    'gc_device_',
+    // 分包首版曾短暂使用云同步标记；继续排除，避免旧云快照影响本地判断。
+    'gc_firstLaunchTutorialRouted_',
     'gc_replay_',
     'gc_rank_cache_',
     'gc_workshop_plazaCache',

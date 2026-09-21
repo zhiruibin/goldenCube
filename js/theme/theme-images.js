@@ -35,39 +35,45 @@ const THEME_PATHS = {
   badgeNewMidAutumn: 'assets/images/theme/badge-new-midautumn.png',
   badgeMidAutumn: 'assets/images/theme/badge-mid-autumn.png',
   badgeMidAutumnLocked: 'assets/images/theme/badge-mid-autumn-locked.png',
-  badgeChapter01: 'assets/images/theme/badges/badge-chapter-01.png',
-  badgeChapter01Locked: 'assets/images/theme/badges/badge-chapter-01-locked.png',
-  badgeChapter02: 'assets/images/theme/badges/badge-chapter-02.png',
-  badgeChapter02Locked: 'assets/images/theme/badges/badge-chapter-02-locked.png',
-  badgeChapter03: 'assets/images/theme/badges/badge-chapter-03.png',
-  badgeChapter03Locked: 'assets/images/theme/badges/badge-chapter-03-locked.png',
+  badgeChapter01: 'subpackages/collection-assets/images/badges/badge-chapter-01.png',
+  badgeChapter01Locked: 'subpackages/collection-assets/images/badges/badge-chapter-01-locked.png',
+  badgeChapter02: 'subpackages/collection-assets/images/badges/badge-chapter-02.png',
+  badgeChapter02Locked: 'subpackages/collection-assets/images/badges/badge-chapter-02-locked.png',
+  badgeChapter03: 'subpackages/collection-assets/images/badges/badge-chapter-03.png',
+  badgeChapter03Locked: 'subpackages/collection-assets/images/badges/badge-chapter-03-locked.png',
   // v2 逐枚重排并留出透明安全边距；改名同时避开微信开发者工具的旧图缓存。
-  badgeChapterAtlasV2: 'assets/images/theme/badges/badge-chapters-04-20-atlas-v2.png',
-  badgePlazaAtlas: 'assets/images/theme/badges/badge-plaza-10-30-atlas-v1.png',
-  badgeWorkshopFirstApproved: 'assets/images/theme/badges/badge-workshop-first-approved.png',
-  badgeWorkshopFirstApprovedLocked: 'assets/images/theme/badges/badge-workshop-first-approved-locked.png',
-  badgeWorkshopMaxSlots: 'assets/images/theme/badges/badge-workshop-max-slots.png',
-  badgeWorkshopMaxSlotsLocked: 'assets/images/theme/badges/badge-workshop-max-slots-locked.png',
-  badgeLogin07: 'assets/images/theme/badges/badge-login-07.png',
-  badgeLogin30: 'assets/images/theme/badges/badge-login-30.png',
-  badgeLogin100: 'assets/images/theme/badges/badge-login-100.png',
-  badgeLogin365: 'assets/images/theme/badges/badge-login-365.png',
-  stagePlaqueCurrent: 'assets/images/theme/stage-plaque-current-v2.png',
-  stagePlaqueCurrentFlower: 'assets/images/theme/stage-plaque-current-flower-v2.png',
-  stagePlaqueCleared: 'assets/images/theme/stage-plaque-cleared.png',
-  stagePlaqueClearedFloral: 'assets/images/theme/stage-plaque-cleared-v2.png',
-  stagePlaqueLocked: 'assets/images/theme/stage-plaque-locked-v2.png',
-  stagePlaqueFinale: 'assets/images/theme/stage-plaque-finale.png',
-  stagePlaqueFinaleFlower: 'assets/images/theme/stage-plaque-finale-flower.png',
-  stagePlaqueFinaleCleared: 'assets/images/theme/stage-plaque-finale-cleared-v2.png',
-  stagePlaqueFinaleFlowerCleared: 'assets/images/theme/stage-plaque-finale-flower-cleared-v2.png',
-  stageFinaleLock: 'assets/images/theme/stage-finale-lock.png',
+  badgeChapterAtlasV2: 'subpackages/collection-assets/images/badges/badge-chapters-04-20-atlas-v2.png',
+  badgePlazaAtlas: 'subpackages/collection-assets/images/badges/badge-plaza-10-30-atlas-v1.png',
+  badgeWorkshopFirstApproved: 'subpackages/collection-assets/images/badges/badge-workshop-first-approved.png',
+  badgeWorkshopFirstApprovedLocked: 'subpackages/collection-assets/images/badges/badge-workshop-first-approved-locked.png',
+  badgeWorkshopMaxSlots: 'subpackages/collection-assets/images/badges/badge-workshop-max-slots.png',
+  badgeWorkshopMaxSlotsLocked: 'subpackages/collection-assets/images/badges/badge-workshop-max-slots-locked.png',
+  badgeLogin07: 'subpackages/collection-assets/images/badges/badge-login-07.png',
+  badgeLogin30: 'subpackages/collection-assets/images/badges/badge-login-30.png',
+  badgeLogin100: 'subpackages/collection-assets/images/badges/badge-login-100.png',
+  badgeLogin365: 'subpackages/collection-assets/images/badges/badge-login-365.png',
+  stagePlaqueCurrent: 'subpackages/stage-assets/images/stage-plaque-current-v2.png',
+  stagePlaqueCurrentFlower: 'subpackages/stage-assets/images/stage-plaque-current-flower-v2.png',
+  stagePlaqueCleared: 'subpackages/stage-assets/images/stage-plaque-cleared.png',
+  stagePlaqueClearedFloral: 'subpackages/stage-assets/images/stage-plaque-cleared-v2.png',
+  stagePlaqueLocked: 'subpackages/stage-assets/images/stage-plaque-locked-v2.png',
+  stagePlaqueFinale: 'subpackages/stage-assets/images/stage-plaque-finale.png',
+  stagePlaqueFinaleFlower: 'subpackages/stage-assets/images/stage-plaque-finale-flower.png',
+  stagePlaqueFinaleCleared: 'subpackages/stage-assets/images/stage-plaque-finale-cleared-v2.png',
+  stagePlaqueFinaleFlowerCleared: 'subpackages/stage-assets/images/stage-plaque-finale-flower-cleared-v2.png',
+  stageFinaleLock: 'subpackages/stage-assets/images/stage-finale-lock.png',
   plazaCardFrameThin: 'assets/images/theme/plaza-card-frame-thin.png',
-  midAutumnCardCleared: 'assets/images/theme/mid-autumn/stage-card-cleared-v2.png',
-  midAutumnCardCurrent: 'assets/images/theme/mid-autumn/stage-card-current-v2.png',
-  midAutumnCardLocked: 'assets/images/theme/mid-autumn/stage-card-locked-v3.png',
-  midAutumnCardFinale: 'assets/images/theme/mid-autumn/stage-card-finale-v2.png',
+  midAutumnCardCleared: 'subpackages/theme-event-assets/images/stage-card-cleared-v2.png',
+  midAutumnCardCurrent: 'subpackages/theme-event-assets/images/stage-card-current-v2.png',
+  midAutumnCardLocked: 'subpackages/theme-event-assets/images/stage-card-locked-v3.png',
+  midAutumnCardFinale: 'subpackages/theme-event-assets/images/stage-card-finale-v2.png',
 };
+
+const STARTUP_THEME_KEYS = [
+  'homeBg', 'titlePlaque',
+  'btnSquareAmber', 'btnSquareGold', 'btnSquareBrown', 'btnSquareTeal',
+  'btnIconBrown', 'btnCircleBrown', 'homeFooterIconsV1', 'badgeNewMidAutumn',
+];
 
 /** @type {Record<string, { img: any, ready: boolean, failed: boolean }>} */
 const _cache = {};
@@ -103,8 +109,9 @@ function _loadOne(key) {
   return entry;
 }
 
-function preloadThemeImages() {
-  Object.keys(THEME_PATHS).forEach((key) => _loadOne(key));
+function preloadThemeImages(keys) {
+  const list = Array.isArray(keys) && keys.length ? keys : STARTUP_THEME_KEYS;
+  list.forEach((key) => _loadOne(key));
 }
 
 function getThemeImage(key) {

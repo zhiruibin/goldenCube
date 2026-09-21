@@ -30,12 +30,28 @@ class SceneManager {
         this._registry[name] = SceneClass;
     }
 
+    _deferForPackage(method, name, params, stackNames) {
+        let loader;
+        try { loader = require('../../utils/subpackage-loader'); } catch (e) { return false; }
+        if (!loader || loader.isSceneReady(name)) return false;
+        loader.loadForScene(name).then(() => {
+            if (method === 'leaveTo') this.leaveTo(name, params, stackNames);
+            else if (method === 'back') this.back();
+            else this[method](name, params);
+        }).catch((err) => {
+            console.error('[SceneManager] 分包加载失败：' + name, err);
+            try { wx.showToast({ title: '资源加载失败，请重试', icon: 'none' }); } catch (e) { /* ignore */ }
+        });
+        return true;
+    }
+
     /**
      * 切换到指定场景（替换当前场景）
      * @param {string} name - 目标场景名称
      * @param {Object} [params] - 传递给目标场景的参数
      */
     switchTo(name, params) {
+        if (this._deferForPackage('switchTo', name, params)) return;
         if (!this._registry[name]) {
             console.error(`[SceneManager] 场景 "${name}" 未注册`);
             return;
@@ -77,6 +93,7 @@ class SceneManager {
      * @param {Object} [params]
      */
     replace(name, params) {
+        if (this._deferForPackage('replace', name, params)) return;
         if (!this._registry[name]) {
             console.error(`[SceneManager] 场景 "${name}" 未注册`);
             return;
@@ -102,6 +119,7 @@ class SceneManager {
      * @param {string[]} [stackNames] 重置后的底层栈（默认 ['home']；目标为 home 时栈空）
      */
     leaveTo(name, params, stackNames) {
+        if (this._deferForPackage('leaveTo', name, params, stackNames)) return;
         if (!this._registry[name]) {
             console.error(`[SceneManager] 场景 "${name}" 未注册`);
             return;
@@ -142,11 +160,14 @@ class SceneManager {
             return;
         }
 
+        const prev = this._stack[this._stack.length - 1];
+        if (this._deferForPackage('back', prev.name, prev.params)) {
+            return;
+        }
         if (this.current) {
             this.current.onExit && this.current.onExit();
         }
-
-        const prev = this._stack.pop();
+        this._stack.pop();
         const SceneClass = this._registry[prev.name];
         this.current = new SceneClass();
         this.currentName = prev.name;
@@ -200,6 +221,14 @@ class SceneManager {
                 const H = (typeof GameGlobal !== 'undefined' && GameGlobal.game && GameGlobal.game.height) || 667;
                 renderDialog(ctx, W, H);
             }
+        } catch (e) { /* ignore */ }
+        try {
+            const loader = require('../../utils/subpackage-loader');
+            loader.renderOverlay(
+                ctx,
+                (typeof GameGlobal !== 'undefined' && GameGlobal.game && GameGlobal.game.width) || 375,
+                (typeof GameGlobal !== 'undefined' && GameGlobal.game && GameGlobal.game.height) || 667
+            );
         } catch (e) { /* ignore */ }
         // 全局授权弹窗叠在当前场景之上（隐私优先于资料授权）
         try {
