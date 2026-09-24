@@ -9,7 +9,7 @@ const {
     SUBTITLE,
     MUTED,
 } = require('../theme/arcade-night');
-const { drawThemeBackground, drawThemeImageContain, drawThemeButtonSkin } = require('../theme/theme-images');
+const { drawThemeBackground, drawThemeImageContain, drawThemeButtonSkin, fillThemeVeil } = require('../theme/theme-images');
 const workshop = require('../../utils/workshop-manager');
 const goldenBlock = require('../../utils/golden-block-manager');
 const { applyShortageHighlight, renderEntryDialog } = require('../../utils/stage-entry-ui');
@@ -67,9 +67,7 @@ class WorkshopScene {
         this._scrollVel = 0;
         this._moveSamples = [];
         this._rebuild();
-        Promise.resolve(workshop.syncMyReviewStatuses()).then((changed) => {
-            if (changed) this._rebuild();
-        }).catch(() => {});
+        this._syncReviewStatuses();
     }
 
     onExit() {
@@ -86,9 +84,53 @@ class WorkshopScene {
 
     onResume() {
         this._rebuild();
+        this._syncReviewStatuses();
+    }
+
+    _syncReviewStatuses() {
         Promise.resolve(workshop.syncMyReviewStatuses()).then((changed) => {
-            if (changed) this._rebuild();
+            const rejected = workshop.listUnseenRejectedStages();
+            if (rejected.length) this._mineSub = 'cleared';
+            if (changed || rejected.length) this._rebuild();
+            const sceneManager = GameGlobal.game && GameGlobal.game.sceneManager;
+            if (rejected.length && sceneManager && sceneManager.current === this) {
+                workshop.markReviewNoticesSeen(rejected);
+                this._showRejectedReviewNotice(rejected);
+            }
         }).catch(() => {});
+    }
+
+    _showRejectedReviewNotice(stages) {
+        const list = (Array.isArray(stages) ? stages : []).slice().sort((a, b) => {
+            const at = (a.review && Number(a.review.reviewedAt)) || Number(a.updatedAt) || 0;
+            const bt = (b.review && Number(b.review.reviewedAt)) || Number(b.updatedAt) || 0;
+            return bt - at;
+        });
+        if (!list.length) return;
+        const first = list[0];
+        const reason = workshop.normalizeRejectReason(first.rejectReason);
+        const multiple = list.length > 1;
+        let content = '「' + (first.title || '未命名关卡') + '」已驳回：' + reason;
+        if (multiple) {
+            content += '\n另有 ' + (list.length - 1) + ' 个关卡未通过审核，可在“已通关”中查看。';
+        }
+        try {
+            if (typeof wx.showModal !== 'function') throw new Error('showModal unavailable');
+            wx.showModal({
+                title: '关卡审核未通过',
+                content,
+                confirmText: '去修改',
+                cancelText: '知道了',
+                success: (res) => {
+                    if (!res || !res.confirm) return;
+                    GameGlobal.game.sceneManager.switchTo('workshopEditor', {
+                        stageId: first.stageId,
+                    });
+                },
+            });
+        } catch (e) {
+            this._showToast((first.title || '关卡') + '已驳回：' + reason);
+        }
     }
 
     getRenderInterval() {
@@ -562,7 +604,6 @@ class WorkshopScene {
             stage,
             locked: !unlocked,
             needGold: unlocked ? 0 : workshop.PLAZA_UNLOCK_GOLD,
-            rewardedLeft: 0,
             canAd: false,
             canChallenge: false,
             lackGold: false,
@@ -598,8 +639,7 @@ class WorkshopScene {
         if (!drawThemeBackground(ctx, 'mapMineBg', W, H)) {
             fillNightBackground(ctx, W, H);
         } else {
-            ctx.fillStyle = 'rgba(12, 8, 4, 0.32)';
-            ctx.fillRect(0, 0, W, H);
+            fillThemeVeil(ctx, W, H, 0.32);
         }
 
         const top = this._getTopInset();
@@ -673,13 +713,13 @@ class WorkshopScene {
         let sub = '垃圾 ' + (stage.garbageCount || 0)
             + ' · 行 ' + (stage.minLines || 0);
         if (stage.status === workshop.STATUS.rejected) {
-            sub = '已驳回 · ' + sub;
+            sub = '已驳回：' + workshop.normalizeRejectReason(stage.rejectReason);
         } else if (stage.status === workshop.STATUS.delisted) {
             sub = '已下架 · ' + sub;
         }
         ctx.fillStyle = MUTED;
         ctx.font = '12px sans-serif';
-        ctx.fillText(sub, x + 12, y + 48);
+        ctx.fillText(sub, x + 12, y + 48, w - 82);
 
         this._drawMiniBoard(ctx, stage.rows, x + w - 56, y + 10, 4);
     }

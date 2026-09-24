@@ -7,8 +7,6 @@ const { drawGoldenCubeBadge } = require('../js/render/title-decor');
 const { drawThemeButtonSkin } = require('../js/theme/theme-images');
 const goldenBlock = require('./golden-block-manager');
 const { adManager, isRewardedVideoConfigured } = require('./ad-manager');
-const progression = require('./progression-v2');
-
 const DIALOG_MASK = 'rgba(10, 7, 4, 0.62)';
 const LACK_RED = '#ff5c5c';
 const TEAL_BORDER = 'rgba(31, 155, 152, 0.7)';
@@ -132,8 +130,7 @@ function createEntryDialog(stage) {
         fee: 0,
         locked: needGold > 0,
         needGold,
-        rewardedLeft: progression.getRewardedRemaining('officialUnlock'),
-        canAd: lackGold && isRewardedVideoConfigured() === true,
+        canAd: isRewardedVideoConfigured() === true,
         canChallenge: false,
         armed: false,
         lackGold,
@@ -217,12 +214,6 @@ function handleEntryDialogTap(dialog, x, y, hooks) {
     }
 
     if (d.adRect && hitRect(x, y, d.adRect)) {
-        if (d.rewardedLeft <= 0) {
-            if (typeof hooks.onToast === 'function') {
-                hooks.onToast('今日主线视频解锁次数已用完');
-            }
-            return 'handled';
-        }
         if (!d.canAd) {
             if (typeof hooks.onToast === 'function') {
                 hooks.onToast('广告暂不可用');
@@ -231,12 +222,6 @@ function handleEntryDialogTap(dialog, x, y, hooks) {
         }
         adManager.showRewardedVideo()
             .then(() => {
-                if (!progression.consumeRewardedUnlock('officialUnlock')) {
-                    if (typeof hooks.onToast === 'function') {
-                        hooks.onToast('今日主线视频解锁次数已用完');
-                    }
-                    return;
-                }
                 const paid = enterOfficialStage(d.stage.id, { rewardedUnlock: true });
                 if (!paid.ok) {
                     if (typeof hooks.onToast === 'function') {
@@ -331,12 +316,7 @@ function renderEntryDialog(ctx, W, H, dialog) {
 
     if (showAd) {
         d.adRect = { x: px + 20, y: by, w: btnW, h: btnH };
-        _fillEntryBtn(
-            ctx,
-            d.adRect,
-            d.rewardedLeft > 0 ? 'ad' : 'disabled',
-            '观看视频永久解锁（余' + d.rewardedLeft + '）'
-        );
+        _fillEntryBtn(ctx, d.adRect, 'ad', '观看视频永久解锁');
         by += btnH + btnGap;
     }
     if (showChallenge) {

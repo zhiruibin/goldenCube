@@ -1,6 +1,6 @@
 /**
  * StageFailScene - 闯关失败结算
- * 展示本局成绩；支持观看激励视频回退8步 / 免费重玩 / 分享 / 返回关选。
+ * 展示本局成绩；支持重玩本关 / 分享 / 返回关选。
  */
 
 const {
@@ -10,10 +10,8 @@ const {
     SUBTITLE,
     MUTED,
 } = require('../theme/arcade-night');
-const { drawThemeBackground } = require('../theme/theme-images');
+const { drawThemeBackground, fillThemeVeil } = require('../theme/theme-images');
 const goldenBlock = require('../../utils/golden-block-manager');
-const { adManager, isRewardedVideoConfigured } = require('../../utils/ad-manager');
-const rewindManager = require('../../utils/rewind-manager');
 const { achievementManager } = require('../../utils/achievement-manager');
 const stageFailShareCard = require('../../utils/stage-fail-share-card');
 const { Button } = require('../widgets/button');
@@ -25,6 +23,7 @@ const {
     renderCenterToast,
     formatStageEntryButtonLabel,
 } = require('../../utils/stage-entry-ui');
+const { scheduleSettlementInterstitial } = require('../../utils/settlement-interstitial');
 const { buildIsoBlockFaces, drawSolidIsoBlock } = require('../render/iso-block-renderer');
 const {
     preloadResultBlockImages,
@@ -43,6 +42,7 @@ class StageFailScene {
         this._toast = '';
         this._toastUntil = 0;
         this._shareBusy = false;
+        this._interstitial = null;
     }
 
     onEnter(params) {
@@ -56,9 +56,20 @@ class StageFailScene {
         this._result = this._params.result || null;
         preloadResultBlockImages();
         this._buildButtons();
+        this._cancelInterstitial();
+        this._interstitial = scheduleSettlementInterstitial();
     }
 
-    onExit() {}
+    onExit() {
+        this._cancelInterstitial();
+    }
+
+    _cancelInterstitial() {
+        if (this._interstitial) {
+            this._interstitial.cancel();
+            this._interstitial = null;
+        }
+    }
 
     _getTopInset() {
         const sys = (GameGlobal && GameGlobal.game && GameGlobal.game.systemInfo) || {};
@@ -79,26 +90,6 @@ class StageFailScene {
     _showToast(msg) {
         this._toast = msg || '';
         this._toastUntil = Date.now() + 2200;
-    }
-
-    _rewindViaAd() {
-        const pending = rewindManager.load();
-        if (!pending || !this._params.rewindAvailable) return;
-        if (isRewardedVideoConfigured() !== true) return;
-        adManager.showRewardedVideo()
-            .then(() => {
-                const payload = rewindManager.consume();
-                if (!payload) {
-                    this._showToast('回退记录已失效');
-                    return;
-                }
-                const gameParams = Object.assign({}, payload.gameParams || {}, {
-                    assisted: true,
-                    rewindPayload: payload,
-                });
-                GameGlobal.game.sceneManager.replace('game', gameParams);
-            })
-            .catch(() => this._showToast('需完整观看视频，或稍后再试'));
     }
 
     /** 分享本局失败战绩（专用紧凑分享卡，避免截屏顶空白） */
@@ -156,19 +147,6 @@ class StageFailScene {
         const gapY = 10;
 
         const rows = [];
-        const canRewind = !!this._params.rewindAvailable
-            && !!rewindManager.load()
-            && isRewardedVideoConfigured() === true;
-        if (canRewind) {
-            rows.push({
-                text: '观看视频，回退' + rewindManager.REWIND_STEPS + '步',
-                color: '#c89840',
-                skin: 'btnBarAmber',
-                labelColor: '#241408',
-                onClick: () => this._rewindViaAd(),
-            });
-        }
-
         rows.push({
             text: formatStageEntryButtonLabel('重玩本关', this._stage ? this._stage.id : 0),
             color: '#c9a227',
@@ -231,6 +209,7 @@ class StageFailScene {
         for (let i = 0; i < this._buttons.length; i++) {
             const btn = this._buttons[i];
             if (btn.hitTest(x, y)) {
+                this._cancelInterstitial();
                 btn.trigger();
                 return;
             }
@@ -344,8 +323,7 @@ class StageFailScene {
         if (!drawThemeBackground(ctx, 'homeBg', W, H)) {
             fillNightBackground(ctx, W, H);
         } else {
-            ctx.fillStyle = 'rgba(10, 7, 4, 0.42)';
-            ctx.fillRect(0, 0, W, H);
+            fillThemeVeil(ctx, W, H, 0.42);
         }
 
         const topInset = this._getTopInset() - 30;

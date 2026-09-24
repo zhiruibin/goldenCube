@@ -14,7 +14,7 @@ const {
     fillNightBackground,
     drawBrandTitle,
 } = require('../theme/arcade-night');
-const { drawThemeBackground } = require('../theme/theme-images');
+const { drawThemeBackground, fillThemeVeil } = require('../theme/theme-images');
 const challengeUi = require('../../utils/challenge-ui');
 const challengeShareCard = require('../../utils/challenge-share-card');
 
@@ -150,8 +150,7 @@ class ResultScene {
         if (!drawThemeBackground(ctx, 'homeBg', W, H)) {
             fillNightBackground(ctx, W, H);
         } else {
-            ctx.fillStyle = 'rgba(10, 7, 4, 0.42)';
-            ctx.fillRect(0, 0, W, H);
+            fillThemeVeil(ctx, W, H, 0.42);
         }
 
         // 背景装饰：缓慢下落的半透明方块

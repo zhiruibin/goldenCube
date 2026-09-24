@@ -14,7 +14,7 @@ const IconRenderer = require('../render/icon-renderer');
 const { achievementManager } = require('../../utils/achievement-manager');
 const goldenBlock = require('../../utils/golden-block-manager');
 const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
-const { drawThemeBackground, drawThemeImageContain } = require('../theme/theme-images');
+const { drawThemeBackground, drawThemeImageContain, fillThemeVeil } = require('../theme/theme-images');
 const { layoutTabRow } = require('../widgets/tab-layout');
 const { fillNightBackground, drawBrandTitle } = require('../theme/arcade-night');
 
@@ -99,8 +99,7 @@ class RankScene {
         if (!drawThemeBackground(ctx, 'mapMineBg', W, H)) {
             fillNightBackground(ctx, W, H);
         } else {
-            ctx.fillStyle = 'rgba(12, 8, 4, 0.36)';
-            ctx.fillRect(0, 0, W, H);
+            fillThemeVeil(ctx, W, H, 0.36);
         }
 
         drawBrandTitle(ctx, '排行榜', W / 2, this._topInset() + 16, 'bold 28px sans-serif');

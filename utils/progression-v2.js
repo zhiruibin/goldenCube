@@ -1,19 +1,13 @@
 /**
- * 无金币版本的进度与激励视频额度。
+ * 无金币版本的进度。
  * - 金方块仍由 golden-block-manager 管理
- * - 激励视频只授予“指定关卡永久解锁”或“本局回退”
+ * - 激励视频只授予指定关卡永久解锁，不设每日次数
  * - 登录仅累计自然日并解锁纪念徽章，不发放任何资源
  */
 
 const ECONOMY_VERSION_KEY = 'gc_economyVersion';
 const ECONOMY_VERSION = 2;
-const AD_QUOTA_KEY = 'gc_rewardedQuota_v2';
 const LOGIN_KEY = 'gc_loginProgress_v1';
-
-const AD_LIMITS = {
-    officialUnlock: 1,
-    plazaUnlock: 2,
-};
 
 const LOGIN_BADGES = [
     { id: 'login_7', days: 7, name: '初识方界', description: '累计登录 7 天' },
@@ -64,30 +58,6 @@ function migrate() {
     });
     _set(ECONOMY_VERSION_KEY, ECONOMY_VERSION);
     return { changed: true, version: ECONOMY_VERSION };
-}
-
-function _quota() {
-    const day = _beijingDay();
-    const raw = _get(AD_QUOTA_KEY, {}) || {};
-    if (raw.day !== day) return { day, officialUnlock: 0, plazaUnlock: 0 };
-    return {
-        day,
-        officialUnlock: Math.max(0, Number(raw.officialUnlock) || 0),
-        plazaUnlock: Math.max(0, Number(raw.plazaUnlock) || 0),
-    };
-}
-
-function getRewardedRemaining(kind) {
-    const limit = AD_LIMITS[kind] || 0;
-    return Math.max(0, limit - (_quota()[kind] || 0));
-}
-
-function consumeRewardedUnlock(kind) {
-    if (!AD_LIMITS[kind]) return false;
-    const quota = _quota();
-    if (quota[kind] >= AD_LIMITS[kind]) return false;
-    quota[kind] += 1;
-    return _set(AD_QUOTA_KEY, quota);
 }
 
 function getLoginProgress() {
@@ -143,11 +113,8 @@ function recordLoginLocal() {
 
 module.exports = {
     ECONOMY_VERSION,
-    AD_LIMITS,
     LOGIN_BADGES,
     migrate,
-    getRewardedRemaining,
-    consumeRewardedUnlock,
     getLoginProgress,
     recordLogin,
     recordLoginLocal,

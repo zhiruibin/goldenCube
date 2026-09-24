@@ -11,6 +11,7 @@ const {
     drawThemeTiledBackground,
     drawThemeImageContain,
     getThemeImage,
+    fillThemeVeil,
 } = require('../theme/theme-images');
 const IconRenderer = require('../render/icon-renderer');
 const { renderCenterToast } = require('../../utils/stage-entry-ui');
@@ -332,8 +333,7 @@ class WorldMapScene {
                 ctx.drawImage(img, dx, y0, dw, dh);
                 y0 += period;
             }
-            ctx.fillStyle = 'rgba(12, 8, 5, 0.18)';
-            ctx.fillRect(0, 0, W, H);
+            fillThemeVeil(ctx, W, H, 0.18);
             return;
         }
         const tile = Math.round(Math.min(W, H) * 0.38);

@@ -8,6 +8,7 @@ const {
     drawThemeBackground,
     drawThemeButtonSkin,
     getThemeImage,
+    fillThemeVeil,
 } = require('../theme/theme-images');
 const goldenBlock = require('../../utils/golden-block-manager');
 const { Button } = require('../widgets/button');
@@ -827,8 +828,7 @@ class StageSelectScene {
         if (!drawThemeBackground(ctx, 'mapMineBg', W, H)) {
             fillNightBackground(ctx, W, H);
         } else {
-            ctx.fillStyle = 'rgba(12, 8, 4, 0.28)';
-            ctx.fillRect(0, 0, W, H);
+            fillThemeVeil(ctx, W, H, 0.28);
         }
         this._renderFallingBlocks(ctx);
 

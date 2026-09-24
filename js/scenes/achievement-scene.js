@@ -2,7 +2,7 @@
 const { Button } = require('../widgets/button');
 const IconRenderer = require('../render/icon-renderer');
 const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
-const { drawThemeBackground, drawThemeImageContain, getThemeImage } = require('../theme/theme-images');
+const { drawThemeBackground, drawThemeImageContain, getThemeImage, fillThemeVeil } = require('../theme/theme-images');
 const { layoutTabRow } = require('../widgets/tab-layout');
 const { fillNightBackground, drawBrandTitle } = require('../theme/arcade-night');
 const { roundRectPath } = require('../render/board-tiles');
@@ -104,7 +104,7 @@ class AchievementScene {
     render(ctx) {
         const m = this._metrics();
         if (!drawThemeBackground(ctx, 'mapMineBg', m.W, m.H)) fillNightBackground(ctx, m.W, m.H);
-        else { ctx.fillStyle = 'rgba(12,7,3,.42)'; ctx.fillRect(0, 0, m.W, m.H); }
+        else fillThemeVeil(ctx, m.W, m.H, 0.42);
         drawBrandTitle(ctx, '徽章图鉴', m.W / 2, m.titleY, 'bold 27px sans-serif');
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillStyle = 'rgba(245,226,194,.68)'; ctx.font = '11px sans-serif';
@@ -205,7 +205,17 @@ class AchievementScene {
                     ctx.shadowColor = 'rgba(240,181,66,.34)'; ctx.shadowBlur = 8;
                 }
                 const artRadius = radius + 5;
-                if (!badge.owned && !badge.lockedImage) ctx.globalAlpha = .38;
+                const grayLocked = !badge.owned && !badge.lockedImage
+                    && ['chapter', 'plaza', 'memorial'].indexOf(badge.category) >= 0;
+                const dimFallback = !badge.owned && !badge.lockedImage && !grayLocked;
+                const previousFilter = ctx.filter;
+                let filterApplied = false;
+                if (grayLocked && typeof previousFilter === 'string') {
+                    ctx.filter = 'grayscale(1) brightness(.72) contrast(1.15)';
+                    filterApplied = ctx.filter !== previousFilter;
+                } else if (dimFallback) {
+                    ctx.globalAlpha = .38;
+                }
                 if (Number.isInteger(badge.atlasIndex)) {
                     const cols = Math.max(1, badge.atlasCols || 1);
                     const rows = Math.max(1, badge.atlasRows || 1);
@@ -218,8 +228,16 @@ class AchievementScene {
                 } else {
                     ctx.drawImage(image.img, cx - artRadius, cy - artRadius, artRadius * 2, artRadius * 2);
                 }
+                if (filterApplied) ctx.filter = previousFilter;
                 ctx.globalAlpha = 1;
-                if (!badge.owned && !badge.lockedImage) {
+                if (grayLocked && !filterApplied) {
+                    // 不支持 Canvas filter 的运行环境使用饱和度混合降为灰阶，不叠加暗色蒙层。
+                    ctx.save();
+                    ctx.globalCompositeOperation = 'saturation';
+                    ctx.beginPath(); ctx.arc(cx, cy, artRadius, 0, Math.PI * 2);
+                    ctx.fillStyle = '#000'; ctx.fill();
+                    ctx.restore();
+                } else if (dimFallback) {
                     ctx.beginPath(); ctx.arc(cx, cy, radius * .74, 0, Math.PI * 2);
                     ctx.fillStyle = 'rgba(18,20,20,.50)'; ctx.fill();
                 }

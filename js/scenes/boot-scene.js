@@ -26,6 +26,43 @@ class BootScene {
     update(dt) { this._time += Number(dt) || 0; }
     onExit() {}
 
+    /** 高辨识度启动动效：旋转矿灯光环 + 呼吸金方块。 */
+    _drawLoadingSpinner(ctx, cx, cy) {
+        const radius = 19;
+        const segmentCount = 10;
+        const rotation = this._time * 3.4;
+        const pulse = (Math.sin(this._time * 4.2) + 1) / 2;
+
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.lineWidth = 4.5;
+        for (let i = 0; i < segmentCount; i++) {
+            const angle = rotation + i * Math.PI * 2 / segmentCount;
+            const tail = (i + 1) / segmentCount;
+            ctx.strokeStyle = 'rgba(255,200,87,' + (.12 + tail * .82).toFixed(2) + ')';
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, angle, angle + .32);
+            ctx.stroke();
+        }
+
+        // 呼吸光晕让加载状态在深色背景上更醒目。
+        ctx.beginPath();
+        ctx.arc(cx, cy, 10 + pulse * 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,184,55,' + (.10 + pulse * .12).toFixed(2) + ')';
+        ctx.fill();
+
+        // 中心金方块采用菱形轮廓，避免再像普通的三点等待提示。
+        const cubeSize = 6.5 + pulse * 1.2;
+        ctx.translate(cx, cy);
+        ctx.rotate(Math.PI / 4 - this._time * .45);
+        ctx.fillStyle = '#ffc857';
+        ctx.fillRect(-cubeSize / 2, -cubeSize / 2, cubeSize, cubeSize);
+        ctx.strokeStyle = 'rgba(255,235,169,.95)';
+        ctx.lineWidth = 1.2;
+        ctx.strokeRect(-cubeSize / 2, -cubeSize / 2, cubeSize, cubeSize);
+        ctx.restore();
+    }
+
     render(ctx) {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
@@ -70,16 +107,7 @@ class BootScene {
         ctx.font = '13px sans-serif';
         ctx.fillText((this._params && this._params.status) || '正在进入方块世界…', W / 2, H * .51);
 
-        const dotsY = H * .56;
-        for (let i = 0; i < 3; i++) {
-            const phase = (this._time * 2.8 - i * .42);
-            ctx.globalAlpha = .28 + (Math.sin(phase) + 1) * .30;
-            ctx.fillStyle = '#ffc857';
-            ctx.beginPath();
-            ctx.arc(W / 2 + (i - 1) * 18, dotsY, 3, 0, Math.PI * 2);
-            ctx.fill();
-        }
-        ctx.globalAlpha = 1;
+        this._drawLoadingSpinner(ctx, W / 2, H * .57);
     }
 }
 

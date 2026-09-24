@@ -11,7 +11,7 @@ const {
     fillNightBackground,
     drawBrandTitle,
 } = require('../theme/arcade-night');
-const { drawThemeBackground, drawThemeImageContain } = require('../theme/theme-images');
+const { drawThemeBackground, drawThemeImageContain, fillThemeVeil } = require('../theme/theme-images');
 const { MiniTetrisFx } = require('../render/mini-tetris-fx');
 const { FRAME_INTERVAL } = require('../runtime/frame-budget');
 const featureAccess = require('../../utils/feature-access');
@@ -143,8 +143,7 @@ class HomeScene {
             fillNightBackground(ctx, W, H);
         } else {
             // 轻压暗，突出前景 UI
-            ctx.fillStyle = 'rgba(8, 6, 4, 0.22)';
-            ctx.fillRect(0, 0, W, H);
+            fillThemeVeil(ctx, W, H, 0.22);
         }
 
         // 标题牌（整体下移 50px，给顶区留呼吸）

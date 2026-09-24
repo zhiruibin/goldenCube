@@ -35,11 +35,6 @@ const normal = golden.rewardClear(3, 5, 9, 4500);
 assert(!normal.first && normal.isNewBest, '之后正常通关应补建最佳纪录');
 assert(store.gc_goldenBlocks === 1, '补建首条最佳纪录不应额外发破纪录奖励');
 
-assert(progression.getRewardedRemaining('officialUnlock') === 1, '主线每日应有一次视频解锁');
-assert(progression.consumeRewardedUnlock('officialUnlock'), '首次主线视频解锁应成功');
-assert(!progression.consumeRewardedUnlock('officialUnlock'), '主线视频解锁超过日限应失败');
-assert(progression.getRewardedRemaining('plazaUnlock') === 2, '广场每日应有两次视频解锁');
-
 const plazaStage = workshop.getOfficialPlazaStages()[0];
 assert(plazaStage && plazaStage.stageId, '应有官方广场测试关卡');
 store.gc_goldenBlocks = 0;

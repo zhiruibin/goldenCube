@@ -152,7 +152,8 @@ function renderOverlay(ctx, width, height) {
 
     ctx.fillStyle = 'rgba(239,220,186,.68)';
     ctx.font = '12px sans-serif';
-    ctx.fillText(progress > 0 ? (progress + '%') : '准备资源…', W / 2, y + 91);
+    // 微信回调在部分机型会给出长小数；整数百分比更稳定、也更容易扫读。
+    ctx.fillText(progress > 0 ? (Math.round(progress) + '%') : '准备资源…', W / 2, y + 91);
     ctx.restore();
 }
 

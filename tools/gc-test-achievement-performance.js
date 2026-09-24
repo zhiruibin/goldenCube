@@ -55,6 +55,9 @@ const AchievementScene = require('../js/scenes/achievement-scene');
 const scene = new AchievementScene();
 scene.onEnter({ category: 'chapter' });
 scene.render(ctx); // 建立可见区域与滚动边界；允许首次快照读取。
+assert(scene._badges.filter((badge) => Number(String(badge.id).replace('chapter_', '')) >= 4)
+    .every((badge) => badge.lockedImage === 'badgeChapterLockedAtlasV1'),
+'第 4–20 章全部绑定专用未获得徽章图集');
 
 storageReads = 0;
 for (let i = 0; i < 5; i++) scene.render(ctx);

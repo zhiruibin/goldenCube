@@ -7,7 +7,7 @@ const { achievementManager } = require('../../utils/achievement-manager');
 const challengeUi = require('../../utils/challenge-ui');
 const challengeShareCard = require('../../utils/challenge-share-card');
 const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
-const { drawThemeBackground, drawThemeImageContain, drawThemeButtonSkin } = require('../theme/theme-images');
+const { drawThemeBackground, drawThemeImageContain, drawThemeButtonSkin, fillThemeVeil } = require('../theme/theme-images');
 const { layoutTabRow } = require('../widgets/tab-layout');
 const { fillNightBackground, drawBrandTitle } = require('../theme/arcade-night');
 const featureAccess = require('../../utils/feature-access');
@@ -236,8 +236,7 @@ class ChallengeScene {
     if (!drawThemeBackground(ctx, 'mapMineBg', W, H)) {
       fillNightBackground(ctx, W, H);
     } else {
-      ctx.fillStyle = 'rgba(12, 8, 4, 0.36)';
-      ctx.fillRect(0, 0, W, H);
+      fillThemeVeil(ctx, W, H, 0.36);
     }
 
     const titleY = this._topInset() + 18;

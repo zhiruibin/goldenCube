@@ -1,21 +1,25 @@
 /**
  * ShopScene - 商店场景
- * 职责：展示方块皮肤、棋盘皮肤、音效包，按进度自动解锁并装备
+ * 职责：方块、棋盘和背景主题。已获得或试用中可直接装备；未获得弹出说明，广告可用时可看视频试用 3 天。
  */
 
 const { Button } = require('../widgets/button');
 const IconRenderer = require('../render/icon-renderer');
-const { blockSkins, boardSkins, soundPacks, soundPackProfiles } = require('../../data/skins');
+const { blockSkins, boardSkins, soundPackProfiles } = require('../../data/skins');
+const { themeBackgrounds } = require('../../data/themes');
 const { LIST_FRAME_INTERVAL } = require('../runtime/frame-budget');
-const { drawThemeBackground, drawThemeImageContain } = require('../theme/theme-images');
+const { drawThemeBackground, drawThemeImageContain, drawThemeButtonSkin, fillThemeVeil } = require('../theme/theme-images');
 const { layoutTabRow } = require('../widgets/tab-layout');
-const { fillNightBackground, drawBrandTitle } = require('../theme/arcade-night');
+const { fillNightBackground, drawBrandTitle, SUBTITLE } = require('../theme/arcade-night');
+const { fillGoldBorderedPanel } = require('../../utils/stage-entry-ui');
+const { adManager, isRewardedVideoConfigured } = require('../../utils/ad-manager');
+const skinTrial = require('../../utils/skin-trial');
 
 class ShopScene {
     constructor() {
         this._params = null;
         this._buttons = [];
-        this._tab = 'block'; // 'block' | 'board' | 'sound'
+        this._tab = 'block'; // 'block' | 'board' | 'theme'
         this._scrollY = 0;
         this._tabAreas = [];
         // 缓存本地存储数据，避免渲染帧内频繁读 storage
@@ -26,6 +30,10 @@ class ShopScene {
         this._touchStartY = 0;
         this._isScrolling = false;
         this._suppressTap = false;
+        this._detail = null;
+        this._detailBusy = false;
+        this._trialTick = 0;
+        this._trialByTab = { block: null, board: null, theme: null };
     }
 
     onEnter(params) {
@@ -42,13 +50,9 @@ class ShopScene {
 
     /** 从本地存储刷新一次缓存（进入场景时调用） */
     _refreshCache() {
+        skinTrial.retireSoundShopTab();
         this._owned = wx.getStorageSync('gc_ownedItems') || [];
-        this._equipped = {
-            block: wx.getStorageSync('gc_equipped_block') || 'default',
-            board: wx.getStorageSync('gc_equipped_board') || 'default',
-            sound: wx.getStorageSync('gc_equipped_sound') || 'default',
-        };
-        const all = blockSkins.concat(boardSkins, soundPacks);
+        const all = blockSkins.concat(boardSkins, themeBackgrounds);
         const nextOwned = this._owned.slice();
         all.forEach((item) => {
             if (nextOwned.indexOf(item.id) >= 0 || item.unlockCondition === 'default') return;
@@ -58,6 +62,17 @@ class ShopScene {
             this._owned = nextOwned;
             wx.setStorageSync('gc_ownedItems', nextOwned);
         }
+        skinTrial.settle();
+        this._equipped = {
+            block: wx.getStorageSync('gc_equipped_block') || 'default',
+            board: wx.getStorageSync('gc_equipped_board') || 'default',
+            theme: wx.getStorageSync('gc_equipped_theme') || 'default',
+        };
+        this._trialByTab = {
+            block: skinTrial.getActive('block'),
+            board: skinTrial.getActive('board'),
+            theme: skinTrial.getActive('theme'),
+        };
     }
 
     onPause() {}
@@ -68,7 +83,22 @@ class ShopScene {
         return LIST_FRAME_INTERVAL;
     }
 
-    update(dt) {}
+    update() {
+        const now = Date.now();
+        if (now - this._trialTick < 1000) return;
+        this._trialTick = now;
+        skinTrial.settle();
+        this._equipped = {
+            block: wx.getStorageSync('gc_equipped_block') || 'default',
+            board: wx.getStorageSync('gc_equipped_board') || 'default',
+            theme: wx.getStorageSync('gc_equipped_theme') || 'default',
+        };
+        this._trialByTab = {
+            block: skinTrial.getActive('block'),
+            board: skinTrial.getActive('board'),
+            theme: skinTrial.getActive('theme'),
+        };
+    }
 
     render(ctx) {
         const W = GameGlobal.game.width;
@@ -78,8 +108,7 @@ class ShopScene {
         if (!drawThemeBackground(ctx, 'mapMineBg', W, H)) {
             fillNightBackground(ctx, W, H);
         } else {
-            ctx.fillStyle = 'rgba(12, 8, 4, 0.36)';
-            ctx.fillRect(0, 0, W, H);
+            fillThemeVeil(ctx, W, H, 0.36);
         }
 
         const titleY = this._topInset() + 16;
@@ -94,6 +123,7 @@ class ShopScene {
         for (const btn of this._buttons) {
             btn.render(ctx);
         }
+        this._renderDetail(ctx);
     }
 
     _renderTabs(ctx) {
@@ -101,7 +131,7 @@ class ShopScene {
         const tabs = [
             { key: 'block', label: '方块' },
             { key: 'board', label: '棋盘' },
-            { key: 'sound', label: '音效' },
+            { key: 'theme', label: '主题' },
         ];
         const layout = layoutTabRow(W, tabs.length, { gap: 0, side: 12, height: 40, maxWidth: 90 });
         const tabW = layout.width;
@@ -184,9 +214,8 @@ class ShopScene {
                 this._drawBoardPreview(ctx, item, listX + 15, y + 14, 44);
             }
 
-            // 音效包预览（基于真实合成参数的动态频率条）
-            if (this._tab === 'sound') {
-                this._drawSoundPreview(ctx, item, listX + 15, y + 14, 44);
+            if (this._tab === 'theme') {
+                this._drawThemePreview(ctx, item, listX + 15, y + 14, 44);
             }
 
             // 名称和描述（描述按右侧文案预留空间，超长自动省略号截断，避免与条件/价格重叠）
@@ -198,12 +227,11 @@ class ShopScene {
 
             const isOwned = owned.includes(item.id) || item.unlockCondition === 'default';
             const isEquipped = equipped === item.id;
+            const trialLeft = this._trialRemainText(item.id);
 
-            // 先确定右侧状态/价格文案及其占用宽度
             let rightText = '';
             let rightFont = '14px sans-serif';
             let rightColor = '#ffd700';
-
             if (isEquipped) {
                 rightText = '使用中';
                 rightFont = 'bold 14px sans-serif';
@@ -212,8 +240,11 @@ class ShopScene {
                 rightText = '装备';
                 rightFont = '14px sans-serif';
                 rightColor = '#c9a227';
+            } else if (trialLeft) {
+                rightText = trialLeft;
+                rightFont = '12px sans-serif';
+                rightColor = '#ffd700';
             } else if (item.unlockCondition) {
-                // 条件解锁商品：右侧只显示简短标签，具体条件已由描述体现，避免两段长文案重叠
                 rightText = '条件解锁';
                 rightFont = '12px sans-serif';
                 rightColor = '#a0a0a0';
@@ -223,9 +254,12 @@ class ShopScene {
             }
 
             ctx.font = rightFont;
-            const rightW = ctx.measureText(rightText).width;
+            let rightW = ctx.measureText(rightText).width;
+            if (trialLeft && isEquipped) {
+                ctx.font = '12px sans-serif';
+                rightW = Math.max(rightW, ctx.measureText(trialLeft).width);
+            }
 
-            // 描述：最大宽度 = 右侧文案左侧预留 8px
             ctx.font = '12px sans-serif';
             const descX = listX + 80;
             const descMaxW = (listX + listW - 15 - rightW - 8) - descX;
@@ -233,11 +267,20 @@ class ShopScene {
             ctx.fillStyle = 'rgba(255,255,255,0.4)';
             ctx.fillText(desc, descX, y + 34);
 
-            // 右侧文案（右对齐）
-            ctx.font = rightFont;
-            ctx.fillStyle = rightColor;
+            const rightX = listX + listW - 15;
             ctx.textAlign = 'right';
-            ctx.fillText(rightText, listX + listW - 15, y + itemH / 2 - 7);
+            if (trialLeft && isEquipped) {
+                ctx.font = 'bold 14px sans-serif';
+                ctx.fillStyle = '#8fd36a';
+                ctx.fillText('使用中', rightX, y + 22);
+                ctx.font = '12px sans-serif';
+                ctx.fillStyle = '#ffd700';
+                ctx.fillText(trialLeft, rightX, y + 46);
+            } else {
+                ctx.font = rightFont;
+                ctx.fillStyle = rightColor;
+                ctx.fillText(rightText, rightX, y + itemH / 2 - 7);
+            }
         }
 
         ctx.restore();
@@ -627,6 +670,22 @@ class ShopScene {
         ctx.restore();
     }
 
+    _drawThemePreview(ctx, item, x, y, size) {
+        ctx.save();
+        this._roundRect(ctx, x, y, size, size, 6);
+        ctx.clip();
+        const drawn = drawThemeImageContain(ctx, item.listKey, x + size / 2, y + size / 2, size, size);
+        if (!drawn || !drawn.drawn) {
+            ctx.fillStyle = '#3a2a1c';
+            ctx.fillRect(x, y, size, size);
+        }
+        ctx.restore();
+        ctx.strokeStyle = 'rgba(31, 155, 152, 0.7)';
+        ctx.lineWidth = 1;
+        this._roundRect(ctx, x, y, size, size, 6);
+        ctx.stroke();
+    }
+
     /**
      * 绘制音效包预览（基于真实合成参数的动态频率条）
      * 从 soundPackProfiles 读取各动作合成参数，映射为高低不同的彩色音条并轻微脉动
@@ -689,6 +748,10 @@ class ShopScene {
             this._suppressTap = false;
             return;
         }
+        if (this._detail) {
+            this._handleDetailTap(x, y);
+            return;
+        }
         // Tab 切换
         for (const area of this._tabAreas) {
             if (x >= area.x && x <= area.x + area.w &&
@@ -725,7 +788,6 @@ class ShopScene {
         const items = this._currentItems();
 
         const owned = this._owned;
-        const equippedKey = 'gc_equipped_' + this._tab;
         const equipped = this._equipped[this._tab] || 'default';
 
         for (let i = 0; i < items.length; i++) {
@@ -736,39 +798,172 @@ class ShopScene {
             if (tapY < itemY || tapY > itemY + itemH) continue;
 
             const isOwned = owned.indexOf(item.id) >= 0 || item.unlockCondition === 'default';
-            if (isOwned) {
-                if (equipped !== item.id) {
-                    this._equipped[this._tab] = item.id;
-                    wx.setStorageSync(equippedKey, item.id);
-                    if (this._tab === 'sound') {
-                        try {
-                            const audio = GameGlobal.game && GameGlobal.game.audioManager;
-                            if (audio && typeof audio.applySoundPack === 'function') {
-                                audio.applySoundPack(item.id);
-                                if (typeof audio.playHardDrop === 'function') audio.playHardDrop();
-                            }
-                        } catch (e) { /* ignore */ }
-                    }
-                    wx.showToast({ title: '已装备：' + item.name, icon: 'none' });
-                } else {
-                    wx.showToast({ title: '正在使用中', icon: 'none' });
-                }
+            if (isOwned || skinTrial.isActive(this._tab, item.id)) {
+                this._equipItem(item, isOwned && equipped === item.id);
                 return;
             }
 
-            // 未拥有：先判断是否满足条件解锁
             if (this._canUnlockByCondition(item)) {
                 this._owned = owned.concat(item.id);
                 wx.setStorageSync('gc_ownedItems', this._owned);
-                this._equipped[this._tab] = item.id;
-                wx.setStorageSync(equippedKey, item.id);
-                wx.showToast({ title: '已解锁：' + item.name, icon: 'none' });
+                skinTrial.settle();
+                this._equipItem(item, false, '已解锁：' + item.name);
                 return;
             }
 
-            wx.showToast({ title: this._unlockHint(item), icon: 'none' });
+            this._detail = item;
+            this._detailBusy = false;
             return;
         }
+    }
+
+    /** 装备已拥有或试用中的皮肤。已拥有且正在使用时只提示。 */
+    _equipItem(item, alreadyUsing, toastTitle) {
+        const equippedKey = 'gc_equipped_' + this._tab;
+        const equipped = this._equipped[this._tab] || 'default';
+        if (alreadyUsing || equipped === item.id) {
+            wx.showToast({ title: '正在使用中', icon: 'none' });
+            return;
+        }
+        this._equipped[this._tab] = item.id;
+        wx.setStorageSync(equippedKey, item.id);
+        if (this._tab === 'sound') {
+            try {
+                const audio = GameGlobal.game && GameGlobal.game.audioManager;
+                if (audio && typeof audio.applySoundPack === 'function') {
+                    audio.applySoundPack(item.id);
+                    if (typeof audio.playHardDrop === 'function') audio.playHardDrop();
+                }
+            } catch (e) { /* ignore */ }
+        }
+        wx.showToast({ title: toastTitle || ('已装备：' + item.name), icon: 'none' });
+    }
+
+    _trialRemainText(skinId) {
+        const slot = this._trialByTab && this._trialByTab[this._tab];
+        if (!slot || slot.skinId !== skinId) return '';
+        const left = slot.expiresAt - Date.now();
+        if (left <= 0) return '';
+        return '剩' + skinTrial.formatRemaining(left);
+    }
+
+    _detailLayout() {
+        const W = GameGlobal.game.width;
+        const H = GameGlobal.game.height;
+        const bw = Math.min(300, W * 0.82);
+        const btnH = 44;
+        const btnGap = 10;
+        const showTrial = isRewardedVideoConfigured() === true;
+        const bh = 108 + btnH + (showTrial ? btnH + btnGap : 0);
+        const px = (W - bw) / 2;
+        const py = Math.max(this._topInset() + 24, (H - bh) / 2);
+        const btnW = bw - 40;
+        let by = py + 96;
+        const trial = showTrial ? { x: px + 20, y: by, w: btnW, h: btnH } : null;
+        if (showTrial) by += btnH + btnGap;
+        const close = { x: px + 20, y: by, w: btnW, h: btnH };
+        return { px: px, py: py, bw: bw, bh: bh, trial: trial, close: close };
+    }
+
+    _renderDetail(ctx) {
+        if (!this._detail) return;
+        const W = GameGlobal.game.width;
+        const H = GameGlobal.game.height;
+        const box = this._detailLayout();
+        ctx.fillStyle = 'rgba(10, 7, 4, 0.62)';
+        ctx.fillRect(0, 0, W, H);
+        fillGoldBorderedPanel(ctx, box.px, box.py, box.bw, box.bh, 12);
+
+        ctx.fillStyle = '#fff8ef';
+        ctx.font = 'bold 18px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(this._detail.name || '皮肤', W / 2, box.py + 36);
+
+        ctx.fillStyle = SUBTITLE;
+        ctx.font = '14px sans-serif';
+        ctx.fillText(this._unlockHint(this._detail), W / 2, box.py + 68);
+
+        if (box.trial) {
+            this._drawVideoTrialButton(ctx, box.trial);
+        }
+        this._drawBrownButton(ctx, box.close, '关闭');
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'alphabetic';
+    }
+
+    _drawVideoTrialButton(ctx, rect) {
+        const drawn = drawThemeButtonSkin(ctx, 'btnBarVideo', rect.x, rect.y, rect.w, rect.h);
+        if (!drawn) {
+            ctx.fillStyle = '#c9a227';
+            this._roundRect(ctx, rect.x, rect.y, rect.w, rect.h, 8);
+            ctx.fill();
+        }
+        ctx.fillStyle = '#241408';
+        ctx.font = 'bold 15px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = 'rgba(0,0,0,0.28)';
+        ctx.shadowBlur = 2;
+        ctx.shadowOffsetY = 1;
+        ctx.fillText('试用 3 天', rect.x + rect.w * 0.62, rect.y + rect.h / 2 + 1);
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
+    }
+
+    _drawBrownButton(ctx, rect, text) {
+        const drawn = drawThemeButtonSkin(ctx, 'btnBarBrown', rect.x, rect.y, rect.w, rect.h);
+        if (!drawn) {
+            ctx.fillStyle = '#5a4030';
+            this._roundRect(ctx, rect.x, rect.y, rect.w, rect.h, 8);
+            ctx.fill();
+        }
+        ctx.fillStyle = '#fff8ef';
+        ctx.font = 'bold 15px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, rect.x + rect.w / 2, rect.y + rect.h / 2 + 1);
+    }
+
+    _hitRect(x, y, rect) {
+        return !!(rect && x >= rect.x && x <= rect.x + rect.w && y >= rect.y && y <= rect.y + rect.h);
+    }
+
+    _handleDetailTap(x, y) {
+        const box = this._detailLayout();
+        if (box.trial && this._hitRect(x, y, box.trial)) {
+            this._startTrialFromDialog();
+            return;
+        }
+        if (this._hitRect(x, y, box.close) || !this._hitRect(x, y, {
+            x: box.px, y: box.py, w: box.bw, h: box.bh,
+        })) {
+            this._detail = null;
+            this._detailBusy = false;
+        }
+    }
+
+    _startTrialFromDialog() {
+        if (this._detailBusy || !this._detail) return;
+        if (isRewardedVideoConfigured() !== true) return;
+        const item = this._detail;
+        const tab = this._tab;
+        this._detailBusy = true;
+        adManager.showRewardedVideo()
+            .then(() => {
+                this._detailBusy = false;
+                skinTrial.startTrial(tab, item.id);
+                this._refreshCache();
+                if (this._detail && this._detail.id === item.id) this._detail = null;
+                wx.showToast({ title: '已开始试用', icon: 'none' });
+            })
+            .catch((err) => {
+                this._detailBusy = false;
+                const msg = err && err.message ? err.message : '';
+                const title = msg.indexOf('未完整观看') >= 0 ? '需看完视频才能试用' : '视频暂不可用';
+                wx.showToast({ title: title, icon: 'none' });
+            });
     }
 
     /** 判断是否满足非购买类解锁条件 */
@@ -834,6 +1029,7 @@ class ShopScene {
     }
 
     handleTouchMove(identifier, x, y) {
+        if (this._detail) return;
         if (identifier !== this._touchId) return;
         const dx = x - this._touchStartX;
         const dy = y - this._touchStartY;
@@ -872,7 +1068,8 @@ class ShopScene {
     _currentItems() {
         if (this._tab === 'block') return blockSkins;
         if (this._tab === 'board') return boardSkins;
-        return soundPacks;
+        if (this._tab === 'theme') return themeBackgrounds;
+        return [];
     }
 }
 

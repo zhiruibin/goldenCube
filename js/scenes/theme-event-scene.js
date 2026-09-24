@@ -1,7 +1,7 @@
 /** 中秋专题关卡页：先完成章节式页面，关卡内容后续逐关确定。 */
 const { Button } = require('../widgets/button');
 const { fillNightBackground } = require('../theme/arcade-night');
-const { drawThemeBackground, getThemeImage } = require('../theme/theme-images');
+const { drawThemeBackground, getThemeImage, fillThemeVeil } = require('../theme/theme-images');
 const { roundRectPath } = require('../render/board-tiles');
 const IconRenderer = require('../render/icon-renderer');
 const themeEventManager = require('../../utils/theme-event-manager');
@@ -184,7 +184,7 @@ class ThemeEventScene {
     render(ctx) {
         const m = this._metrics();
         if (!drawThemeBackground(ctx, 'mapMineBg', m.W, m.H)) fillNightBackground(ctx, m.W, m.H);
-        else { ctx.fillStyle = 'rgba(16,9,3,.30)'; ctx.fillRect(0, 0, m.W, m.H); }
+        else fillThemeVeil(ctx, m.W, m.H, 0.3);
         this._drawMoonGlow(ctx, m.W - 58, m.headerY + 25);
 
         ctx.textAlign = 'left'; ctx.textBaseline = 'middle';

@@ -8,7 +8,7 @@ const {
     drawBrandTitle,
     MUTED,
 } = require('../theme/arcade-night');
-const { drawThemeBackground, drawThemeImageContain } = require('../theme/theme-images');
+const { drawThemeBackground, drawThemeImageContain, fillThemeVeil } = require('../theme/theme-images');
 const workshop = require('../../utils/workshop-manager');
 const { drawGarbageLayoutCell } = require('../render/garbage-cell');
 const {
@@ -392,8 +392,7 @@ class WorkshopEditorScene {
         if (!drawThemeBackground(ctx, 'mapMineBg', W, H)) {
             fillNightBackground(ctx, W, H);
         } else {
-            ctx.fillStyle = 'rgba(12, 8, 4, 0.4)';
-            ctx.fillRect(0, 0, W, H);
+            fillThemeVeil(ctx, W, H, 0.4);
         }
 
         const titleY = this._titleY != null ? this._titleY : 80;

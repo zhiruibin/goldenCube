@@ -10,10 +10,9 @@ const {
     MUTED,
     ACCENT,
 } = require('../theme/arcade-night');
-const { drawThemeBackground, drawThemeButtonSkin } = require('../theme/theme-images');
+const { drawThemeBackground, drawThemeButtonSkin, fillThemeVeil } = require('../theme/theme-images');
 const workshop = require('../../utils/workshop-manager');
 const goldenBlock = require('../../utils/golden-block-manager');
-const progression = require('../../utils/progression-v2');
 const {
     applyShortageHighlight,
     renderEntryDialog,
@@ -568,15 +567,12 @@ class PlazaScene {
 
     _rejectReview(stage) {
         try {
-            wx.showModal({
-                title: '驳回关卡',
-                content: '请填写驳回原因',
-                editable: true,
-                placeholderText: '例如：标题或布局不合规',
-                confirmText: '驳回',
+            wx.showActionSheet({
+                itemList: workshop.REJECT_REASONS.slice(),
                 success: (res) => {
-                    if (!res || !res.confirm) return;
-                    const reason = String(res.content || '').trim() || '未通过审核';
+                    if (!res || res.tapIndex == null) return;
+                    const reason = workshop.REJECT_REASONS[res.tapIndex] || '其他';
+                    this._showToast('处理中…');
                     Promise.resolve(workshop.rejectReview(stage.stageId, reason)).then((result) => {
                         if (!result || !result.success) {
                             this._showToast((result && result.errMsg) || '驳回失败');
@@ -707,8 +703,7 @@ class PlazaScene {
             stage,
             locked: !unlocked,
             needGold: unlocked ? 0 : workshop.PLAZA_UNLOCK_GOLD,
-            rewardedLeft: progression.getRewardedRemaining('plazaUnlock'),
-            canAd: lackGold && isRewardedVideoConfigured() === true,
+            canAd: !unlocked && isRewardedVideoConfigured() === true,
             canChallenge: false,
             lackGold,
         };
@@ -859,8 +854,7 @@ class PlazaScene {
         if (!drawThemeBackground(ctx, 'mapMineBg', W, H)) {
             fillNightBackground(ctx, W, H);
         } else {
-            ctx.fillStyle = 'rgba(12, 8, 4, 0.32)';
-            ctx.fillRect(0, 0, W, H);
+            fillThemeVeil(ctx, W, H, 0.32);
         }
 
         const top = this._getTopInset();
@@ -1026,16 +1020,8 @@ class PlazaScene {
                 return;
             }
             if (this._hit(x, y, r.ad)) {
-                if (d.rewardedLeft <= 0) {
-                    this._showToast('今日广场视频解锁次数已用完');
-                    return;
-                }
                 adManager.showRewardedVideo()
                     .then(() => {
-                        if (!progression.consumeRewardedUnlock('plazaUnlock')) {
-                            this._showToast('今日广场视频解锁次数已用完');
-                            return;
-                        }
                         const paid = workshop.enterPlazaStage(d.stage.stageId, { rewardedUnlock: true });
                         if (!paid.ok) {
                             this._showToast(workshop.plazaEntryShortageText(paid));

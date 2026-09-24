@@ -18,6 +18,7 @@ const KEYS = {
     authorShareDaily: 'gc_workshop_authorShareDaily',
     plazaCache: 'gc_workshop_plazaCache', // { [stageId]: stageDoc }
     deletedStages: 'gc_workshop_deletedStages', // 离线删除墓碑，防止云端恢复时复活
+    reviewNoticeSeen: 'gc_workshop_reviewNoticeSeen', // { [stageId]: reviewedAt/status token }
 };
 
 const FREE_SLOTS = 3;
@@ -48,6 +49,34 @@ const STATUS = {
     rejected: 'rejected',
     delisted: 'delisted',
 };
+
+/** 审核拒绝原因固定枚举；客户端与云函数保持同一口径。 */
+const REJECT_REASONS = ['过于简单', '过于复杂', '其他'];
+
+function normalizeRejectReason(reason) {
+    const value = String(reason || '').trim();
+    return REJECT_REASONS.indexOf(value) >= 0 ? value : '其他';
+}
+
+function _reviewNoticeToken(stage) {
+    if (!stage) return '';
+    const reviewedAt = stage.review && Number(stage.review.reviewedAt);
+    return [stage.status || '', reviewedAt || stage.updatedAt || 0, stage.rejectReason || ''].join('|');
+}
+
+function listUnseenRejectedStages() {
+    const seen = _loadJson(KEYS.reviewNoticeSeen, {}) || {};
+    return listStages().filter((stage) => stage && stage.status === STATUS.rejected
+        && seen[stage.stageId] !== _reviewNoticeToken(stage));
+}
+
+function markReviewNoticesSeen(stages) {
+    const seen = _loadJson(KEYS.reviewNoticeSeen, {}) || {};
+    (Array.isArray(stages) ? stages : []).forEach((stage) => {
+        if (stage && stage.stageId) seen[stage.stageId] = _reviewNoticeToken(stage);
+    });
+    _saveJson(KEYS.reviewNoticeSeen, seen);
+}
 
 function _today() {
     const d = new Date();
@@ -508,7 +537,10 @@ function approveReview(stageId) {
 }
 
 function rejectReview(stageId, reason) {
-    return require('./cloud-service').cloudService.rejectWorkshopStage(stageId, reason);
+    return require('./cloud-service').cloudService.rejectWorkshopStage(
+        stageId,
+        normalizeRejectReason(reason)
+    );
 }
 
 function syncMyReviewStatuses() {
@@ -1152,6 +1184,10 @@ function getSubmitRemaining() {
 
 module.exports = {
     STATUS,
+    REJECT_REASONS,
+    normalizeRejectReason,
+    listUnseenRejectedStages,
+    markReviewNoticesSeen,
     FREE_SLOTS,
     MAX_SLOTS,
     SLOT_EXPAND_COST,

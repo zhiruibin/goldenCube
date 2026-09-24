@@ -10,7 +10,7 @@ const { EffectRenderer } = require('../render/effect-renderer');
 const { BackgroundEffects } = require('../render/background-effects');
 const { DPadButton } = require('../widgets/dpad-button');
 const { Button } = require('../widgets/button');
-const { drawThemeBackground, drawThemeButtonSkin, drawThemeButtonSkin9Slice } = require('../theme/theme-images');
+const { drawThemeBackground, drawThemeButtonSkin, drawThemeButtonSkin9Slice, fillThemeVeil } = require('../theme/theme-images');
 const { fillNightBackground } = require('../theme/arcade-night');
 const { PIECES, PIECE_COLORS } = require('../../data/pieces');
 const { achievementManager } = require('../../utils/achievement-manager');
@@ -23,7 +23,7 @@ const goldenBlock = require('../../utils/golden-block-manager');
 const { normalizeGameParams } = require('../../utils/play-context');
 const { stagePlayStack, stageSelectStack } = require('../../utils/stage-nav');
 const endless = require('../../utils/endless-manager');
-const rewindManager = require('../../utils/rewind-manager');
+const skinTrial = require('../../utils/skin-trial');
 
 /** 硬降短时冷却：防止连点/多指瞬时误砸下一块（不改按钮布局） */
 const HARD_DROP_COOLDOWN_MS = 200;
@@ -62,10 +62,8 @@ class GameScene {
         this._inputBlockUntil = 0;
         this._hardDropReadyAt = 0;
 
-        // 确定性局种子：保证本局方块序列稳定，并供失败回退恢复同一序列。
+        // 确定性局种子：保证本局方块序列稳定。
         this._runSeed = null;
-        this._rewindHistory = [];
-        this._rewindPayload = null;
 
         // 按键震动节流
         this._lastActionVibrateTime = 0;
@@ -94,6 +92,7 @@ class GameScene {
     }
 
     onEnter(params) {
+        skinTrial.settle();
         this._params = normalizeGameParams(params);
         this._playContext = this._params.playContext || 'stage';
         this._mode = 'stage';
@@ -104,9 +103,6 @@ class GameScene {
         this._themeEventStageId = Number(this._params.themeEventStageId) || 0;
         this._entryPaid = Number(this._params.entryPaid) || 0;
         this._assisted = !!this._params.assisted;
-        this._rewindPayload = this._params.rewindPayload || null;
-        this._rewindHistory = [];
-        if (!this._rewindPayload) rewindManager.clear();
         this._workshop = !!this._params.workshop;
         this._workshopStageId = this._params.workshopStageId || null;
         this._workshopRows = this._params.workshopRows || null;
@@ -125,8 +121,7 @@ class GameScene {
         this._stageFailRefunded = false;
         this._stageSettleLocked = false;
         this._pieceCount = 0;
-        this._stageStartTime = Date.now() - Math.max(0,
-            Number(this._rewindPayload && this._rewindPayload.timeMs) || 0);
+        this._stageStartTime = Date.now();
         this._stageInfo = null;
         this._challengeId = this._params.challengeId || '';
         this._challengeMode = this._params.challengeKind || this._params.challengeMode || '';
@@ -187,14 +182,7 @@ class GameScene {
         this._collapseHintLeft = 0;
 
         this._calculateLayout();
-        // 每局生成随机种子；兼容读取旧版回退记录中的 replaySeed 字段。
-        const savedRunSeed = this._rewindPayload
-            && (this._rewindPayload.runSeed != null
-                ? this._rewindPayload.runSeed
-                : this._rewindPayload.replaySeed);
-        this._runSeed = Number.isFinite(Number(savedRunSeed))
-            ? Number(savedRunSeed)
-            : Math.floor(Math.random() * 0x7fffffff);
+        this._runSeed = Math.floor(Math.random() * 0x7fffffff);
         this._initEngine();
         this._initRenderers();
         this._initUI();
@@ -220,11 +208,7 @@ class GameScene {
         // 启动引擎（init 已在 _initEngine 内完成；此处不可重复 init，否则清空闯关垃圾布局）
         // 闯关：先播垃圾掉落开场，再 start
         this._bindEngineEvents();
-        if (this._rewindPayload) {
-            this._startGameplayAfterIntro();
-            this._captureRewindCheckpoint();
-            rewindManager.clear();
-        } else if (this._endless && this._endlessResume) {
+        if (this._endless && this._endlessResume) {
             this._startGameplayAfterIntro();
         } else if (this._mode === 'stage' && this._engine) {
             this._beginStageIntro();
@@ -496,8 +480,7 @@ class GameScene {
         if (!drawThemeBackground(ctx, 'homeBg', W, H)) {
             fillNightBackground(ctx, W, H);
         } else {
-            ctx.fillStyle = 'rgba(10, 7, 4, 0.42)';
-            ctx.fillRect(0, 0, W, H);
+            fillThemeVeil(ctx, W, H, 0.42);
         }
 
         // 高潮特效震屏：整体画面位移（背景特效/棋盘/方块/UI 全部跟随）
@@ -688,10 +671,6 @@ class GameScene {
                     dropIntervalMs: stage.dropIntervalMs,
                     firstPiece: stage.firstPiece,
                 });
-                if (this._rewindPayload && this._rewindPayload.snapshot) {
-                    this._engine.restoreSnapshot(this._rewindPayload.snapshot, { endless: false });
-                    this._pieceCount = Math.max(0, Number(this._rewindPayload.pieceCount) || 0);
-                }
             }
         } else if (this._mode === 'stage' && this._workshop && (this._workshopRows || this._endless)) {
             const rows = this._workshopRows || {};
@@ -701,10 +680,6 @@ class GameScene {
                 endless: !!this._endless,
                 lineFactory: this._endless ? () => endless.generateGarbageLine() : null,
             });
-            if (this._rewindPayload && this._rewindPayload.snapshot) {
-                this._engine.restoreSnapshot(this._rewindPayload.snapshot, { endless: false });
-                this._pieceCount = Math.max(0, Number(this._rewindPayload.pieceCount) || 0);
-            }
             if (this._endless && this._endlessSnapshot) {
                 this._engine.restoreEndlessSnapshot(this._endlessSnapshot);
                 this._stageInfo = {
@@ -759,7 +734,6 @@ class GameScene {
     }
 
     _bindEngineEvents() {
-        this._engine.onPieceSpawn(() => this._captureRewindCheckpoint());
         if (typeof this._engine.onGoldBlock === 'function') {
             this._engine.onGoldBlock((event) => {
                 const goldEvent = Object.assign({ startedAt: Date.now() }, event || {});
@@ -910,40 +884,6 @@ class GameScene {
         this._engine.onLevelChange((level) => {
             if (this._audio) this._audio.playLevelUp();
         });
-    }
-
-    _isRewindEligible() {
-        if (this._themeEvent || this._endless || this._authorTrial || this._reviewMode || this._challengeId) {
-            return false;
-        }
-        return !this._assisted;
-    }
-
-    _captureRewindCheckpoint() {
-        if (!this._isRewindEligible() || !this._engine
-            || typeof this._engine.exportSnapshot !== 'function') return;
-        this._rewindHistory.push({
-            snapshot: this._engine.exportSnapshot(),
-            pieceCount: this._pieceCount || 0,
-            timeMs: Math.max(0, Date.now() - this._stageStartTime),
-            runSeed: this._runSeed,
-        });
-        if (this._rewindHistory.length > rewindManager.MAX_HISTORY) this._rewindHistory.shift();
-    }
-
-    _saveRewindForFailure() {
-        if (!this._isRewindEligible()) return false;
-        const checkpoint = rewindManager.pick(this._rewindHistory);
-        if (!checkpoint) return false;
-        const gameParams = Object.assign({}, this._params);
-        delete gameParams.rewindPayload;
-        gameParams.assisted = true;
-        return rewindManager.save(Object.assign({
-            mode: this._workshop ? 'plaza' : 'official',
-            stageId: this._stageId,
-            workshopStageId: this._workshopStageId,
-            gameParams,
-        }, checkpoint));
     }
 
     _renderGoldBlockFx(ctx) {
@@ -1609,7 +1549,7 @@ class GameScene {
         const bw = Math.min(200, cardW * 0.62);
         const bx = W / 2 - bw / 2;
         this._stageTutorialBtnRect = { x: bx, y: by, w: bw, h: bh };
-        if (!drawThemeButtonSkin9Slice(ctx, 'cardStageGold', bx, by, bw, bh, 0.22)) {
+        if (!drawThemeButtonSkin9Slice(ctx, 'btnBarGold', bx, by, bw, bh, 0.22)) {
             ctx.fillStyle = '#c9a227';
             this._roundRect(ctx, bx, by, bw, bh, 12);
             ctx.fill();
@@ -2135,7 +2075,6 @@ class GameScene {
         // 广场开打未通关：进结算页（竖排按钮），不直接退回列表
         if (!this._authorTrial && this._workshopStageId && !this._challengeId) {
             this._stageSettleLocked = true;
-            const rewindAvailable = this._saveRewindForFailure();
             const lines = this._engine ? this._engine.getLines() : 0;
             const pieces = this._pieceCount || 0;
             const timeMs = Date.now() - this._stageStartTime;
@@ -2151,7 +2090,6 @@ class GameScene {
                     workshopReturnTo: this._workshopReturnTo || 'list',
                     workshopListParams: listParams,
                     failed: true,
-                    rewindAvailable,
                     result: {
                         lines,
                         pieces,
@@ -2276,7 +2214,6 @@ class GameScene {
     _goToStageResult(lines) {
         if (this._stageSettleLocked) return;
         this._stageSettleLocked = true;
-        rewindManager.clear();
         const timeMs = Date.now() - this._stageStartTime;
         const stage = goldenBlock.getStage(this._stageId);
         const goldResult = goldenBlock.rewardClear(
@@ -2343,7 +2280,7 @@ class GameScene {
         enterResult();
     }
 
-    /** 闯关失败：不退入场费 → 失败结算页（广告免费重开在结算页） */
+    /** 闯关失败：进入失败结算页，由玩家选择重玩或返回。 */
     _goToStageFail() {
         if (this._stageSettleLocked) return;
         this._stageSettleLocked = true;
@@ -2359,7 +2296,6 @@ class GameScene {
         const timeMs = Date.now() - this._stageStartTime;
         const stage = goldenBlock.getStage(this._stageId);
         const minLines = stage ? stage.minLines : 1;
-        const rewindAvailable = this._saveRewindForFailure();
 
         setTimeout(() => {
             GameGlobal.game.sceneManager.leaveTo('stageFail', {
@@ -2371,7 +2307,6 @@ class GameScene {
                     minLines,
                     reason: this._stageOverReason || 'topOut',
                 },
-                rewindAvailable,
             }, stagePlayStack());
         }, 700);
     }

@@ -47,9 +47,9 @@ function isBannerConfigured() {
 
 // 频率控制配置（单位：毫秒）
 const FREQUENCY_CONFIG = {
-  rewardedVideo: { interval: 60000, maxPerSession: 10 },   // 激励视频：60s 间隔，单次会话最多 10 次
+  rewardedVideo: { interval: 0 },   // 激励视频：不设会话间隔和次数，连续解锁关卡不被挡住
   banner: { interval: 30000, showDuration: 15000 },        // Banner：30s 间隔，展示 15s 后自动关闭
-  interstitial: { interval: 180000, maxPerSession: 3 },    // 插屏：180s 间隔，单次会话最多 3 次（与结算页降频叠加）
+  interstitial: { interval: 120000 },    // 插屏：两次至少间隔 120s，不设单次打开次数上限
 };
 
 // 重试配置
@@ -309,22 +309,37 @@ class AdManager {
    * @param {object} ad - 广告实例
    * @returns {Promise<void>}
    */
-  _loadThenShow(ad) {
+  _loadThenShow(ad, shouldShow) {
     return new Promise((resolve, reject) => {
       if (!ad || typeof ad.show !== 'function') {
         reject(new Error('广告实例无效'));
         return;
       }
 
+      const allowed = () => typeof shouldShow !== 'function' || shouldShow() === true;
+
       const doShow = () => {
+        if (!allowed()) {
+          reject(new Error('cancelled'));
+          return;
+        }
         ad.show()
           .then(resolve)
           .catch((showErr) => {
             // show 失败：尝试 load 后再 show 一次（部分场景展示需先加载完成）
             if (typeof ad.load === 'function') {
               ad.load()
-                .then(() => ad.show())
-                .then(resolve)
+                .then(() => {
+                  if (!allowed()) {
+                    reject(new Error('cancelled'));
+                    return null;
+                  }
+                  return ad.show();
+                })
+                .then((shown) => {
+                  if (shown === null) return;
+                  resolve(shown);
+                })
                 .catch(reject);
             } else {
               reject(showErr);
@@ -334,8 +349,20 @@ class AdManager {
 
       if (typeof ad.load === 'function') {
         ad.load()
-          .then(doShow)
-          .catch(() => doShow()); // load 失败不阻塞展示，交给 show 决定
+          .then(() => {
+            if (!allowed()) {
+              reject(new Error('cancelled'));
+              return;
+            }
+            doShow();
+          })
+          .catch(() => {
+            if (!allowed()) {
+              reject(new Error('cancelled'));
+              return;
+            }
+            doShow();
+          });
       } else {
         doShow();
       }
@@ -623,8 +650,15 @@ class AdManager {
   /*** 展示插屏广告（先 load 再 show，失败时自动重试一次）
    * @returns {Promise<boolean>} 展示成功 resolve(true)，跳过/失败 resolve(false)
    */
-  showInterstitial() {
+  showInterstitial(options) {
+    const shouldShow = options && typeof options.shouldShow === 'function'
+      ? options.shouldShow
+      : null;
     return new Promise((resolve) => {
+      if (shouldShow && shouldShow() !== true) {
+        resolve(false);
+        return;
+      }
       if (!this._isAdUnitReady('interstitial')) {
         console.warn('[AdManager] 插屏广告位未配置，跳过展示');
         resolve(false);
@@ -649,7 +683,7 @@ class AdManager {
         return;
       }
 
-      this._loadThenShow(this._interstitialAd)
+      this._loadThenShow(this._interstitialAd, shouldShow)
         .then(() => {
           this._recordShow('interstitial');
           resolve(true);

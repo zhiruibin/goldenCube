@@ -1,5 +1,5 @@
 /**
- * WorkshopResultScene - 工坊/广场结算（无金币；广场失败可激励视频回退）
+ * WorkshopResultScene - 工坊/广场结算（无金币；失败后重新开打）
  * 含作者试玩通关 / 未通关。
  */
 const {
@@ -9,7 +9,7 @@ const {
     SUBTITLE,
     MUTED,
 } = require('../theme/arcade-night');
-const { drawThemeBackground } = require('../theme/theme-images');
+const { drawThemeBackground, fillThemeVeil } = require('../theme/theme-images');
 const { Button } = require('../widgets/button');
 const { ConfettiFx } = require('../render/confetti-fx');
 const {
@@ -19,8 +19,7 @@ const {
 const { buildIsoBlockFaces, drawSolidIsoBlock } = require('../render/iso-block-renderer');
 const workshop = require('../../utils/workshop-manager');
 const endless = require('../../utils/endless-manager');
-const rewindManager = require('../../utils/rewind-manager');
-const { adManager, isRewardedVideoConfigured } = require('../../utils/ad-manager');
+const { scheduleSettlementInterstitial } = require('../../utils/settlement-interstitial');
 
 class WorkshopResultScene {
     constructor() {
@@ -29,6 +28,8 @@ class WorkshopResultScene {
         this._animTime = 0;
         this._confettiFx = null;
         this._buttonsTopY = 0;
+        this._submitBusy = false;
+        this._interstitial = null;
     }
 
     onEnter(params) {
@@ -43,6 +44,7 @@ class WorkshopResultScene {
         this._stageId = this._params.workshopStageId;
         this._title = this._params.workshopTitle || (this._endless ? '无尽' : '工坊关卡');
         this._returnTo = this._params.workshopReturnTo || 'editor';
+        this._submitBusy = false;
         this._listParams = this._params.workshopListParams || {
             origin: this._authorTrial ? 'workshop' : 'plaza',
             mineSub: 'draft',
@@ -65,6 +67,7 @@ class WorkshopResultScene {
                 }
             } catch (e) { /* ignore */ }
         }
+        this._armInterstitial();
     }
 
     onExit() {
@@ -72,6 +75,21 @@ class WorkshopResultScene {
         if (this._confettiFx) {
             this._confettiFx.destroy();
             this._confettiFx = null;
+        }
+        this._cancelInterstitial();
+    }
+
+    /** 广场对局和无尽结算才插屏；作者试玩、审核试玩留在编辑流程里。 */
+    _armInterstitial() {
+        this._cancelInterstitial();
+        if (this._authorTrial || this._reviewMode) return;
+        this._interstitial = scheduleSettlementInterstitial();
+    }
+
+    _cancelInterstitial() {
+        if (this._interstitial) {
+            this._interstitial.cancel();
+            this._interstitial = null;
         }
     }
 
@@ -183,30 +201,78 @@ class WorkshopResultScene {
         });
     }
 
-    _rewindViaAd() {
-        const pending = rewindManager.load();
-        if (!pending || !this._params.rewindAvailable || isRewardedVideoConfigured() !== true) return;
-        adManager.showRewardedVideo().then(() => {
-            const payload = rewindManager.consume();
-            if (!payload) return;
-            GameGlobal.game.sceneManager.replace('game', Object.assign({}, payload.gameParams || {}, {
-                assisted: true,
-                rewindPayload: payload,
-            }));
-        }).catch(() => {
-            try { wx.showToast({ title: '需完整观看视频，或稍后再试', icon: 'none' }); } catch (e) { /* ignore */ }
+    _submitErrorText(result) {
+        const r = result || {};
+        const messages = {
+            'daily-limit': '今日提交次数已用完',
+            missing: '关卡不存在',
+            'not-cleared': '请先完成自通',
+            'need-clear': '布局已修改，请重新自通',
+            invalid: r.detail || '关卡布局不合规',
+            cloud: r.detail || '云端提交失败，请稍后重试',
+        };
+        return messages[r.reason] || r.detail || '提交失败，请稍后重试';
+    }
+
+    _showSubmitToast(message) {
+        try { wx.showToast({ title: message, icon: 'none' }); } catch (e) { /* ignore */ }
+    }
+
+    _submitToPlaza() {
+        if (this._submitBusy) return;
+        this._submitBusy = true;
+        this._buildButtons();
+        Promise.resolve(workshop.submitForReview(this._stageId)).then((result) => {
+            this._submitBusy = false;
+            if (!result || !result.ok) {
+                this._showSubmitToast(this._submitErrorText(result));
+                this._buildButtons();
+                return;
+            }
+            // 审核中的关卡不可继续编辑；提交成功后直接进入对应列表形成闭环。
+            this._goList({ mineSub: 'reviewing', toast: '已提交审核' });
+        }).catch((error) => {
+            this._submitBusy = false;
+            this._showSubmitToast((error && error.message) || '提交失败，请稍后重试');
+            this._buildButtons();
+        });
+    }
+
+    _requestSubmitToPlaza() {
+        if (this._submitBusy || this._failed || !this._authorTrial
+            || this._reviewMode || this._endless) return;
+        const stage = workshop.getStage(this._stageId);
+        if (!stage) {
+            this._showSubmitToast('关卡不存在');
+            return;
+        }
+        const title = String(stage.title || this._title || '未命名关卡');
+        if (typeof wx.showModal !== 'function') {
+            this._submitToPlaza();
+            return;
+        }
+        wx.showModal({
+            title: '提交到广场',
+            content: '「' + title + '」将进入审核，通过后展示在关卡广场。是否提交？',
+            confirmText: '提交审核',
+            cancelText: '取消',
+            success: (res) => {
+                if (res && res.confirm) this._submitToPlaza();
+            },
         });
     }
 
     /** 英雄位与文案底边（不依赖按钮，避免互相顶开） */
     _computeContentLayout() {
         const H = GameGlobal.game.height;
+        const compact = H < 740;
         const topInset = this._getTopInset() - 30;
-        const panelY = topInset + 156;
-        const panelH = 88;
+        const panelY = topInset + (compact ? 140 : 156);
+        const panelH = compact ? 80 : 88;
         const statsBottom = panelY + panelH;
-        const heroSize = 108;
-        const heroCy = statsBottom + 18 + heroSize * 0.52 + 30;
+        const heroSize = compact ? 92 : 108;
+        const heroCy = statsBottom + (compact ? 10 : 18)
+            + heroSize * 0.52 + (compact ? 8 : 30);
         const footY = heroCy + heroSize * 0.72;
         let contentBottom = footY + 26;
         if (this._failed) {
@@ -266,13 +332,25 @@ class WorkshopResultScene {
                 onClick: () => this._goList(),
             });
         } else if (this._authorTrial) {
-            rows.push({
-                text: '再试一次',
-                color: '#c9a227',
-                skin: 'btnBarGold',
-                labelColor: '#241408',
-                onClick: () => this._retryTrial(),
-            });
+            if (!this._failed) {
+                rows.push({
+                    text: this._submitBusy ? '正在提交…' : '提交到广场',
+                    color: '#c9a227',
+                    skin: 'btnBarGold',
+                    labelColor: '#241408',
+                    onClick: () => this._requestSubmitToPlaza(),
+                });
+            }
+            // 四枚通栏按钮只在长屏展示；短屏优先保留提交、编辑和返回。
+            if (this._failed || H >= 740) {
+                rows.push({
+                    text: '再试一次',
+                    color: this._failed ? '#c9a227' : '#c89840',
+                    skin: this._failed ? 'btnBarGold' : 'btnBarAmber',
+                    labelColor: '#241408',
+                    onClick: () => this._retryTrial(),
+                });
+            }
             if (this._returnTo === 'list') {
                 rows.push({
                     text: '去编辑',
@@ -307,16 +385,6 @@ class WorkshopResultScene {
             });
         } else {
             // 广场 / 他人关：与闯关结算同款竖排通栏
-            if (this._failed && this._params.rewindAvailable && rewindManager.load()
-                && isRewardedVideoConfigured() === true) {
-                rows.push({
-                    text: '观看视频，回退' + rewindManager.REWIND_STEPS + '步',
-                    color: '#c89840',
-                    skin: 'btnBarAmber',
-                    labelColor: '#241408',
-                    onClick: () => this._rewindViaAd(),
-                });
-            }
             rows.push({
                 text: this._failed ? '再试一次' : '再玩一局',
                 color: '#c9a227',
@@ -506,8 +574,7 @@ class WorkshopResultScene {
         if (!drawThemeBackground(ctx, 'homeBg', W, H)) {
             fillNightBackground(ctx, W, H);
         } else {
-            ctx.fillStyle = 'rgba(10, 7, 4, 0.42)';
-            ctx.fillRect(0, 0, W, H);
+            fillThemeVeil(ctx, W, H, 0.42);
         }
 
         const topInset = this._getTopInset() - 30;
@@ -535,7 +602,7 @@ class WorkshopResultScene {
         const heroSize = layout.heroSize;
         // 非广场（作者试玩）仍用按钮顶限制英雄位，避免与按钮重叠
         if (this._authorTrial && !this._endless) {
-            const labelReserve = this._failed ? 42 : 78;
+            const labelReserve = this._failed ? 42 : (H < 740 ? 100 : 112);
             const maxCy = (this._buttonsTopY || H * 0.72) - labelReserve - heroSize * 0.52;
             if (heroCy > maxCy) heroCy = Math.max(layout.statsBottom + heroSize * 0.4, maxCy);
         }
@@ -594,6 +661,7 @@ class WorkshopResultScene {
     handleTap(x, y) {
         for (const btn of this._buttons) {
             if (btn.hitTest(x, y)) {
+                this._cancelInterstitial();
                 btn.trigger();
                 return;
             }

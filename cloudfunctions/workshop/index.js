@@ -354,7 +354,9 @@ async function approveStage(openid, data) {
 async function rejectStage(openid, data) {
   requireAdmin(openid);
   const stageId = String((data && data.stageId) || '').slice(0, 64);
-  const reason = String((data && data.reason) || '未通过审核').trim().slice(0, 100) || '未通过审核';
+  const rejectReasons = ['过于简单', '过于复杂', '其他'];
+  const requestedReason = String((data && data.reason) || '').trim();
+  const reason = rejectReasons.indexOf(requestedReason) >= 0 ? requestedReason : '其他';
   const doc = await _findByStageId(stageId);
   if (!doc || doc.status !== 'reviewing') return { success: false, errMsg: 'not-reviewing' };
   const now = Date.now();

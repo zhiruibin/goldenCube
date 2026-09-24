@@ -1,6 +1,9 @@
+const { readEquippedTheme } = require('../../data/themes');
+
 /**
  * 金矿工坊主题贴图加载（对齐首页概念示意图）
  * 路径相对小游戏根目录；失败时调用方回退到纯色绘制。
+ * homeBg / mapMineBg 会按已装备背景主题换成对应的对局底或列表底。
  */
 
 const THEME_PATHS = {
@@ -14,6 +17,7 @@ const THEME_PATHS = {
   btnBarBrown: 'assets/images/theme/btn-bar-brown.png',
   btnBarAmber: 'assets/images/theme/btn-bar-amber.png',
   btnBarGold: 'assets/images/theme/btn-bar-gold.png',
+  btnBarVideo: 'assets/images/theme/btn-bar-video.png',
   btnCircleTeal: 'assets/images/theme/btn-circle-teal.png',
   btnCircleGold: 'assets/images/theme/btn-circle-gold.png',
   btnCircleRose: 'assets/images/theme/btn-circle-rose.png',
@@ -22,6 +26,16 @@ const THEME_PATHS = {
   homeFooterIconsV1: 'assets/images/theme/home-footer-icons-v1.png',
   mapGroundTile: 'assets/images/theme/map-ground-tile.jpg',
   mapMineBg: 'assets/images/theme/map-mine-bg.jpg',
+  themeCityPlay: 'assets/images/theme/theme-city-play.jpg',
+  themeCityList: 'assets/images/theme/theme-city-list.jpg',
+  themeForestPlay: 'assets/images/theme/theme-forest-play.jpg',
+  themeForestList: 'assets/images/theme/theme-forest-list.jpg',
+  themeDesertPlay: 'assets/images/theme/theme-desert-play.jpg',
+  themeDesertList: 'assets/images/theme/theme-desert-list.jpg',
+  themeGrassPlay: 'assets/images/theme/theme-grass-play.jpg',
+  themeGrassList: 'assets/images/theme/theme-grass-list.jpg',
+  themeBeachPlay: 'assets/images/theme/theme-beach-play.jpg',
+  themeBeachList: 'assets/images/theme/theme-beach-list.jpg',
   mapTitlePlaque: 'assets/images/theme/map-title-plaque.png',
   mapBtnBack: 'assets/images/theme/map-btn-back.png',
   mapCubeCleared: 'assets/images/theme/map-cube-cleared.png',
@@ -43,6 +57,8 @@ const THEME_PATHS = {
   badgeChapter03Locked: 'subpackages/collection-assets/images/badges/badge-chapter-03-locked.png',
   // v2 逐枚重排并留出透明安全边距；改名同时避开微信开发者工具的旧图缓存。
   badgeChapterAtlasV2: 'subpackages/collection-assets/images/badges/badge-chapters-04-20-atlas-v2.png',
+  // 第 4–20 章专用未获得态：与前三章一致的黑银石雕材质，不再依赖运行时滤镜。
+  badgeChapterLockedAtlasV1: 'subpackages/collection-assets/images/badges/badge-chapters-04-20-locked-atlas-v1.png',
   badgePlazaAtlas: 'subpackages/collection-assets/images/badges/badge-plaza-10-30-atlas-v1.png',
   badgeWorkshopFirstApproved: 'subpackages/collection-assets/images/badges/badge-workshop-first-approved.png',
   badgeWorkshopFirstApprovedLocked: 'subpackages/collection-assets/images/badges/badge-workshop-first-approved-locked.png',
@@ -114,15 +130,22 @@ function preloadThemeImages(keys) {
   list.forEach((key) => _loadOne(key));
 }
 
-function getThemeImage(key) {
-  return _loadOne(key);
+function _sceneBackgroundKey(key) {
+  if (key !== 'homeBg' && key !== 'mapMineBg') return key;
+  const theme = readEquippedTheme();
+  if (!theme || theme.id === 'default') return key;
+  const next = key === 'homeBg' ? theme.playKey : theme.listKey;
+  return next || key;
 }
 
-/**
- * cover 方式绘制主题背景（居中裁切）
- * @returns {boolean}
- */
-function drawThemeBackground(ctx, key, w, h) {
+function getThemeImage(key) {
+  const resolved = _sceneBackgroundKey(key);
+  const entry = _loadOne(resolved);
+  if (resolved !== key && !entry.ready) return _loadOne(key);
+  return entry;
+}
+
+function _drawCover(ctx, key, w, h) {
   const entry = _loadOne(key);
   if (!entry.ready || !entry.img) return false;
   const iw = entry.img.width || 1;
@@ -134,6 +157,27 @@ function drawThemeBackground(ctx, key, w, h) {
   const dy = (h - dh) / 2;
   ctx.drawImage(entry.img, dx, dy, dw, dh);
   return true;
+}
+
+/**
+ * cover 方式绘制主题背景（居中裁切）
+ * @returns {boolean}
+ */
+function drawThemeBackground(ctx, key, w, h) {
+  const resolved = _sceneBackgroundKey(key);
+  if (_drawCover(ctx, resolved, w, h)) return true;
+  if (resolved !== key) return _drawCover(ctx, key, w, h);
+  return false;
+}
+
+/** 按当前主题减弱页面压暗，亮场景不会被盖闷。 */
+function fillThemeVeil(ctx, w, h, alpha) {
+  const theme = readEquippedTheme();
+  const scale = theme && typeof theme.veil === 'number' ? theme.veil : 1;
+  const a = Math.max(0, Math.min(0.9, (Number(alpha) || 0) * scale));
+  if (a < 0.02) return;
+  ctx.fillStyle = 'rgba(12, 8, 4, ' + a.toFixed(3) + ')';
+  ctx.fillRect(0, 0, w, h);
 }
 
 /**
@@ -275,6 +319,7 @@ module.exports = {
   preloadThemeImages,
   getThemeImage,
   drawThemeBackground,
+  fillThemeVeil,
   drawThemeImageContain,
   drawThemeButtonSkin,
   drawThemeButtonSkin9Slice,

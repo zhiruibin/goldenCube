@@ -1,7 +1,7 @@
 /** 中秋专题徽章获得页：仅在徽章真正写入收藏的那一次进入。 */
 const { Button } = require('../widgets/button');
 const { fillNightBackground, drawBrandTitle } = require('../theme/arcade-night');
-const { drawThemeBackground, getThemeImage } = require('../theme/theme-images');
+const { drawThemeBackground, getThemeImage, fillThemeVeil } = require('../theme/theme-images');
 const { ConfettiFx } = require('../render/confetti-fx');
 
 const RISE_SEC = 1.2;
@@ -85,7 +85,7 @@ class ThemeBadgeAwardScene {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
         if (!drawThemeBackground(ctx, 'mapMineBg', W, H)) fillNightBackground(ctx, W, H);
-        else { ctx.fillStyle = 'rgba(10,6,2,.56)'; ctx.fillRect(0, 0, W, H); }
+        else fillThemeVeil(ctx, W, H, 0.56);
 
         const headingAlpha = clamp01((this._animTime - .34) / .5);
         ctx.save();

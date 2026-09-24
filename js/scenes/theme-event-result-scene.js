@@ -1,7 +1,7 @@
 /** 中秋专题结算：与普通闯关、工坊奖励和进度完全隔离。 */
 const { Button } = require('../widgets/button');
 const { fillNightBackground, drawBrandTitle } = require('../theme/arcade-night');
-const { drawThemeBackground, getThemeImage } = require('../theme/theme-images');
+const { drawThemeBackground, getThemeImage, fillThemeVeil } = require('../theme/theme-images');
 const midAutumn = require('../../data/mid-autumn-stages');
 const { ConfettiFx } = require('../render/confetti-fx');
 
@@ -93,7 +93,7 @@ class ThemeEventResultScene {
         const W = GameGlobal.game.width;
         const H = GameGlobal.game.height;
         if (!drawThemeBackground(ctx, 'mapMineBg', W, H)) fillNightBackground(ctx, W, H);
-        else { ctx.fillStyle = 'rgba(12,8,4,.38)'; ctx.fillRect(0, 0, W, H); }
+        else fillThemeVeil(ctx, W, H, 0.38);
         const cleared = this._params.cleared === true;
         const stage = midAutumn.getStage(this._params.stageId || 1) || midAutumn.STAGES[0];
         drawBrandTitle(ctx, cleared ? '月出海面' : '月隐云后', W / 2, H * .19, 'bold 34px sans-serif');

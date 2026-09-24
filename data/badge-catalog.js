@@ -25,7 +25,13 @@ const MEMORIAL_ART = {
 function getChapterArt(chapterId) {
     if (CHAPTER_ART[chapterId]) return CHAPTER_ART[chapterId];
     if (chapterId >= 4 && chapterId <= 20) {
-        return { image: 'badgeChapterAtlasV2', atlasIndex: chapterId - 4, atlasCols: 4, atlasRows: 5 };
+        return {
+            image: 'badgeChapterAtlasV2',
+            lockedImage: 'badgeChapterLockedAtlasV1',
+            atlasIndex: chapterId - 4,
+            atlasCols: 4,
+            atlasRows: 5,
+        };
     }
     return {};
 }

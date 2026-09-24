@@ -67,6 +67,22 @@ check(/const STARTUP_THEME_KEYS = \[/.test(themeSource)
     && /const list = Array\.isArray\(keys\).*STARTUP_THEME_KEYS/.test(themeSource),
 '启动预加载使用白名单而非全部主题资源');
 
+const bootSource = fs.readFileSync(path.join(ROOT, 'js/scenes/boot-scene.js'), 'utf8');
+check(/_drawLoadingSpinner\s*\(/.test(bootSource)
+    && /segmentCount\s*=\s*10/.test(bootSource),
+'启动页使用高辨识度旋转加载动效');
+const loaderSource = fs.readFileSync(path.join(ROOT, 'utils/subpackage-loader.js'), 'utf8');
+check(/Math\.round\(progress\)\s*\+\s*'%'/g.test(loaderSource),
+'分包加载进度显示为整数百分比');
+
+const lockedAtlasRel = 'subpackages/collection-assets/images/badges/badge-chapters-04-20-locked-atlas-v1.png';
+const lockedAtlas = fs.readFileSync(path.join(ROOT, lockedAtlasRel));
+check(lockedAtlas.readUInt32BE(16) === 320 && lockedAtlas.readUInt32BE(20) === 400,
+    '第 4–20 章未获得徽章图集为严格 320×400（4×5）');
+const catalogSource = fs.readFileSync(path.join(ROOT, 'data/badge-catalog.js'), 'utf8');
+check(/lockedImage:\s*'badgeChapterLockedAtlasV1'/.test(catalogSource),
+    '第 4–20 章使用专用未获得图集');
+
 console.log('\n==== RESULT ====');
 console.log('passed:', passed, 'failed:', failed);
 if (failed) process.exitCode = 1;

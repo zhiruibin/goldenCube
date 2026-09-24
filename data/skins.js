@@ -1,7 +1,7 @@
 /*** 皮肤配置数据
  * 包含方块皮肤、棋盘皮肤、音效包的定义
  *
- * 皮肤不使用货币购买；达到指定主线关卡后自动解锁。
+ * 皮肤不使用货币购买；通关指定主线关卡后解锁，第 150 关时全部拿齐。
  */
 
 /** 方块皮肤列表 */
@@ -28,7 +28,7 @@ const blockSkins = [
     id: 'neon',
     name: '霓虹',
     price: 0,
-    unlockCondition: 'stage_clear_5',
+    unlockCondition: 'stage_clear_10',
     description: '经典玻璃积木的霓虹发光版',
     colors: {
       I: ['#61d0df', '#32a9c1'],
@@ -47,7 +47,7 @@ const blockSkins = [
     id: 'wood',
     name: '木纹',
     price: 0,
-    unlockCondition: 'stage_clear_10',
+    unlockCondition: 'stage_clear_30',
     description: '温暖自然的木纹质感',
     colors: {
       I: '#c8a882',
@@ -64,7 +64,7 @@ const blockSkins = [
     id: 'gradient',
     name: '渐变',
     price: 0,
-    unlockCondition: 'stage_clear_15',
+    unlockCondition: 'stage_clear_50',
     description: '柔和的渐变色彩',
     colors: {
       I: ['#00c6ff', '#0072ff'],
@@ -81,7 +81,7 @@ const blockSkins = [
     id: 'pastel',
     name: '马卡龙',
     price: 0,
-    unlockCondition: 'stage_clear_20',
+    unlockCondition: 'stage_clear_70',
     description: '清新甜美的马卡龙色系',
     colors: {
       I: '#a8e6cf',
@@ -97,7 +97,7 @@ const blockSkins = [
     id: 'crystal',
     name: '水晶',
     price: 0,
-    unlockCondition: 'stage_clear_30',
+    unlockCondition: 'stage_clear_100',
     description: '晶莹剔透的水晶方块',
     colors: {
       I: '#e0f7fa',
@@ -115,7 +115,7 @@ const blockSkins = [
     id: 'pixel',
     name: '像素',
     price: 0,
-    unlockCondition: 'stages_cleared_10',
+    unlockCondition: 'stage_clear_90',
     description: '主线闯关累计通关10关解锁',
     colors: {
       I: '#22d3ee',
@@ -132,7 +132,7 @@ const blockSkins = [
     id: 'gold',
     name: '黄金',
     price: 0,
-    unlockCondition: 'stage_clear_50',
+    unlockCondition: 'stage_clear_150',
     description: '尊贵华丽的黄金方块',
     colors: {
       I: '#ffd700',
@@ -167,7 +167,7 @@ const boardSkins = [
     id: 'starry',
     name: '星空',
     price: 0,
-    unlockCondition: 'stage_clear_25',
+    unlockCondition: 'stage_clear_20',
     description: '深邃的星空背景',
     style: {
       background: '#0b0d17',
@@ -181,7 +181,7 @@ const boardSkins = [
     id: 'ocean',
     name: '海洋',
     price: 0,
-    unlockCondition: 'stage_clear_35',
+    unlockCondition: 'stage_clear_50',
     description: '宁静的深海主题',
     style: {
       background: '#0a192f',
@@ -195,7 +195,7 @@ const boardSkins = [
     id: 'matrix',
     name: '矩阵',
     price: 0,
-    unlockCondition: 'stage_clear_45',
+    unlockCondition: 'stage_clear_80',
     description: '黑客帝国数字雨',
     style: {
       background: '#000000',
@@ -209,7 +209,7 @@ const boardSkins = [
     id: 'sakura',
     name: '樱花',
     price: 0,
-    unlockCondition: 'stage_clear_60',
+    unlockCondition: 'stage_clear_110',
     description: '浪漫的樱花飘落',
     style: {
       background: '#2d1b33',
@@ -223,7 +223,7 @@ const boardSkins = [
     id: 'minimal',
     name: '极简',
     price: 0,
-    unlockCondition: 'games_50',
+    unlockCondition: 'stage_clear_130',
     description: '深灰磨砂，干净低干扰',
     style: {
       background: '#10151e',
@@ -236,7 +236,7 @@ const boardSkins = [
     id: 'lava',
     name: '熔岩',
     price: 0,
-    unlockCondition: 'stage_clear_70',
+    unlockCondition: 'stage_clear_150',
     description: '炽热的熔岩流动',
     style: {
       background: '#1a0000',
@@ -271,7 +271,7 @@ const soundPacks = [
     id: 'retro',
     name: '复古',
     price: 0,
-    unlockCondition: 'stage_clear_12',
+    unlockCondition: 'stage_clear_40',
     description: '8-bit 像素风音效',
     files: {
       move: 'retro_move.mp3',
@@ -288,7 +288,7 @@ const soundPacks = [
     id: 'piano',
     name: '钢琴',
     price: 0,
-    unlockCondition: 'stage_clear_22',
+    unlockCondition: 'stage_clear_60',
     description: '优雅的钢琴音色',
     files: {
       move: 'piano_move.mp3',
@@ -305,7 +305,7 @@ const soundPacks = [
     id: 'electronic',
     name: '电子',
     price: 0,
-    unlockCondition: 'stage_clear_32',
+    unlockCondition: 'stage_clear_100',
     description: '电子合成器音效',
     files: {
       move: 'electronic_move.mp3',
@@ -322,7 +322,7 @@ const soundPacks = [
     id: 'cute',
     name: '萌趣',
     price: 0,
-    unlockCondition: 'stage_clear_42',
+    unlockCondition: 'stage_clear_120',
     description: '可爱卡通风格音效',
     files: {
       move: 'cute_move.mp3',
@@ -339,7 +339,7 @@ const soundPacks = [
     id: 'epic',
     name: '史诗',
     price: 0,
-    unlockCondition: 'tetris_count_100',
+    unlockCondition: 'stage_clear_140',
     description: '累计 100 次 QUAD 解锁',
     files: {
       move: 'epic_move.mp3',
@@ -356,10 +356,7 @@ const soundPacks = [
 
 /*** 解锁条件类型说明
  * - 'default'        : 默认解锁，无需条件
- * - 'stage_clear_N'  : 通关主线第 N 关
- * - 'stages_cleared_10': 主线闯关累计通关 10 关
- * - 'games_50'       : 累计对局达到 50 场
- * - 'tetris_count_100': 累计消除 Tetris 达到 100 次
+ * - 'stage_clear_N'  : 通关主线第 N 关；全部可解锁皮肤在第 150 关前拿齐
  */
 
 /** 音效包程序化合成参数（与 AudioManager 配合，无需外部音频文件）

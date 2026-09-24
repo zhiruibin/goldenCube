@@ -1,5 +1,9 @@
-// 底部迷你方块特效：7 种标准迷你方块静态展示 + 晃动彩蛋
+// 底部迷你方块：七种标准形状，格子是共用的暖色石块（各主题不换图）+ 晃动彩蛋
 const { PIECES, PIECE_COLORS } = require('../../data/pieces');
+
+const STONE_WARM = '#c4a574';
+const STONE_SIDE = '#5c3a24';
+const STONE_SHADE = '#3a2416';
 
 const MINI_TYPES = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
 
@@ -113,8 +117,8 @@ class MiniTetrisFx {
     }
     const areaH = areaBottom - areaTop;
 
-    let cell = Math.max(6, Math.min(10, Math.floor((W - 48) / 28)));
-    const gap = Math.max(2, Math.floor(cell * 0.3));
+    let cell = Math.max(8, Math.min(13, Math.floor((W - 36) / 26)));
+    const gap = Math.max(3, Math.floor(cell * 0.34));
     const pieceGap = Math.max(6, Math.floor(cell * 0.9));
 
     let totalW = 0;
@@ -208,22 +212,88 @@ class MiniTetrisFx {
   render(ctx) {
     if (!this._enabled || !this._pieces.length) return;
     for (const p of this._pieces) {
+      this._drawPieceShadow(ctx, p);
       const ox = p.x - p.w / 2;
       const oy = p.y - p.h / 2;
+      const tone = _stoneTone(p.color);
       for (let r = 0; r < p.shape.length; r++) {
         for (let c = 0; c < p.shape[r].length; c++) {
           if (p.shape[r][c] === 1) {
             const rx = ox + c * (p.cell + p.gap);
             const ry = oy + r * (p.cell + p.gap);
-            ctx.fillStyle = p.color;
-            ctx.fillRect(rx, ry, p.cell, p.cell);
-            ctx.fillStyle = 'rgba(255,255,255,0.22)';
-            ctx.fillRect(rx, ry, p.cell, Math.max(1, p.cell * 0.25));
+            _drawStoneCell(ctx, rx, ry, p.cell, tone);
           }
         }
       }
     }
   }
+
+  _drawPieceShadow(ctx, p) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(28, 16, 8, 0.28)';
+    ctx.beginPath();
+    const rx = Math.max(3, p.w * 0.42);
+    const ry = Math.max(1.6, p.cell * 0.22);
+    if (typeof ctx.ellipse === 'function') {
+      ctx.ellipse(p.x, p.y + p.h * 0.38, rx, ry, 0, 0, Math.PI * 2);
+    } else {
+      ctx.rect(p.x - rx, p.y + p.h * 0.38 - ry, rx * 2, ry * 2);
+    }
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function _hexToRgb(hex) {
+  const n = parseInt(String(hex).replace('#', ''), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+function _mix(hex, target, t) {
+  const a = _hexToRgb(hex);
+  const b = _hexToRgb(target);
+  const c = a.map((v, i) => Math.round(v + (b[i] - v) * t));
+  return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
+}
+
+/** 霓虹色压进暖石，侧面再压暗，七色仍能分开。 */
+function _stoneTone(hex) {
+  return {
+    top: _mix(hex, STONE_WARM, 0.46),
+    side: _mix(hex, STONE_SIDE, 0.58),
+    shade: _mix(hex, STONE_SHADE, 0.7),
+  };
+}
+
+function _drawStoneCell(ctx, x, y, size, tone) {
+  const s = Math.max(4, size);
+  const d = Math.max(1.5, s * 0.26);
+  const w = s - d;
+
+  ctx.fillStyle = tone.side;
+  ctx.beginPath();
+  ctx.moveTo(x + w, y + 0.5);
+  ctx.lineTo(x + s, y + d * 0.7);
+  ctx.lineTo(x + s, y + d * 0.7 + w);
+  ctx.lineTo(x + w, y + w);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = tone.shade;
+  ctx.beginPath();
+  ctx.moveTo(x + 0.5, y + w);
+  ctx.lineTo(x + w, y + w);
+  ctx.lineTo(x + s, y + w + d * 0.7);
+  ctx.lineTo(x + d * 0.7, y + w + d * 0.7);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = tone.top;
+  ctx.fillRect(x, y, w, w);
+  ctx.fillStyle = 'rgba(255, 236, 210, 0.32)';
+  ctx.fillRect(x, y, w, Math.max(1, s * 0.12));
+  ctx.fillStyle = 'rgba(48, 28, 14, 0.22)';
+  ctx.fillRect(x, y, Math.max(1, s * 0.1), w);
 }
 
 module.exports = { MiniTetrisFx };

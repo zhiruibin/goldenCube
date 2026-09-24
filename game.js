@@ -109,6 +109,7 @@ function onStart() {
     GameGlobal.game.inputManager = new InputManager(canvas);
     // 全局音频管理器（延迟到首次用户交互时 init，满足自动播放策略）
     GameGlobal.game.audioManager = new AudioManager();
+    try { require('./utils/skin-trial').retireSoundShopTab(); } catch (e) { /* 音效页签下线失败不影响启动 */ }
 
     // 必须先于云请求和全量场景解析绘制首帧，冷启动期间不再出现纯黑屏。
     GameGlobal.game.sceneManager.register('boot', BootScene);
@@ -874,6 +875,7 @@ wx.onHide(function () {
 /*** 小游戏恢复时继续
  */
 wx.onShow(function (res) {
+    try { require('./utils/skin-trial').settle(); } catch (e) { /* 试用到期回退失败时不影响恢复 */ }
     if (res && res.query && res.query.challengeId) {
         _handleShareChallengeEntry(res.query, { fromLaunch: false });
     }

@@ -12,7 +12,7 @@ const {
     SUBTITLE,
     MUTED,
 } = require('../theme/arcade-night');
-const { drawThemeBackground } = require('../theme/theme-images');
+const { drawThemeBackground, fillThemeVeil } = require('../theme/theme-images');
 const goldenBlock = require('../../utils/golden-block-manager');
 const { Button } = require('../widgets/button');
 const { stageSelectStack } = require('../../utils/stage-nav');
@@ -30,6 +30,7 @@ const {
     renderCenterToast,
     formatStageEntryButtonLabel,
 } = require('../../utils/stage-entry-ui');
+const { scheduleSettlementInterstitial } = require('../../utils/settlement-interstitial');
 
 /** 有金奖励时升起时长（秒） */
 const REVEAL_RISE_SEC = 1.1;
@@ -74,6 +75,8 @@ class StageResultScene {
         this._dirt = [];
         this._shareImageUrl = '';
         this._shareCardActive = false;
+        this._interstitial = null;
+        this._interstitialArmed = false;
     }
 
     onEnter(params) {
@@ -85,6 +88,7 @@ class StageResultScene {
         this._stage = goldenBlock.getStage(this._params.stageId);
         this._result = this._params.result || null;
         this._shareCardActive = true;
+        this._cancelInterstitial();
         this._prepareShareCard();
         preloadResultBlockImages();
         this._buildButtons();
@@ -122,6 +126,21 @@ class StageResultScene {
         this._dirt = [];
         this._shareImageUrl = '';
         this._shareCardActive = false;
+        this._cancelInterstitial();
+    }
+
+    _armInterstitial() {
+        if (this._interstitialArmed) return;
+        this._interstitialArmed = true;
+        this._interstitial = scheduleSettlementInterstitial();
+    }
+
+    _cancelInterstitial() {
+        this._interstitialArmed = false;
+        if (this._interstitial) {
+            this._interstitial.cancel();
+            this._interstitial = null;
+        }
     }
 
     _prepareShareCard() {
@@ -358,7 +377,7 @@ class StageResultScene {
         const medals = this._getResultMedals();
         if (!medals.length) return;
         // 章印是结算状态的核心反馈，放大至约 86px；三枚并排仍可完整落在 375px 画布内。
-        const size = Math.max(82, Math.min(90, heroSize * .80));
+        const size = 86.4;
         const gap = size * 1.12;
         const startX = cx - ((medals.length - 1) * gap) / 2;
         for (let i = 0; i < medals.length; i++) {
@@ -482,6 +501,7 @@ class StageResultScene {
         if (fromSkip) {
             this._buttonsReady = true;
             this._revealPhase = 'done';
+            this._armInterstitial();
         }
     }
 
@@ -561,6 +581,7 @@ class StageResultScene {
         for (let i = 0; i < this._buttons.length; i++) {
             const btn = this._buttons[i];
             if (btn.hitTest(x, y)) {
+                this._cancelInterstitial();
                 btn.trigger();
                 return;
             }
@@ -588,6 +609,7 @@ class StageResultScene {
             if (this._buttonDelayT >= REVEAL_BUTTON_DELAY) {
                 this._buttonsReady = true;
                 this._revealPhase = 'done';
+                this._armInterstitial();
             }
         } else {
             this._updateDirt(dt);
@@ -600,8 +622,7 @@ class StageResultScene {
         if (!drawThemeBackground(ctx, 'homeBg', W, H)) {
             fillNightBackground(ctx, W, H);
         } else {
-            ctx.fillStyle = 'rgba(10, 7, 4, 0.38)';
-            ctx.fillRect(0, 0, W, H);
+            fillThemeVeil(ctx, W, H, 0.38);
         }
 
         const uiAlpha = this._uiAlpha();
