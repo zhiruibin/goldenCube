@@ -18,6 +18,18 @@ const PROGRESS_COLLECTION = 'player_progress';
 const ALLOWED_MODES = ['stage'];
 const TOP_LIMIT = 20;
 
+/** 与工坊审核相同的环境变量。这些 OpenID 不出现在排行返回结果里，上报仍照常写入。 */
+function adminOpenIds() {
+    return String(process.env.WORKSHOP_ADMIN_OPENIDS || '')
+        .split(',')
+        .map((id) => id.trim())
+        .filter(Boolean);
+}
+
+function isRankAdmin(openid) {
+    return adminOpenIds().indexOf(String(openid || '')) >= 0;
+}
+
 const CLEARED_MUL = 1e10;
 const LINES_MUL = 1e5;
 const PIECES_MUL = 10;
@@ -219,11 +231,13 @@ async function submitScore(openid, data) {
     }
 
     let rank = null;
-    try {
-        const mine = isNewRecord ? sums : prev;
-        rank = await countBetter(coll, { mode }, mine) + 1;
-    } catch (e) {
-        rank = null;
+    if (!isRankAdmin(openid)) {
+        try {
+            const mine = isNewRecord ? sums : prev;
+            rank = await countBetter(coll, { mode }, mine) + 1;
+        } catch (e) {
+            rank = null;
+        }
     }
 
     return {
@@ -341,11 +355,15 @@ async function getRankList(openid, data) {
     const where = { mode };
 
     if (type === 'friend') {
-        const friendOpenIds = Array.isArray(data.friendOpenIds) ? data.friendOpenIds.slice(0, 50) : [];
+        const admins = adminOpenIds();
+        const friendOpenIds = (Array.isArray(data.friendOpenIds) ? data.friendOpenIds.slice(0, 50) : [])
+            .filter((id) => admins.indexOf(String(id || '')) < 0);
         if (friendOpenIds.length === 0) {
             return { success: true, list: [], total: 0, page, pageSize, myRank: null, myScore: null };
         }
         where.openid = _.in(friendOpenIds);
+    } else if (adminOpenIds().length) {
+        where.openid = _.nin(adminOpenIds());
     }
 
     const query = coll.where(where);
@@ -392,25 +410,29 @@ async function getRankList(openid, data) {
     let myRank = null;
     let myScore = null;
     let myCleared = null;
-    try {
-        const myWhere = { openid, mode };
-        const my = await coll.where(myWhere).orderBy('score', 'desc').limit(1).get();
-        if (my.data && my.data[0]) {
-            myScore = my.data[0].score || 0;
-            myCleared = typeof my.data[0].clearedCount === 'number'
-                ? my.data[0].clearedCount
-                : decodeClearedCount(myScore);
-            const rankScope = { mode };
-            if (type === 'friend') {
-                const friendOpenIds = Array.isArray(data.friendOpenIds) ? data.friendOpenIds.slice(0, 50) : [];
-                if (friendOpenIds.length > 0) {
-                    rankScope.openid = _.in(friendOpenIds);
+    if (!isRankAdmin(openid)) {
+        try {
+            const myWhere = { openid, mode };
+            const my = await coll.where(myWhere).orderBy('score', 'desc').limit(1).get();
+            if (my.data && my.data[0]) {
+                myScore = my.data[0].score || 0;
+                myCleared = typeof my.data[0].clearedCount === 'number'
+                    ? my.data[0].clearedCount
+                    : decodeClearedCount(myScore);
+                const rankScope = { mode };
+                if (type === 'friend') {
+                    const admins = adminOpenIds();
+                    const friendOpenIds = (Array.isArray(data.friendOpenIds) ? data.friendOpenIds.slice(0, 50) : [])
+                        .filter((id) => admins.indexOf(String(id || '')) < 0);
+                    if (friendOpenIds.length > 0) {
+                        rankScope.openid = _.in(friendOpenIds);
+                    }
                 }
+                myRank = await countBetter(coll, rankScope, my.data[0]) + 1;
             }
-            myRank = await countBetter(coll, rankScope, my.data[0]) + 1;
+        } catch (e) {
+            // ignore
         }
-    } catch (e) {
-        // ignore
     }
 
     return {
@@ -426,11 +448,15 @@ async function getRankList(openid, data) {
 }
 
 async function countBetter(coll, scope, mine) {
+    const base = Object.assign({}, scope);
+    if (adminOpenIds().length && !base.openid) {
+        base.openid = _.nin(adminOpenIds());
+    }
     const parts = [
-        Object.assign({}, scope, { clearedCount: _.gt(mine.clearedCount || 0) }),
-        Object.assign({}, scope, { clearedCount: mine.clearedCount || 0, linesSum: _.lt(mine.linesSum || 0) }),
-        Object.assign({}, scope, { clearedCount: mine.clearedCount || 0, linesSum: mine.linesSum || 0, piecesSum: _.lt(mine.piecesSum || 0) }),
-        Object.assign({}, scope, {
+        Object.assign({}, base, { clearedCount: _.gt(mine.clearedCount || 0) }),
+        Object.assign({}, base, { clearedCount: mine.clearedCount || 0, linesSum: _.lt(mine.linesSum || 0) }),
+        Object.assign({}, base, { clearedCount: mine.clearedCount || 0, linesSum: mine.linesSum || 0, piecesSum: _.lt(mine.piecesSum || 0) }),
+        Object.assign({}, base, {
             clearedCount: mine.clearedCount || 0,
             linesSum: mine.linesSum || 0,
             piecesSum: mine.piecesSum || 0,
@@ -449,6 +475,10 @@ async function getMyRank(openid, data) {
     const mode = data.mode || 'stage';
     if (ALLOWED_MODES.indexOf(mode) < 0) {
         return { success: false, errMsg: 'invalid mode' };
+    }
+
+    if (isRankAdmin(openid)) {
+        return { success: true, myRank: null, myScore: null, hasRecord: false };
     }
 
     const coll = db.collection(COLLECTION);
